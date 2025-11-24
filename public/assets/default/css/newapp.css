@@ -1,0 +1,64 @@
+
+  :root{
+    --bg:#0B0712; --panel:#121021; --ink:#fff; --edge:#ffffff22; --gold:#D7B45E;
+    --red:#E53935; --orange:#FB8C00; --yellow:#FFD600; --green:#43A047;
+    --blue:#1E88E5; --indigo:#5E35B1; --violet:#8E24AA;
+    --sidebar-w:280px;
+  }
+  *{box-sizing:border-box} html,body{height:100%}
+  body{margin:0; font-family:Inter,system-ui,Segoe UI,Roboto,Arial;
+       color:var(--ink);
+       background:radial-gradient(1100px 700px at 70% -10%, #1d112c66, transparent), var(--bg);}
+  .app{display:flex; min-height:100vh}
+
+/* Dashboard panel */
+
+  .dashboard-side{width:var(--sidebar-w); background:linear-gradient(180deg,#16122a 0%, #0f0b1c 100%);
+        border-right:1px solid var(--edge); padding:18px 14px; position:sticky; top:0; height:100vh;}
+  .dashboard-brand{display:flex; align-items:center; gap:10px; padding:4px 2px 12px}
+  .dashboard-brand-badge{width:48px;height:48px;display:grid;place-items:center;border:1px solid var(--edge);
+    border-radius:12px;background:linear-gradient(#1d112c,#0e0a18);font-weight:900;color:var(--gold)}
+  .dashboard-nav{margin-top:10px}
+  .dashboard-nav a{display:flex;align-items:center;gap:12px;padding:12px;border:1px solid var(--edge);
+         color:var(--ink);text-decoration:none;border-radius:12px;margin:6px 0;background:transparent;transition:.2s}
+  .dashboard-nav a.active,.dashboard-nav a:hover{border-color:var(--gold);background:#ffffff10;box-shadow:0 8px 20px #00000044}
+  .dashboard-ms{font-family:"Material Symbols Outlined";font-weight:normal;font-style:normal;font-size:20px;line-height:1}
+  .dashboard-chakra{display:flex;gap:8px;justify-content:center;margin-top:auto;padding-top:8px}
+  .dashboard-chakra i{width:10px;height:10px;border-radius:50%}
+
+  /* Main */
+  .dashboard-main{flex:1; min-width:0}
+  .dashboard-topbar{display:flex; flex-wrap:wrap; align-items:center; gap:12px; padding:18px; border-bottom:1px solid var(--edge)}
+  .dashboard-pill{padding:8px 12px; border:1px solid var(--edge); border-radius:999px; font-weight:800; font-size:13px; background:#ffffff0a}
+  .dashboard-role{margin-left:auto; display:flex; gap:8px}
+  .dashboard-role button{padding:8px 12px; border-radius:999px; border:1px solid var(--edge); background:#ffffff0a; color:var(--ink); font-weight:800; cursor:pointer}
+  .dashboard-role button.active{border-color:var(--gold); color:var(--gold); background:#ffffff12}
+
+  .dashboard-wrap{padding:18px}
+  .dashboard-grid{display:grid; gap:16px; grid-template-columns:repeat(4,minmax(0,1fr))}
+  @media (max-width:1400px){.dashboard-grid{grid-template-columns:repeat(3,minmax(0,1fr))}}
+  @media (max-width:1100px){.dashboard-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
+
+  .dashboard-tile{position:relative; border-radius:18px; padding:16px; cursor:pointer; border:1px solid var(--edge);
+        background:linear-gradient(135deg,#ffffff10,#00000010); overflow:hidden; transition:.25s;
+        box-shadow:0 10px 22px var(--glow,#00000048);}
+  .dashboard-tile:hover{transform:translateY(-2px)}
+  .dashboard-tile .dashboard-icon{width:42px;height:42px;display:grid;place-items:center;border-radius:12px;margin-bottom:10px;
+              background:#ffffff08;border:1px solid var(--edge); color:var(--tint,var(--gold))}
+  .dashboard-tile .dashboard-title{font-weight:900}
+  .dashboard-tile .dashboard-meta{color:#ffffff90;font-size:12px;margin-top:6px}
+  .dashboard-tile .dashboard-count{position:absolute;right:12px;top:12px;font-weight:900;padding:6px 10px;border-radius:999px;
+               border:1px solid var(--edge);background:#ffffff0b;color:var(--tint,var(--gold))}
+
+  /* Drawer */
+  .dashboard-drawer{position:fixed; top:0; right:-560px; width:560px; height:100vh;
+          background:linear-gradient(180deg,#17112b,#0b0815); border-left:1px solid var(--edge);
+          transition:.35s ease; z-index:50; display:flex; flex-direction:column}
+  .dashboard-drawer.open{right:0}
+  .dashboard-drawer .dashboard-head{display:flex; align-items:center; gap:12px; padding:16px; border-bottom:1px solid var(--edge)}
+  .dashboard-drawer .dashboard-body{padding:16px; overflow:auto}
+  .dashboard-close{margin-left:auto;border:1px solid var(--edge);background:#ffffff10;color:var(--ink);padding:8px 10px;border-radius:10px;cursor:pointer}
+  table{width:100%;border-collapse:collapse;font-size:14px} th,td{padding:10px 8px;border-bottom:1px solid var(--edge)} th{text-align:left;font-weight:900}
+  .dashboard-muted{color:#ffffff99}
+  .dashboard-section-title{font-weight:900;margin:16px 0 8px}
+  
