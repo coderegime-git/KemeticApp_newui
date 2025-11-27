@@ -17,23 +17,47 @@ use Illuminate\Support\Facades\Storage;
 
 class ReelController extends Controller
 {
-    public function __construct()
+    // public function __construct()
+    // {
+    //     $this->middleware('auth:api');
+    //     $this->middleware(function ($request, $next) {
+    //         if (!$request->expectsJson()) {
+    //             return response()->json(['error' => 'Unauthorized'], 401);
+    //         }
+    //         return $next($request);
+    //     });
+    // }
+
+    private function getUserIdFromToken(Request $request)
     {
-        $this->middleware('auth:api');
-        $this->middleware(function ($request, $next) {
-            if (!$request->expectsJson()) {
-                return response()->json(['error' => 'Unauthorized'], 401);
-            }
-            return $next($request);
-        });
+        $authorizationHeader = $request->header('Authorization');
+        
+        if (!$authorizationHeader || !str_starts_with($authorizationHeader, 'Bearer ')) {
+            return null;
+        }
+        
+        $token = substr($authorizationHeader, 7);
+        
+        if (empty($token)) {
+            return null;
+        }
+        
+        try {
+            $user = auth('api')->setToken($token)->user();
+            return $user ? $user->id : null;
+        } catch (\Exception $e) {
+            return null;
+        }
     }
+
 
     /**
      * Get paginated reels feed
      */
     public function index(Request $request)
     {
-        $userId = Auth::id();
+        // $userId = Auth::id();
+        $userId = $this->getUserIdFromToken($request);
 
         $reels = Reel::with(['likes', 'comments.user'])
             ->where('is_hidden', false)
@@ -100,6 +124,7 @@ class ReelController extends Controller
         if (!Auth::check()) {
             return response()->json(['error' => 'Not authenticated', 'user' => Auth::user()], 401);
         }
+        
 
         $video = $request->file('video');
         $filename = time() . '_' . uniqid() . '.' . $video->getClientOriginalExtension();
