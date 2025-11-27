@@ -15,9 +15,18 @@ class BlogController extends Controller
     //blog
     public function index(Request $request)
     {
-        $user = auth('api')->user();
-        $userid = $user->id;
-        
+        // $user = auth('api')->user();
+        // if($user)
+        // {
+        //     $userid = $user->id;
+        // }
+        // else
+        // {
+        //     $userid = null;
+        // }
+
+        $userid = $this->getUserIdFromToken($request);
+       
         $searchQuery = $request->query('title');
 
         $popularPosts = $this->getPopularPosts();
@@ -67,6 +76,30 @@ class BlogController extends Controller
 
 
         return apiResponse2(1, 'retrieved', trans('api.public.retrieved'), $data);
+    }
+
+    private function getUserIdFromToken(Request $request)
+    {
+        $authorizationHeader = $request->header('Authorization');
+        
+        if (!$authorizationHeader || !str_starts_with($authorizationHeader, 'Bearer ')) {
+            return null;
+        }
+        
+        $token = substr($authorizationHeader, 7);
+        
+        if (empty($token)) {
+            return null;
+        }
+        
+        try {
+            $user = auth('api')->setToken($token)->user();
+            return $user ? $user->id : null;
+        } catch (\Exception $e) {
+            // Log the error if needed
+            // \Log::error('Token validation failed: ' . $e->getMessage());
+            return null;
+        }
     }
 
     private function getPopularPosts()

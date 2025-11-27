@@ -35,7 +35,14 @@ class Blog extends Model implements TranslatableContract
     public  function getDetailsAttribute()
     {
         $user = auth('api')->user();
-        $userid = $user->id;
+        if($user)
+        {
+            $userid = $user->id;
+        }
+        else
+        {
+            $userid = null;
+        }
 
         return [
             'id' => $this->id,
@@ -78,7 +85,14 @@ class Blog extends Model implements TranslatableContract
     {
         if (!$userid) {
             $user = auth('api')->user();
-            $userid = $user->id;
+            if($user)
+            {
+                $userid = $user->id;
+            }
+            else
+            {
+                $userid = null;
+            }
         }
         
         if (!$userid) {

@@ -61,10 +61,17 @@ class Authenticate
             $request->headers->set('Authorization', $authorizationnHeader);
         }
 
-
+        // ✅ If token is invalid / user not authenticated
         if ($this->auth->guard('api')->guest()) {
-            return apiResponse2(0, 'unauthorized', trans('auth.unauthorized'));
+            return response()->json([
+                'status'  => 'error',
+                'message' => 'Login Required'
+            ], 401);
         }
+
+        // if ($this->auth->guard('api')->guest()) {
+        //     return apiResponse2(0, 'unauthorized', trans('auth.unauthorized'));
+        // }
 
         return $next($request);
     }

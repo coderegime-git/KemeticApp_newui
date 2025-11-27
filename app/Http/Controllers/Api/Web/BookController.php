@@ -14,12 +14,32 @@ use Illuminate\Support\Facades\Storage;
 
 class BookController extends Controller
 {
+    private function getUserIdFromToken(Request $request)
+    {
+        $authorizationHeader = $request->header('Authorization');
+        
+        if (!$authorizationHeader || !str_starts_with($authorizationHeader, 'Bearer ')) {
+            return null;
+        }
+        
+        $token = substr($authorizationHeader, 7);
+        
+        if (empty($token)) {
+            return null;
+        }
+        
+        try {
+            $user = auth('api')->setToken($token)->user();
+            return $user ? $user->id : null;
+        } catch (\Exception $e) {
+            return null;
+        }
+    }
+
     public function index(Request $request)
     {
-        //print_r("hello");exit;
-        $user = auth('api')->user();
-        $userid = $user->id;
-          
+        $userid = $this->getUserIdFromToken($request);
+            
         $searchQuery = $request->query('title');
 
         $query = Book::query();
@@ -39,30 +59,28 @@ class BookController extends Controller
             ->orderBy('updated_at', 'desc')
             ->orderBy('created_at', 'desc')
             ->get()
-            ->map(function ($book) {
-                return $this->formatBookDetails($book);
+            ->map(function ($book) use ($userid) {
+                return $this->formatBookDetails($book, $userid);
             });
 
         return apiResponse2(1, 'retrieved', trans('api.public.retrieved'), $books);
     }
     
-    public function show($id)
+    public function show($id, Request $request)
     {
-        $user = auth('api')->user();
-        $userid = $user->id;
+        $userid = $this->getUserIdFromToken($request);
 
         $book = Book::with(['translations', 'creator'])->find($id);
         abort_unless($book, 404);
 
         return apiResponse2(1, 'retrieved', trans('api.public.retrieved'), [
-            'book' => $this->formatBookDetails($book)
+            'book' => $this->formatBookDetails($book, $userid)
         ]);
     }
 
     public function list(Request $request, $id = null)
     {
-        $user = auth('api')->user();
-        $userid = $user->id;
+        $userid = $this->getUserIdFromToken($request);
 
         $query = Book::query()->with(['translations', 'creator'])
             ->orderBy('updated_at', 'desc')
@@ -73,10 +91,10 @@ class BookController extends Controller
             if (!$query->count()) {
                 abort(404);
             }
-            $books = $this->formatBooksResponse($query, true);
+            $books = $this->formatBooksResponse($query, true, $userid);
         } else {
             $query = $this->handleFilters($request, $query);
-            $books = $this->formatBooksResponse($query->get());
+            $books = $this->formatBooksResponse($query->get(), false, $userid);
         }
 
         return apiResponse2(1, 'retrieved', trans('api.public.retrieved'), $books);
@@ -84,8 +102,7 @@ class BookController extends Controller
 
     public function handleFilters(Request $request, $query)
     {
-        $user = auth('api')->user();
-        $userid = $user->id;
+        $userid = $this->getUserIdFromToken($request);
 
         $offset = $request->get('offset', null);
         $limit = $request->get('limit', null);
@@ -131,11 +148,8 @@ class BookController extends Controller
         return $query;
     }
 
-    private function formatBookDetails($book)
+    private function formatBookDetails($book, $userid = null)
     {
-        $user = auth('api')->user();
-        $userid = $user->id;
-
         $translation = $book->translation ?? $book->translations->first();
         $isLiked = $userid ? $book->likes()->where('user_id', $userid)->exists() : false;
         $isSaved = $userid ? $book->savedItems()->where('user_id', $userid)->exists() : false;
@@ -200,16 +214,6 @@ class BookController extends Controller
                     ],
                     'create_at' => $item->created_at,
                     'comment' => $item->content,
-                    // 'replies' => $item->replies ? $item->replies->map(function ($reply) {
-                    //     return [
-                    //         'user' => [
-                    //             'full_name' => $reply->user->full_name ?? '',
-                    //             'avatar' => $reply->user ? url($reply->user->getAvatar()) : '',
-                    //         ],
-                    //         'create_at' => $reply->created_at,
-                    //         'comment' => $reply->comment,
-                    //     ];
-                    // }) : []
                 ];
             }) : [],
             'translations' => $book->translations->map(function ($translation) {
@@ -223,13 +227,10 @@ class BookController extends Controller
         ];
     }
 
-    private function formatBooksResponse($books, $single = false)
+    private function formatBooksResponse($books, $single = false, $userid = null)
     {
-        $user = auth('api')->user();
-        $userid = $user->id;
-
-        $formattedBooks = $books->map(function ($book) {
-            return $this->formatBookDetails($book);
+        $formattedBooks = $books->map(function ($book) use ($userid) {
+            return $this->formatBookDetails($book, $userid);
         });
 
         if ($single) {
