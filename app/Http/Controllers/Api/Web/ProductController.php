@@ -19,13 +19,46 @@ use Illuminate\Support\Facades\Storage;
 
 class ProductController extends Controller
 {
+    private function getUserIdFromToken(Request $request)
+    {
+        $authorizationHeader = $request->header('Authorization');
+        
+        if (!$authorizationHeader || !str_starts_with($authorizationHeader, 'Bearer ')) {
+            return null;
+        }
+        
+        $token = substr($authorizationHeader, 7);
+        
+        if (empty($token)) {
+            return null;
+        }
+        
+        try {
+            $user = auth('api')->setToken($token)->user();
+            return $user ?? null;
+        } catch (\Exception $e) {
+            // Log the error if needed
+            // \Log::error('Token validation failed: ' . $e->getMessage());
+            return null;
+        }
+    }
 
     public function index(Request $request)
     {
 
         $data = $request->all();
-        $user = apiAuth();
-        $user_id = $user->id;
+
+        $user = $this->getUserIdFromToken($request);
+        // $user = apiAuth();
+        // $user_id = $user->id;
+        if($user)
+        {
+            $user_id = $user->id;
+        }
+        else
+        {
+            $user_id = null;
+        }
 
         // Default limit and offset values
         $limit = (int) $request->input('limit', 10); // Default limit is 10

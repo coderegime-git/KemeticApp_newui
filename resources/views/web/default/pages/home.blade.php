@@ -151,7 +151,7 @@
           @foreach($latestWebinars as $latestWebinar)
           <div class="home-tile">
             <div class="home-thumb"><img src="{{ $latestWebinar->getImage() }}" alt="{{ $latestWebinar->title }}"></div>
-            <div class="home-title">{{ $latestWebinar->title }}</div>
+            <div class="home-title">{{ Str::limit($latestWebinar->title, 15, '..') }}</div>
             <div class="home-meta"><span>⏱</span><span>{{ convertMinutesToHourAndMinute($latestWebinar->duration) }} {{ trans('hours') }}</span></div>
             <div class="home-actions">
               <a href="{{ $latestWebinar->getUrl() }}"><button class="home-btn">{{ trans('Enroll Now') }}</button></a>
@@ -170,7 +170,7 @@
           @foreach($newProducts as $product)
           <div class="home-tile">
             <div class="home-thumb"><img src="{{ $product->thumbnail }}" alt="{{ $product->title }}"></div>
-            <div class="home-title">{{ $product->title }}</div>
+            <div class="home-title">{{ Str::limit($product->title, 15, '..') }} </div>
             <div class="home-price">{{ handlePrice($product->price, true, true, false, null, true) }}</div>
             <div class="home-actions">
                 <a href="{{ $product->getUrl() }}"><button class="home-btn">{{ trans('Add to Cart') }}</button></a>
@@ -189,7 +189,7 @@
           @foreach($books as $book)
           <div class="home-tile">
             <div class="home-thumb"><img src="{{ $book->getImage() }}" alt="{{ $book->title }}"></div>
-            <div class="home-title">{{ $book->title }}</div>
+            <div class="home-title">{{ Str::limit($book->title, 15, '..') }} </div>
             <div class="home-meta">
               @if($book->price == 0)
                 <span class="home-chip">{{ trans('Free with Membership') }}</span>
@@ -234,7 +234,7 @@
           @foreach($blog as $post)
           <div class="home-tile">
             <div class="home-thumb"><img src="{{ $post->image }}" alt="{{ $post->title }}"></div>
-            <div class="home-title">{{ $post->title }}</div>
+            <div class="home-title">{{ Str::limit($post->title, 15, '..') }} </div>
             <div class="home-meta"><span>❤️ {{ $post->likes_count }}</span><span style="margin-left:10px">💬 {{ $post->comments_count }}</span></div>
             <div class="home-actions">
               <a href="{{ $post->getUrl() }}"><button class="home-btn">{{ trans('Read') }}</button></a>

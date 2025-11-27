@@ -67,8 +67,8 @@ Route::group([], function () {
 
     Route::group(['prefix' => 'blogs'], function () {
 
-        //Route::get('/', ['uses' => 'BlogController@index']);
-        Route::get('/', ['uses' => 'BlogController@index','middleware' => 'api.auth']);
+        Route::get('/', ['uses' => 'BlogController@index']);
+        // Route::get('/', ['uses' => 'BlogController@index','middleware' => 'api.auth']);
         Route::get('/categories', ['uses' => 'BlogCategoryController@index']);
         Route::get('/{id}', ['uses' => 'BlogController@show']);
 
@@ -86,7 +86,7 @@ Route::group([], function () {
 
     Route::group(['prefix' => 'books'], function () {
 
-        Route::get('/', ['uses' => 'BookController@index','middleware' => 'api.auth']);
+        Route::get('/', ['uses' => 'BookController@index']);
         Route::get('/categories', ['uses' => 'BookCategoryController@index']);
         Route::get('/{id}', ['uses' => 'BookController@show','middleware' => 'api.auth']);
 
@@ -127,7 +127,7 @@ Route::group([], function () {
     /******  Products ******/
     Route::group(['prefix' => 'products'], function () {
         //Route::post('/', ['uses' => 'ProductController@index']);
-        Route::post('/', ['uses' => 'ProductController@index','middleware' => 'api.auth']);
+        Route::post('/', ['uses' => 'ProductController@index']);
         Route::get('/{id}', ['uses' => 'ProductController@show']);
 
         Route::post('/{product}/like', ['uses' => 'ProductController@productlike','middleware' => 'api.auth']);
