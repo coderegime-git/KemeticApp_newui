@@ -21,6 +21,7 @@ use App\Models\UserOccupation;
 use App\Models\UserSelectedBank;
 use App\Models\UserSelectedBankSpecification;
 use App\Models\UserZoomApi;
+use App\Models\UsersIdentity;
 use App\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -70,6 +71,11 @@ class UserController extends Controller
         $cities = null;
         $districts = null;
         $userLoginHistories = null;
+        $countries = Region::select(DB::raw('*, ST_AsText(geo_center) as geo_center'))
+                ->where('type', Region::$country)
+                ->get();
+
+        $usersidentity = UsersIdentity::where('user_id', $user->id)->first();
 
         if ($step == 8 and !$user->isUser()) {
             $countries = Region::select(DB::raw('*, ST_AsText(geo_center) as geo_center'))
@@ -137,6 +143,7 @@ class UserController extends Controller
             'cities' => $cities,
             'districts' => $districts,
             'userBanks' => $userBanks,
+            'usersidentity' => $usersidentity,
             'formFieldsHtml' => $formFieldsHtml,
             'userLoginHistories' => $userLoginHistories,
         ];
@@ -202,15 +209,21 @@ class UserController extends Controller
                     'language' => $data['language'] ?? null,
                     'timezone' => $data['timezone'] ?? null,
                     'currency' => $data['currency'] ?? null,
+                    'country_id' => $data['country_id'] ?? null,
+                    'city_name' => $data['city_name'] ?? null,
+                    'zip_code' => $data['zip_code'] ?? null,
+                    'address' => $data['address'] ?? null,
+                    'display_name' => $data['display_name'] ?? null,
+                    'address1' => $data['address1'] ?? null,
                     'newsletter' => $joinNewsletter,
                     'public_message' => (!empty($data['public_messages']) and $data['public_messages'] == 'on'),
                 ];
 
                 $this->handleNewsletter($data['email'], $user->id, $joinNewsletter);
             } elseif ($step == 2) {
-                $updateData = [
-                    'cover_img' => $data['cover_img'],
-                ];
+                // $updateData = [
+                //     'cover_img' => $data['cover_img'],
+                // ];
 
                 if (!empty($data['profile_image'])) {
                     $profileImage = $this->createImage($user, $data['profile_image']);
@@ -228,26 +241,61 @@ class UserController extends Controller
                     ]);
                 }
 
+                if (!empty($data['new_gallery_images'])) {
+
+                    UserMeta::query()->where('user_id', $user->id)
+                    ->where('name', 'gallery')->delete();
+
+                    foreach ($data['new_gallery_images'] as $imageFile) {
+
+                        // You can reuse your image upload function here
+                        $galleryImage = $this->createImage($user, $imageFile);
+
+                        UserMeta::create([
+                            'user_id' => $user->id,
+                            'name' => 'gallery',
+                            'value' => $galleryImage
+                        ]);
+                    }
+                }
+
             } elseif ($step == 3) {
                 $updateData = [
                     'about' => $data['about'],
-                    'bio' => $data['bio'],
+                    'bio' => $data['bio'] ?? null,
                 ];
             } elseif ($step == 6) {
-                if (!$user->isUser()) {
-                    UserOccupation::where('user_id', $user->id)->delete();
-                    if (!empty($data['occupations'])) {
 
-                        foreach ($data['occupations'] as $category_id) {
-                            UserOccupation::create([
-                                'user_id' => $user->id,
-                                'category_id' => $category_id
-                            ]);
-                        }
-                    }
-                } else {
-                    $updateData = $this->handleUserIdentityAndFinancial($user, $data);
-                }
+                UsersIdentity::where('user_id', $user->id)->delete();
+                $identity_scan = $this->createImage($user, $data['identity_scan']);
+                $certificate = $this->createImage($user, $data['certificate']);
+                
+                UsersIdentity::create([
+                    'user_id' => $user->id,
+                    'legal_name' => $data['legal_name'] ?? '',
+                    'country_id' => $data['country_id'] ?? null,
+                    'dob' => !empty($data['dob']) ? strtotime($data['dob']) : null,
+                    'city' => $data['city'] ?? '',
+                    'identity_scan' => $identity_scan ?? '',
+                    'certificate' => $certificate ?? '',
+                    'notes' => $data['notes'] ?? '',
+                    'created_at' => time(),
+                ]);
+
+                // if (!$user->isUser()) {
+                //     UserOccupation::where('user_id', $user->id)->delete();
+                //     if (!empty($data['occupations'])) {
+                
+                //         foreach ($data['occupations'] as $category_id) {
+                //             UserOccupation::create([
+                //                 'user_id' => $user->id,
+                //                 'category_id' => $category_id
+                //             ]);
+                //         }
+                //     }
+                // } else {
+                //     $updateData = $this->handleUserIdentityAndFinancial($user, $data);
+                // }
             } elseif ($step == 7) {
                 if (!$user->isUser()) {
                     $updateData = $this->handleUserIdentityAndFinancial($user, $data);
@@ -317,13 +365,13 @@ class UserController extends Controller
                 $url = "/panel/manage/{$userType}/{$user->id}/edit";
             }
 
-            if ($step <= 9) {
-                if ($nextStep) {
-                    $step = $step + 1;
-                }
+            // if ($step <= 9) {
+            //     if ($nextStep) {
+            //         $step = $step + 1;
+            //     }
 
-                $url .= '/step/' . (($step <= 8) ? $step : 9);
-            }
+            //     $url .= '/step/' . (($step <= 8) ? $step : 9);
+            // }
 
             $toastData = [
                 'title' => trans('public.request_success'),
@@ -463,6 +511,12 @@ class UserController extends Controller
                 'user_id' => $user->id,
                 'name' => $data['name'],
                 'value' => $data['value'],
+                'institution' => $data['institution'] ?? null,
+                'year' => $data['year'] ?? null,
+                'organization' => $data['organization'] ?? null,
+                'start_date' => $data['start_date'] ?? null,
+                'end_date' => $data['end_date'] ?? null,
+                'description' => $data['description'] ?? null,
             ]);
 
             return response()->json([
@@ -489,7 +543,13 @@ class UserController extends Controller
 
                 if (!empty($meta)) {
                     $meta->update([
-                        'value' => $data['value']
+                        'value' => $data['value'],
+                        'institution' => $data['institution'] ?? null,
+                        'year' => $data['year'] ?? null,
+                        'organization' => $data['organization'] ?? null,
+                        'start_date' => $data['start_date'] ?? null,
+                        'end_date' => $data['end_date'] ?? null,
+                        'description' => $data['description'] ?? null,
                     ]);
 
                     return response()->json([
@@ -520,10 +580,16 @@ class UserController extends Controller
                     ->first();
 
                 $meta->delete();
-
-                return response()->json([
-                    'code' => 200
-                ], 200);
+                $url = '/panel/setting';
+                $toastData = [
+                    'title' => trans('public.request_success'),
+                    'msg' => trans('Deleted successfully'),
+                    'status' => 'success'
+                ];
+                return redirect($url)->with(['toast' => $toastData]);
+                // return response()->json([
+                //     'code' => 200
+                // ], 200);
             }
         }
 

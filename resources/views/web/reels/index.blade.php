@@ -53,7 +53,7 @@
        @foreach($reels as $reel)
       <article class="reels-card">
         <span class="reels-rank">{{ $reel->title }}</span>
-        <div class="reels-thumb"> <video class="reel-video" controls preload="metadata" poster="{{ $reel->thumbnail_url }}">
+        <div class="reels-thumb"> <video class="img" controls preload="metadata" poster="{{ $reel->thumbnail_url }}">
                                     <source src="{{ $reel->video_url }}" type="video/mp4">
                                     {{ trans('public.browser_not_support_video') }}
                                 </video></div>

@@ -71,13 +71,19 @@
     <div>
        @endforeach
       @endif
-      <div class="course-chips">
+      <!-- <div class="course-chips">
         @foreach($categories as $categorie)
         <span class="course-chip">{{$categorie->title}}</span>
         @endforeach
-      </div>
+      </div> -->
+     
     </div>
   </section>
+   <div class="shop-chips">
+         @foreach($categories as $categorie)
+        <span class="shop-pill">{{$categorie->title}}</span>
+        @endforeach
+      </div>
   
 
   <!-- Trending Courses -->
@@ -95,18 +101,30 @@
           <div class="course-name"><a href="{{ $webinar->getUrl() }}">{{ clean($webinar->title,'title') }}</a></div>
           <div class="course-meta">{{ convertMinutesToHourAndMinute($webinar->duration) }} {{ trans('home.hours') }} · <a href="{{ $webinar->teacher->getProfileUrl() }}" target="_blank" class="user-name ml-5 font-14">{{ $webinar->teacher->full_name }}</a></div>
           <div class="course-bar">
-            <div class="course-stars">★★★★★
+            <div class="course-stars">
                @php
                       $i = 5;
                   @endphp
-               @foreach($webinar->reviews as $review)
-                @while(--$i >= 5 - $review->rates)
-                        ★
-                     @endwhile
-                      @while($i-- >= 0)
-                        ☆
-                    @endwhile
-                  @endforeach</div>
+               @if($webinar->reviews->count() > 0)
+                  @foreach($webinar->reviews as $review)
+                      @php
+                          $rating = $review->rates ?? 0;
+                          $filledStars = min(5, max(0, $rating));
+                          $emptyStars = 5 - $filledStars;
+                      @endphp
+                      
+                      @for($i = 0; $i < $filledStars; $i++)
+                          ★
+                      @endfor
+                      @for($i = 0; $i < $emptyStars; $i++)
+                          ☆
+                      @endfor
+                  @endforeach
+              @else
+                  @for($i = 0; $i < 5; $i++)
+                      ☆
+                  @endfor
+              @endif</div>
             <button class="course-cta"><a href="{{ $webinar->getUrl() }}">Enroll Now</a></button>
           </div>
         </article>

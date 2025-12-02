@@ -10,6 +10,205 @@
     .tab-content.active {
       display: block;
     }
+
+      .story-upload-modal {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0, 0, 0, 0.8);
+      z-index: 9999;
+      display: none;
+      justify-content: center;
+      align-items: center;
+    }
+    
+    .story-upload-modal.active {
+      display: flex;
+    }
+    
+    .story-upload-content {
+      background: white;
+      padding: 25px;
+      border-radius: 15px;
+      width: 90%;
+      max-width: 500px;
+      position: relative;
+    }
+    
+    .story-upload-close {
+      position: absolute;
+      top: 10px;
+      right: 15px;
+      background: none;
+      border: none;
+      font-size: 24px;
+      cursor: pointer;
+      color: #666;
+    }
+    
+    .story-preview {
+      width: 100%;
+      max-height: 300px;
+      object-fit: contain;
+      border-radius: 10px;
+      margin: 15px 0;
+      display: none;
+    }
+    
+    .story-preview.active {
+      display: block;
+    }
+    
+    .story-upload-form {
+      display: flex;
+      flex-direction: column;
+      gap: 15px;
+    }
+    
+    .story-input {
+      padding: 12px 15px;
+      border: 2px solid #e0e0e0;
+      border-radius: 8px;
+      font-size: 16px;
+      width: 100%;
+    }
+    
+    .story-input:focus {
+      outline: none;
+      border-color: #667eea;
+    }
+    
+    .story-upload-btn {
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: white;
+      border: none;
+      padding: 14px;
+      border-radius: 8px;
+      font-size: 16px;
+      cursor: pointer;
+      font-weight: 600;
+      transition: opacity 0.3s;
+    }
+    
+    .story-upload-btn:hover {
+      opacity: 0.9;
+    }
+    
+    .story-upload-btn:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+    }
+    
+    .upload-progress {
+      height: 4px;
+      background: #e0e0e0;
+      border-radius: 2px;
+      margin-top: 10px;
+      overflow: hidden;
+      display: none;
+    }
+    
+    .upload-progress.active {
+      display: block;
+    }
+    
+    .upload-progress-bar {
+      height: 100%;
+      background: linear-gradient(90deg, #4CAF50, #8BC34A);
+      width: 0%;
+      transition: width 0.3s;
+    }
+    
+    .error-message {
+      color: #f44336;
+      font-size: 14px;
+      margin-top: 5px;
+      display: none;
+      padding: 10px;
+      background: #ffebee;
+      border-radius: 5px;
+    }
+    
+    .error-message.active {
+      display: block;
+    }
+    
+    /* File Upload Button */
+    .story-choose-btn {
+      background: #f5f5f5;
+      border: 2px dashed #ccc;
+      padding: 40px 20px;
+      text-align: center;
+      border-radius: 10px;
+      cursor: pointer;
+      transition: all 0.3s;
+      margin-bottom: 20px;
+    }
+    
+    .story-choose-btn:hover {
+      border-color: #667eea;
+      background: #f0f0ff;
+    }
+    
+    .story-choose-text {
+      font-size: 18px;
+      color: #666;
+      margin-bottom: 10px;
+      font-weight: 500;
+    }
+    
+    .story-choose-subtext {
+      font-size: 14px;
+      color: #999;
+    }
+    
+    /* Story Item Styles */
+    .profile-story {
+      cursor: pointer;
+      text-align: center;
+      width: 80px;
+    }
+    
+    .profile-ring {
+      width: 80px;
+      height: 80px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin-bottom: 8px;
+      position: relative;
+      border: 2px solid transparent;
+      background: linear-gradient(45deg, #f09433, #e6683c, #dc2743, #cc2366, #bc1888);
+      background-size: 400% 400%;
+    }
+    
+    .profile-ring.viewed {
+      background: #e0e0e0;
+    }
+    
+    .profile-add {
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    }
+    
+    .profile-inner {
+      width: 70px;
+      height: 70px;
+      border-radius: 50%;
+      overflow: hidden;
+      background: white;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    
+    .profile-inner img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
   </style>
 
   <div class="profile-wrap">
@@ -42,33 +241,38 @@
 
     <!-- Stories row -->
     <section class="profile-stories" id="stories">
-      <!-- Add Story -->
-      <div class="profile-story">
+       @if(auth()->check() && auth()->id() == $user->id)
+      <div class="profile-story" id="addStoryBtn">
         <div class="profile-ring profile-add" id="addStory">
           <div class="profile-inner">＋</div>
         </div>
         Add Story
       </div>
+       @endif
 
       <!-- Sample stories -->
-      <div class="profile-story">
-        <div class="profile-ring profile-open" data-src="https://images.unsplash.com/photo-1543294001-f7cd5d7fb516?w=800" data-type="image">
-          <div class="profile-inner"><img src="https://images.unsplash.com/photo-1543294001-f7cd5d7fb516?w=400" alt=""></div>
+      @foreach($userStories as $story)
+      <div class="profile-story story-item" 
+           data-story-id="{{ $story->id }}"
+           data-media-type="{{ $story->media_type }}"
+           data-media-url="{{ $story->media_url }}"
+           data-title="{{ $story->title }}"
+           data-created-at="{{ is_int($story->created_at) ? $story->created_at : strtotime($story->created_at) }}">
+        <div class="profile-ring {{ $story->viewed_by_current_user ? 'viewed' : 'not-viewed' }}">
+          <div class="profile-inner">
+            @if($story->media_type == 'image')
+              <img src="{{ $story->thumbnail_url ?: $story->media_url }}" alt="{{ $story->title }}">
+            @else
+              <img src="{{ $story->thumbnail_url }}" alt="{{ $story->title }}">
+              <div style="position: absolute; bottom: 5px; right: 5px; background: rgba(0,0,0,0.7); color: white; padding: 2px 5px; border-radius: 3px; font-size: 10px;">
+                ▶
+              </div>
+            @endif
+          </div>
         </div>
-        New Drop
+        <div class="profile-story-text">{{ $story->title }}</div>
       </div>
-      <div class="profile-story">
-        <div class="profile-ring profile-open" data-src="https://images.unsplash.com/photo-1599643478518-a784e5dc4c49?w=800" data-type="image">
-          <div class="profile-inner"><img src="https://images.unsplash.com/photo-1599643478518-a784e5dc4c49?w=400" alt=""></div>
-        </div>
-        Healing
-      </div>
-      <div class="profile-story">
-        <div class="profile-ring profile-open" data-src="https://images.unsplash.com/photo-1519681393784-d120267933ba?w=1200" data-type="image">
-          <div class="profile-inner"><img src="https://images.unsplash.com/photo-1519681393784-d120267933ba?w=400" alt=""></div>
-        </div>
-        Ceremony
-      </div>
+      @endforeach
     </section>
 
     <!-- Tabs -->
@@ -225,8 +429,49 @@
     </div>
   </div>
 
+   <div class="story-upload-modal" id="storyUploadModal">
+    <div class="story-upload-content">
+      <button class="story-upload-close" id="closeUploadModal">×</button>
+      <h2 style="margin-bottom: 20px; color: #333;">Add New Story</h2>
+      
+      <div class="story-choose-btn" id="storyChooseBtn">
+        <div class="story-choose-text">Choose Photo or Video</div>
+        <div class="story-choose-subtext">JPG, PNG, MP4 up to 50MB</div>
+      </div>
+      
+      <input type="file" id="storyFileInput" accept="image/*,video/*" hidden>
+      
+      <img class="story-preview" id="imagePreview" alt="Image preview">
+      <video class="story-preview" id="videoPreview" controls style="display: none;"></video>
+      
+      <form class="story-upload-form" id="storyUploadForm">
+        @csrf
+        <input type="text" 
+               class="story-input" 
+               name="title" 
+               placeholder="Story Title (Optional)" 
+               maxlength="100">
+        
+        <input type="text" 
+               class="story-input" 
+               name="link" 
+               placeholder="Add a link (Optional)">
+        
+        <div class="upload-progress" id="uploadProgress">
+          <div class="upload-progress-bar" id="uploadProgressBar"></div>
+        </div>
+        
+        <div class="error-message" id="errorMessage"></div>
+        
+        <button type="submit" class="story-upload-btn" id="uploadBtn" disabled>
+          Upload Story
+        </button>
+      </form>
+    </div>
+  </div>
+
   <!-- Hidden file input for Add Story -->
-  <input type="file" id="storyInput" accept="image/*,video/*" hidden>
+  <!-- <input type="file" id="storyInput" accept="image/*,video/*" hidden> -->
 
   <!-- Story Viewer Modal -->
   <div class="profile-modal" id="modal">
@@ -242,6 +487,15 @@
 <script>
   document.addEventListener('DOMContentLoaded', function() {
     console.log('DOM loaded - initializing tabs');
+
+    let currentStories = [];
+    let currentStoryIndex = 0;
+    let currentFile = null;
+    let storyTimeout;
+    let currentFileData = null;
+    let currentFileName = '';
+    let currentFileType = '';
+    const storyDuration = 30000;
     
     // Tab functionality
     const tabs = document.querySelectorAll('.profile-tab');
@@ -286,7 +540,361 @@
       });
     });
     
-    // Follow button toggle
+     const addStoryBtn = document.getElementById('addStoryBtn');
+    const storyUploadModal = document.getElementById('storyUploadModal');
+    const closeUploadModal = document.getElementById('closeUploadModal');
+    const storyChooseBtn = document.getElementById('storyChooseBtn');
+    const storyFileInput = document.getElementById('storyFileInput');
+    const imagePreview = document.getElementById('imagePreview');
+    const videoPreview = document.getElementById('videoPreview');
+    const storyUploadForm = document.getElementById('storyUploadForm');
+    const uploadBtn = document.getElementById('uploadBtn');
+    const uploadProgress = document.getElementById('uploadProgress');
+    const uploadProgressBar = document.getElementById('uploadProgressBar');
+    const errorMessage = document.getElementById('errorMessage');
+    
+    // Open upload modal
+    if (addStoryBtn) {
+      addStoryBtn.addEventListener('click', () => {
+        storyUploadModal.classList.add('active');
+      });
+    }
+    
+    // Close upload modal
+    closeUploadModal.addEventListener('click', () => {
+      storyUploadModal.classList.remove('active');
+      resetUploadForm();
+    });
+    
+    // Click on choose button
+    storyChooseBtn.addEventListener('click', () => {
+      storyFileInput.click();
+    });
+    
+    // Handle file selection
+    storyFileInput.addEventListener('change', function(e) {
+      const file = e.target.files[0];
+      if (!file) return;
+
+      currentFileData = file;
+      currentFileName = file.name;
+      currentFileType = file.type;
+      
+      // Validate file type
+      const validTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/gif', 'video/mp4', 'video/quicktime'];
+      if (!validTypes.includes(file.type)) {
+          showError('Please select a valid image or video file (JPG, PNG, GIF, MP4)');
+          return;
+      }
+      
+      // Validate file size (50MB max)
+      const maxSize = 50 * 1024 * 1024; // 50MB in bytes
+      if (file.size > maxSize) {
+        showError('File size should be less than 50MB');
+        return;
+      }
+      
+      // Reset error
+      hideError();
+      
+      // Preview file
+      if (file.type.startsWith('image/')) {
+        const reader = new FileReader();
+        reader.onload = function(e) {
+          imagePreview.src = e.target.result;
+          imagePreview.classList.add('active');
+          videoPreview.classList.remove('active');
+        };
+        reader.readAsDataURL(file);
+      } else if (file.type.startsWith('video/')) {
+        const reader = new FileReader();
+        reader.onload = function(e) {
+          videoPreview.src = e.target.result;
+          videoPreview.classList.add('active');
+          imagePreview.classList.remove('active');
+        };
+        reader.readAsDataURL(file);
+      }
+      
+      // Enable upload button
+      uploadBtn.disabled = false;
+    });
+    
+    // Handle form submission
+    storyUploadForm.addEventListener('submit', async function(e) {
+      e.preventDefault();
+      
+      if (!currentFileData) {
+        showError('Please select a file first');
+        return;
+      }
+      
+      const formData = new FormData();
+      formData.append('story', currentFileData, currentFileName);
+      formData.append('title', this.title.value);
+      formData.append('link', this.link.value);
+      formData.append('_token', '{{ csrf_token() }}');
+      
+      // Show progress bar
+      uploadProgress.classList.add('active');
+      uploadBtn.disabled = true;
+      uploadBtn.textContent = 'Uploading...';
+      
+      try {
+        const userId = {{ $user->id }}; // Get the current user ID
+        const response = await fetch(`/users/${userId}/story/upload`, {
+            method: 'POST',
+            headers: {
+                'X-Requested-With': 'XMLHttpRequest',
+                'Accept': 'application/json',
+            },
+            body: formData
+        });
+        
+        const result = await response.json();
+        
+        if (result.success) {
+          // Upload successful
+          showSuccess('Story uploaded successfully!');
+          resetUploadForm();
+          storyUploadModal.classList.remove('active');
+          
+          // Reload stories section
+          loadUserStories();
+        } else {
+          showError(result.message || 'Upload failed. Please try again.');
+        }
+      } catch (error) {
+        //console.error('Upload error:', error);
+        showError('Upload error:', error.message || 'An error occurred during upload.');
+      } finally {
+        uploadProgress.classList.remove('active');
+        uploadProgressBar.style.width = '0%';
+        uploadBtn.disabled = false;
+        uploadBtn.textContent = 'Upload Story';
+      }
+    });
+    
+    // Handle progress for file upload (if needed for larger files)
+    function updateProgressBar(percent) {
+      uploadProgressBar.style.width = percent + '%';
+    }
+    
+    function showError(message) {
+      errorMessage.textContent = message;
+      errorMessage.classList.add('active');
+    }
+    
+    function hideError() {
+      errorMessage.classList.remove('active');
+    }
+    
+    function showSuccess(message) {
+      // You can implement a success toast notification here
+      alert(message); // Temporary success message
+    }
+    
+    function resetUploadForm() {
+      storyFileInput.value = '';
+      imagePreview.src = '';
+      imagePreview.classList.remove('active');
+      videoPreview.src = '';
+      videoPreview.classList.remove('active');
+      storyUploadForm.reset();
+      uploadBtn.disabled = true;
+      hideError();
+      
+      currentFileData = null;
+      currentFileName = '';
+      currentFileType = '';
+    }
+    
+    // Story Viewer Functionality
+    const storyViewer = document.getElementById('storyViewer');
+    const closeStoryViewer = document.getElementById('closeStoryViewer');
+    const storyMediaImage = document.getElementById('storyMediaImage');
+    const storyMediaVideo = document.getElementById('storyMediaVideo');
+    const storyViewerTitle = document.getElementById('storyViewerTitle');
+    const progressContainer = document.getElementById('progressContainer');
+    const prevStoryBtn = document.getElementById('prevStory');
+    const nextStoryBtn = document.getElementById('nextStory');
+    
+    // Load user stories
+    async function loadUserStories() {
+      try {
+        const response = await fetch(`{{ route("profile.stories", $user->id) }}`);
+        const result = await response.json();
+        
+        if (result.success) {
+          // Update stories section
+          // You can implement AJAX updating of stories here
+          location.reload(); // Simple reload for now
+        }
+      } catch (error) {
+        console.error('Error loading stories:', error);
+      }
+    }
+    
+    // Open story viewer when clicking on a story
+    document.querySelectorAll('.story-item').forEach(item => {
+      item.addEventListener('click', function() {
+        const storyId = this.getAttribute('data-story-id');
+        const mediaType = this.getAttribute('data-media-type');
+        const mediaUrl = this.getAttribute('data-media-url');
+        const title = this.getAttribute('data-title');
+        
+        // Mark as viewed
+        markStoryAsViewed(storyId);
+
+        openProfileModal(mediaType, mediaUrl);
+
+        // const modal = document.createElement('div');
+        // modal.style.cssText = `
+        //   position: fixed;
+        //   top: 0;
+        //   left: 0;
+        //   width: 100%;
+        //   height: 100%;
+        //   background: rgba(0,0,0,0.9);
+        //   z-index: 99999;
+        //   display: flex;
+        //   justify-content: center;
+        //   align-items: center;
+        // `;
+        
+        // modal.innerHTML = `
+        //   <div style="position: relative; max-width: 90%; max-height: 90vh;">
+        //     ${mediaType === 'image' 
+        //       ? `<img src="${mediaUrl}" style="max-width: 100%; max-height: 90vh;">`
+        //       : `<video src="${mediaUrl}" controls autoplay style="max-width: 100%; max-height: 90vh;"></video>`
+        //     }
+        //     <button style="position: absolute; top: -40px; right: 0; background: none; border: none; color: white; font-size: 30px; cursor: pointer;">×</button>
+        //   </div>
+        // `;
+        
+        // document.body.appendChild(modal);
+        
+        // // Close modal on click
+        // modal.querySelector('button').addEventListener('click', () => {
+        //   document.body.removeChild(modal);
+        // });
+        
+        // // Close on background click
+        // modal.addEventListener('click', (e) => {
+        //   if (e.target === modal) {
+        //     document.body.removeChild(modal);
+        //   }
+        // });
+        
+        // // Close on Escape key
+        // document.addEventListener('keydown', function closeOnEscape(e) {
+        //   if (e.key === 'Escape') {
+        //     document.body.removeChild(modal);
+        //     document.removeEventListener('keydown', closeOnEscape);
+        //   }
+        // });
+        
+        // Load all stories for this user
+        // loadAllStories().then(stories => {
+        //   if (stories.length > 0) {
+        //     currentStories = stories;
+        //     currentStoryIndex = stories.findIndex(s => s.id == storyId);
+        //     openStoryViewer();
+        //   }
+        // });
+      });
+    });
+    
+    async function loadAllStories() {
+      try {
+        const userId = {{ $user->id }};
+        const response = await fetch(`/users/${userId}/stories/all`);
+        if (!response.ok) {
+          throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        const result = await response.json();
+        
+        if (result.success) {
+            return result.stories;
+        } else {
+            console.error('API Error:', result.message);
+            return [];
+        }
+      } catch (error) {
+        console.error('Error loading all stories:', error);
+        return [];
+      }
+    }
+    
+    async function markStoryAsViewed(storyId) {
+      try {
+          const userId = {{ $user->id }};
+          
+          // FIXED: Use correct URL and headers
+          const response = await fetch(`/users/${userId}/story/${storyId}/view`, {
+              method: 'POST',
+              headers: {
+                  'X-CSRF-TOKEN': '{{ csrf_token() }}',
+                  'Content-Type': 'application/json',
+                  'Accept': 'application/json'
+              }
+          });
+          
+          if (!response.ok) {
+              throw new Error(`HTTP error! status: ${response.status}`);
+          }
+          
+          const result = await response.json();
+          
+          if (!result.success) {
+              console.error('Failed to mark story as viewed:', result.message);
+          }
+          
+          return result.success;
+      } catch (error) {
+          console.error('Error marking story as viewed:', error);
+          return false;
+      }
+  }
+
+  function openProfileModal(mediaType, mediaUrl) {
+    const modal = document.getElementById("modal");
+    const media = document.getElementById("media");
+    const closeBtn = document.getElementById("close");
+
+    // Insert image or video
+    if (mediaType === "image") {
+        media.innerHTML = `<img src="${mediaUrl}" style="width:100%; max-height:90vh; object-fit: contain;" />`;
+    } else {
+        media.innerHTML = `<video src="${mediaUrl}" controls autoplay style="width:100%; max-height:90vh;object-fit: contain;"></video>`;
+    }
+
+    // Show modal
+    modal.classList.add("open");
+
+    // Close button
+    closeBtn.onclick = () => {
+        modal.classList.remove("open");
+        media.innerHTML = ""; // clear media
+    };
+
+    // Close when clicking outside viewer
+    modal.onclick = e => {
+        if (e.target === modal) {
+            modal.classList.remove("open");
+            media.innerHTML = "";
+        }
+    };
+
+    // ESC key close
+    document.addEventListener("keydown", function escClose(e) {
+        if (e.key === "Escape") {
+            modal.classList.remove("open");
+            media.innerHTML = "";
+            document.removeEventListener("keydown", escClose);
+        }
+    });
+}
     
   });
 </script>

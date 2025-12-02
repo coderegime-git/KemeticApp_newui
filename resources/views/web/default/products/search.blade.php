@@ -65,7 +65,7 @@
             <a href="{{ $product->getUrl() }}" class="image-box__a"><img src="{{ $product->thumbnail }}" class="img-cover" alt="{{ $product->title }}"></a>
             <div class="shop-grad"></div>
             <div class="shop-meta">
-              <div class="shop-vendor"><img src="{{ $product->creator->getAvatar() }}" class="img-cover" alt="{{ $product->creator->full_name }}">
+              <div class="shop-vendor"><img src="{{ $product->creator->getAvatar() }}" style="width: 50px;" class="img-cover" alt="{{ $product->creator->full_name }}">
                 <a href="{{ $product->creator->getProfileUrl() }}" target="_blank" class="user-name ml-5 font-14">{{ $product->creator->full_name }}</a></div>
               <div style="font-weight:900">{{ clean($product->title,'title') }}</div>
               <div class="shop-stars">
@@ -113,11 +113,38 @@
             <div class="shop-pd">
               <div style="font-weight:900"><a href="{{ $product->getUrl() }}">{{ clean($product->title,'title') }}</a></div>
               <div class="shop-stars">
+                @php
+                  $i = 5;
+                  $rate = $product->getRate();
+                @endphp
+              
+                @php
+                    $rating = $rate ?? 0;
+                    $filledStars = min(5, max(0, $rate));
+                    $emptyStars = 5 - $filledStars;
+                @endphp
+                
+                @for($i = 0; $i < $filledStars; $i++)
+                    ★
+                @endfor
+                @for($i = 0; $i < $emptyStars; $i++)
+                    ☆
+                @endfor
+                  
                 <!-- Your existing star rating PHP code here -->
               </div> 
               <div class="shop-row-end">
                 <div class="shop-price-row">
-                  <!-- Your existing price display PHP code here -->
+                    @if(!empty($product->price) and $product->price > 0)
+                        @if($product->getPriceWithActiveDiscountPrice() < $product->price)
+                            <span class="real">{{ handlePrice($product->getPriceWithActiveDiscountPrice(), true, true, false, null, true, 'store') }}</span>
+                            <span class="off ml-10">{{ handlePrice($product->price, true, true, false, null, true, 'store') }}</span>
+                        @else
+                            <span class="real">{{ handlePrice($product->price, true, true, false, null, true, 'store') }}</span>
+                        @endif
+                    @else
+                        <span class="real">{{ trans('public.free') }}</span>
+                    @endif
                 </div>
                @if($product->getAvailability() > 0)<button type="button" data-id="{{ $product->id }}" class="shop-atk btn-add-product-to-cart">Add to Cart</button>@endif
               </div>

@@ -14,6 +14,7 @@ Route::group([], function () {
     Route::get('/filterByCategoryId/{id}', [ProductFilterController::class, 'getByCategoryId']);
     Route::get('/getCity', [CartController::class, 'getCity']);
     Route::get('/getCountry', [CartController::class, 'getCountry']);
+    Route::get('/home', ['uses' => 'WebinarController@home']);
    
     Route::group(['prefix' => 'courses'], function () {
 

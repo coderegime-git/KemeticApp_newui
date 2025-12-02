@@ -16,6 +16,8 @@ use App\Models\Follow;
 
 use App\Models\UserZoomApi;
 use App\User;
+use App\Models\UserStory;
+use App\Models\UserStoryView;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
@@ -32,16 +34,403 @@ class UsersController extends Controller
     public function setting()
     {
         $user = apiAuth();
+        $userStories = collect();
+        
+        if ($user) {
+            // Get stories from users that the current user follows
+            // $followingIds = Follow::where('follower', $user->id)
+            //     ->where('status', Follow::$accepted)
+            //     ->pluck('user_id')
+            //     ->toArray();
+            
+            // // Add current user's own ID to see their own stories
+            // $followingIds[] = $user->id;
+            
+            // // Get stories from last 24 hours
+            // $stories = UserStory::whereIn('user_id', $followingIds)
+            //     ->where('is_active', true)
+            //     ->where('expires_at', '>', Carbon::now())
+            //     ->with(['user' => function($query) {
+            //         $query->select('id', 'full_name', 'avatar');
+            //     }])
+            //     ->orderBy('created_at', 'desc')
+            //     ->get()
+            //     ->groupBy('user_id');
+            
+            // // Mark if story is viewed by current user
+            // $stories = $stories->map(function ($userStories) use ($user) {
+            //     return $userStories->map(function ($story) use ($user) {
+            //         $story->viewed_by_current_user = UserStoryView::where('story_id', $story->id)
+            //             ->where('user_id', $user->id)
+            //             ->exists();
+            //         return $story;
+            //     });
+            // });
+
+            $userStories = UserStory::where('user_id', $user->id)
+                ->where('is_active', true)
+                ->where('expires_at', '>', Carbon::now())
+                ->orderBy('created_at', 'desc')
+                ->get();
+            
+            // Mark if story is viewed by current user
+            $userStories = $userStories->map(function ($story) use ($user) {
+                $story->viewed_by_current_user = UserStoryView::where('story_id', $story->id)
+                    ->where('user_id', $user->id)
+                    ->exists();
+                $story->media_url = url($story->media_url);  
+                return $story;
+            });
+        }
+
         return apiResponse2(
             1,
             'retrieved',
             trans('api.public.retrieved'),
             [
-                'user' => $user->details
+                'user' => $user->details,
+                'stories' => $userStories
             ]
         );
+    }
 
+     public function getUserStories($id)
+    {
+        $authUser = apiAuth();
+        $user = User::findOrFail($id);
+        
+        $stories = UserStory::where('user_id', $id)
+            ->where('is_active', true)
+            ->where('expires_at', '>', Carbon::now())
+            ->orderBy('created_at', 'asc')
+            ->get();
+        
+        // Mark if viewed by current user
+        if ($authUser) {
+            $stories = $stories->map(function ($story) use ($authUser) {
+                $story->viewed_by_current_user = UserStoryView::where('story_id', $story->id)
+                    ->where('user_id', $authUser->id)
+                    ->exists();
+                $story->media_url = url($story->media_url);  
+                return $story;
+            });
+        }
+        
+        return apiResponse2(
+            1,
+            'retrieved',
+            trans('api.public.retrieved'),
+            [
+                'stories' => $stories,
+                'user' => [
+                    'id' => $user->id,
+                    'full_name' => $user->full_name,
+                    'avatar' => url($user->avatar)
+                ]
+            ]
+        );
+    }
 
+    public function uploadStory(Request $request)
+    {
+        $user = apiAuth();
+        
+        if (!$user) {
+            return apiResponse2(0, 'unauthorized', trans('api.auth.unauthorized'));
+        }
+
+        validateParam($request->all(), [
+            'story' => 'required|file|mimes:jpg,jpeg,png,gif,mp4,mov,avi,wmv|max:51200', // 50MB max
+            'title' => 'nullable|string|max:100',
+            'link' => 'nullable|url|max:255'
+        ]);
+
+        try {
+            $file = $request->file('story');
+            $isVideo = in_array($file->getMimeType(), ['video/mp4', 'video/quicktime', 'video/avi', 'video/wmv']);
+            $mediaType = $isVideo ? 'video' : 'image';
+            
+            // Create directory if it doesn't exist
+            $directory = 'stories/' . $user->id . '/' . date('Y/m');
+            Storage::disk('public')->makeDirectory($directory);
+            
+            // Generate unique filename
+            $filename = uniqid() . '_' . time() . '.' . $file->getClientOriginalExtension();
+            $path = $directory . '/' . $filename;
+            
+            // Store the file
+            Storage::disk('public')->put($path, file_get_contents($file));
+            
+            $mediaUrl = Storage::disk('public')->url($path);
+            $thumbnailUrl = null;
+            
+            // Generate thumbnail
+            if ($isVideo) {
+                $thumbnailUrl = $this->generateVideoThumbnail($file, $directory);
+            } else {
+                $thumbnailUrl = $this->createImageThumbnail($file, $directory);
+            }
+
+            if ($request->file('story')) {
+                $storage = new UploadFileManager($request->file('story'));
+            }
+            
+            // Create story record
+            $story = UserStory::create([
+                'user_id' => $user->id,
+                'title' => $request->input('title'),
+                'media_url' => $mediaUrl,
+                'media_type' => $mediaType,
+                'thumbnail_url' => $thumbnailUrl,
+                'link' => $request->input('link'),
+                'is_active' => true,
+                'expires_at' => Carbon::now()->addHours(24),
+                'created_at' => time(),
+                'updated_at' => time(),
+            ]);
+            
+            return apiResponse2(
+                1,
+                'uploaded',
+                trans('Story Uploaded Successfully'),
+                [
+                    'story' => $story
+                ]
+            );
+            
+        } catch (\Exception $e) {
+            Log::error('Story upload error: ' . $e->getMessage());
+            
+            return apiResponse2(
+                0,
+                'error',
+                trans('Upload error')
+            );
+        }
+    }
+
+    public function markStoryViewed(Request $request, $storyId)
+    {
+        $user = apiAuth();
+        
+        if (!$user) {
+            return apiResponse2(0, 'unauthorized', trans('api.auth.unauthorized'));
+        }
+        
+        $story = UserStory::where('id', $storyId)
+            ->where('is_active', true)
+            ->where('expires_at', '>', Carbon::now())
+            ->first();
+        
+        if (!$story) {
+            return apiResponse2(0, 'not_found', trans('api.story.not_found'));
+        }
+        
+        // Check if already viewed
+        $existingView = UserStoryView::where('story_id', $storyId)
+            ->where('user_id', $user->id)
+            ->first();
+        
+        if (!$existingView) {
+            // Create view record
+            UserStoryView::create([
+                'story_id' => $storyId,
+                'user_id' => $user->id,
+                'created_at' => time(),
+                'updated_at' => time()
+            ]);
+            
+            // Increment views count
+            $story->increment('views');
+        }
+        
+        return apiResponse2(
+            1,
+            'viewed',
+            trans('Story Viewed Successfully')
+        );
+    }
+
+    public function deleteStory($storyId)
+    {
+        $user = apiAuth();
+        
+        if (!$user) {
+            return apiResponse2(0, 'unauthorized', trans('api.auth.unauthorized'));
+        }
+        
+        $story = UserStory::where('id', $storyId)
+            ->where('user_id', $user->id)
+            ->first();
+        
+        if (!$story) {
+            return apiResponse2(0, 'not_found', trans('api.story.not_found'));
+        }
+        
+        try {
+            // Delete file from storage
+            $this->deleteStoryFile($story->media_url);
+            
+            if ($story->thumbnail_url) {
+                $this->deleteStoryFile($story->thumbnail_url);
+            }
+            
+            // Delete from database
+            $story->delete();
+            
+            return apiResponse2(
+                1,
+                'deleted',
+                trans('api.story.deleted')
+            );
+            
+        } catch (\Exception $e) {
+            Log::error('Story delete error: ' . $e->getMessage());
+            
+            return apiResponse2(
+                0,
+                'error',
+                trans('api.story.delete_error')
+            );
+        }
+    }
+
+    public function getFollowedUsersStories()
+    {
+        $user = apiAuth();
+        
+        if (!$user) {
+            return apiResponse2(0, 'unauthorized', trans('api.auth.unauthorized'));
+        }
+        
+        // Get users that the current user follows
+        $followingIds = Follow::where('follower', $user->id)
+            ->where('status', Follow::$accepted)
+            ->pluck('user_id')
+            ->toArray();
+        
+        // Add current user's own ID
+        $followingIds[] = $user->id;
+        
+        // Get stories from last 24 hours
+        $storiesByUser = UserStory::whereIn('user_id', $followingIds)
+            ->where('is_active', true)
+            ->where('expires_at', '>', Carbon::now())
+            ->with(['user' => function($query) {
+                $query->select('id', 'full_name', 'avatar');
+            }])
+            ->orderBy('created_at', 'desc')
+            ->get()
+            ->groupBy('user_id');
+        
+        // Format response
+        $formattedStories = [];
+        foreach ($storiesByUser as $userId => $stories) {
+            $userStories = $stories->map(function ($story) use ($user) {
+                $story->viewed_by_current_user = UserStoryView::where('story_id', $story->id)
+                    ->where('user_id', $user->id)
+                    ->exists();
+                return $story;
+            });
+            
+            if ($userStories->count() > 0) {
+                $formattedStories[] = [
+                    'user' => $userStories->first()->user,
+                    'stories' => $userStories,
+                    'has_unviewed' => $userStories->where('viewed_by_current_user', false)->count() > 0
+                ];
+            }
+        }
+        
+        return apiResponse2(
+            1,
+            'retrieved',
+            trans('api.public.retrieved'),
+            [
+                'stories' => $formattedStories
+            ]
+        );
+    }
+
+    // Helper method to generate video thumbnail
+    private function generateVideoThumbnail($videoFile, $directory)
+    {
+        try {
+            // Create a temporary file for the video
+            $tempVideoPath = tempnam(sys_get_temp_dir(), 'video_') . '.mp4';
+            file_put_contents($tempVideoPath, file_get_contents($videoFile->getRealPath()));
+            
+            // Use FFmpeg to generate thumbnail
+            $thumbnailFilename = 'thumbnail_' . uniqid() . '.jpg';
+            $thumbnailPath = $directory . '/' . $thumbnailFilename;
+            $fullThumbnailPath = storage_path('app/public/' . $thumbnailPath);
+            
+            // Ensure directory exists
+            Storage::disk('public')->makeDirectory($directory);
+            
+            // Generate thumbnail (using first frame)
+            $ffmpegCommand = "ffmpeg -i {$tempVideoPath} -ss 00:00:01 -vframes 1 -vf 'scale=320:-1' {$fullThumbnailPath} 2>&1";
+            exec($ffmpegCommand);
+            
+            // Clean up temp file
+            if (file_exists($tempVideoPath)) {
+                unlink($tempVideoPath);
+            }
+            
+            if (file_exists($fullThumbnailPath)) {
+                return Storage::disk('public')->url($thumbnailPath);
+            }
+            
+            return null;
+            
+        } catch (\Exception $e) {
+            Log::error('Video thumbnail generation error: ' . $e->getMessage());
+            return null;
+        }
+    }
+
+    // Helper method to create image thumbnail
+    private function createImageThumbnail($imageFile, $directory)
+    {
+        try {
+            $thumbnailFilename = 'thumbnail_' . uniqid() . '.jpg';
+            $thumbnailPath = $directory . '/' . $thumbnailFilename;
+            $fullThumbnailPath = storage_path('app/public/' . $thumbnailPath);
+            
+            // Create thumbnail using Intervention Image
+            $image = Image::make($imageFile->getRealPath());
+            $image->fit(320, 320, function ($constraint) {
+                $constraint->aspectRatio();
+                $constraint->upsize();
+            });
+            
+            // Ensure directory exists
+            Storage::disk('public')->makeDirectory($directory);
+            
+            // Save thumbnail
+            $image->save($fullThumbnailPath, 80);
+            
+            return Storage::disk('public')->url($thumbnailPath);
+            
+        } catch (\Exception $e) {
+            Log::error('Image thumbnail creation error: ' . $e->getMessage());
+            return null;
+        }
+    }
+
+    // Helper method to delete story file
+    private function deleteStoryFile($url)
+    {
+        try {
+            $path = parse_url($url, PHP_URL_PATH);
+            $relativePath = str_replace('/storage/', '', $path);
+            
+            if (Storage::disk('public')->exists($relativePath)) {
+                Storage::disk('public')->delete($relativePath);
+            }
+        } catch (\Exception $e) {
+            Log::error('Story file deletion error: ' . $e->getMessage());
+        }
     }
 
     public function updateImages(Request $request)

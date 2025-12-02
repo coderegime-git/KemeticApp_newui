@@ -39,6 +39,8 @@
 
 <!-- Template JS File -->
 <script src="/assets/default/js/app.js"></script>
+<!-- <script src="/assets/default/vendors/daterangepicker/daterangepicker.min.js"></script> -->
+<!-- <script src="/assets/default/js/parts/forms.min.js"></script> -->
 <script src="/assets/default/vendors/feather-icons/dist/feather.min.js"></script>
 <script src="/assets/default/vendors/moment.min.js"></script>
 <script src="/assets/default/vendors/sweetalert2/dist/sweetalert2.min.js"></script>
@@ -51,6 +53,36 @@
 
 
 <script>
+
+  // Mobile menu functionality
+document.addEventListener('DOMContentLoaded', function() {
+  const menuToggle = document.querySelector('.mobile-menu-toggle');
+  const sidebar = document.querySelector('.dashboard-side');
+  const overlay = document.querySelector('.mobile-overlay');
+  
+  if (menuToggle && sidebar && overlay) {
+    menuToggle.addEventListener('click', function() {
+      sidebar.classList.toggle('mobile-open');
+      overlay.classList.toggle('active');
+    });
+    
+    overlay.addEventListener('click', function() {
+      sidebar.classList.remove('mobile-open');
+      overlay.classList.remove('active');
+    });
+  }
+  
+  // Close menu when clicking on a nav link (optional)
+  const navLinks = document.querySelectorAll('.dashboard-nav a');
+  navLinks.forEach(link => {
+    link.addEventListener('click', function() {
+      if (window.innerWidth <= 768) {
+        sidebar.classList.remove('mobile-open');
+        overlay.classList.remove('active');
+      }
+    });
+  });
+});
         // Role tabs
         const roleTabs = document.querySelectorAll('#dashboard-roleTabs button');
         const grids = {

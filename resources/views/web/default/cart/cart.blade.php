@@ -206,17 +206,17 @@
                         @enderror
                     </div>
 
-                    <div class="field">
+                    <!-- <div class="field">
                         <label for="zip">{{ trans('update.district') }}</label>
                         <input type="text" name="district_name" class="form-control @error('district_name') is-invalid @enderror" 
-                           value="{{ !empty($user) ? $user->district_name : '' }}" required />
+                           value="{{ !empty($user) ? $user->district_name : '' }}"  />
                     
                         @error('district_name')
                         <div class="invalid-feedback">
                             {{ $message }}
                         </div>
                         @enderror
-                    </div>
+                    </div> -->
                 </div>
 
                 <div class="field-row">

@@ -262,6 +262,16 @@ Route::group(['namespace' => 'Web', 'middleware' => ['check_mobile_app', 'impers
         Route::get('/{id}/profile', 'UserController@profile');
         Route::post('/{id}/availableTimes', 'UserController@availableTimes');
         Route::post('/{id}/send-message', 'UserController@sendMessage');
+
+        Route::get('/{id}/stories', 'UserController@getUserStories')->name('profile.stories');
+        Route::get('/{id}/stories/all', 'UserController@getUserStories')->name('profile.stories.all');
+
+        // Protected routes
+        Route::group(['middleware' => 'web.auth'], function () {
+            Route::post('/{id}/story/upload', 'UserController@uploadStory')->name('story.upload');
+            Route::post('/{id}/story/{storyId}/view', 'UserController@markStoryViewed')->name('story.view');
+            Route::delete('/{id}/story/{storyId}', 'UserController@deleteStory')->name('story.delete');
+        });
     });
 
     Route::group(['prefix' => 'payments'], function () {

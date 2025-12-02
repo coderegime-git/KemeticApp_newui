@@ -18,10 +18,15 @@ use App\Models\UserOccupation;
 use App\Models\Webinar;
 use App\Models\Reel;
 use App\User;
+use App\Models\UserStory;
+use App\Models\UserStoryView;
 use App\Models\Role;
 use App\Models\Follow;
 use App\Models\Meeting;
 use Carbon\Carbon;
+use Illuminate\Support\Facades\Storage;
+use Intervention\Image\Facades\Image;
+use Exception;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
@@ -51,6 +56,11 @@ class UserController extends Controller
                 },
                 'reels' => function ($query) {
                     $query->where('is_hidden', '0');
+                },
+                'stories' => function ($query) {
+                    $query->active()
+                          ->withCount('views')
+                          ->orderBy('created_at', 'desc');
                 },
                 'userMetas'
             ])
@@ -164,6 +174,15 @@ class UserController extends Controller
                 ->get();
         }
 
+        $userStories = collect();
+        if (auth()->check()) {
+            $userStories = $user->stories->map(function ($story) {
+                $story->viewed_by_current_user = $story->viewedByCurrentUser();
+                return $story;
+            });
+        } else {
+            $userStories = $user->stories;
+        }
 
         $data = [
             'pageTitle' => $user->full_name . ' ' . trans('public.profile'),
@@ -184,7 +203,8 @@ class UserController extends Controller
             'instructors' => $instructors,
             'forumTopics' => $this->getUserForumTopics($user->id),
             'cashbackRules' => $cashbackRules,
-            'instructorDiscounts' => $instructorDiscounts
+            'instructorDiscounts' => $instructorDiscounts,
+            'userStories' => $userStories
         ];
 
         return view('web.default.user.profile', $data);
@@ -655,6 +675,298 @@ class UserController extends Controller
                 'code' => 403,
                 'message' => trans('site.user_disabled_public_message')
             ]);
+        }
+    }
+
+    public function uploadStory(Request $request, $id)
+    {
+        //dd('here');
+        $user = auth()->user();
+        
+        if (!$user) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Unauthorized'
+            ], 401);
+        }
+
+        $validator = Validator::make($request->all(), [
+            'story' => 'required|file|mimes:jpg,jpeg,png,gif,mp4,mov|max:51200', // 50MB max
+            'title' => 'nullable|string|max:100',
+            'link' => 'nullable|url|max:255'
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json([
+                'success' => false,
+                'message' => $validator->errors()->first()
+            ], 422);
+        }
+
+        try {
+            
+            $file = $request->file('story');
+            $isVideo = $file->getMimeType() === 'video/mp4' || $file->getMimeType() === 'video/quicktime';
+            $mediaType = $isVideo ? 'video' : 'image';
+            
+            // Create directory if it doesn't exist
+            $directory = 'stories/' . $user->id . '/' . date('Y/m');
+            Storage::disk('public')->makeDirectory($directory);
+            
+            // Generate unique filename
+            $filename = uniqid() . '_' . time() . '.' . $file->getClientOriginalExtension();
+            $path = $directory . '/' . $filename;
+
+            
+            
+            Storage::disk('public')->put($path, file_get_contents($file));
+            
+            $mediaUrl = Storage::disk('public')->url($path);
+            $thumbnailUrl = null;
+            
+            // Generate thumbnail for video
+            if ($isVideo) {
+                $thumbnailUrl = $this->generateVideoThumbnail($file, $directory);
+            } else {
+                // For images, create a thumbnail version
+                $thumbnailUrl = $this->createImageThumbnail($file, $directory);
+            }
+
+            
+            $now = time();
+
+            // Create story record
+            $story = UserStory::create([
+                'user_id' => $user->id,
+                'title' => $request->input('title') ?? null,
+                'media_url' => $mediaUrl ?? null,
+                'media_type' => $mediaType ?? null,
+                'thumbnail_url' => $thumbnailUrl ?? null,
+                'link' => $request->input('link') ?? null,
+                'is_active' => true,
+                'expires_at' => now()->addHours(24),
+                'created_at' => $now,
+                'updated_at' => $now,
+            ]);
+            //dd($user->id, $mediaUrl, $thumbnailUrl, $mediaType, $request->input('title'), $request->input('link'),now()->addHours(24));
+            return response()->json([
+                'success' => true,
+                'message' => 'Story uploaded successfully!',
+                'story' => $story
+            ]);
+            
+        } catch (\Exception $e) {
+            Log::error('Story upload error: ' . $e->getMessage());
+            
+            return response()->json([
+                'success' => false,
+                'message' => 'Failed to upload story. Please try again.'
+            ], 500);
+        }
+    }
+
+    // Get user stories for AJAX
+    public function getUserStories(Request $request, $id)
+    {
+        $user = User::findOrFail($id);
+        
+        $stories = UserStory::where('user_id', $id)
+            ->active()
+            ->orderBy('created_at', 'desc')
+            ->get()
+            ->map(function ($story) {
+                $createdAt = is_int($story->created_at) 
+                ? \Carbon\Carbon::createFromTimestamp($story->created_at)
+                : $story->created_at;
+                return [
+                    'id' => $story->id,
+                    'title' => $story->title,
+                    'media_url' => url($story->media_url),
+                    'media_type' => $story->media_type,
+                    'thumbnail_url' => url($story->thumbnail_url),
+                    'link' => $story->link,
+                    'views' => $story->views,
+                    'created_at' => $createdAt,
+                    'created_ago' => $createdAt->diffForHumans(),
+                    'viewed' => auth()->check() ? $story->viewedByCurrentUser() : false
+                ];
+            });
+        
+        return response()->json([
+            'success' => true,
+            'stories' => $stories
+        ]);
+    }
+
+    // Mark story as viewed
+    public function markStoryViewed(Request $request, $id, $storyId)
+    {
+        $user = auth()->user();
+        
+        if (!$user) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Unauthorized'
+            ], 401);
+        }
+        
+         $story = UserStory::where('id', $storyId)
+        ->where('user_id', $id) // Ensure story belongs to this user
+        ->first();
+        
+        if (!$story) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Story not found'
+            ]);
+        }
+        
+        // Check if already viewed
+        $existingView = UserStoryView::where('story_id', $storyId)
+            ->where('user_id', $user->id)
+            ->first();
+        
+        if (!$existingView) {
+            // Create view record
+            UserStoryView::create([
+                'story_id' => $storyId,
+                'user_id' => $user->id,
+                'created_at' => time(),
+                'updated_at' => time()
+            ]);
+            
+            // Increment views count
+            $story->increment('views');
+        }
+        
+        return response()->json([
+            'success' => true,
+            'message' => 'Story marked as viewed'
+        ]);
+    }
+
+    // Delete story
+    public function deleteStory($storyId)
+    {
+        $user = auth()->user();
+        
+        if (!$user) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Unauthorized'
+            ], 401);
+        }
+        
+        $story = UserStory::where('id', $storyId)
+            ->where('user_id', $user->id)
+            ->first();
+        
+        if (!$story) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Story not found or unauthorized'
+            ], 404);
+        }
+        
+        try {
+            // Delete file from storage
+            $this->deleteStoryFile($story->media_url);
+            
+            if ($story->thumbnail_url) {
+                $this->deleteStoryFile($story->thumbnail_url);
+            }
+            
+            // Delete from database
+            $story->delete();
+            
+            return response()->json([
+                'success' => true,
+                'message' => 'Story deleted successfully'
+            ]);
+            
+        } catch (\Exception $e) {
+            Log::error('Story delete error: ' . $e->getMessage());
+            
+            return response()->json([
+                'success' => false,
+                'message' => 'Failed to delete story'
+            ], 500);
+        }
+    }
+
+    // Helper method to generate video thumbnail
+    private function generateVideoThumbnail($videoFile, $directory)
+    {
+        try {
+            // Create a temporary file for the video
+            $tempVideoPath = tempnam(sys_get_temp_dir(), 'video_') . '.mp4';
+            file_put_contents($tempVideoPath, file_get_contents($videoFile->getRealPath()));
+            
+            // Use FFmpeg to generate thumbnail
+            $thumbnailFilename = 'thumbnail_' . uniqid() . '.jpg';
+            $thumbnailPath = $directory . '/' . $thumbnailFilename;
+            $fullThumbnailPath = storage_path('app/public/' . $thumbnailPath);
+            
+            // Ensure directory exists
+            Storage::disk('public')->makeDirectory($directory);
+            
+            // Generate thumbnail (using first frame)
+            $ffmpegCommand = "ffmpeg -i {$tempVideoPath} -ss 00:00:01 -vframes 1 -vf 'scale=320:-1' {$fullThumbnailPath} 2>&1";
+            exec($ffmpegCommand);
+            
+            // Clean up temp file
+            unlink($tempVideoPath);
+            
+            if (file_exists($fullThumbnailPath)) {
+                return Storage::disk('public')->url($thumbnailPath);
+            }
+            
+            return null;
+            
+        } catch (\Exception $e) {
+            Log::error('Video thumbnail generation error: ' . $e->getMessage());
+            return null;
+        }
+    }
+
+    // Helper method to create image thumbnail
+    private function createImageThumbnail($imageFile, $directory)
+    {
+        try {
+            $thumbnailFilename = 'thumbnail_' . uniqid() . '.jpg';
+            $thumbnailPath = $directory . '/' . $thumbnailFilename;
+            $fullThumbnailPath = storage_path('app/public/' . $thumbnailPath);
+            
+            // Create thumbnail using Intervention Image
+            $image = Image::make($imageFile->getRealPath());
+            $image->fit(320, 320, function ($constraint) {
+                $constraint->aspectRatio();
+                $constraint->upsize();
+            });
+            
+            // Save thumbnail
+            $image->save($fullThumbnailPath, 80);
+            
+            return Storage::disk('public')->url($thumbnailPath);
+            
+        } catch (\Exception $e) {
+            Log::error('Image thumbnail creation error: ' . $e->getMessage());
+            return null;
+        }
+    }
+
+    // Helper method to delete story file
+    private function deleteStoryFile($url)
+    {
+        try {
+            $path = parse_url($url, PHP_URL_PATH);
+            $relativePath = str_replace('/storage/', '', $path);
+            
+            if (Storage::disk('public')->exists($relativePath)) {
+                Storage::disk('public')->delete($relativePath);
+            }
+        } catch (\Exception $e) {
+            Log::error('Story file deletion error: ' . $e->getMessage());
         }
     }
 }

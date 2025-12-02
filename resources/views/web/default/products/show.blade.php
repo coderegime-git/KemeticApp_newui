@@ -64,7 +64,25 @@
       <!-- right: sticky purchase card -->
       <aside class="shopdetail-purchase">
         <div class="shopdetail-muted" style="font-weight:800">Price</div>
+        @php
+            $i = 5;
+            $rate = $product->getRate();
+          @endphp
+        
+          @php
+              $rating = $rate ?? 0;
+              $filledStars = min(5, max(0, $rate));
+              $emptyStars = 5 - $filledStars;
+          @endphp
+          
+          @for($i = 0; $i < $filledStars; $i++)
+              ★
+          @endfor
+          @for($i = 0; $i < $emptyStars; $i++)
+              ☆
+          @endfor
         <div class="shopdetail-price">
+          
           @if(!empty($product->price) and $product->price > 0)
             @if($product->getPriceWithActiveDiscountPrice() < $product->price)
                 <span class="real">{{ handlePrice($product->getPriceWithActiveDiscountPrice(), true, true, false, null, true, 'store') }}</span>

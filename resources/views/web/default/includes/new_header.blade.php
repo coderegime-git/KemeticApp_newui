@@ -1,4 +1,4 @@
-<button class="header-openBtn" id="openBtn">
+  <button class="header-openBtn" id="openBtn">
   <span>☰</span> Menu
 </button>
 <aside class="header-menu" id="menu">
@@ -27,18 +27,34 @@
     <div class="header-grid" style="margin-top:6px">
       @if(!empty($navbarPages) and count($navbarPages))
         @foreach($navbarPages as $navbarPage)
+          @php
+            // Define title to CSS class mapping
+            $titleClasses = [
+              'Home' => 'red',
+              'Reels' => 'orange',
+              'Course' => 'green',
+              'Shop' => 'yellow',
+              'Book' => 'blue',
+              'Articles' => 'violet',
+              'Livestreams' => 'indigo',
+              'Dashboard' => 'gold'
+            ];
+            
+            // Get the class for this title, default to 'red' if not found
+            $tileClass = $titleClasses[$navbarPage['title']] ?? 'red';
+          @endphp
           @if($navbarPage['title'] == 'Dashboard')
             @if(!empty($authUser))
               @if($authUser->isAdmin())
                 <a href="{{ getAdminPanelUrl() }}">
-                    <div class="header-tile">
+                    <div class="header-tile {{ $tileClass }}">
                         <div class="header-ico"><img src="{{ url($navbarPage['icons']) }}" alt="icon" width="40"></div>
                         <div class="header-label">{{ $navbarPage['title'] }}</div>
                     </div>
                 </a>  
               @else
                 <a href="{{ $navbarPage['link'] }}">
-                    <div class="header-tile">
+                    <div class="header-tile {{ $tileClass }}">
                         <div class="header-ico"><img src="{{ url($navbarPage['icons']) }}" alt="icon" width="40"></div>
                         <div class="header-label">{{ $navbarPage['title'] }}</div>
                     </div>
@@ -47,7 +63,7 @@
             @endif
             @else
             <a href="{{ $navbarPage['link'] }}">
-                <div class="header-tile">
+                <div class="header-tile {{ $tileClass }}">
                     <div class="header-ico"><img src="{{ url($navbarPage['icons']) }}" alt="icon" width="40"></div>
                     <div class="header-label">{{ $navbarPage['title'] }}</div>
                 </div>
