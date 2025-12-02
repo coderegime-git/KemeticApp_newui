@@ -301,6 +301,10 @@ Route::group(['namespace' => 'Panel', 'prefix' => 'panel', 'middleware' => ['imp
         Route::post('metas/{meta_id}/update', 'UserController@updateMeta');
         Route::get('metas/{meta_id}/delete', 'UserController@deleteMeta');
         Route::get('/deleteAccount', 'UserController@deleteAccount');
+
+        Route::post('/upload-profile-image', 'UserController@uploadProfileImage');
+        Route::post('/set-main-profile-image', 'UserController@setMainProfileImage');
+        Route::delete('/gallery-photo/{photo_id}', 'UserController@deleteGalleryPhoto');
     });
 
     Route::group(['prefix' => 'support'], function () {

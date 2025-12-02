@@ -188,6 +188,10 @@ Route::group([], function () {
         Route::put('/password', ['uses' => 'UsersController@updatePassword', 'middleware' => 'api.request.type']);
         Route::put('/', ['uses' => 'UsersController@update']);
         Route::post('/images', ['uses' => 'UsersController@updateImages']);
+
+        Route::post('/story', ['uses' => 'UsersController@uploadStory']);
+        Route::delete('/story/{storyId}', ['uses' => 'UsersController@deleteStory']);
+        Route::post('/story/{storyId}/view', ['uses' => 'UsersController@markStoryViewed']);
     });
 
     Route::group(['prefix' => 'store'], function () {

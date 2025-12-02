@@ -22,6 +22,7 @@ use App\Models\RewardAccounting;
 use App\Models\Role;
 use App\Models\Follow;
 use App\Models\Sale;
+use App\Models\UserStory;
 use App\Models\Section;
 use App\Models\UserCommission;
 use App\Models\Webinar;
@@ -155,6 +156,11 @@ class User extends Authenticatable
         }
 
         return $imgUrl;
+    }
+
+    public function stories()
+    {
+        return $this->hasMany(UserStory::class, 'user_id');
     }
 
     public function getSignature()

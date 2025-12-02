@@ -26,14 +26,24 @@
         <!-- ⚙️ Filters  onclick="alert('Open filters')" -->
       </div>
     </form>
-    @foreach($blogCategories as $blogCategory)
+    <!-- @foreach($blogCategories as $blogCategory)
+        <a href="{{ $blogCategory->getUrl() }}" class="font-14 text-dark-blue d-block mt-15">
+            <div class="article-pill @if(!empty($selectedCategory) and $selectedCategory->id == $blogCategory->id) active @endif">
+                {{ $blogCategory->title }}
+            </div>
+        </a> -->
+    <!-- @endforeach -->
+    </div>
+      <div class="shop-chips">
+        @foreach($blogCategories as $blogCategory)
         <a href="{{ $blogCategory->getUrl() }}" class="font-14 text-dark-blue d-block mt-15">
             <div class="article-pill @if(!empty($selectedCategory) and $selectedCategory->id == $blogCategory->id) active @endif">
                 {{ $blogCategory->title }}
             </div>
         </a>
-    @endforeach
-    </div>
+        @endforeach
+      </div>
+  
 
     <div class="article-sp"></div>
 
