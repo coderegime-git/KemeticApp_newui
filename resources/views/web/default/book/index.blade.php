@@ -11,7 +11,7 @@
           Unlock Unlimited Kemetic Knowledge – €1/mo or €10/yr
         </div>
         <div class="book-membership-text-sub">
-          Access all ebooks, PDFs, courses, reels, livestreams & premium articles with one membership.
+          Access all ebooks, PDFs, courses, portals, livestreams & premium articles with one membership.
         </div>
       </div>
       <div class="book-membership-actions">
@@ -57,7 +57,7 @@
 
         <div class="book-hero-cta-row">
           <a href="{{ $popularBook->getUrl() }}">
-            <button class="book-btn-hero-main">View Book</button>
+            <button class="book-btn-hero-main">View Scrolls</button>
           </a>
           <span class="book-hero-secondary-pill">
             or <strong>Add to Cart</strong> and read instantly on Kemetic App.
@@ -83,7 +83,7 @@
         @endif
 
         <div class="book-hero-side-card">
-          <strong>Why this book?</strong><br/>
+          <strong>Why this Scrolls?</strong><br/>
           • Most popular in our collection<br/>
           • High engagement from community<br/>
           • Perfect for spiritual seekers<br/>
@@ -106,7 +106,7 @@
     <!-- Global Books Row -->
     <section>
       <div class="book-section-header">
-        <div class="book-section-title">Global Books</div>
+        <div class="book-section-title">Global Scrolls</div>
         <div class="book-section-caption">Rated & ranked by the global Kemetic community.</div>
       </div>
 
@@ -139,7 +139,7 @@
           </div>
           <div class="book-book-footer">
             <a href="{{ $book->getUrl() }}">
-              <button class="book-btn-book">View Book</button>
+              <button class="book-btn-book">View Scrolls</button>
             </a>
             <span class="book-price-tag">
               @if($book->is_free)
@@ -193,7 +193,7 @@
             </div>
             <div class="book-book-footer">
               <a href="{{ $book->getUrl() }}">
-                <button class="book-btn-book">View Book</button>
+                <button class="book-btn-book">View Scrolls</button>
               </a>
               <span class="book-price-tag">
                 @if($book->is_free)

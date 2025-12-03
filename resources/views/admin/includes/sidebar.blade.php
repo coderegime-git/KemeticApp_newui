@@ -795,6 +795,7 @@
 
             @if($authUser->can('admin_blog') or
                 $authUser->can('admin_pages') or
+                $authUser->can('admin_book') or
                 $authUser->can('admin_additional_pages') or
                 $authUser->can('admin_testimonials') or
                 $authUser->can('admin_tags') or
@@ -951,6 +952,30 @@
                     </ul>
                 </li>
             @endcan
+
+            @can('admin_book')
+                <li class="nav-item dropdown {{ (request()->is(getAdminPanelUrl('/book*', false))) ? 'active' : '' }}">
+                    <a href="#" class="nav-link has-dropdown" data-toggle="dropdown">
+                        <i class="fas fa-pager"></i>
+                        <span>Book</span>
+                    </a>
+
+                    <ul class="dropdown-menu">
+                        @can('admin_book_list')
+                            <li class="{{ (request()->is(getAdminPanelUrl('/book', false))) ? 'active' : '' }}">
+                                <a class="nav-link" href="{{ getAdminPanelUrl() }}/book">{{ trans('admin/main.lists') }}</a>
+                            </li>
+                        @endcan()
+
+                        @can('admin_book_create')
+                            <li class="{{ (request()->is(getAdminPanelUrl('/book/create', false))) ? 'active' : '' }}">
+                                <a class="nav-link" href="{{ getAdminPanelUrl() }}/book/create">{{ trans('admin/main.new_page') }}</a>
+                            </li>
+                        @endcan()
+                    </ul>
+                </li>
+            @endcan
+
 
             @can('admin_additional_pages')
                 <li class="nav-item dropdown {{ (request()->is(getAdminPanelUrl('/additional_page*', false))) ? 'active' : '' }}">
@@ -1355,6 +1380,7 @@
                 $authUser->can('admin_product_discount') or
                 $authUser->can('admin_feature_webinars') or
                 $authUser->can('admin_gift') or
+                $authUser->can('admin_giftreel') or
                 $authUser->can('admin_promotion') or
                 $authUser->can('admin_advertising') or
                 $authUser->can('admin_newsletters') or
@@ -1511,6 +1537,29 @@
                                 <a class="nav-link" href="{{ getAdminPanelUrl('/cashback/history') }}">{{ trans('update.history') }}</a>
                             </li>
                         @endcan
+                    </ul>
+                </li>
+            @endcan
+
+            @can('admin_giftreel')
+                <li class="nav-item dropdown {{ (request()->is(getAdminPanelUrl('/giftreel*', false))) ? 'active' : '' }}">
+                    <a href="#" class="nav-link has-dropdown" data-toggle="dropdown">
+                        <i class="fas fa-pager"></i>
+                        <span>Send Gifts</span>
+                    </a>
+
+                    <ul class="dropdown-menu">
+                        @can('admin_giftreel_list')
+                            <li class="{{ (request()->is(getAdminPanelUrl('/giftreel', false))) ? 'active' : '' }}">
+                                <a class="nav-link" href="{{ getAdminPanelUrl() }}/giftreel">{{ trans('admin/main.lists') }}</a>
+                            </li>
+                        @endcan()
+
+                        @can('admin_giftreel_create')
+                            <li class="{{ (request()->is(getAdminPanelUrl('/giftreel/create', false))) ? 'active' : '' }}">
+                                <a class="nav-link" href="{{ getAdminPanelUrl() }}/giftreel/create">{{ trans('admin/main.new_page') }}</a>
+                            </li>
+                        @endcan()
                     </ul>
                 </li>
             @endcan

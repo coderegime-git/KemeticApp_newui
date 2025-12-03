@@ -5,7 +5,7 @@
 <!-- membership banner -->
 <div class="reels-banner">
   <div class="reels-wrap">
-    <span>Unlock Unlimited Reels, Courses & Livestreams — €1/month or €10/year</span>
+    <span>Unlock Unlimited Portals, Courses & Livestreams — €1/month or €10/year</span>
      @if(auth()->check())
           <button class="reels-btn"><a href="/membership">Join Now</a></button>
         @else
@@ -19,7 +19,10 @@
   <!-- HERO: last month global #1 -->
   <section class="reels-hero">
     <div class="reels-hero-card">
-      <img src="https://images.unsplash.com/photo-1544005313-94ddf0286df2?w=1600" alt="">
+      <video class="img" controls preload="metadata" poster="{{ $heroreels->thumbnail_url }}">
+                                    <source src="{{ $heroreels->video_url }}" type="video/mp4">
+                                    {{ trans('public.browser_not_support_video') }}
+                                </video>
       <div class="reels-rail">
         <div class="reels-pill"><span class="reels-circle reels-bg-red">❤</span><b>{{ $heroreels->likes_count }}</b></div>
         <div class="reels-pill"><span class="reels-circle reels-bg-blue">▶</span><b>{{ $heroreels->views_count }}</b></div>
@@ -34,12 +37,12 @@
           <span class="reels-dot reels-bg-yellow"></span><span class="reels-dot reels-bg-green"></span>
           <span class="reels-dot reels-bg-blue"></span><b style="margin-left:10px">3,255+</b>
         </div>
-        <button class="reels-btn">Watch Reel</button>
+        <button class="reels-btn">Watch Portals</button>
         <a class="reels-go-profile" href="/user/1066/profile">→ View profile</a>
       </div>
     </div>
     <div>
-      <h2>Reels</h2>
+      <h2>Portals</h2>
       <div class="reels-sub">{{ $heroreels->title }}</div>
       <p class="reels-sub">{{ $heroreels->caption }}</p>
     </div>
@@ -47,7 +50,7 @@
 
   <!-- GLOBAL -->
   <section>
-    <h2>🌍 Global Reels</h2>
+    <h2>🌍 Global Portals</h2>
     <div class="reels-scroller">
       <!-- repeat cards -->
        @foreach($reels as $reel)
@@ -84,7 +87,7 @@
 
   <!-- TRENDING -->
   <section>
-    <h2>🔥 Trending Reels</h2>
+    <h2>🔥 Trending Portals</h2>
     <div class="reels-scroller">
      @foreach($reels as $reel)
       <article class="reels-card">
@@ -117,7 +120,7 @@
   </section>
 
   <!-- LIVE NOW -->
-  <section>
+  <!-- <section>
     <h2>🔴 Live Now</h2>
     <div class="reels-scroller">
      @foreach($reels as $reel)
@@ -148,10 +151,10 @@
       </article>
       @endforeach
     </div>
-  </section>
+  </section> -->
 
   <!-- FOR ME -->
-  <section>
+  <!-- <section>
     <h2>💫 For Me</h2>
     <div class="reels-scroller">
       @foreach($reels as $reel)
@@ -182,10 +185,10 @@
       </article>
       @endforeach
     </div>
-  </section>
+  </section> -->
 
   <!-- CLASSES -->
-  <section>
+  <!-- <section>
     <h2>🎓 Classes / Courses</h2>
     <div class="reels-scroller">
      @foreach($reels as $reel)
@@ -216,7 +219,7 @@
       </article>
       @endforeach
     </div>
-  </section>
+  </section> -->
 
 </main>
 @endsection

@@ -17,7 +17,7 @@
 
         <div class="bookdetail-media-badges">
           @if($book->is_free)
-            <div class="bookdetail-pill bookdetail-gold">Free Book</div>
+            <div class="bookdetail-pill bookdetail-gold">Free Scrolls</div>
           @else
             <div class="bookdetail-pill bookdetail-gold">Included with Membership</div>
           @endif
@@ -91,7 +91,7 @@
           @endif
         </div>
 
-        <div class="bookdetail-section-title">About this Book</div>
+        <div class="bookdetail-section-title">About this Scrolls</div>
         <p class="bookdetail-description">
             {!! nl2br($book->description) !!}
          </p>
@@ -103,7 +103,7 @@
         </div>
         @endif
 
-        <div class="bookdetail-section-title">Book Details</div>
+        <div class="bookdetail-section-title">Scrolls Details</div>
         <div class="bookdetail-meta-grid">
         <div>
             <div class="bookdetail-meta-label">Format</div>
@@ -205,11 +205,11 @@
         <div class="bookdetail-primary-buy">
           @if($book->is_free)
             <button class="bookdetail-btn bookdetail-btn-gold bookdetail-btn-lg">
-              Download Free Book
+              Download Free Scrolls
             </button>
           @else
             <button class="bookdetail-btn bookdetail-btn-gold bookdetail-btn-lg">
-              Buy Book Only - €{{ $formattedPrice }}
+              Buy Scrolls Only - €{{ $formattedPrice }}
             </button>
             @if(auth()->check())
               <button class="bookdetail-btn bookdetail-btn-outline bookdetail-btn-lg"><a href="/membership">Unlock with Membership</a></button>
@@ -235,7 +235,7 @@
           </div>
           <ul>
             <li>Unlimited access to all Kemetic courses.</li>
-            <li>All eBooks & PDFs included while active.</li>
+            <li>All eScrolls & PDFs included while active.</li>
             <li>Exclusive reels, livestreams & TV sessions.</li>
             <li>Member-only discounts in the physical shop.</li>
           </ul>
@@ -249,9 +249,9 @@
         </ul>
 
         <p class="bookdetail-small-note">
-          After payment you'll receive an email with your download link and the book will appear
-          in your in-app "Books" section. If you already have a membership, the system will skip
-          charging you twice and only process the physical book or extra items in your cart.
+          After payment you'll receive an email with your download link and the Scrolls will appear
+          in your in-app "Scrolls" section. If you already have a membership, the system will skip
+          charging you twice and only process the physical Scrolls or extra items in your cart.
         </p>
       </aside>
 
@@ -273,7 +273,7 @@ function playAudioSample(audioUrl) {
 }
 
 function showAudioDetails() {
-    alert('Audio Book Details:\n• Total Duration: 6 hours 25 min\n• Format: MP3\n• Chapters: 24\n• File Size: 350MB');
+    alert('Audio Scrolls Details:\n• Total Duration: 6 hours 25 min\n• Format: MP3\n• Chapters: 24\n• File Size: 350MB');
 }
 
 // E-book/PDF Functions
@@ -316,7 +316,7 @@ function showPreviewModal(contentUrl, type) {
     modal.innerHTML = `
         <div style="background: var(--panel); padding: 20px; border-radius: 12px; max-width: 90%; max-height: 90%; overflow: auto;">
             <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
-                <h3>Book Preview</h3>
+                <h3>Scrolls Preview</h3>
                 <button onclick="this.parentElement.parentElement.parentElement.remove()" style="background: none; border: none; color: white; font-size: 20px; cursor: pointer;">×</button>
             </div>
             ${type === 'pdf' ? 
@@ -347,6 +347,6 @@ function downloadSample(pdfUrl) {
 }
 
 function showPhysicalDetails() {
-    alert('Physical Book Details:\n• Format: Hardcover\n• Pages: 420\n• Dimensions: 9x6 inches\n• Weight: 1.2 kg\n• Free PDF included with purchase');
+    alert('Physical Scrolls Details:\n• Format: Hardcover\n• Pages: 420\n• Dimensions: 9x6 inches\n• Weight: 1.2 kg\n• Free PDF included with purchase');
 }
 </script>

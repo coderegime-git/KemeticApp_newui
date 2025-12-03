@@ -1064,7 +1064,7 @@
   /* hero */
   .reels-hero{display:grid;grid-template-columns:1.15fr .85fr;gap:24px;align-items:center;margin-top:18px}
   .reels-hero-card{position:relative;border:1px solid var(--edge);border-radius:18px;overflow:hidden;min-height:360px;background:#111}
-  .reels-hero-card img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;filter:brightness(.72)}
+  .reels-hero-card img, .reels-hero-card video {position:absolute;inset:0;width:100%;height:100%;object-fit:cover;filter:brightness(.72)}
   .reels-hero-body{position:relative;z-index:2;padding:26px}
   .reels-title{font-weight:900;font-size:40px;margin:0 0 6px}
   .reels-sub{color:var(--muted);margin:0 0 12px}
