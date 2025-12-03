@@ -584,16 +584,6 @@ Route::group(['prefix' => $prefix, 'namespace' => 'Admin', 'middleware' => ['web
                 Route::get('/{id}/print', 'DocumentController@printer');
             });
 
-            Route::group(['prefix' => 'giftreel'], function () {
-                Route::get('/', 'GiftReelController@index');
-                Route::get('/create', 'GiftReelController@create');
-                Route::post('/store', 'GiftReelController@store');
-                Route::get('/{id}/edit', 'GiftReelController@edit');
-                Route::post('/{id}/update', 'GiftReelController@update');
-                Route::get('/{id}/delete', 'GiftReelController@delete');
-            });
-
-
             Route::group(['prefix' => 'subscribes'], function () {
                 Route::get('/', 'SubscribesController@index');
                 Route::get('/new', 'SubscribesController@create');
@@ -1142,6 +1132,15 @@ Route::group(['prefix' => $prefix, 'namespace' => 'Admin', 'middleware' => ['web
                 Route::get('/', 'GiftsController@settings');
                 Route::post('/', 'GiftsController@storeSettings');
             });
+        });
+
+        Route::group(['prefix' => 'giftreel'], function () {
+            Route::get('/', 'GiftReelController@index');
+            Route::get('/create', 'GiftReelController@create');
+            Route::post('/store', 'GiftReelController@store');
+            Route::get('/{id}/edit', 'GiftReelController@edit');
+            Route::post('/{id}/update', 'GiftReelController@update');
+            Route::get('/{id}/delete', 'GiftReelController@delete');
         });
 
 

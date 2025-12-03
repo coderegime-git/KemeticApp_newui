@@ -19,7 +19,7 @@ class GiftReelController extends Controller
             'giftReels' => $giftReels
         ];
 
-        return view('admin.financial.giftreel.lists', $data);
+        return view('admin.giftreel.lists', $data);
     }
 
     public function create()
@@ -30,7 +30,7 @@ class GiftReelController extends Controller
             'pageTitle' => 'Create New Gift Reel',
         ];
 
-        return view('admin.financial.giftreel.new', $data);
+        return view('admin.giftreel.new', $data);
     }
 
     public function store(Request $request)
@@ -49,7 +49,7 @@ class GiftReelController extends Controller
             'updated_at' => time(),
         ]);
 
-        return redirect(getAdminPanelUrl().'/financial/giftreel')->with('success', 'Gift reel created successfully.');
+        return redirect(getAdminPanelUrl().'/giftreel')->with('success', 'Gift reel created successfully.');
     }
 
     public function edit($id)
@@ -63,7 +63,7 @@ class GiftReelController extends Controller
             'giftReel' => $giftReel
         ];
 
-        return view('admin.financial.giftreel.new', $data);
+        return view('admin.giftreel.new', $data);
     }
 
     public function update(Request $request, $id)
@@ -83,7 +83,7 @@ class GiftReelController extends Controller
             'updated_at' => time(),
         ]);
 
-        return redirect(getAdminPanelUrl().'/financial/giftreel')->with('success', 'Gift reel updated successfully.');
+        return redirect(getAdminPanelUrl().'/giftreel')->with('success', 'Gift reel updated successfully.');
     }
 
     public function delete($id)
@@ -93,6 +93,6 @@ class GiftReelController extends Controller
         $giftReel = GiftReel::findOrFail($id);
         $giftReel->delete();
 
-        return redirect(getAdminPanelUrl().'/financial/giftreel')->with('success', 'Gift reel deleted successfully.');
+        return redirect(getAdminPanelUrl().'/giftreel')->with('success', 'Gift reel deleted successfully.');
     }
 }

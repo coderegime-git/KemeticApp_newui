@@ -115,7 +115,7 @@
       @if(!empty($reels) and !$reels->isEmpty())
       <section>
         <div class="home-row-head">
-          <h2>{{ trans('Global Top Ranked Reels') }}</h2>
+          <h2>{{ trans('Global Top Ranked Portals') }}</h2>
           <span class="home-chip">#1–#10</span>
         </div>
         <div class="home-scroller" id="reels">
@@ -184,7 +184,7 @@
       <!-- BOOKS (Bundles) -->
       @if(!empty($books) and !$books->isEmpty())
       <section>
-        <div class="home-row-head"><h2>{{ trans('Books') }}</h2><a href="/classes?type[]=bundle" class="home-chip">{{ trans('Browse') }}</a></div>
+        <div class="home-row-head"><h2>Scrolls</h2><a href="/classes?type[]=bundle" class="home-chip">{{ trans('Browse') }}</a></div>
         <div class="home-grid">
           @foreach($books as $book)
           <div class="home-tile">

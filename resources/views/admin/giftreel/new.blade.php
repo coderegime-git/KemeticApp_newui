@@ -15,7 +15,7 @@
             <div class="row">
                 <div class="col-12 col-md-8 col-lg-6">
                     <div class="card-body">
-                        <form action="{{ getAdminPanelUrl() }}/financial/giftreel/{{ !empty($giftReel) ? $giftReel->id.'/update' : 'store' }}" method="POST">
+                        <form action="{{ getAdminPanelUrl() }}/giftreel/{{ !empty($giftReel) ? $giftReel->id.'/update' : 'store' }}" method="POST">
                             @csrf
 
                             <div class="form-group">

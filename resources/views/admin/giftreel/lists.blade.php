@@ -15,10 +15,11 @@
                 <div class="col-12 col-md-12">
                     <div class="card">
                         <div class="card-header">
-                            <!-- @can('admin_gift_reel_create') -->
-                                <a href="{{ getAdminPanelUrl() }}/gift-reels/create" class="btn btn-primary">
+                            
+                                <a href="{{ getAdminPanelUrl() }}/giftreel/create" class="btn btn-primary">
                                     <i class="fa fa-plus"></i> Create New Gift Reel
                                 </a>
+                                <!-- @can('admin_gift_reel_create') -->
                             <!-- @endcan -->
                         </div>
                         
@@ -48,11 +49,11 @@
                                             <td class="text-center">{{ dateTimeFormat($giftReel->created_at, 'Y M j | H:i') }}</td>
                                             <td class="text-center">{{ dateTimeFormat($giftReel->updated_at, 'Y M j | H:i') }}</td>
                                             <td>
-                                                 <a href="{{ getAdminPanelUrl() }}/financial/giftreel/{{ $giftReel->id }}/edit" class="btn-sm" data-toggle="tooltip" data-placement="top" title="{{ trans('admin/main.edit') }}">
+                                                 <a href="{{ getAdminPanelUrl() }}/giftreel/{{ $giftReel->id }}/edit" class="btn-sm" data-toggle="tooltip" data-placement="top" title="{{ trans('admin/main.edit') }}">
                                                         <i class="fa fa-edit"></i>
                                                     </a>
 
-                                                     @include('admin.includes.delete_button',['url' => getAdminPanelUrl().'/financial/giftreel/'. $giftReel->id.'/delete','btnClass' => 'btn-sm'])
+                                                     @include('admin.includes.delete_button',['url' => getAdminPanelUrl().'/giftreel/'. $giftReel->id.'/delete','btnClass' => 'btn-sm'])
                                                 <!-- @can('admin_gift_reel_edit') -->
                                                  
                                                 <!-- @endcan
