@@ -85,25 +85,25 @@
 
             <div class="card-wrapper">
                 @if(empty($user))
-                    <div class="card">
+                    <!-- <div class="card"> -->
                         
                         <div class="field-row">
                             <div class="checkbox-row">
                                 <input type="hidden" name="create_account" value="0">
-                                <input type="checkbox" id="createAccount" name="create_account" class="@error('create_account') is-invalid @enderror" value="1">
+                                <input type="checkbox" id="createAccount" name="create_account" class="@error('create_account') is-invalid @enderror" value="{{ !empty($user) ? 1 : 0}}" />
                                 <span>Create account with these details</span>
                             </div>
 
-                            <div class="field">
+                            <div class="field-single">
                                 <label for="firstName">{{ trans('update.first_name') }}</label>
-                                <input id="firstName" name="first_name" type="text" class="form-control @error('first_name') is-invalid @enderror" required />
+                                <input id="firstName" name="first_name" type="text" class="form-control @error('first_name') is-invalid @enderror" required value="{{ !empty($user) ? $user->full_name : '' }}" />
                                 @error('first_name')
                                 <div class="invalid-feedback">
                                     {{ $message }}
                                 </div>
                                 @enderror
                             </div>
-                            <div class="field">
+                            <div class="field-single">
                                 <label for="lastName">{{ trans('update.last_name') }}</label>
                                 <input id="lastName" name="last_name" class="form-control @error('last_name') is-invalid @enderror" type="text" required />
                                 @error('last_name')
@@ -118,7 +118,7 @@
                         <div class="field-single">
                             <label for="email">{{ trans('update.email') }}</label>
                             <input id="email" name="email" class="form-control @error('email') is-invalid @enderror" 
-                            value="{{ !empty($user) ? $user->email : '' }}"type="email" required />
+                            value="{{ !empty($user) ? $user->email : '' }}" type="email" required />
                             @error('email')
                             <div class="invalid-feedback">
                                 {{ $message }}
@@ -171,9 +171,20 @@
                         </div> -->
 
                         
-                    </div>
+                    <!-- </div> -->
 
                 @endif
+                <div class="field-single">
+                    <label for="phone">Phone Number</label>
+                    <input type="text" name="phone"  id="phone" class="form-control @error('phone') is-invalid @enderror" 
+                    required value="{{ !empty($user) ? $user->mobile : '' }}" />
+                    @error('phone')
+                    <div class="invalid-feedback">
+                        {{ $message }}
+                    </div>
+                    @enderror
+                </div>
+
                 <div class="field-single">
                     <label for="country">{{ trans('update.country') }}</label>
                      <select name="country_id" id="country" class="form-control @error('country_id')  is-invalid @enderror" required>

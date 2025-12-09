@@ -5,15 +5,104 @@
 <div class="coursedetail-wrap">
   <!-- HERO -->
   <div class="coursedetail-hero">
+    @php
+      $videoDemo = $course->video_demo;
+      $videoSource = $course->video_demo_source;
+      $isVideoTag = false;
+      $isYoutube = false;
+      $isVimeo = false;
+      $isIframe = false;
+      $iframeSrc = '';
+      
+      if ($videoDemo && $videoSource)
+      {
+        switch($videoSource)
+        {
+            case 'upload':
+                // Check if it's a video file
+                $videoExtensions = ['.mp4', '.webm', '.ogg', '.mov', '.avi', '.m4v', '.wmv'];
+                $isVideoTag = Str::endsWith(strtolower($videoDemo), $videoExtensions);
+                break;
+                
+            case 'youtube':
+                $isYoutube = true;
+                $isIframe = true;
+                // Extract YouTube video ID
+                $youtubeId = '';
+                if (preg_match('/(?:youtube\.com\/(?:[^\/]+\/.+\/|(?:v|e(?:mbed)?)\/|.*[?&]v=)|youtu\.be\/)([^"&?\/\s]{11})/i', $videoDemo, $matches)) {
+                    $youtubeId = $matches[1];
+                }
+                $iframeSrc = "https://www.youtube.com/embed/{$youtubeId}?autoplay=0&controls=1&showinfo=0&rel=0&modestbranding=1";
+                break;
+                
+            case 'vimeo':
+                $isVimeo = true;
+                $isIframe = true;
+                // Extract Vimeo video ID
+                $vimeoId = '';
+                if (preg_match('/(?:vimeo\.com\/(?:video\/)?)(\d+)/i', $videoDemo, $matches)) {
+                    $vimeoId = $matches[1];
+                }
+                $iframeSrc = "https://player.vimeo.com/video/{$vimeoId}?autoplay=0&title=0&byline=0&portrait=0";
+                break;
+                
+            case 'external_link':
+            case 'secure_host':
+                // Check if it's a direct video file
+                $videoExtensions = ['.mp4', '.webm', '.ogg', '.mov', '.avi', '.m4v', '.wmv'];
+                $isVideoTag = Str::endsWith(strtolower($videoDemo), $videoExtensions);
+                
+                // If not a direct video file, try to embed as iframe
+                if (!$isVideoTag) {
+                    $isIframe = true;
+                    $iframeSrc = $videoDemo;
+                }
+                break;
+        }
+      }
+    @endphp
+     @if($videoDemo && $videoSource)
+        @if($isVideoTag)
+          <video class="img-cover course-cover-img video-cover" 
+                  id="courseVideoCover"
+                  poster="{{ $videoDemo }}"
+                  preload="metadata">
+              <source src="{{ $videoDemo }}" type="video/mp4">
+              Your browser does not support the video tag.
+          </video>
+            
+        @elseif($isIframe)
+          <iframe 
+              id="videoIframe"
+              class="img-cover course-cover-img"
+              src="{{ $iframeSrc }}"
+              frameborder="0"
+              allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+              allowfullscreen
+              loading="lazy"
+              data-original-src="{{ $iframeSrc }}"
+              data-current-time="0"
+              data-is-playing="false">
+          </iframe>
+        @endif
+        
+    @else
     <img src="{{ $course->getImageCover() }}" class="img-cover course-cover-img" alt="{{ $course->title }}"/>
+    @endif
     <div class="coursedetail-hero-top">
       <div class="coursedetail-glass"><span>⏱</span><span>{{ convertMinutesToHourAndMinute(!empty($course->duration) ? $course->duration : 0) }} {{ trans('home.hours') }} · {{ $course->textLessons->count() }} lessons</span></div>
     </div>
     <div class="coursedetail-hero-top-right">
       <button class="coursedetail-glass" id="openCurr"><span>📖</span><span>Open curriculum</span></button>
     </div>
-    <div class="coursedetail-play"><div class="coursedetail-btn">▶</div></div>
+    @if($videoDemo && $videoSource)
+      @if($isVideoTag)
+        <div class="coursedetail-play"  id="videoPlayPauseBtn"><div class="coursedetail-btn">▶</div></div>
+      
+      @endif
+    @endif
   </div>
+        <!-- <div class="coursedetail-play"  id="embeddedVideoPlayBtn"><div class="coursedetail-btn">▶</div></div> -->
 
   <h1 class="coursedetail-title"> {{ $course->title }}</h1>
   <div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap">
@@ -101,7 +190,7 @@
 
     @if($canSale and $course->subscribe)
       <a href="/subscribes/apply/{{ $course->slug }}" class="@if(!$canSale) disabled @endif">
-        <button class="coursedetail-btn">{{ trans('public.subscribe') }}</button></a>
+        <button class="coursedetail-btn">Connect</button></a>
     @endif</div>
   </div>
   </form>
@@ -147,16 +236,13 @@
         @foreach($course->chapters as $chapter)
           <div class="coursedetail-lesson" style="margin-top:8px"><span>{{ $chapter->title }}</span><button class="coursedetail-btn">Preview</button></div> 
         @endforeach
-        <!-- <div class="coursedetail-lesson"><span>01 · Foundations</span><button class="coursedetail-btn">Preview</button></div>
-        <div class="coursedetail-lesson"><span>02 · Posture & Setup</span><button class="coursedetail-btn">Preview</button></div>
-        <div class="coursedetail-lesson"><span>03 · 4-7-8 Breath</span><button class="coursedetail-btn">Preview</button></div> -->
       </div>
     </section>
 
 
     <!-- Reviews -->
-     @php
-        $reviewCount = $course->reviews->pluck('creator_id')->count();
+    @php
+      $reviewCount = $course->reviews->pluck('creator_id')->count();
     @endphp
     <section id="reviews" class="coursedetail-panel" style="margin-top:18px;display:none">
       <h3>Reviews</h3>
@@ -393,6 +479,123 @@
       teacher.addEventListener('mouseleave', () => tip.style.display = 'none');
     }
   });
+</script>
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const videoElement = document.querySelector('.video-cover');
+    const playPauseBtn = document.getElementById('videoPlayPauseBtn');
+    
+    if (videoElement && playPauseBtn) {
+        const playBtn = playPauseBtn.querySelector('.coursedetail-btn');
+        
+        // Initial state - video paused
+        videoElement.pause();
+        playBtn.textContent = '▶';
+        
+        // Toggle play/pause on button click
+        playPauseBtn.addEventListener('click', function() {
+            if (videoElement.paused) {
+                videoElement.play();
+                playBtn.textContent = '⏸'; // Pause symbol
+                playPauseBtn.classList.add('playing');
+            } else {
+                videoElement.pause();
+                playBtn.textContent = '▶'; // Play symbol
+                playPauseBtn.classList.remove('playing');
+            }
+        });
+        
+        // Update button when video ends
+        videoElement.addEventListener('ended', function() {
+            playBtn.textContent = '▶';
+            playPauseBtn.classList.remove('playing');
+        });
+        
+        // Update button when video is paused by other means
+        videoElement.addEventListener('pause', function() {
+            if (playBtn.textContent !== '▶') {
+                playBtn.textContent = '▶';
+                playPauseBtn.classList.remove('playing');
+            }
+        });
+        
+        // Update button when video starts playing
+        videoElement.addEventListener('play', function() {
+            playBtn.textContent = '⏸';
+            playPauseBtn.classList.add('playing');
+        });
+    }
+
+    const embeddedVideoBtn = document.getElementById('embeddedVideoPlayBtn');
+    
+    // if (embeddedVideoBtn)
+    // {
+    //    const iframeElement = document.querySelector('#videoIframe');
+    //     if (!iframeElement) return;
+        
+    //     const playBtn = embeddedVideoBtn.querySelector('.coursedetail-btn');
+    //     let isPlaying = false;
+    //     let currentTime = 0;
+    //     let playStartTime = 0;
+    //     const originalSrc = iframeElement.src;
+        
+    //     embeddedVideoBtn.addEventListener('click', function() {
+    //         if (isPlaying) {
+    //             // Calculate elapsed time
+    //             currentTime = (Date.now() - playStartTime) / 1000;
+                
+    //             // Pause by reloading with current time but no autoplay
+    //             let pausedUrl = originalSrc;
+    //             pausedUrl = pausedUrl.replace('autoplay=1', 'autoplay=0');
+                
+    //             // Add time parameter for resume
+    //             if (currentTime > 0) {
+    //                 if (pausedUrl.includes('youtube')) {
+    //                     pausedUrl = pausedUrl.replace(/[?&]start=\d+/, '');
+    //                     pausedUrl += (pausedUrl.includes('?') ? '&' : '?') + 'start=' + Math.floor(currentTime);
+    //                 }
+    //             }
+                
+    //             iframeElement.src = pausedUrl;
+    //             isPlaying = false;
+    //             playBtn.textContent = '▶';
+                
+    //         } else {
+    //             // Play from current time
+    //             let playUrl = originalSrc;
+    //             playUrl = playUrl.replace('autoplay=0', 'autoplay=1');
+                
+    //             // Add time parameter if we have a saved position
+    //             if (currentTime > 0) {
+    //                 if (playUrl.includes('youtube')) {
+    //                     playUrl = playUrl.replace(/[?&]start=\d+/, '');
+    //                     playUrl += (playUrl.includes('?') ? '&' : '?') + 'start=' + Math.floor(currentTime);
+    //                 }
+    //             }
+                
+    //             iframeElement.src = playUrl;
+    //             isPlaying = true;
+    //             playStartTime = Date.now() - (currentTime * 1000);
+    //             playBtn.textContent = '⏸';
+    //         }
+    //     });
+        
+    //     // Update button based on URL
+    //     iframeElement.addEventListener('load', function() {
+    //         isPlaying = this.src.includes('autoplay=1');
+    //         playBtn.textContent = isPlaying ? '⏸' : '▶';
+            
+    //         // Extract time from URL to keep track
+    //         const timeMatch = this.src.match(/[?&]start=(\d+)/);
+    //         if (timeMatch) {
+    //             currentTime = parseInt(timeMatch[1]);
+    //             if (isPlaying) {
+    //                 playStartTime = Date.now() - (currentTime * 1000);
+    //             }
+    //         }
+    //     });
+    // }
+});
 </script>
 <script>
         var webinarDemoLang = '{{ trans('webinars.webinar_demo') }}';

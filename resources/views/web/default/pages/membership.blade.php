@@ -51,11 +51,7 @@
           <article class="membership-card" id="plan-monthly" data-eur="€{{ $subscribe->price }}" data-usd="${{ $subscribe->price }}">
             <div class="membership-small">{{ $subscribe->title }}</div>
             <div class="membership-price js-price">€{{ $subscribe->price }}</div>
-            <div class="membership-small">{{ $subscribe->days }}  {{ trans('financial.days_of_subscription') }} · @if($subscribe->infinite_use)
-                                    {{ trans('update.unlimited') }}
-                                    @else
-                                    {{ $subscribe->usable_count }}
-                                    @endif</div>
+            <div class="membership-small">{{ $subscribe->days }}</div>
             <button type='submit' class="membership-cta" data-join="monthly">Join Now</button>
           </article>
         </form>

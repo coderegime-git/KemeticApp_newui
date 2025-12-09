@@ -114,7 +114,7 @@ Route::group(['namespace' => 'Auth', 'middleware' => ['check_mobile_app', 'share
 
 Route::group(['namespace' => 'Web', 'middleware' => ['check_mobile_app', 'impersonate', 'share', 'check_maintenance', 'check_restriction']], function () {
     Route::get('/reels', 'ReelController@index')->name('reels.index');
-    Route::post('/reels', 'ReelController@store')->name('reels.store');
+    Route::post('/reels', 'ReelController@store');
     Route::post('/reels/{reel}/like', 'ReelController@like')->name('reels.like');
     Route::post('/reels/{reel}/comment', 'ReelController@comment')->name('reels.comment');
     Route::post('/reels/{reel}/report', 'ReelController@report')->name('reels.report');
@@ -312,7 +312,23 @@ Route::group(['namespace' => 'Web', 'middleware' => ['check_mobile_app', 'impers
         Route::get('/', 'BookController@index');
         Route::get('/categories/{category}', 'BookController@index');
         Route::get('/{slug}', 'BookController@show');
+        Route::get('/lulu/details', 'LuluController@showBookDetails');
     });
+
+    Route::prefix('api/lulu')->group(function () {
+        Route::get('/test', [TestLuluController::class, 'testConnection']);
+        Route::get('/jobs', [TestLuluController::class, 'listJobs']);
+        Route::post('/test-job', [TestLuluController::class, 'createTestJob']);
+    });
+
+    Route::group(['prefix' => 'lulu'], function () {
+        Route::get('/', 'LuluController@index');
+        Route::get('/create', 'LuluController@create');
+        Route::post('/store', 'LuluController@store');
+        Route::get('/{id}/details', 'LuluController@show');
+        Route::post('/quote', 'LuluController@getQuote');
+    });
+
 
     Route::group(['prefix' => 'blog'], function () {
         Route::get('/', 'BlogController@index');

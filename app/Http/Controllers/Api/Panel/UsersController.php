@@ -139,37 +139,37 @@ class UsersController extends Controller
             return apiResponse2(0, 'unauthorized', trans('api.auth.unauthorized'));
         }
 
-        validateParam($request->all(), [
-            'story' => 'required|file|mimes:jpg,jpeg,png,gif,mp4,mov,avi,wmv|max:51200', // 50MB max
-            'title' => 'nullable|string|max:100',
-            'link' => 'nullable|url|max:255'
-        ]);
+        // validateParam($request->all(), [
+        //     'story' => 'required|file|mimes:jpg,jpeg,png,gif,mp4,mov,avi,wmv|max:51200', // 50MB max
+        //     'title' => 'nullable|string|max:100',
+        //     'link' => 'nullable|url|max:255'
+        // ]);
 
         try {
             $file = $request->file('story');
             $isVideo = in_array($file->getMimeType(), ['video/mp4', 'video/quicktime', 'video/avi', 'video/wmv']);
             $mediaType = $isVideo ? 'video' : 'image';
             
-            // Create directory if it doesn't exist
-            $directory = 'stories/' . $user->id . '/' . date('Y/m');
-            Storage::disk('public')->makeDirectory($directory);
+            // // Create directory if it doesn't exist
+            // $directory = 'stories/' . $user->id . '/' . date('Y/m');
+            // Storage::disk('public')->makeDirectory($directory);
             
-            // Generate unique filename
-            $filename = uniqid() . '_' . time() . '.' . $file->getClientOriginalExtension();
-            $path = $directory . '/' . $filename;
+            // // Generate unique filename
+            // $filename = uniqid() . '_' . time() . '.' . $file->getClientOriginalExtension();
+            // $path = $directory . '/' . $filename;
             
-            // Store the file
-            Storage::disk('public')->put($path, file_get_contents($file));
+            // // Store the file
+            // Storage::disk('public')->put($path, file_get_contents($file));
             
-            $mediaUrl = Storage::disk('public')->url($path);
-            $thumbnailUrl = null;
+            // $mediaUrl = Storage::disk('public')->url($path);
+            // $thumbnailUrl = null;
             
-            // Generate thumbnail
-            if ($isVideo) {
-                $thumbnailUrl = $this->generateVideoThumbnail($file, $directory);
-            } else {
-                $thumbnailUrl = $this->createImageThumbnail($file, $directory);
-            }
+            // // Generate thumbnail
+            // if ($isVideo) {
+            //     $thumbnailUrl = $this->generateVideoThumbnail($file, $directory);
+            // } else {
+            //     $thumbnailUrl = $this->createImageThumbnail($file, $directory);
+            // }
 
             if ($request->file('story')) {
                 $storage = new UploadFileManager($request->file('story'));
@@ -179,9 +179,9 @@ class UsersController extends Controller
             $story = UserStory::create([
                 'user_id' => $user->id,
                 'title' => $request->input('title'),
-                'media_url' => $mediaUrl,
-                'media_type' => $mediaType,
-                'thumbnail_url' => $thumbnailUrl,
+                'media_url' => $storage->storage_path,
+                'media_type' => $mediaType ?? 'image',
+                'thumbnail_url' => $thumbnailUrl ?? null,
                 'link' => $request->input('link'),
                 'is_active' => true,
                 'expires_at' => Carbon::now()->addHours(24),
@@ -749,7 +749,7 @@ class UsersController extends Controller
     {
         $session = UserFirebaseSessions::where("token", request()->bearerToken())->get()->first();
         abort_unless($session, 404);
-        $session->fcm_token = \request("token");
+        $session->fcm_token = request("token");
         $session->save();
         return apiResponse2(1, 'retrieved', "");
     }
@@ -803,16 +803,14 @@ class UsersController extends Controller
                     ProductOrder::where('id', $cart->product_order_id)
                         ->where('buyer_id', $userid)
                         ->update([
-                            'message_to_seller' => $data['description'],
+                            'message_to_seller' => $data['description'] ?? null,
                         ]);
                 }
             }
 
-           
-
             if (!$user) {
                 
-                $name = $data['first_name']." ".$data['last_name'];
+                $name = ($data['first_name'] ?? null) . " " . ($data['last_name'] ?? null);
                 $createuser = User::create([
                     'device_id_or_ip_address' => $data['device_id'],
                     'country_id'    => $data['country_id'] ?? null,
@@ -844,7 +842,8 @@ class UsersController extends Controller
             }
             else{
 
-                $name = $data['first_name']." ".$data['last_name'];
+                $name = ($data['first_name'] ?? null) . " " . ($data['last_name'] ?? null);
+                //dd($name);
                 $user->update([
                     'country_id' => $data['country_id'] ?? $user->country_id,
                     'province_name' => $data['province_name'] ?? $user->province_name,

@@ -12,6 +12,8 @@ use App\Models\Sale;
 use App\Models\UserOccupation;
 use App\Models\Api\Webinar;
 use App\Models\Api\User;
+use App\Models\UserStory;
+use App\Models\UserStoryView;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -24,6 +26,8 @@ class UserController extends Controller
 
     public function profile(Request $request, $id)
     {
+        $userStories = collect();
+
         $user = User::where('id', $id)
             ->whereIn('role_name', [Role::$organization, Role::$teacher, Role::$user])
             ->first();
@@ -53,10 +57,26 @@ class UserController extends Controller
             $userDetails = $this->transformNullStrings($userDetails);
             $userDetails = $this->fixCommissionField($userDetails);
         }
+
+        $userStories = UserStory::where('user_id', $user->id)
+            ->where('is_active', true)
+            ->where('expires_at', '>', Carbon::now())
+            ->orderBy('created_at', 'desc')
+            ->get();
+        
+        // Mark if story is viewed by current user
+        $userStories = $userStories->map(function ($story) use ($user) {
+            $story->viewed_by_current_user = UserStoryView::where('story_id', $story->id)
+                ->where('user_id', $user->id)
+                ->exists();
+            $story->media_url = url($story->media_url);  
+            return $story;
+        });
         
         return apiResponse2(1, 'retrieved', trans('api.public.retrieved'), [
             'user' => $userDetails,
             'cashbackRules' => $cashbackRules,
+            'stories' => $userStories
         ]);
 
     }
