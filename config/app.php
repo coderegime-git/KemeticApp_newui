@@ -213,6 +213,7 @@ return [
         Craftsys\Msg91\Msg91LaravelServiceProvider::class,
         Kreait\Laravel\Firebase\ServiceProvider::class,
         Paytabscom\Laravel_paytabs\PaypageServiceProvider::class,
+        // App\Providers\LuluServiceProvider::class,
     ],
 
     /*

@@ -53,7 +53,7 @@ Route::group([], function () {
         Route::get('organizations', ['uses' => 'UserController@organizations']);
         Route::get('consultations', ['uses' => 'UserController@consultations']);
 
-    });
+    }); 
 
     /******  Meetings ******/
     Route::post('meetings/reserve', ['uses' => 'MeetingsController@reserve', 'middleware' => ['api.auth', 'api.request.type']]);

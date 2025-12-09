@@ -12,12 +12,13 @@
     </div>
     <nav class="dashboard-nav">
         @if($authUser->isAdmin())
+            <a href="/"><span class="dashboard-ms">home</span> Home</a>
             <a href="{{ getAdminPanelUrl() }}" class="active"><span class="dashboard-ms">space_dashboard</span> Dashboard</a>
             <a href="{{ getAdminPanelUrl("/settings") }}"><span class="dashboard-ms">settings</span> Settings</a>
         @else
             <a href="/"><span class="dashboard-ms">home</span> Home</a>
             <a href="/panel" class="{{ Request::is('panel') && !Request::is('panel/*') ? 'active' : '' }}"><span class="dashboard-ms">space_dashboard</span> Dashboard</a>
-            <a href="{{ $authUser->getProfileUrl() }}" class="{{ !Request::is('panel/*') ? 'active' : '' }}"><span class="dashboard-ms">person</span> Profile</a>
+            <a href="{{ $authUser->getProfileUrl() }}" class="{{ Request::is('users/*') ? 'active' : '' }}"><span class="dashboard-ms">person</span> Profile</a>
             <a href="/panel/notifications" class="{{ Request::is('panel/notifications*') ? 'active' : '' }}"><span class="dashboard-ms">notifications</span> Notifications</a>
             <a href="/panel/setting" class="{{ Request::is('panel/setting*') ? 'active' : '' }}"><span class="dashboard-ms">settings</span> Settings</a>
         @endif

@@ -471,6 +471,7 @@ class CartController extends Controller
     {
         $user = apiAuth();
         $user_as_a_guest=false;
+
         if($user){
             $carts = Cart::where('creator_id', $user->id)
             ->get();
@@ -486,6 +487,7 @@ class CartController extends Controller
             $carts = Cart::where('creator_guest_id', $user->id)
             ->get();
         }
+        
 
         $hasPhysicalProduct = $carts->where('productOrder.product.type', Product::$physical);
         $checkAddressValidation = (count($hasPhysicalProduct) > 0);

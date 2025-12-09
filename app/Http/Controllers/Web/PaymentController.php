@@ -915,15 +915,17 @@ class PaymentController extends Controller
             if (session()->has('device_id')) {
                 $guestuser = new \stdClass(); // Create an empty object for guest users
                 $guestuser->id = session('device_id');
-                $userid = $guestuser->id;
+                $userId = $guestuser->id;
             }
             else{
                 return redirect('/cart');
             }
         }
         else{
-            $userid = $user->id;
+            $userId = $user->id;
         }
+
+        
 
          $order = Order::where('id', $orderId)
             ->where('user_id', $userId)

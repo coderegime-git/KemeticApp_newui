@@ -51,6 +51,20 @@ return [
         'industry_type' => env('PAYTM_INDUSTRY_TYPE'),
     ],
 
+    // 'lulu' => [
+    //     'base_url' => "https://api.sandbox.lulu.com",
+    //     'client_key' => "9f605b15-6c3c-49e5-919b-84f7341a2283",
+    //     'client_secret' => "20aiFIjqs1ZnCRFBkcbRLIxUUX83ogIp",
+    //     'base64' => "Basic OWY2MDViMTUtNmMzYy00OWU1LTkxOWItODRmNzM0MWEyMjgzOjIwYWlGSWpxczFabkNSRkJrY2JSTEl4VVVYODNvZ0lw",
+    // ],
+
+    // 'lulu' => [
+    //     'base_url' => env('LULU_BASE_URL', 'https://api.sandbox.lulu.com'),
+    //     'client_key' => env('LULU_CLIENT_KEY'),
+    //     'client_secret' => env('LULU_CLIENT_SECRET'),
+    //     'base64' => env('LULU_BASE64_AUTH'),
+    // ],
+
     // SMS Channel
     "msg91" => [
         'key' => '', // set from Channel

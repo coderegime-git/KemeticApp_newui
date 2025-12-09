@@ -11,204 +11,7 @@
       display: block;
     }
 
-      .story-upload-modal {
-      position: fixed;
-      top: 0;
-      left: 0;
-      width: 100%;
-      height: 100%;
-      background: rgba(0, 0, 0, 0.8);
-      z-index: 9999;
-      display: none;
-      justify-content: center;
-      align-items: center;
-    }
-    
-    .story-upload-modal.active {
-      display: flex;
-    }
-    
-    .story-upload-content {
-      background: white;
-      padding: 25px;
-      border-radius: 15px;
-      width: 90%;
-      max-width: 500px;
-      position: relative;
-    }
-    
-    .story-upload-close {
-      position: absolute;
-      top: 10px;
-      right: 15px;
-      background: none;
-      border: none;
-      font-size: 24px;
-      cursor: pointer;
-      color: #666;
-    }
-    
-    .story-preview {
-      width: 100%;
-      max-height: 300px;
-      object-fit: contain;
-      border-radius: 10px;
-      margin: 15px 0;
-      display: none;
-    }
-    
-    .story-preview.active {
-      display: block;
-    }
-    
-    .story-upload-form {
-      display: flex;
-      flex-direction: column;
-      gap: 15px;
-    }
-    
-    .story-input {
-      padding: 12px 15px;
-      border: 2px solid #e0e0e0;
-      border-radius: 8px;
-      font-size: 16px;
-      width: 100%;
-    }
-    
-    .story-input:focus {
-      outline: none;
-      border-color: #667eea;
-    }
-    
-    .story-upload-btn {
-      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-      color: white;
-      border: none;
-      padding: 14px;
-      border-radius: 8px;
-      font-size: 16px;
-      cursor: pointer;
-      font-weight: 600;
-      transition: opacity 0.3s;
-    }
-    
-    .story-upload-btn:hover {
-      opacity: 0.9;
-    }
-    
-    .story-upload-btn:disabled {
-      opacity: 0.5;
-      cursor: not-allowed;
-    }
-    
-    .upload-progress {
-      height: 4px;
-      background: #e0e0e0;
-      border-radius: 2px;
-      margin-top: 10px;
-      overflow: hidden;
-      display: none;
-    }
-    
-    .upload-progress.active {
-      display: block;
-    }
-    
-    .upload-progress-bar {
-      height: 100%;
-      background: linear-gradient(90deg, #4CAF50, #8BC34A);
-      width: 0%;
-      transition: width 0.3s;
-    }
-    
-    .error-message {
-      color: #f44336;
-      font-size: 14px;
-      margin-top: 5px;
-      display: none;
-      padding: 10px;
-      background: #ffebee;
-      border-radius: 5px;
-    }
-    
-    .error-message.active {
-      display: block;
-    }
-    
-    /* File Upload Button */
-    .story-choose-btn {
-      background: #f5f5f5;
-      border: 2px dashed #ccc;
-      padding: 40px 20px;
-      text-align: center;
-      border-radius: 10px;
-      cursor: pointer;
-      transition: all 0.3s;
-      margin-bottom: 20px;
-    }
-    
-    .story-choose-btn:hover {
-      border-color: #667eea;
-      background: #f0f0ff;
-    }
-    
-    .story-choose-text {
-      font-size: 18px;
-      color: #666;
-      margin-bottom: 10px;
-      font-weight: 500;
-    }
-    
-    .story-choose-subtext {
-      font-size: 14px;
-      color: #999;
-    }
-    
-    /* Story Item Styles */
-    .profile-story {
-      cursor: pointer;
-      text-align: center;
-      width: 80px;
-    }
-    
-    .profile-ring {
-      width: 80px;
-      height: 80px;
-      border-radius: 50%;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      margin-bottom: 8px;
-      position: relative;
-      border: 2px solid transparent;
-      background: linear-gradient(45deg, #f09433, #e6683c, #dc2743, #cc2366, #bc1888);
-      background-size: 400% 400%;
-    }
-    
-    .profile-ring.viewed {
-      background: #e0e0e0;
-    }
-    
-    .profile-add {
-      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-    }
-    
-    .profile-inner {
-      width: 70px;
-      height: 70px;
-      border-radius: 50%;
-      overflow: hidden;
-      background: white;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-    }
-    
-    .profile-inner img {
-      width: 100%;
-      height: 100%;
-      object-fit: cover;
-    }
+   
   </style>
 
   <div class="profile-wrap">
@@ -232,10 +35,15 @@
 
       <button type="button" id="followToggle" data-user-id="{{ $user['id'] }}" class="profile-follow">
         @if(!empty($authUserIsFollower) and $authUserIsFollower)
+            Unconnect
+        @else
+            Connect
+        @endif
+        <!-- @if(!empty($authUserIsFollower) and $authUserIsFollower)
             {{ trans('panel.unfollow') }}
         @else
             {{ trans('panel.follow') }}
-        @endif
+        @endif -->
       </button>
     </section>
 
@@ -292,8 +100,12 @@
         <section class="profile-grid">
            @if(!empty($user->reels) and !$user->reels->isEmpty())
              @foreach($user->reels as $reel)
-          <a class="profile-card" href="{{ $webinar->getUrl() }}">
-              <img src="{{ url($reel->video_path) }}" alt="{{ $reel->title }}">
+          <a class="profile-card" href="#">
+             <video class="reel-video" controls preload="metadata" poster="{{ url($reel->thumbnail_url) }}">
+                                    <source src="{{ url($reel->video_path) }}" type="video/mp4">
+                                    {{ $reel->title }}
+                                </video>
+              <!-- <img src="{{ url($reel->video_path) }}" alt="{{ $reel->title }}"> -->
             <div class="profile-badge"><span class="profile-star">★</span> 4,320</div>
           </a>
           @endforeach
@@ -900,8 +712,10 @@
 </script>
 
 <script>
-  var unFollowLang = '{{ trans('panel.unfollow') }}';
-  var followLang = '{{ trans('panel.follow') }}';
+  var unFollowLang = 'Unconnect';
+  var followLang = 'Connect';
+  // var unFollowLang = '{{ trans('panel.unfollow') }}';
+  // var followLang = '{{ trans('panel.follow') }}';
   var reservedLang = '{{ trans('meeting.reserved') }}';
   var availableDays = {{ json_encode($times) }};
   var messageSuccessSentLang = '{{ trans('site.message_success_sent') }}';

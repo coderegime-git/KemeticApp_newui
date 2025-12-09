@@ -105,7 +105,7 @@
 
                     <div class="settings-field-group">
                         <label class="settings-field-label">Phone Number</label>
-                        <input type="tel" name="mobile" value="{{ $user->mobile }}" class="settings-field-input @error('mobile') settings-field-error @enderror" placeholder="+31 6 0000 0000" required/>
+                        <input type="tel" name="mobile" value="{{ $user->mobile }}" class="settings-field-input @error('mobile') settings-field-error @enderror" placeholder="+31 6 0000 0000"/>
                         @error('mobile')
                         <div class="settings-field-error-message">{{ $message }}</div>
                         @enderror
@@ -113,7 +113,7 @@
 
                     <div class="settings-field-group">
                         <label class="settings-field-label">Country</label>
-                        <select name="country_id" class="settings-field-input">
+                        <select name="country_id" class="settings-field-input" style="color: #bdb5b5;">
                             <option value="">Select country</option>
                             @if(!empty($countries))
                                 @foreach($countries as $country)
@@ -147,7 +147,7 @@
 
                      <div class="settings-field-group">
                             <label class="settings-field-label">Language</label>
-                            <select name="language" class="settings-field-input">
+                            <select name="language" class="settings-field-input" style="color: #bdb5b5;">
                                 <option value="">Select Language</option>
                                 @if(!empty($userLanguages))
                                     @foreach($userLanguages as $lang => $language)
@@ -161,7 +161,7 @@
 
                         <div class="settings-field-group">
                             <label class="settings-field-label">Timezone</label>
-                            <select name="timezone" class="settings-field-input">
+                            <select name="timezone" class="settings-field-input" style="color: #bdb5b5;">
                                 <option value="" disabled>Select Timezone</option>
                                 @foreach(getListOfTimezones() as $timezone)
                                     <option value="{{ $timezone }}" @if($user->timezone == $timezone) selected @endif>
@@ -174,7 +174,7 @@
                         @if(!empty($currencies) and count($currencies))
                             <div class="settings-field-group">
                                 <label class="settings-field-label">Currency</label>
-                                <select name="currency" class="settings-field-input">
+                                <select name="currency" class="settings-field-input" style="color: #bdb5b5;">
                                     @foreach($currencies as $currencyItem)
                                         <option value="{{ $currencyItem->currency }}" {{ $user->currency == $currencyItem->currency ? 'selected' : '' }}>
                                             {{ currenciesLists($currencyItem->currency) }} ({{ currencySign($currencyItem->currency) }})

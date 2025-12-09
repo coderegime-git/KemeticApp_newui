@@ -8,6 +8,7 @@ use App\User;
 use Carbon\Carbon;
 use Illuminate\Foundation\Auth\SendsPasswordResetEmails;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Mail;
@@ -111,6 +112,14 @@ class ForgotPasswordController extends Controller
             'generalSettings' => $generalSettings,
             'email' => $email
         ];
+
+        //Log::info('Attempting to send password reset email to: ' . $email);
+
+        // Mail::send('web.default.auth.password_verify', $emailData, function ($message) use ($email) {
+        //     $message->from("info@kemetic.app", "Kemetic App");
+        //     $message->to('murugesapandianr@gmail.com');
+        //     $message->subject('Reset Password Notification');
+        // });
 
         Mail::send('web.default.auth.password_verify', $emailData, function ($message) use ($email) {
             $message->from(!empty($generalSettings['site_email']) ? $generalSettings['site_email'] : env('MAIL_FROM_ADDRESS'), env('MAIL_FROM_NAME'));

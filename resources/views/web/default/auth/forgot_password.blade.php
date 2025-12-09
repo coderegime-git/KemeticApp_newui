@@ -8,16 +8,16 @@
 
     <div class="container">
         <div class="row login-container">
-            <div class="col-12 col-md-6 pl-0">
-                <img src="{{ getPageBackgroundSettings('remember_pass') }}" class="img-cover" alt="Login">
+            <div class="col-12 col-md-6 pl-0" style="margin-top:10px;">
+                <img src="{{ getPageBackgroundSettings('remember_pass') }}" class="img-cover" alt="Login" style="width:-webkit-fill-available;">
             </div>
 
             <div class="col-12 col-md-6">
 
-                <div class="login-card">
-                    <h1 class="font-20 font-weight-bold">{{ trans('auth.forget_password') }}</h1>
+                <div class="login-card" style="margin-top:10px;">
+                    <h1 class="font-20 font-weight-bold" style="padding:10px;">{{ trans('auth.forget_password') }}</h1>
 
-                    <form method="post" action="/forget-password" class="mt-35">
+                    <form method="post" action="/forget-password" class="mt-35" style="padding:10px;">
                         <input type="hidden" name="_token" value="{{ csrf_token() }}">
 
                         @include('web.default.auth.includes.register_methods')
@@ -26,8 +26,9 @@
                             @include('web.default.includes.captcha_input')
                         @endif
 
-
-                        <button type="submit" class="btn btn-primary btn-block mt-20">{{ trans('auth.reset_password') }}</button>
+                        <div class="text-center mt-20">
+                            <button type="submit" class="btn btn-primary btn-block mt-20">{{ trans('auth.reset_password') }}</button>
+                        </div>
                     </form>
 
                     <div class="text-center mt-20">
@@ -36,7 +37,9 @@
 
                     <div class="text-center mt-20">
                         <span class="text-secondary">
-                            <a href="/login" class="text-secondary font-weight-bold">{{ trans('auth.login') }}</a>
+                            <a href="/login" class="text-secondary font-weight-bold">
+                                <button type="submit" style="margin-top:0px; margin-bottom:10px;" class="btn btn-primary btn-block mt-20">{{ trans('auth.login') }}</button>
+                            </a>
                         </span>
                     </div>
 
