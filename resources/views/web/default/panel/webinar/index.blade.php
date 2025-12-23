@@ -1,5 +1,470 @@
-@extends(getTemplate() .'.panel.layouts.panel_layout')
 
+@extends('web.default.layouts.newapp')
+
+<style>
+   /* ======================================================
+   KEMETIC APP – PREMIUM PANEL DESIGN
+   Black • Gold • Luxury SaaS
+====================================================== */
+
+:root {
+    --k-bg: #070707;
+    --k-surface: #0e0e0e;
+    --k-card: linear-gradient(180deg,#141414,#0c0c0c);
+    --k-border: rgba(242,201,76,.18);
+
+    --k-gold: #F2C94C;
+    --k-gold-soft: rgba(242,201,76,.12);
+    --k-gold-glow: rgba(242,201,76,.35);
+
+    --k-text: #f1f1f1;
+    --k-muted: #9b9b9b;
+
+    --k-radius-lg: 20px;
+    --k-radius-md: 14px;
+}
+
+/* ===================== PAGE ===================== */
+
+section {
+    padding: 34px 18px 18px !important;
+}
+
+.section-title {
+    color: var(--k-gold);
+    font-size: 22px;
+    font-weight: 700;
+    letter-spacing: .4px;
+}
+
+/* ===================== ACTIVITY STATS ===================== */
+
+.activities-container {
+    background: radial-gradient(circle at top,#161616,#090909);
+    border: 1px solid var(--k-border);
+    border-radius: var(--k-radius-lg);
+    box-shadow: 0 20px 60px rgba(0,0,0,.75);
+}
+
+.activities-container img {
+    filter: drop-shadow(0 0 14px var(--k-gold-glow));
+}
+
+.activities-container strong {
+    font-size: 22px;
+    color: var(--k-gold);
+}
+
+.activities-container span {
+    color: var(--k-muted);
+}
+
+/* ===================== WEBINAR CARD ===================== */
+
+.webinar-card {
+    background: var(--k-card);
+    border-radius: var(--k-radius-lg);
+    border: 1px solid var(--k-border);
+    overflow: hidden;
+    transition: all .35s ease;
+    box-shadow: 0 18px 55px rgba(0,0,0,.7);
+}
+
+.webinar-card:hover {
+    transform: translateY(-8px);
+    box-shadow: 0 28px 75px rgba(242,201,76,.18);
+    border-color: var(--k-gold);
+}
+
+/* ===================== IMAGE ===================== */
+
+.webinar-card .image-box {
+    width: 260px;
+    position: relative;
+}
+
+.webinar-card img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+/* ===================== PROGRESS ===================== */
+
+.webinar-card .progress {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    height: 6px;
+    width: 100%;
+    background: rgba(255,255,255,.08);
+}
+
+.webinar-card .progress-bar {
+    background: linear-gradient(90deg,#F2C94C,#E5A100);
+}
+
+/* ===================== BADGES ===================== */
+
+.badges-lists {
+    position: absolute;
+    top: 12px;
+    left: 12px;
+    display: flex;
+    gap: 6px;
+    flex-wrap: wrap;
+}
+
+.badge {
+    border-radius: 999px;
+    padding: 6px 14px;
+    font-size: 12px;
+    font-weight: 600;
+    border: 1px solid transparent;
+}
+
+.badge-primary {
+    background: var(--k-gold-soft);
+    color: var(--k-gold);
+    border-color: var(--k-gold);
+}
+
+.badge-secondary {
+    background: rgba(255,255,255,.08);
+    color: #ddd;
+}
+
+.badge-danger {
+    background: rgba(220,53,69,.18);
+    color: #ff6b6b;
+}
+
+.badge-warning {
+    background: rgba(255,193,7,.22);
+    color: #ffc107;
+}
+
+.status-badge-dark {
+    background: rgba(0,0,0,.7);
+    color: var(--k-gold);
+    border: 1px solid var(--k-border);
+}
+
+/* ===================== CARD BODY ===================== */
+
+.webinar-card-body {
+    padding: 20px 24px;
+}
+
+.webinar-card-body h3 {
+    color: var(--k-text);
+    font-size: 16px;
+    line-height: 1.4;
+}
+
+.webinar-card-body a:hover h3 {
+    color: var(--k-gold);
+}
+
+/* ===================== PRICE ===================== */
+
+.webinar-price-box .real {
+    color: var(--k-gold);
+    font-size: 20px;
+    font-weight: 700;
+}
+
+.webinar-price-box .off {
+    color: #888;
+    text-decoration: line-through;
+}
+
+/* ===================== STATS ===================== */
+
+.stat-title {
+    color: var(--k-muted);
+    font-size: 12px;
+    letter-spacing: .08em;
+    text-transform: uppercase;
+}
+
+.stat-value {
+    color: var(--k-text);
+    font-size: 15px;
+    font-weight: 600;
+}
+
+/* ===================== DROPDOWN ===================== */
+
+.table-actions .dropdown-menu {
+    background: #0b0b0b;
+    border-radius: var(--k-radius-md);
+    border: 1px solid var(--k-border);
+    box-shadow: 0 18px 60px rgba(0,0,0,.85);
+}
+
+.webinar-actions {
+    color: #ddd;
+    padding: 12px 16px;
+    font-size: 14px;
+    transition: .25s;
+}
+
+.webinar-actions:hover {
+    background: var(--k-gold-soft);
+    color: var(--k-gold);
+}
+
+/* ===================== SWITCH ===================== */
+
+.custom-control-input:checked ~ .custom-control-label::before {
+    background-color: var(--k-gold);
+    border-color: var(--k-gold);
+}
+
+/* ===================== PAGINATION ===================== */
+
+.pagination .page-link {
+    background: #0d0d0d;
+    border: 1px solid var(--k-border);
+    color: var(--k-gold);
+    border-radius: 10px;
+}
+
+.pagination .active .page-link {
+    background: var(--k-gold);
+    color: #000;
+}
+
+/* ===================== MOBILE ===================== */
+
+@media (max-width: 991px) {
+    .webinar-card {
+        flex-direction: column;
+    }
+
+    .webinar-card .image-box {
+        width: 100%;
+        height: 220px;
+    }
+}
+
+/* ===================== FIX DROPDOWN POSITION ===================== */
+
+.webinar-dropdown {
+    position: relative;
+}
+
+.webinar-dropdown .dropdown-menu {
+    position: absolute !important;
+    top: 42px !important;
+    right: 0 !important;
+    left: auto !important;
+
+    transform: none !important;
+    margin-top: 6px;
+
+    min-width: 220px;
+    z-index: 9999;
+}
+
+/* Prevent parent clipping */
+.webinar-card,
+.webinar-card-body {
+    overflow: visible !important;
+}
+
+/* Mobile fix */
+@media (max-width: 991px) {
+    .webinar-dropdown .dropdown-menu {
+        right: 10px !important;
+        left: auto !important;
+    }
+}
+
+
+.custom-control {
+  position: relative;
+  z-index: 1;
+  display: block;
+  min-height: 1.3rem;
+  padding-left: 2rem;
+  -webkit-print-color-adjust: exact;
+          print-color-adjust: exact;
+}
+
+.custom-control-inline {
+  display: inline-flex;
+  margin-right: 1rem;
+}
+
+.custom-control-input {
+  position: absolute;
+  left: 0;
+  z-index: -1;
+  width: 1.5rem;
+  height: 1.4rem;
+  opacity: 0;
+}
+.custom-control-input:checked ~ .custom-control-label::before {
+  color: #ffffff;
+  border-color: #43d477;
+  background-color: #43d477;
+}
+.custom-control-input:focus ~ .custom-control-label::before {
+  box-shadow: none, 1.5rem;
+}
+.custom-control-input:focus:not(:checked) ~ .custom-control-label::before {
+  border-color: #43d477;
+}
+.custom-control-input:not(:disabled):active ~ .custom-control-label::before {
+  color: #ffffff;
+  background-color: #43d477;
+  border-color: #43d477;
+}
+.custom-control-input[disabled] ~ .custom-control-label, .custom-control-input:disabled ~ .custom-control-label {
+  color: #6c757d;
+}
+.custom-control-input[disabled] ~ .custom-control-label::before, .custom-control-input:disabled ~ .custom-control-label::before {
+  background-color: #f1f1f1;
+}
+
+.custom-control-label {
+  position: relative;
+  margin-bottom: 0;
+  vertical-align: top;
+}
+.custom-control-label::before {
+  position: absolute;
+  top: -0.1rem;
+  left: -2rem;
+  display: block;
+  width: 1.5rem;
+  height: 1.5rem;
+  pointer-events: none;
+  content: "";
+  background-color: #ffffff;
+  border: 2px solid #adb5bd;
+  box-shadow: none;
+}
+.custom-control-label::after {
+  position: absolute;
+  top: -0.1rem;
+  left: -2rem;
+  display: block;
+  width: 1.5rem;
+  height: 1.5rem;
+  content: "";
+  background: 50%/50% 50% no-repeat;
+}
+
+.custom-checkbox .custom-control-label::before {
+  border-radius: 0.25rem;
+}
+.custom-checkbox .custom-control-input:checked ~ .custom-control-label::after {
+  background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' width='8' height='8' viewBox='0 0 8 8'%3e%3cpath fill='%23ffffff' d='M6.564.75l-3.59 3.612-1.538-1.55L0 4.26l2.974 2.99L8 2.193z'/%3e%3c/svg%3e");
+}
+.custom-checkbox .custom-control-input:indeterminate ~ .custom-control-label::before {
+  border-color: #F2C94C;
+  background-color: #F2C94C;
+}#
+.custom-checkbox .custom-control-input:indeterminate ~ .custom-control-label::after {
+  background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' width='4' height='4' viewBox='0 0 4 4'%3e%3cpath stroke='%23ffffff' d='M0 2h4'/%3e%3c/svg%3e");
+}
+.custom-checkbox .custom-control-input:disabled:checked ~ .custom-control-label::before {
+  background-color: #F2C94C;
+}
+.custom-checkbox .custom-control-input:disabled:indeterminate ~ .custom-control-label::before {
+  background-color: #F2C94C;
+}
+
+.custom-radio .custom-control-label::before {
+  border-radius: 50%;
+}
+.custom-radio .custom-control-input:checked ~ .custom-control-label::after {
+  background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='-4 -4 8 8'%3e%3ccircle r='3' fill='%23ffffff'/%3e%3c/svg%3e");
+}
+.custom-radio .custom-control-input:disabled:checked ~ .custom-control-label::before {
+  background-color: rgba(67, 212, 119, 0.5);
+}
+
+.custom-switch {
+  padding-left: 4.125rem;
+}
+.custom-switch .custom-control-label::before {
+  left: -3.125rem;
+  width: 2.625rem;
+  pointer-events: all;
+  border-radius: 0.75rem;
+}
+.custom-switch .custom-control-label::after {
+  top: calc(-0.1rem + 4px);
+  left: calc(-3.125rem + 4px);
+  width: calc(1.5rem - 8px);
+  height: calc(1.5rem - 8px);
+  background-color: #adb5bd;
+  border-radius: 0.75rem;
+  transition: transform 0.15s ease-in-out, background-color 0.15s ease-in-out, border-color 0.15s ease-in-out, box-shadow 0.15s ease-in-out;
+}
+@media (prefers-reduced-motion: reduce) {
+  .custom-switch .custom-control-label::after {
+    transition: none;
+  }
+}
+.custom-switch .custom-control-input:checked ~ .custom-control-label::after {
+  background-color: #ffffff;
+  transform: translateX(1.125rem);
+}
+.custom-switch .custom-control-input:disabled:checked ~ .custom-control-label::before {
+  background-color: rgba(67, 212, 119, 0.5);
+}
+
+/* ===================== KEMETIC 3 DOT BUTTON ===================== */
+
+.kemetic-more-btn {
+    width: 38px;
+    height: 38px;
+    border-radius: 50%;
+    background: transparent;
+    border: 1px solid rgba(242,201,76,.25);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+
+    transition: all .25s ease;
+}
+
+/* Icon color */
+.kemetic-more-btn svg {
+    stroke: #F2C94C;
+}
+
+/* Hover effect */
+.kemetic-more-btn:hover {
+    background: rgba(242,201,76,.12);
+    border-color: #F2C94C;
+    box-shadow: 0 0 14px rgba(242,201,76,.35);
+}
+
+/* Active / open state */
+.kemetic-more-btn[aria-expanded="true"] {
+    background: rgba(242,201,76,.18);
+    box-shadow: 0 0 18px rgba(242,201,76,.45);
+}
+
+/* Remove bootstrap caret */
+.kemetic-more-btn::after {
+    display: none !important;
+}
+
+/* Mobile tap feedback */
+.kemetic-more-btn:active {
+    transform: scale(.95);
+}
+
+
+</style>
 @push('styles_top')
     <link rel="stylesheet" href="/assets/default/vendors/daterangepicker/daterangepicker.min.css">
 @endpush
@@ -9,11 +474,11 @@
         <h2 class="section-title">{{ trans('panel.my_activity') }}</h2>
 
         <div class="activities-container mt-25 p-20 p-lg-35">
-            <div class="row">
+            <div class="row" style="padding:10px;">
                 <div class="col-6 col-md-3 mt-30 mt-md-0 d-flex align-items-center justify-content-center">
                     <div class="d-flex flex-column align-items-center text-center">
                         <img src="/assets/default/img/activity/webinars.svg" width="64" height="64" alt="">
-                        <strong class="font-30 text-dark-blue font-weight-bold mt-5">{{ !empty($webinars) ? $webinarsCount : 0}}</strong>
+                        <strong class="">{{ !empty($webinars) ? $webinarsCount : 0}}</strong>
                         <span class="font-16 text-gray font-weight-500">{{ trans('panel.classes') }}</span>
                     </div>
                 </div>
@@ -21,7 +486,7 @@
                 <div class="col-6 col-md-3 mt-30 mt-md-0 d-flex align-items-center justify-content-center">
                     <div class="d-flex flex-column align-items-center text-center">
                         <img src="/assets/default/img/activity/hours.svg" width="64" height="64" alt="">
-                        <strong class="font-30 text-dark-blue font-weight-bold mt-5">{{ convertMinutesToHourAndMinute($webinarHours) }}</strong>
+                        <strong class="">{{ convertMinutesToHourAndMinute($webinarHours) }}</strong>
                         <span class="font-16 text-gray font-weight-500">{{ trans('home.hours') }}</span>
                     </div>
                 </div>
@@ -29,7 +494,7 @@
                 <div class="col-6 col-md-3 mt-30 mt-md-0 d-flex align-items-center justify-content-center mt-5 mt-md-0">
                     <div class="d-flex flex-column align-items-center text-center">
                         <img src="/assets/default/img/activity/sales.svg" width="64" height="64" alt="">
-                        <strong class="font-30 text-dark-blue font-weight-bold mt-5">{{ handlePrice($webinarSalesAmount) }}</strong>
+                        <strong class="">{{ handlePrice($webinarSalesAmount) }}</strong>
                         <span class="font-16 text-gray font-weight-500">{{ trans('cart.total') .' '. trans('panel.webinar_sales') }}</span>
                     </div>
                 </div>
@@ -37,7 +502,7 @@
                 <div class="col-6 col-md-3 mt-30 mt-md-0 d-flex align-items-center justify-content-center mt-5 mt-md-0">
                     <div class="d-flex flex-column align-items-center text-center">
                         <img src="/assets/default/img/activity/download-sales.svg" width="64" height="64" alt="">
-                        <strong class="font-30 text-dark-blue font-weight-bold mt-5">{{ handlePrice($courseSalesAmount) }}</strong>
+                        <strong class="">{{ handlePrice($courseSalesAmount) }}</strong>
                         <span class="font-16 text-gray font-weight-500">{{ trans('cart.total') .' '.trans('panel.course_sales') }}</span>
                     </div>
                 </div>
@@ -74,7 +539,7 @@
 
                 <div class="row mt-30">
                     <div class="col-12">
-                        <div class="webinar-card webinar-list d-flex">
+                        <div class="webinar-card webinar-list d-flex" style="padding:10px;">
                             <div class="image-box">
                                 <img src="{{ $webinar->getImage() }}" class="img-cover" alt="">
 
@@ -125,8 +590,8 @@
                                     </a>
 
                                     @if($webinar->isOwner($authUser->id) or $webinar->isPartnerTeacher($authUser->id))
-                                        <div class="btn-group dropdown table-actions">
-                                            <button type="button" class="btn-transparent dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                                        <div class="btn-group dropdown table-actions webinar-dropdown">
+                                            <button type="button" class="btn-transparent dropdown-toggle kemetic-more-btn" data-toggle="dropdown" data-display="static" aria-haspopup="true" aria-expanded="false">
                                                 <i data-feather="more-vertical" height="20"></i>
                                             </button>
                                             <div class="dropdown-menu ">

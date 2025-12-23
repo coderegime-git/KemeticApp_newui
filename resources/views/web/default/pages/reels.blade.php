@@ -80,8 +80,9 @@
 
       
     </div>
+    
   </section>
-
+  
   <!-- TRENDING -->
   <section>
     <h2>🔥 Trending Reels</h2>

@@ -14,16 +14,43 @@ use App\Models\PaymentChannel;
 use App\Models\Product;
 use App\Models\Subscribe;
 use App\Models\ProductOrder;
-use Illuminate\Http\Request;
-use Illuminate\Validation\Rule;
 use App\User;
 use Carbon\Carbon;
 use App\Models\Region;
+use Illuminate\Http\Request;
+use Illuminate\Validation\Rule;
+use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
 
 class CartController extends Controller
 {
     use RegionsDataByUser;
+
+    protected $laragonCertPath;
+    
+    public function __construct()
+    {
+        // Laragon certificate path - adjust if different
+        $this->laragonCertPath = "C:/laragon/etc/ssl/cert.pem";
+        
+        // Alternative paths to check
+        $alternativePaths = [
+            "C:/laragon/etc/ssl/cert.pem",
+            "C:/laragon/etc/ssl/cacert.pem",
+            "C:/laragon/etc/ssl/certs/ca-bundle.crt",
+            base_path("cacert.pem"), // If you want to store in your project
+            storage_path("app/certs/cacert.pem"), // Custom storage path
+        ];
+        
+        // Find the first existing certificate file
+        foreach ($alternativePaths as $path) {
+            if (file_exists($path)) {
+                $this->laragonCertPath = $path;
+                break;
+            }
+        }
+    }
 
     // public function index()
     // {
@@ -161,7 +188,7 @@ class CartController extends Controller
     
        // echo "<pre>"; print_r($carts); die;
         if ($carts->isNotEmpty()) {
-            $calculate = $this->calculatePrice($carts, $user);
+            $calculate = $this->calculatePrice($carts, $user, null, $request);
     
             // Only consider carts that have a valid productOrder + product
             $hasPhysicalProduct = $carts->filter(function ($item) {
@@ -497,8 +524,143 @@ class CartController extends Controller
 
         return $fee;
     }
+    
+    public function calculateShipping(Request $request)
+    {
+        
+        try {
+            $user = auth()->user();
+            $isGuest = false;
+            
+            // Get cart items
+            if (!$user) {
+                $isGuest = true;
+                $deviceId = session('device_id');
+                if (!$deviceId) {
+                    return response()->json([
+                        'success' => false,
+                        'message' => 'Session expired. Please refresh the page.'
+                    ]);
+                }
+                
+                $user = new \stdClass();
+                $user->id = $deviceId;
+                $carts = Cart::where('creator_guest_id', $deviceId)
+                    ->with(['productOrder' => function($query) {
+                        $query->whereHas('product')->with('product');
+                    }])
+                    ->get();
+            } else {
+                $carts = Cart::where('creator_id', $user->id)
+                    ->with(['productOrder' => function($query) {
+                        $query->whereHas('product')->with('product');
+                    }])
+                    ->get();
+            }
+            
+            if ($carts->isEmpty()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Your cart is empty'
+                ]);
+            }
+            
+            // Validate request data
+            $validator = \Validator::make($request->all(), [
+                'country_id' => 'required|integer',
+                'city_name' => 'required|string|max:255',
+                'zip_code' => 'required|string|max:20',
+                'phone' => 'nullable|string|max:20'
+            ]);
+            
+            if ($validator->fails()) {
+                return response()->json([
+                    'success' => false,
+                    'errors' => $validator->errors(),
+                    'message' => 'Please fill in all required address fields.'
+                ], 422);
+            }
+            
+            // Check if we have physical products
+            $hasPhysicalProduct = false;
+            foreach ($carts as $cart) {
+                if (!empty($cart->productOrder) && 
+                    !empty($cart->productOrder->product) && 
+                    $cart->productOrder->product->type == Product::$physical) {
+                    $hasPhysicalProduct = true;
+                    break;
+                }
+            }
+            
+            // if (!$hasPhysicalProduct) {
+            //     return response()->json([
+            //         'success' => true,
+            //         'shipping_cost' => 0,
+            //         'shipping_cost_formatted' => handlePrice(0),
+            //         'total' => 0,
+            //         'total_formatted' => handlePrice(0),
+            //         'shipping_calculated' => false,
+            //         'shipping_method' => 'none',
+            //         'message' => 'No physical products in cart.'
+            //     ]);
+            // }
+            
+            // Calculate shipping with new address
+            $addressData = [
+                'country_id' => $request->input('country_id'),
+                'city_name' => $request->input('city_name'),
+                'zip_code' => $request->input('zip_code'),
+                'province_name' => $request->input('province_name', ''),
+                'address' => $request->input('address', ''),
+                'house_no' => $request->input('house_no', ''),
+                'phone' => $request->input('phone', '')
+            ];
+            
+            
+           
+            // Try Lulu API first
+            try {
+                $shippingCost = $this->calculateLuluShipping($carts, $addressData);
+                dd($shippingCost);
+                $shippingMethod = 'lulu_api';
+                $shippingCalculated = true;
+            } catch (\Exception $e) {
+                \Log::warning('Lulu API failed, using default shipping: ' . $e->getMessage());
+                $shippingCost = $this->calculateDefaultShipping($carts);
+                $shippingMethod = 'default';
+                $shippingCalculated = false;
+            }
+            
+            // Calculate the full price with shipping
+            $calculate = $this->calculatePrice($carts, $user);
+            $newTotal = $calculate['total'] + $shippingCost;
+            
+            return response()->json([
+                'success' => true,
+                'shipping_cost' => $shippingCost,
+                'shipping_cost_formatted' => handlePrice($shippingCost),
+                'total' => $newTotal,
+                'total_formatted' => handlePrice($newTotal),
+                'shipping_calculated' => $shippingCalculated,
+                'shipping_method' => $shippingMethod,
+                'subtotal' => $calculate['sub_total'],
+                'tax' => $calculate['tax_price'],
+                'product_delivery_fee' => $calculate['product_delivery_fee'] ?? 0,
+                'message' => $shippingCalculated ? 'Shipping calculated successfully' : 'Estimated shipping calculated'
+            ]);
+            
+        } catch (\Exception $e) {
+            \Log::error('Shipping calculation error: ' . $e->getMessage());
+            \Log::error($e->getTraceAsString());
+            
+            return response()->json([
+                'success' => false,
+                'message' => 'Failed to calculate shipping. Please try again.'
+            ], 500);
+        }
+    }
 
-    public function calculatePrice($carts, $user, $discountCoupon = null)
+    public function calculatePrice($carts, $user, $discountCoupon = null, $request = null)
     {
         $financialSettings = getFinancialSettings();
 
@@ -508,6 +670,9 @@ class CartController extends Controller
         $taxPrice = 0;
         $commissionPrice = 0;
         $commission = 0;
+
+        $shippingInfo = $this->calculateShippingCost($carts, $user, $request);
+        $shippingCost = $shippingInfo['shipping_cost'];
 
         $cartHasWebinar = array_filter($carts->pluck('webinar_id')->toArray());
         $cartHasBundle = array_filter($carts->pluck('bundle_id')->toArray());
@@ -553,8 +718,214 @@ class CartController extends Controller
             'commission_price' => round($commissionPrice, 2),
             'total' => round($total, 2),
             'product_delivery_fee' => round($productDeliveryFee, 2),
+            'shipping_cost' => round($shippingCost, 2),
+            'shipping_calculated' => $shippingInfo['shipping_calculated'],
+            'shipping_method' => $shippingInfo['shipping_method'],
             'tax_is_different' => $taxIsDifferent
         ];
+    }
+
+    private function calculateShippingCost($carts, $user, $request = null)
+    {
+        $totalShippingCost = 0;
+        $hasPhysicalBooks = false;
+        
+        // Check if we have physical books in cart
+        foreach ($carts as $cart) {
+            if (!empty($cart->productOrder) && 
+                !empty($cart->productOrder->product) && 
+                $cart->productOrder->product->type == Product::$physical) {
+                $hasPhysicalBooks = true;
+                break;
+            }
+        }
+        
+        if (!$hasPhysicalBooks) {
+            return [
+                'shipping_cost' => 0,
+                'shipping_calculated' => false,
+                'shipping_method' => 'default'
+            ];
+        }
+        
+        // Check if user has address information
+        $hasAddress = false;
+        $addressData = [];
+        
+        if (!empty($user) && !is_string($user->id)) { // Regular user
+            $hasAddress = !empty($user->country_id) && 
+                        !empty($user->city_name) && 
+                        !empty($user->zip_code);
+            
+            if ($hasAddress) {
+                $addressData = [
+                    'country_id' => $user->country_id,
+                    'city_name' => $user->city_name,
+                    'zip_code' => $user->zip_code,
+                    'province_name' => $user->province_name ?? '',
+                    'address' => $user->address ?? '',
+                    'house_no' => $user->house_no ?? '',
+                    'phone' => $user->phone ?? ''
+                ];
+            }
+        } else if ($request && $request->has('country_id') && 
+                $request->has('city_name') && $request->has('zip_code')) {
+            // Guest user with form data
+            $hasAddress = true;
+            $addressData = [
+                'country_id' => $request->get('country_id'),
+                'city_name' => $request->get('city_name'),
+                'zip_code' => $request->get('zip_code'),
+                'province_name' => $request->get('province_name', ''),
+                'address' => $request->get('address', ''),
+                'house_no' => $request->get('house_no', ''),
+                'phone' => $request->get('phone', '')
+            ];
+        }
+        
+        if ($hasAddress && !empty($addressData)) {
+            // Calculate shipping using Lulu API
+            try {
+                $shippingCost = $this->calculateLuluShipping($carts, $addressData);
+                return [
+                    'shipping_cost' => $shippingCost,
+                    'shipping_calculated' => true,
+                    'shipping_method' => 'lulu_api',
+                    'address_data' => $addressData
+                ];
+            } catch (\Exception $e) {
+                \Log::error('Lulu shipping calculation failed: ' . $e->getMessage());
+                // Fall back to default shipping
+            }
+        }
+        
+        // Use default shipping cost
+        $defaultShipping = $this->calculateDefaultShipping($carts);
+        return [
+            'shipping_cost' => $defaultShipping,
+            'shipping_calculated' => false,
+            'shipping_method' => 'default'
+        ];
+    }
+
+    private function calculateLuluShipping($carts, $addressData)
+    {
+        
+        $token = $this->getLuluAccessTokenUsingCurl();
+        
+        if (!$token) {
+            throw new \Exception('Failed to get Lulu API token');
+        }
+        
+        
+        // Prepare line items for Lulu calculation
+        $lineItems = [];
+        
+        foreach ($carts as $cart) {
+            
+            if (!empty($cart->productOrder) && 
+                !empty($cart->productOrder->product) ) {
+                // && $cart->productOrder->product->type == Product::$physical) {
+                
+                $product = $cart->productOrder->product;
+                $pageCount =100; // Default page count
+                
+                
+                // Get PDF URL from product
+                //$pdfUrl = $product->getPdfUrl(); // You need to implement this method
+                $pdfUrl = "https://kemetic.app/store/1/pdf/traffic_pub_gen19.pdf";
+                
+                if (!$pdfUrl) {
+                    // Use a fallback PDF URL or skip
+                    continue;
+                }
+                
+                
+                // Get actual page count
+                if($pageCount == 0)
+                {
+                    $actualPageCount = $this->getPageCountWithPdfinfo($pdfUrl);
+                }
+                else
+                {
+                    $actualPageCount = $pageCount;
+                }
+                
+                
+                if ($actualPageCount === false) {
+                    $actualPageCount = $pageCount;
+                }
+
+               
+                $lineItems[] = [
+                    'page_count' => $actualPageCount,
+                    'pod_package_id' => '0600X0900BWSTDPB060UW444MXX', // Default package
+                    'quantity' => $cart->productOrder->quantity
+                ];
+            }
+        }
+        
+        if (empty($lineItems)) {
+            return 0;
+        }
+        
+        // Get country code from country_id
+        $country = Region::find($addressData['country_id']);
+        $countryCode = $country ? $country->code : 'US'; // Default to US
+        
+        $requestData = [
+            'line_items' => $lineItems,
+            'shipping_address' => [
+                'city' => $addressData['city_name'],
+                'country_code' => $countryCode,
+                'postcode' => $addressData['zip_code'],
+                'state_code' => $addressData['province_name'],
+                // 'street1' => ($addressData['house_no'] ?? '') . ' ' . ($addressData['address'] ?? ''),
+                'stree1' => '101 Independence Ave SE',
+                'phone_number' => $addressData['phone']
+            ],
+            'shipping_option' => 'EXPRESS' // Standard shipping
+        ];
+
+          
+        
+        $response = $this->getLuluPriceUsingCurl('/print-job-cost-calculations/', 'POST', $requestData, $token);
+        
+        dd('hi1');
+        if (isset($response['total_cost_incl_tax'])) {
+            return $response['total_cost_incl_tax'];
+        } elseif (isset($response['shipping_cost'])) {
+            return $response['shipping_cost'];
+        }
+        
+        throw new \Exception('No shipping cost in Lulu response');
+    }
+
+    private function calculateDefaultShipping($carts)
+    {
+        $totalWeight = 0;
+        $totalItems = 0;
+        
+        foreach ($carts as $cart) {
+            if (!empty($cart->productOrder) && 
+                !empty($cart->productOrder->product) && 
+                $cart->productOrder->product->type == Product::$physical) {
+                
+                $product = $cart->productOrder->product;
+                $weight = $product->weight ?? 1; // Default 1kg
+                $totalWeight += $weight * $cart->productOrder->quantity;
+                $totalItems += $cart->productOrder->quantity;
+            }
+        }
+        
+        // Default shipping calculation logic
+        if ($totalWeight <= 1) {
+            return 10.00; // $10 for up to 1kg
+        } elseif ($totalWeight <= 5) {
+            return 20.00; // $20 for up to 5kg
+        } else {
+            return 30.00 + (($totalWeight - 5) * 5); // $30 + $5 per additional kg
+        }
     }
 
     public function checkout(Request $request, $carts = null)
@@ -1111,5 +1482,434 @@ class CartController extends Controller
         }
 
         return $amount;
+    }
+
+    public function pricecalcuate(Request $request)
+    {
+        $token = $this->getLuluAccessTokenUsingCurl();
+
+        if ($token) {
+
+            // $pdfUrl = 'https://example.com/path/to/document.pdf';
+            // $tempFilePath = sys_get_temp_dir() . '/' . uniqid() . '.pdf';
+
+            // // Use cURL to fetch the file from the URL and save it locally
+            // $ch = curl_init($pdfUrl);
+            // curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+            // curl_setopt($ch, CURLOPT_FOLLOWLOCATION, true);
+            // $pdfContent = curl_exec($ch);
+            // curl_close($ch);
+
+            // if ($pdfContent === false) {
+            //     die("Could not fetch the PDF from the URL.");
+            // }
+
+            // file_put_contents($tempFilePath, $pdfContent);
+
+            // try {
+            //     $image = new Imagick();
+            //     $image->pingImage($tempFilePath);
+            //     $pageCount = $image->getNumberImages();
+            //     // echo "The PDF has $pageCount pages.";
+            // } catch (ImagickException $e) {
+            //     echo "Error counting pages with ImageMagick: " . $e->getMessage();
+            // } finally {
+            //     // Clean up the temporary file
+            //     if (file_exists($tempFilePath)) {
+            //         unlink($tempFilePath);
+            //     }
+            // }
+
+
+            $pageCount = getPageCountWithPdfinfo('https://kemetic.app/store/1/pdf/traffic_pub_gen19.pdf');
+            if ($pageCount !== false) {
+                echo "The PDF has $pageCount pages.";
+            }
+
+            dd($pageCount);
+
+            $requestData = [
+                'line_items' => [
+                    [
+                        'page_count' => $pageCount,
+                        'pod_package_id' => '0600X0900BWSTDPB060UW444MXX',
+                        'quantity' => 1
+                    ],
+                ],
+                'shipping_address' => [
+                    'city' => 'Washington',
+                    'country_code' => 'US',
+                    'postcode' => '20540',
+                    'state_code' => 'DC',
+                    'street1' => '101 Independence Ave SE',
+                    'phone_number' => '+1 206 555 0100'
+                ],
+                'shipping_option' => 'EXPRESS'
+            ];
+
+            $pricecalcute = $this->getLuluPriceUsingCurl('/print-job-cost-calculations/', 'POST', [], $requestData); 
+        }
+
+        if ($response['http_code'] == 200 && isset($response['data'])) {
+            // Success - process the price calculation
+            $calculatedCost = $response['data'];
+            
+            // Example of accessing cost details
+            if (isset($calculatedCost['total_cost_incl_tax'])) {
+                $totalCost = $calculatedCost['total_cost_incl_tax'];
+                \Log::info("Total cost including tax: " . $totalCost);
+            }
+            
+            if (isset($calculatedCost['line_item_costs'])) {
+                foreach ($calculatedCost['line_item_costs'] as $lineItem) {
+                    \Log::info("Line item cost: " . json_encode($lineItem));
+                }
+            }
+            
+            return $calculatedCost;
+        } else {
+            // Error handling
+            $errorMessage = isset($response['data']['message']) 
+                ? $response['data']['message'] 
+                : 'Unknown error occurred';
+            
+            \Log::error('Lulu price calculation failed: ' . $errorMessage);
+            throw new \Exception('Failed to calculate price: ' . $errorMessage);
+        }
+    }
+
+    function getPageCountWithPdfinfo($url) {
+        //dd('count');
+        // Fetch the PDF from URL to a temp file first (same code as Method 1)
+        $tempFilePath = sys_get_temp_dir() . '/' . uniqid() . '.pdf';
+        $pdfContent = file_get_contents($url);
+        $number = preg_match_all("/\/Page\W/",$pdfContent, $dummy);
+        
+        return $number;
+        
+    }
+
+    private function getLuluAccessTokenUsingCurl()
+    {
+        
+        $url = "https://api.lulu.com/auth/realms/glasstree/protocol/openid-connect/token";
+        $authorization = "OWY2MDViMTUtNmMzYy00OWU1LTkxOWItODRmNzM0MWEyMjgzOk50cVpOa2N2aE1nNlJpb25FaEVSbWpyZW5EQTJYU3dW";
+        // $authorization = "9f605b15-6c3c-49e5-919b-84f7341a2283:NtqZNkcvhMg6RionEhERmjrenDA2XSwV"; // Basic xxxx
+
+        $laragonCertPath = "C:/laragon/etc/ssl/cert.pem";
+        $verifyOption = file_exists($laragonCertPath) ? $laragonCertPath : false;
+
+        
+        $curl = curl_init();
+
+        curl_setopt_array($curl, [
+            CURLOPT_URL => 'https://api.lulu.com/auth/realms/glasstree/protocol/openid-connect/token',
+            CURLOPT_RETURNTRANSFER => true,
+            CURLOPT_ENCODING => '',
+            CURLOPT_MAXREDIRS => 10,
+            CURLOPT_TIMEOUT => 30,
+            CURLOPT_FOLLOWLOCATION => true,
+            CURLOPT_HTTP_VERSION => CURL_HTTP_VERSION_1_1,
+            CURLOPT_CUSTOMREQUEST => 'POST',
+            CURLOPT_POSTFIELDS => 'grant_type=client_credentials',
+            CURLOPT_HTTPHEADER => [
+                'Content-Type: application/x-www-form-urlencoded',
+                'Authorization: Basic ' . $authorization
+            ],
+        ]);
+        
+        
+        if ($this->laragonCertPath && file_exists($this->laragonCertPath)) {
+            // Use Laragon certificate
+            $options[CURLOPT_CAINFO] = $this->laragonCertPath;
+            $options[CURLOPT_CAPATH] = dirname($this->laragonCertPath);
+            $options[CURLOPT_SSL_VERIFYPEER] = true;
+            $options[CURLOPT_SSL_VERIFYHOST] = 2;
+        } else {
+            // Disable SSL verification if no certificate found (NOT RECOMMENDED for production)
+            $options[CURLOPT_SSL_VERIFYPEER] = false;
+            $options[CURLOPT_SSL_VERIFYHOST] = false;
+            
+            \Log::warning('SSL certificate verification disabled. Certificate file not found.');
+        }
+        
+        curl_setopt_array($curl, $options);
+
+        $response = curl_exec($curl);
+        $httpCode = curl_getinfo($curl, CURLINFO_HTTP_CODE);
+        $error = curl_error($curl);
+          
+        if ($error) {
+            $errorNo = curl_errno($curl);
+            \Log::error("cURL Error #{$errorNo}: {$error}");
+            \Log::error("Certificate path used: " . ($this->laragonCertPath ?? 'none'));
+            \Log::error("File exists: " . (file_exists($this->laragonCertPath) ? 'Yes' : 'No'));
+        }
+        
+        
+        curl_close($curl);
+
+        $data = json_decode($response, true);
+      
+        // if ($httpCode !== 200) {
+        //     throw new \Exception("Failed to get access token: " . ($data['error_description'] ?? 'Unknown error'));
+        // }
+
+        // dd($authorization, $response, $httpCode, $error, $data, curl_getinfo($curl), $curl);
+
+        return $data['access_token'] ?? null;
+    }
+
+    private function getLuluPriceUsingCurl($endpoint, $method = 'POST', $data = [], $token = null)
+    {
+        if (!$token) {
+            $token = $this->getLuluAccessTokenUsingCurl();
+        }
+
+        
+        
+        $curl = curl_init();
+        
+        // $url = env('LULU_BASE_URL', 'https://api.sandbox.lulu.com') . $endpoint;
+        $url = "https://api.lulu.com/print-job-cost-calculations/";
+        // $url = "https://api.sandbox.lulu.com/print-job-cost-calculations/";
+        
+        curl_setopt_array($curl, [
+            CURLOPT_URL => $url,
+            CURLOPT_RETURNTRANSFER => true,
+            CURLOPT_ENCODING => '',
+            CURLOPT_MAXREDIRS => 10,
+            CURLOPT_TIMEOUT => 30,
+            CURLOPT_FOLLOWLOCATION => true,
+            CURLOPT_HTTP_VERSION => CURL_HTTP_VERSION_1_1,
+            CURLOPT_CUSTOMREQUEST => strtoupper($method),
+            CURLOPT_HTTPHEADER => [
+                'Authorization: Basic '. $token,
+                'Cache-Control: no-cache',
+                'Content-Type: application/json'
+            ],
+        ]);
+
+        // Certificate verification handling
+        if ($this->laragonCertPath && file_exists($this->laragonCertPath)) {
+            $options[CURLOPT_CAINFO] = $this->laragonCertPath;
+            $options[CURLOPT_CAPATH] = dirname($this->laragonCertPath);
+            $options[CURLOPT_SSL_VERIFYPEER] = true;
+            $options[CURLOPT_SSL_VERIFYHOST] = 2;
+        } else {
+            $options[CURLOPT_SSL_VERIFYPEER] = false;
+            $options[CURLOPT_SSL_VERIFYHOST] = false;
+        }
+
+        if (!empty($data)) {
+            $options[CURLOPT_POSTFIELDS] = json_encode($data);
+        }
+
+        curl_setopt_array($curl, $options);
+        
+        
+        $response = curl_exec($curl);
+        $httpCode = curl_getinfo($curl, CURLINFO_HTTP_CODE);
+        $error = curl_error($curl);
+        if ($error) {
+            $errorNo = curl_errno($curl);
+            \Log::error("cURL Error #{$errorNo}: {$error}");
+            \Log::error("Certificate path used: " . ($this->laragonCertPath ?? 'none'));
+            \Log::error("File exists: " . (file_exists($this->laragonCertPath) ? 'Yes' : 'No'));
+        }
+
+         dd($token);
+        
+        // Enhanced error logging
+        if ($error) {
+            $errorNo = curl_errno($curl);
+            $errorInfo = [
+                'error_no' => $errorNo,
+                'error_msg' => $error,
+                'endpoint' => $endpoint,
+                'cert_path' => $this->laragonCertPath,
+                'cert_exists' => file_exists($this->laragonCertPath) ? 'Yes' : 'No',
+                'url' => $url,
+            ];
+            \Log::error('Lulu API cURL Error', $errorInfo);
+        }
+        
+        curl_close($curl);
+
+        $responseData = json_decode($response, true);
+       
+        return $responseData;
+    }
+
+    private function luluprintjob($path)
+    {
+        $url = "https://api.lulu.com/auth/realms/glasstree/protocol/openid-connect/token";
+        $authorization = "OWY2MDViMTUtNmMzYy00OWU1LTkxOWItODRmNzM0MWEyMjgzOk50cVpOa2N2aE1nNlJpb25FaEVSbWpyZW5EQTJYU3dW";
+        // $authorization = "9f605b15-6c3c-49e5-919b-84f7341a2283:NtqZNkcvhMg6RionEhERmjrenDA2XSwV"; // Basic xxxx
+
+        $laragonCertPath = "C:/laragon/etc/ssl/cert.pem";
+        $verifyOption = file_exists($laragonCertPath) ? $laragonCertPath : false;
+
+
+        $curl = curl_init();
+
+        curl_setopt_array($curl, [
+            CURLOPT_URL => 'https://api.lulu.com/auth/realms/glasstree/protocol/openid-connect/token',
+            CURLOPT_RETURNTRANSFER => true,
+            CURLOPT_ENCODING => '',
+            CURLOPT_MAXREDIRS => 10,
+            CURLOPT_TIMEOUT => 30,
+            CURLOPT_FOLLOWLOCATION => true,
+            CURLOPT_HTTP_VERSION => CURL_HTTP_VERSION_1_1,
+            CURLOPT_CUSTOMREQUEST => 'POST',
+            CURLOPT_POSTFIELDS => 'grant_type=client_credentials',
+            CURLOPT_HTTPHEADER => [
+                'Content-Type: application/x-www-form-urlencoded',
+                'Authorization: Basic ' . $authorization
+            ],
+        ]);
+
+        if ($this->laragonCertPath && file_exists($this->laragonCertPath)) {
+            // Use Laragon certificate
+            $options[CURLOPT_CAINFO] = $this->laragonCertPath;
+            $options[CURLOPT_CAPATH] = dirname($this->laragonCertPath);
+            $options[CURLOPT_SSL_VERIFYPEER] = true;
+            $options[CURLOPT_SSL_VERIFYHOST] = 2;
+        } else {
+            // Disable SSL verification if no certificate found (NOT RECOMMENDED for production)
+            $options[CURLOPT_SSL_VERIFYPEER] = false;
+            $options[CURLOPT_SSL_VERIFYHOST] = false;
+            
+            \Log::warning('SSL certificate verification disabled. Certificate file not found.');
+        }
+        curl_setopt_array($curl, $options);
+
+        $response = curl_exec($curl);
+        $httpCode = curl_getinfo($curl, CURLINFO_HTTP_CODE);
+        $error = curl_error($curl);
+
+        if ($error) {
+            $errorNo = curl_errno($curl);
+            \Log::error("cURL Error #{$errorNo}: {$error}");
+            \Log::error("Certificate path used: " . ($this->laragonCertPath ?? 'none'));
+            \Log::error("File exists: " . (file_exists($this->laragonCertPath) ? 'Yes' : 'No'));
+        }
+        
+        
+        curl_close($curl);
+
+        $data = json_decode($response, true);
+        $token = $data['access_token'] ?? null;
+
+
+
+        $printcurl = curl_init();
+
+        //$printurl = env('LULU_BASE_URL', 'https://api.sandbox.lulu.com') . '/print-jobs/';
+        $printurl = 'https://api.sandbox.lulu.com/print-jobs/';
+
+        $pdfUrl = "https://kemetic.app/store/1/pdf/traffic_pub_gen19.pdf";
+        $title = "Test Print Job via Curl";
+        $quantity = 1;
+
+        // {
+        //     "contact_email": "test@test.com",
+        //     "external_id": "demo-time",
+        //     "line_items": [
+        //         {
+        //         "external_id": "item-reference-1",
+        //         "printable_normalization": {
+        //             "cover": {
+        //             "source_url": "https://www.dropbox.com/s/7bv6mg2tj0h3l0r/lulu_trade_perfect_template.pdf?dl=1&raw=1"
+        //             },
+        //             "interior": {
+        //             "source_url": "https://www.dropbox.com/s/r20orb8umqjzav9/lulu_trade_interior_template-32.pdf?dl=1&raw=1"
+        //             },
+        //             "pod_package_id": "0600X0900BWSTDPB060UW444MXX"
+        //         },
+        //         "quantity": 30,
+        //         "title": "My Book"
+        //         }
+        //     ],
+        //     "production_delay": 120,
+        //     "shipping_address": {
+        //         "city": "Lübeck",
+        //         "country_code": "GB",
+        //         "name": "Hans Dampf",
+        //         "phone_number": "844-212-0689",
+        //         "postcode": "PO1 3AX",
+        //         "state_code": "",
+        //         "street1": "Holstenstr. 48"
+        //     },
+        //     "shipping_level": "MAIL"
+        // }
+
+        curl_setopt_array($printcurl, [
+            CURLOPT_URL => $printurl,
+            CURLOPT_RETURNTRANSFER => true,
+            CURLOPT_ENCODING => '',
+            CURLOPT_MAXREDIRS => 10,
+            CURLOPT_TIMEOUT => 30,
+            CURLOPT_FOLLOWLOCATION => true,
+            CURLOPT_HTTP_VERSION => CURL_HTTP_VERSION_1_1,
+            CURLOPT_CUSTOMREQUEST => 'POST',
+            CURLOPT_HTTPHEADER => [
+                'Authorization: Bearer ' . $token,
+                'Cache-Control: no-cache',
+                'Content-Type: application/json'
+            ],
+        ]);
+
+        // Certificate verification handling
+        if ($this->laragonCertPath && file_exists($this->laragonCertPath)) {
+            $options[CURLOPT_CAINFO] = $this->laragonCertPath;
+            $options[CURLOPT_CAPATH] = dirname($this->laragonCertPath);
+            $options[CURLOPT_SSL_VERIFYPEER] = true;
+            $options[CURLOPT_SSL_VERIFYHOST] = 2;
+        } else {
+            $options[CURLOPT_SSL_VERIFYPEER] = false;
+            $options[CURLOPT_SSL_VERIFYHOST] = false;
+        }
+
+        if (in_array(strtoupper($method), ['POST', 'PUT', 'PATCH']) && !empty($data)) {
+            $options[CURLOPT_POSTFIELDS] = json_encode($data);
+        }
+
+        curl_setopt_array($curl, $options);
+
+        
+        $response = curl_exec($curl);
+        $httpCode = curl_getinfo($curl, CURLINFO_HTTP_CODE);
+        $error = curl_error($curl);
+        if ($error) {
+            $errorNo = curl_errno($curl);
+            \Log::error("cURL Error #{$errorNo}: {$error}");
+            \Log::error("Certificate path used: " . ($this->laragonCertPath ?? 'none'));
+            \Log::error("File exists: " . (file_exists($this->laragonCertPath) ? 'Yes' : 'No'));
+        }
+        
+        // Enhanced error logging
+        if ($error) {
+            $errorNo = curl_errno($curl);
+            $errorInfo = [
+                'error_no' => $errorNo,
+                'error_msg' => $error,
+                'endpoint' => $endpoint,
+                'cert_path' => $this->laragonCertPath,
+                'cert_exists' => file_exists($this->laragonCertPath) ? 'Yes' : 'No',
+                'url' => $url,
+            ];
+            \Log::error('Lulu API cURL Error', $errorInfo);
+        }
+        
+        curl_close($curl);
+
+        //dd($curl,$response, $httpCode, $error);
+
+        // if ($error) {
+        //     throw new \Exception("API request failed: " . $error);
+        // }
+
+        $responseData = json_decode($response, true);
     }
 }

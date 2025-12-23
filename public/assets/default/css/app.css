@@ -710,6 +710,11 @@
     border: 1px solid #fff3;
   } */
 
+   .policy-description,
+  .policy-description * {
+    color: #ffffff !important;
+  }
+
   /* Membership */
   .membership-topbar{
     position:sticky; top:0; z-index:40; backdrop-filter: blur(10px);
@@ -816,6 +821,7 @@
     border:1px solid var(--edge); border-radius:20px; overflow:hidden;
     background:linear-gradient(180deg,rgba(255,255,255,.08),rgba(255,255,255,.03));
     backdrop-filter: blur(6px);
+    padding: 10px;
   }
   .login-card-head{
     display:flex; align-items:center; gap:12px; padding:16px 18px; border-bottom:1px solid var(--edge)
@@ -1153,7 +1159,7 @@
   .article-hero .article-meta{position:absolute;left:18px;right:220px;bottom:16px;display:grid;gap:8px}
   .article-hero .article-k-badges{display:flex;gap:6px}
   .article-k-star{width:12px;height:12px;border-radius:50%}
-  .article-btn{position:absolute;right:18px;bottom:16px;border:none;border-radius:999px;padding:12px 18px;background:var(--gold);color:#000;font-weight:900;cursor:pointer}
+  .article-btn{position:absolute;right:18px;bottom:5px;border:none;border-radius:999px;padding:12px 18px;background:var(--gold);color:#000;font-weight:900;cursor:pointer}
 
   h2{margin:16px 0 10px;font-size:26px;letter-spacing:.2px}
 
@@ -1185,7 +1191,7 @@
   .article-read{border:none;border-radius:999px;padding:8px 12px;background:var(--gold);color:#000;font-weight:900;cursor:pointer}
 
   /* Chakra counters */
-  .article-rail{position:absolute;right:8px;bottom:8px;display:flex;gap:8px}
+  .article-rail{position:absolute;right:8px;bottom:55px;display:flex;gap:8px}
   .article-circle{width:34px;height:34px;border-radius:50%;display:grid;place-items:center;background:rgba(255,255,255,.06);border:1.2px solid var(--clr);color:var(--clr);font-size:14px;font-weight:900}
 
   /* home design */
@@ -1208,7 +1214,7 @@
   .home-btn{background:var(--gold);color:#000;font-weight:900;border:none;border-radius:999px;padding:10px 18px;cursor:pointer}
   .home-btn-outline{background:transparent;color:#fff;border:1px solid var(--edge)}
   .home-chip{display:inline-flex;align-items:center;gap:8px;background:rgba(255,255,255,.06);
-        border:1px solid var(--edge);border-radius:999px;padding:6px 10px;font-size:12px}
+        border:1px solid var(--edge);border-radius:999px;padding:15px 10px;font-size:12px}
 
   /* section */
   section{padding:32px 0 18px;border-top:1px solid var(--edge)}
@@ -1308,7 +1314,8 @@
   .course-description * {
     color: #ffffff !important;
   }
-  .coursedetail-panel{background:rgba(18,18,26,.08);border:1px solid var(--edge);border-radius:16px;padding:14px}
+
+  .coursedetail-panel{background:rgba(18,18,26,.08);border:1px solid var(--edge);border-radius:16px;padding:14px;margin-top:0;}
 
   .coursedetail-lesson{display:flex;justify-content:space-between;align-items:center;padding:10px;border-radius:12px;border:1px solid var(--edge);background:rgba(255,255,255,.03)}
   .coursedetail-btn{background:var(--gold);color:#000;border:none;border-radius:999px;padding:8px 14px;font-weight:900;cursor:pointer}
@@ -5767,6 +5774,9 @@ ease;
     z-index: 1000;
     align-items: center;
     justify-content: center;
+    padding: 20px; /* Added padding for mobile */
+    box-sizing: border-box; /* Ensure padding doesn't add to width */
+    overflow-y: auto; /* Allow scrolling if modal is too tall */
 }
 
 .settings-modal-content {
@@ -5777,6 +5787,10 @@ ease;
     max-width: 500px;
     box-shadow: 0 0 30px rgba(255, 204, 0, 0.2);
     border: 1px solid rgba(255, 204, 0, 0.15);
+    overflow-y: auto; /* Make content scrollable */
+    box-sizing: border-box; /* Include padding in height calculation */
+    margin: auto; 
+    
 }
 
 .settings-modal-header {
@@ -6626,7 +6640,7 @@ ease;
       background: rgba(255, 255, 255, .06) !important;
       border: 1px solid var(--edge) !important;
       border-radius: 999px !important;
-      padding: 10px 14px !important; /* Increased padding for touch */
+      padding: 15px 14px !important; /* Increased padding for touch */
       font-size: 14px !important; /* Larger font for mobile */
       min-height: 44px !important; /* Minimum touch target size */
       white-space: nowrap !important;

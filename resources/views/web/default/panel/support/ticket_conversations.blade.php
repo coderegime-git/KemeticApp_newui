@@ -1,8 +1,124 @@
-@extends(getTemplate() .'.panel.layouts.panel_layout')
+@extends('web.default.layouts.newapp')
 
 @push('styles_top')
     <link rel="stylesheet" href="/assets/default/vendors/daterangepicker/daterangepicker.min.css">
     <link rel="stylesheet" href="/assets/default/vendors/select2/select2.min.css">
+
+    <style>
+    :root {
+        --k-bg: #0b0b0b;
+        --k-card: #141414;
+        --k-gold: #f2c94c;
+        --k-gold-soft: #e6b93d;
+        --k-border: rgba(242,201,76,0.25);
+        --k-text: #eaeaea;
+        --k-muted: #9a9a9a;
+        --k-radius: 16px;
+    }
+
+    body {
+        background: var(--k-bg);
+        color: var(--k-text);
+        font-family: 'Nunito', sans-serif;
+    }
+
+    .section-title {
+        font-size: 1.5rem;
+        color: var(--k-gold);
+        font-weight: bold;
+        margin-bottom: 1rem;
+    }
+
+    .bg-white {
+        background: var(--k-card);
+    }
+
+    .shadow {
+        box-shadow: 0 4px 20px rgba(242,201,76,0.1);
+    }
+
+    .rounded-sm {
+        border-radius: var(--k-radius);
+    }
+
+    .form-control, .select2-container--default .select2-selection--single {
+        background: #1f1f1f;
+        color: var(--k-text);
+        border: 1px solid var(--k-border);
+        border-radius: var(--k-radius);
+    }
+
+    .form-control::placeholder {
+        color: var(--k-muted);
+    }
+
+    .input-label {
+        color: var(--k-gold);
+        font-weight: 600;
+    }
+
+    .input-group-text {
+        background: #1f1f1f;
+        border: 1px solid var(--k-border);
+        color: var(--k-text);
+        border-radius: var(--k-radius);
+    }
+
+    .btn-primary {
+        background-color: var(--k-gold);
+        border: none;
+        color: #000;
+        border-radius: var(--k-radius);
+        transition: 0.3s;
+    }
+
+    .btn-primary:hover {
+        background-color: var(--k-gold-soft);
+    }
+
+    .table th, .table td {
+        border-color: var(--k-border);
+        color: var(--k-text);
+    }
+
+    .table-responsive {
+        overflow-x: auto;
+    }
+
+    .avatar {
+        border-radius: 50%;
+        overflow: hidden;
+    }
+
+    .user-inline-avatar img {
+        object-fit: cover;
+    }
+
+    .panel-shadow {
+        box-shadow: 0 2px 10px rgba(242,201,76,0.1);
+    }
+
+    .text-dark-blue {
+        color: var(--k-text);
+    }
+
+    .text-gray {
+        color: var(--k-muted);
+    }
+
+    .text-primary {
+        color: var(--k-gold);
+    }
+
+    .text-danger {
+        color: #ff6b6b;
+    }
+
+    .text-warning {
+        color: #ffb74d;
+    }
+
+</style>
 @endpush
 
 @section('content')

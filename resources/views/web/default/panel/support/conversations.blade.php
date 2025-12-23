@@ -1,8 +1,138 @@
-@extends(getTemplate() .'.panel.layouts.panel_layout')
+@extends('web.default.layouts.newapp')
 
 @push('styles_top')
-    <link rel="stylesheet" href="/assets/default/vendors/daterangepicker/daterangepicker.min.css">
-    <link rel="stylesheet" href="/assets/default/vendors/select2/select2.min.css">
+<link rel="stylesheet" href="/assets/default/vendors/daterangepicker/daterangepicker.min.css">
+<link rel="stylesheet" href="/assets/default/vendors/select2/select2.min.css">
+
+<style>
+    :root {
+        --k-bg: #0b0b0b;
+        --k-card: #141414;
+        --k-gold: #f2c94c;
+        --k-gold-soft: #e6b93d;
+        --k-border: rgba(242,201,76,0.25);
+        --k-text: #eaeaea;
+        --k-muted: #9a9a9a;
+        --k-radius: 16px;
+    }
+
+    body {
+        background: var(--k-bg);
+        color: var(--k-text);
+        font-family: 'Nunito', sans-serif;
+    }
+
+    .section-title {
+        font-size: 1.5rem;
+        color: var(--k-gold);
+        font-weight: bold;
+        margin-bottom: 1rem;
+    }
+
+    .activities-container, .panel-section-card, .conversation-box, .conversations-card .panel-shadow {
+        background: var(--k-card);
+        border-radius: var(--k-radius);
+        border: 1px solid var(--k-border);
+        box-shadow: 0 4px 20px rgba(242,201,76,0.1);
+    }
+
+    .activities-container .d-flex, .conversation-box {
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        padding: 1rem;
+    }
+
+    .text-dark-blue {
+        color: var(--k-gold);
+        font-weight: bold;
+    }
+
+    .text-gray {
+        color: var(--k-muted);
+    }
+
+    .form-control {
+        background: #1f1f1f;
+        color: var(--k-text);
+        border: 1px solid var(--k-border);
+        border-radius: var(--k-radius);
+    }
+
+    .form-control::placeholder {
+        color: var(--k-muted);
+    }
+
+    .input-group-text {
+        background: #1f1f1f;
+        border: 1px solid var(--k-border);
+        color: var(--k-text);
+        border-radius: var(--k-radius);
+    }
+
+    .btn-primary {
+        background-color: var(--k-gold);
+        border: none;
+        color: #000;
+        border-radius: var(--k-radius);
+    }
+
+    .btn-primary:hover {
+        background-color: var(--k-gold-soft);
+    }
+
+    .select2-container--default .select2-selection--single {
+        background-color: #1f1f1f;
+        border: 1px solid var(--k-border);
+        border-radius: var(--k-radius);
+        color: var(--k-text);
+    }
+
+    .select2-container--default .select2-selection--single .select2-selection__arrow b {
+        border-color: var(--k-text) transparent transparent transparent;
+    }
+
+    .user-inline-avatar .avatar {
+        border-radius: var(--k-radius);
+        overflow: hidden;
+    }
+
+    .panel-shadow {
+        box-shadow: 0 4px 20px rgba(242,201,76,0.1);
+        border-radius: var(--k-radius);
+    }
+
+    .border-gray300 {
+        border-color: var(--k-border) !important;
+    }
+
+    .conversations-list .table tr.selected-row {
+        background: rgba(242,201,76,0.1);
+    }
+
+    .conversations-card .panel-shadow {
+        margin-bottom: 1rem;
+        background: var(--k-card);
+        color: var(--k-text);
+    }
+
+    .conversation-box h3 {
+        color: var(--k-gold);
+    }
+
+    .conversation-box textarea {
+        background: #1f1f1f;
+        color: var(--k-text);
+        border-radius: var(--k-radius);
+        border: 1px solid var(--k-border);
+    }
+
+    .conversation-box .input-group-text {
+        border-radius: var(--k-radius);
+        background: #1f1f1f;
+        border: 1px solid var(--k-border);
+    }
+</style>
 @endpush
 
 @section('content')
@@ -42,7 +172,7 @@
     <section class="mt-25">
         <h2 class="section-title">{{ trans('panel.message_filters') }}</h2>
 
-        <div class="panel-section-card py-20 px-25 mt-20">
+        <div class="panel-section-card py-20 px-25 mt-20" style="padding: 10px;">
             <form action="/panel/support" method="get">
                 <div class="row">
                     <div class="col-12 col-md-4 col-lg-2">

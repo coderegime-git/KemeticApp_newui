@@ -2,7 +2,195 @@
 @push('styles_top')
     <link rel="stylesheet" href="/assets/default/vendors/select2/select2.min.css">
 @endpush
+<style>
+/* CHECKBOX */
+.custom-control {
+  position: relative;
+  z-index: 1;
+  display: block;
+  min-height: 1.3rem;
+  padding-left: 2rem;
+  -webkit-print-color-adjust: exact;
+          print-color-adjust: exact;
+}
 
+.custom-control-inline {
+  display: inline-flex;
+  margin-right: 1rem;
+}
+
+.custom-control-input {
+  position: absolute;
+  left: 0;
+  z-index: -1;
+  width: 1.5rem;
+  height: 1.4rem;
+  opacity: 0;
+}
+.custom-control-input:checked ~ .custom-control-label::before {
+  color: #ffffff;
+  border-color: #43d477;
+  background-color: #43d477;
+}
+.custom-control-input:focus ~ .custom-control-label::before {
+  box-shadow: none, 1.5rem;
+}
+.custom-control-input:focus:not(:checked) ~ .custom-control-label::before {
+  border-color: #43d477;
+}
+.custom-control-input:not(:disabled):active ~ .custom-control-label::before {
+  color: #ffffff;
+  background-color: #43d477;
+  border-color: #43d477;
+}
+.custom-control-input[disabled] ~ .custom-control-label, .custom-control-input:disabled ~ .custom-control-label {
+  color: #6c757d;
+}
+.custom-control-input[disabled] ~ .custom-control-label::before, .custom-control-input:disabled ~ .custom-control-label::before {
+  background-color: #f1f1f1;
+}
+
+.custom-control-label {
+  position: relative;
+  margin-bottom: 0;
+  vertical-align: top;
+}
+.custom-control-label::before {
+  position: absolute;
+  top: -0.1rem;
+  left: -2rem;
+  display: block;
+  width: 1.5rem;
+  height: 1.5rem;
+  pointer-events: none;
+  content: "";
+  background-color: #ffffff;
+  border: 2px solid #adb5bd;
+  box-shadow: none;
+}
+.custom-control-label::after {
+  position: absolute;
+  top: -0.1rem;
+  left: -2rem;
+  display: block;
+  width: 1.5rem;
+  height: 1.5rem;
+  content: "";
+  background: 50%/50% 50% no-repeat;
+}
+
+.custom-checkbox .custom-control-label::before {
+  border-radius: 0.25rem;
+}
+.custom-checkbox .custom-control-input:checked ~ .custom-control-label::after {
+  background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' width='8' height='8' viewBox='0 0 8 8'%3e%3cpath fill='%23ffffff' d='M6.564.75l-3.59 3.612-1.538-1.55L0 4.26l2.974 2.99L8 2.193z'/%3e%3c/svg%3e");
+}
+.custom-checkbox .custom-control-input:indeterminate ~ .custom-control-label::before {
+  border-color: #F2C94C;
+  background-color: #F2C94C;
+}#
+.custom-checkbox .custom-control-input:indeterminate ~ .custom-control-label::after {
+  background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' width='4' height='4' viewBox='0 0 4 4'%3e%3cpath stroke='%23ffffff' d='M0 2h4'/%3e%3c/svg%3e");
+}
+.custom-checkbox .custom-control-input:disabled:checked ~ .custom-control-label::before {
+  background-color: #F2C94C;
+}
+.custom-checkbox .custom-control-input:disabled:indeterminate ~ .custom-control-label::before {
+  background-color: #F2C94C;
+}
+
+.custom-radio .custom-control-label::before {
+  border-radius: 50%;
+}
+.custom-radio .custom-control-input:checked ~ .custom-control-label::after {
+  background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='-4 -4 8 8'%3e%3ccircle r='3' fill='%23ffffff'/%3e%3c/svg%3e");
+}
+.custom-radio .custom-control-input:disabled:checked ~ .custom-control-label::before {
+  background-color: rgba(67, 212, 119, 0.5);
+}
+
+.custom-switch {
+  padding-left: 3.125rem;
+}
+.custom-switch .custom-control-label::before {
+  left: -3.125rem;
+  width: 2.625rem;
+  pointer-events: all;
+  border-radius: 0.75rem;
+}
+.custom-switch .custom-control-label::after {
+  top: calc(-0.1rem + 4px);
+  left: calc(-3.125rem + 4px);
+  width: calc(1.5rem - 8px);
+  height: calc(1.5rem - 8px);
+  background-color: #adb5bd;
+  border-radius: 0.75rem;
+  transition: transform 0.15s ease-in-out, background-color 0.15s ease-in-out, border-color 0.15s ease-in-out, box-shadow 0.15s ease-in-out;
+}
+@media (prefers-reduced-motion: reduce) {
+  .custom-switch .custom-control-label::after {
+    transition: none;
+  }
+}
+.custom-switch .custom-control-input:checked ~ .custom-control-label::after {
+  background-color: #ffffff;
+  transform: translateX(1.125rem);
+}
+.custom-switch .custom-control-input:disabled:checked ~ .custom-control-label::before {
+  background-color: rgba(67, 212, 119, 0.5);
+}
+
+/* Container */
+.kemetic-actions {
+    display: flex;
+    gap: 12px;
+    margin-top: 12px;
+}
+
+/* Base Button */
+.kemetic-btn {
+    padding: 8px 18px;
+    font-size: 14px;
+    font-weight: 600;
+    letter-spacing: 0.5px;
+    border-radius: 10px;
+    text-decoration: none;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    border: 1px solid transparent;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+}
+
+/* Edit Button */
+.kemetic-btn-edit {
+    background: linear-gradient(135deg, #d4af37, #b8962e);
+    color: #000;
+    border-color: #d4af37;
+}
+
+.kemetic-btn-edit:hover {
+    background: #000;
+    color: #d4af37;
+    box-shadow: 0 0 10px rgba(212, 175, 55, 0.6);
+}
+
+/* Delete Button */
+.kemetic-btn-delete {
+    background: #000;
+    color: #d4af37;
+    border: 1px solid #d4af37;
+}
+
+.kemetic-btn-delete:hover {
+    background: #8b0000;
+    color: #fff;
+    border-color: #8b0000;
+    box-shadow: 0 0 10px rgba(139, 0, 0, 0.6);
+}
+
+</style>
 @section('content')
     <main class="settings-main">
         <div class="settings-header">
@@ -190,7 +378,7 @@
                         <div class="settings-card">
                             <div class="settings-card-head">
                                 <span>Membership</span>
-                                <button class="settings-btn-outline" style="padding:6px 14px;font-size:11px;">Manage</button>
+                                <button type="button" class="settings-btn-outline" style="padding:6px 14px;font-size:11px;">Manage</button>
                             </div>
                             <div class="settings-card-main">
                                 €1 / month • Full access to Kemetic App
@@ -203,7 +391,7 @@
                         <div class="settings-card">
                             <div class="settings-card-head">
                                 <span>Primary Payment Method</span>
-                                <button class="settings-btn-outline" style="padding:6px 14px;font-size:11px;">Update</button>
+                                <button type="button" class="settings-btn-outline" style="padding:6px 14px;font-size:11px;">Update</button>
                             </div>
                             <div class="settings-card-main">
                                 • **** 4242 VISA • Expires 09/27
@@ -220,8 +408,11 @@
                         <div class="settings-card">
                             <div class="settings-card-head">
                                 <span>Push Notifications</span>
-                                <div class="settings-pill-toggle settings-on" id="pushToggle"></div>
-                                <input type="hidden" name="push_notifications" value="{{ $user->push_notifications ? '1' : '0' }}" id="pushInput">
+                                <div class="custom-control custom-switch">
+                                    <input type="checkbox" name="push_notification" class="custom-control-input" id="pushToggle" {{ !empty($user) && $user->push_notification ? 'checked' : (old('push_notification') ? 'checked' : '')  }}>
+                                    <label class="custom-control-label" for="pushToggle"></label>
+                                </div>
+                                
                             </div>
                             <div class="settings-card-main">
                                 Chakra-colored alerts for messages, livestreams & new drops.
@@ -234,7 +425,7 @@
                         <div class="settings-card">
                             <div class="settings-card-head">
                                 <span>Change Password</span>
-                                <button class="settings-btn-outline" style="padding:6px 14px;font-size:11px;">Change</button>
+                                <button type="button" class="settings-btn-outline" style="padding:6px 14px;font-size:11px;">Change</button>
                             </div>
                             <div class="settings-card-main">
                                 Keep your Kemetic universe protected.
@@ -247,8 +438,10 @@
                         <div class="settings-card">
                             <div class="settings-card-head">
                                 <span>Join Newsletter</span>
-                                <div class="settings-pill-toggle {{ $user->newsletter ? 'settings-on' : '' }}" id="newsletterToggle"></div>
-                                <input type="hidden" name="join_newsletter" value="{{ $user->newsletter ? '1' : '0' }}" id="newsletterInput">
+                                <div class="custom-control custom-switch">
+                                    <input type="checkbox" name="newsletter" class="custom-control-input" id="newsletterToggle" {{ !empty($user) && $user->newsletter ? 'checked' : (old('newsletter') ? 'checked' : '')  }}>
+                                    <label class="custom-control-label" for="newsletterToggle"></label>
+                                </div>
                             </div>
                             <div class="settings-card-main">
                                 Receive updates about new courses and features.
@@ -258,8 +451,11 @@
                         <div class="settings-card">
                             <div class="settings-card-head">
                                 <span>Public Messages</span>
-                                <div class="settings-pill-toggle {{ $user->public_message ? 'settings-on' : '' }}" id="publicMessagesToggle"></div>
-                                <input type="hidden" name="public_messages" value="{{ $user->public_message ? '1' : '0' }}" id="publicMessagesInput">
+                                <div class="custom-control custom-switch">
+                                    <input type="checkbox" name="public_message" class="custom-control-input" id="publicMessagesToggle" {{ !empty($user) && $user->public_message ? 'checked' : (old('public_message') ? 'checked' : '')  }}>
+                                    <label class="custom-control-label" for="publicMessagesToggle"></label>
+                                </div>
+                                
                             </div>
                             <div class="settings-card-main">
                                 Allow other users to send you messages.
@@ -477,8 +673,10 @@
 
                             <div class="settings-field-group">
                                 <label for="about">About Me / About Us</label>
-                                <textarea id="about" name="about" placeholder="Share your journey, what you teach, and how you serve the community...">{{ $user->about }}</textarea>
-                                <div class="settings-char-count">0 / 1,000</div>
+                                <textarea id="about" name="about" maxlength="1000" placeholder="Share your journey, what you teach, and how you serve the community...">{{ $user->about }}</textarea>
+                                <div class="settings-char-count"><span class="current-count">0</span> / <span class="max-count">1,000</span>
+                                <span class="limit-message" style="display: none; color: #e74c3c;"> - Character limit reached!</span>
+                                </div>
                                 <div class="settings-hint">
                                     This text appears on your public profile. Use it to speak directly to your Seekers.
                                 </div>
@@ -553,9 +751,9 @@
                             <p class="settings-experience-subtitle">{{ $experience->organization }}</p>
                             <span class="settings-experience-period">{{ $experience->start_date }} - {{ $experience->end_date }}</span>
                             <div class="settings-experience-description">{{ $experience->description }}</div>
-                            <div class="settings-experience-actions">
-                                <button data-experience-id="{{ $experience->id }}" data-user-id="{{ (!empty($user) and empty($new_user)) ? $user->id : '' }}"  class="settings-experience-edit">Edit</button>
-                                <a href="/panel/setting/metas/{{ $experience->id }}/delete?user_id={{ (!empty($user) and empty($new_user)) ? $user->id : '' }}" class="settings-experience-delete">Delete</a>              
+                            <div class="settings-experience-actions kemetic-actions">
+                                <button type="button" data-experience-id="{{ $experience->id }}" data-user-id="{{ (!empty($user) and empty($new_user)) ? $user->id : '' }}"  class="kemetic-btn kemetic-btn-edi">Edit</button>
+                                <a href="/panel/setting/metas/{{ $experience->id }}/delete?user_id={{ (!empty($user) and empty($new_user)) ? $user->id : '' }}" class="kemetic-btn kemetic-btn-delete">Delete</a>              
                             </div>
 
                         </div>
@@ -597,9 +795,9 @@
                                     <h2 class="settings-education-title">{{ $education->value }}</h2>
                                     <p class="settings-education-subtitle">{{ $education->institution }}</p>
                                     <span class="settings-education-period">{{ $education->year }}</span>
-                                    <div class="settings-education-actions">
-                                        <button data-education-id="{{ $education->id }}" data-user-id="{{ (!empty($user) and empty($new_user)) ? $user->id : '' }}" class="settings-education-edit">Edit</button>
-                                        <a href="/panel/setting/metas/{{ $education->id }}/delete?user_id={{ (!empty($user) and empty($new_user)) ? $user->id : '' }}" class="settings-education-delete">Delete</a>
+                                    <div class="settings-education-actions kemetic-actions">
+                                        <button type="button" data-education-id="{{ $education->id }}" data-user-id="{{ (!empty($user) and empty($new_user)) ? $user->id : '' }}" class="kemetic-btn kemetic-btn-edi">Edit</button>
+                                        <a href="/panel/setting/metas/{{ $education->id }}/delete?user_id={{ (!empty($user) and empty($new_user)) ? $user->id : '' }}" class="kemetic-btn kemetic-btn-delete">Delete</a>
                                     </div>
                                 </div>
                             @endforeach
@@ -1028,77 +1226,13 @@
                 });
             });
 
-            // Toggle functionality
-            // const toggles = document.querySelectorAll('.settings-pill-toggle');
-            // toggles.forEach(toggle => {
-            //     toggle.addEventListener('click', function() {
-            //         alert('toggle clicked');
-            //         this.classList.toggle('settings-on');
-
-            //     });
-            // });
-
-             const toggles = {
-                pushToggle: {
-                    toggle: document.getElementById('pushToggle'),
-                    input: document.getElementById('pushInput'),
-                    value: true
-                },
-                newsletterToggle: {
-                    toggle: document.getElementById('newsletterToggle'),
-                    input: document.getElementById('newsletterInput'),
-                    value: true
-                },
-                publicMessagesToggle: {
-                    toggle: document.getElementById('publicMessagesToggle'),
-                    input: document.getElementById('publicMessagesInput'),
-                    value: true
-                }
-            };
-
-            // Initialize toggle states
-            function initializeToggles() {
-                for (const key in toggles) {
-                    const toggleData = toggles[key];
-                    
-                    // Set initial state based on class or saved value
-                    if (toggleData.toggle.classList.contains('settings-on')) {
-                        toggleData.value = true;
-                        toggleData.input.value = '1';
-                    } else {
-                        toggleData.value = false;
-                        toggleData.input.value = '0';
-                    }
-
-                    // Add click event listener
-                    toggleData.toggle.addEventListener('click', function() {
-                        toggleData.value = !toggleData.value;
-                        toggleData.toggle.classList.toggle('settings-on');
-                        
-                        // Update status text and color
-                        if (toggleData.value) {
-                            toggleData.input.value = '1';
-                        } else {
-                            toggleData.input.value = '0';
-                        }
-                        
-                        // Show status indicator
-                        //showStatusIndicator();
-                        
-                        // Log the change (in real app, you'd send to server)
-                        console.log(`${key} is now ${toggleData.value ? 'ON' : 'OFF'}`);
-                    });
-                }
-            }
+            
             
             // Handle password change button
             const changePasswordBtn = document.querySelector('.settings-btn-outline');
             changePasswordBtn.addEventListener('click', function() {
-                alert('Password change functionality would be implemented here.');
+                //alert('Password change functionality would be implemented here.');
             });
-
-            // Initialize the toggles
-            initializeToggles();
 
             const profileImageInput = document.querySelector('input[name="profileImageInput"]');
             const profileImagePreview = document.getElementById('profileImagePreview');
@@ -2001,7 +2135,63 @@
         showSuccess('Form reset to original values');
     }
     </script>
-    
+    <script>
+        $(document).ready(function() {
+            const $textarea = $('#about');
+            const $charCount = $('.settings-char-count .current-count');
+            const $limitMessage = $('.settings-char-count .limit-message');
+            const maxChars = 1000;
+
+            // Update character count
+            function updateCharCount() {
+                const currentLength = $textarea.val().length;
+                $charCount.text(currentLength);
+                
+                if (currentLength >= maxChars) {
+                    $limitMessage.show();
+                    $textarea.addClass('limit-exceeded');
+                    
+                    if (currentLength === maxChars) {
+                        showLimitAlert();
+                    }
+                } else {
+                    $limitMessage.hide();
+                    $textarea.removeClass('limit-exceeded');
+                }
+                
+                // Progress color
+                const percentage = (currentLength / maxChars) * 100;
+                if (percentage >= 100) {
+                    $charCount.css('color', '#e74c3c');
+                } else if (percentage >= 80) {
+                    $charCount.css('color', '#f39c12');
+                } else {
+                    $charCount.css('color', '#27ae60');
+                }
+            }
+
+            // Show notification
+            function showLimitAlert() {
+                // Using Toastr if available, or create custom
+                if (typeof toastr !== 'undefined') {
+                    toastr.warning('You have reached the maximum of 1,000 characters.', 'Character Limit Reached');
+                } else {
+                    alert('Character limit reached! Maximum 1,000 characters allowed.');
+                }
+            }
+
+            // Prevent exceeding limit
+            $textarea.on('input', function() {
+                if ($textarea.val().length > maxChars) {
+                    $textarea.val($textarea.val().substring(0, maxChars));
+                }
+                updateCharCount();
+            });
+
+            // Initialize
+            updateCharCount();
+        });
+        </script>
       <!-- <script src="/assets/default/js/parts/img_cropit.min.js"></script> -->
     <script src="/assets/default/vendors/select2/select2.min.js"></script>
 

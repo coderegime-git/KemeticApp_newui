@@ -200,7 +200,7 @@ class UserController extends Controller
             $updateData = [];
 
             if ($step == 1) {
-                $joinNewsletter = (!empty($data['join_newsletter']) and $data['join_newsletter'] == 'on');
+                $joinNewsletter = (!empty($data['newsletter']) and $data['newsletter'] == 'on');
 
                 $updateData = [
                     'email' => $data['email'],
@@ -215,8 +215,9 @@ class UserController extends Controller
                     'address' => $data['address'] ?? null,
                     'display_name' => $data['display_name'] ?? null,
                     'address1' => $data['address1'] ?? null,
+                    'push_notification' => (!empty($data['push_notification']) and $data['push_notification'] == 'on'),
                     'newsletter' => $joinNewsletter,
-                    'public_message' => (!empty($data['public_messages']) and $data['public_messages'] == 'on'),
+                    'public_message' => (!empty($data['public_message']) and $data['public_message'] == 'on'),
                 ];
 
                 $this->handleNewsletter($data['email'], $user->id, $joinNewsletter);

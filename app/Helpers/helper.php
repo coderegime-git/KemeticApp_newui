@@ -2186,7 +2186,9 @@ function checkCourseForSale($course, $user)
         return back()->with(['toast' => $toastData]);
     }
 
+   
     if ($course->checkUserHasBought($user)) {
+        //dd('here');
         $toastData = [
             'title' => trans('cart.fail_purchase'),
             'msg' => trans('site.you_bought_webinar'),
@@ -2194,6 +2196,7 @@ function checkCourseForSale($course, $user)
         ];
         return back()->with(['toast' => $toastData]);
     }
+ //dd('$user');
 
     if ($course->creator_id == $user->id or $course->teacher_id == $user->id) {
         $toastData = [

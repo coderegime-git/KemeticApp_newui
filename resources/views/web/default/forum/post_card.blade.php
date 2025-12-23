@@ -7,7 +7,7 @@
         <div class="col-12 col-md-3">
             <div class="position-relative bg-info-light d-flex flex-column align-items-center justify-content-start rounded-lg w-100 h-100 p-20">
                 <div class="user-avatar rounded-circle {{ ($cardUser->id == $topic->creator_id) ? 'green-ring' : '' }}">
-                    <img src="{{ $cardUser->getAvatar(72) }}" class="img-cover rounded-circle" alt="{{ $cardUser->full_name }}">
+                    <img src="{{ $cardUser->getAvatar(72) }}" class="img-cover rounded-circle" alt="{{ $cardUser->full_name }}" width="50">
                 </div>
                 <a href="{{ $cardUser->getProfileUrl() }}" target="_blank">
                     <h4 class="js-post-user-name font-14 text-secondary mt-15 font-weight-bold w-100 text-center">{{ $cardUser->full_name }}</h4>

@@ -35,6 +35,12 @@ class BlogController extends Controller
             }
         }
 
+        $selectedCategory = null;
+
+        if (!empty($category)) {
+            $selectedCategory = $category;
+        }
+
         if (!empty($author) and is_numeric($author)) {
             $query->where('author_id', $author);
         }
@@ -52,7 +58,7 @@ class BlogController extends Controller
             }
         ])
             ->withCount('comments')
-            ->paginate(6);
+            ->paginate(8);
 
         $popularPosts = $this->getPopularPosts();
 
@@ -64,6 +70,7 @@ class BlogController extends Controller
             'blogCount' => $blogCount,
             'blogCategories' => $blogCategories,
             'popularPosts' => $popularPosts,
+            'selectedCategory' =>$selectedCategory
         ];
 
         return view(getTemplate() . '.blog.index', $data);

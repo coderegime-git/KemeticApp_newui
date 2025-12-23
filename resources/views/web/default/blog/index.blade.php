@@ -13,41 +13,7 @@
           <button class="article-cta"><a href="/login">Upgrade</a></button>
         @endif
     </div>
-
-    <div class="article-sp"></div>
-
-    <!-- Search + Categories -->
-    <div class="article-row">
-    <form action="/blog" method="get">
-      <div class="article-search">
-        <span style="color:var(--gold);font-weight:900">🔎</span>
-        <input  type="text" name="search"  value="{{ request()->get('search') }}" placeholder="{{ trans('home.blog_search_placeholder') }}">
-        <button type="submit" class="article-pill">{{ trans('home.find') }}</button>
-        <!-- ⚙️ Filters  onclick="alert('Open filters')" -->
-      </div>
-    </form>
-    <!-- @foreach($blogCategories as $blogCategory)
-        <a href="{{ $blogCategory->getUrl() }}" class="font-14 text-dark-blue d-block mt-15">
-            <div class="article-pill @if(!empty($selectedCategory) and $selectedCategory->id == $blogCategory->id) active @endif">
-                {{ $blogCategory->title }}
-            </div>
-        </a> -->
-    <!-- @endforeach -->
-    </div>
-      <div class="shop-chips">
-        @foreach($blogCategories as $blogCategory)
-        <a href="{{ $blogCategory->getUrl() }}" class="font-14 text-dark-blue d-block mt-15">
-            <div class="article-pill @if(!empty($selectedCategory) and $selectedCategory->id == $blogCategory->id) active @endif">
-                {{ $blogCategory->title }}
-            </div>
-        </a>
-        @endforeach
-      </div>
-  
-
-    <div class="article-sp"></div>
-
-    <!-- Featured hero -->
+    
     @php
         use Illuminate\Support\Facades\DB;
 
@@ -104,6 +70,32 @@
       </div>
     </section>
 
+    <div class="article-sp"></div>
+
+    <!-- Search + Categories -->
+    <div class="article-row">
+      <form action="/blog" method="get">
+        <div class="article-search">
+          <span style="color:var(--gold);font-weight:900">🔎</span>
+          <input  type="text" name="search"  value="{{ request()->get('search') }}" placeholder="{{ trans('home.blog_search_placeholder') }}">
+          <button type="submit" class="article-pill">{{ trans('home.find') }}</button>
+          <!-- ⚙️ Filters  onclick="alert('Open filters')" -->
+        </div>
+      </form>
+    </div>
+
+    <div class="shop-chips">
+      @foreach($blogCategories as $blogCategory)
+      <a href="{{ $blogCategory->getUrl() }}" class="font-14 text-dark-blue d-block mt-15">
+          <div class="article-pill @if(!empty($selectedCategory) and $selectedCategory == $blogCategory->slug) active @endif">
+              {{ $blogCategory->title }}
+          </div>
+      </a>
+      @endforeach
+    </div>
+
+    <div class="article-sp"></div>
+
     <h2>Global Articles</h2>
     <!-- <div class="article-tabs">
       <div class="article-tab active">All</div>
@@ -116,6 +108,7 @@
 
     <section class="article-grid">
         @foreach($blog as $post)
+        <!-- {{ $post->title }} -->
             <article class="article-card">
                 <div class="article-thumb">
                 <img src="{{ $post->image }}" class="img-cover" alt="{{ $post->title }}">
@@ -124,7 +117,7 @@
                 </div>
                 </div>
                 <div class="article-body">
-                <div class="article-title"><a href="{{ $post->getUrl() }}">{{ $post->title }}</a></div>
+                <div class="article-title"><a href="{{ $post->getUrl() }}">{{ Str::limit($post->title, 13, '..') }}</a></div>
                 <div class="article-meta"><img src="{{ $post->author->getAvatar() }}" class="img-cover" alt="{{ $post->author->full_name }}">{{ $post->author->full_name }} </div>
                 <!-- • 12 min -->
                 <div class="article-row-end">
@@ -146,7 +139,12 @@
                 </div>
             </article>
         @endforeach
+
+         
     </section>
+    <div class="mt-50 pt-30">
+      {{ $blog->appends(request()->input())->links('vendor.pagination.panel') }}
+    </div>
 
     <div class="article-sp"></div>
   </div>

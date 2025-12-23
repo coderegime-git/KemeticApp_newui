@@ -1,10 +1,87 @@
 @push('styles_top')
     <link rel="stylesheet" href="/assets/default/vendors/select2/select2.min.css">
     <link href="/assets/default/vendors/sortable/jquery-ui.min.css"/>
+    <style>
+        /* ================== KEMETIC THEME ================== */
+        .k-section-card {
+            background: #151a23;
+            border-radius: 12px;
+            padding: 20px;
+            margin-bottom: 30px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.4);
+            color: #e5e7eb;
+        }
+
+        .k-section-card .section-title {
+            color: #F2C94C;
+            font-weight: 700;
+            margin-bottom: 15px;
+        }
+
+        .k-section-card .btn-primary {
+            background-color: #F2C94C;
+            border-color: #F2C94C;
+            color: #151a23;
+        }
+
+        .k-section-card .btn-primary:hover {
+            background-color: #d4af36;
+            border-color: #d4af36;
+            color: #151a23;
+        }
+
+        .k-section-card .accordion-content-wrapper {
+            background: #0e1117;
+            border: 1px solid #262c3a;
+            border-radius: 10px;
+            padding: 15px;
+        }
+
+        .k-section-card .draggable-lists li {
+            background: #1a1f2c;
+            border: 1px solid #262c3a;
+            border-radius: 10px;
+            margin-bottom: 10px;
+            padding: 12px 15px;
+            cursor: grab;
+        }
+
+        .k-section-card .draggable-lists li:hover {
+            border-color: #F2C94C;
+        }
+
+        .k-section-card .no-result {
+            background: #0e1117;
+            padding: 20px;
+            border-radius: 12px;
+            text-align: center;
+            color: #9ca3af;
+        }
+
+        .k-section-card .no-result img {
+            max-width: 120px;
+            margin-bottom: 15px;
+        }
+
+        .k-section-card label.input-label {
+            color: #F2C94C;
+            font-weight: 600;
+        }
+
+        .k-section-card .select2-container--default .select2-selection--single {
+            background: #0e1117;
+            border: 1px solid #262c3a;
+            color: #e5e7eb;
+            border-radius: 8px;
+        }
+
+        .k-section-card .select2-container--default .select2-selection--single .select2-selection__arrow b {
+            border-color: #F2C94C transparent transparent transparent;
+        }
+    </style>
 @endpush
 
-
-<section class="mt-50">
+<section class="k-section-card mt-50">
     <div class="">
         <h2 class="section-title after-line">{{ trans('public.faq') }} ({{ trans('public.optional') }})</h2>
     </div>
@@ -38,7 +115,7 @@
 </div>
 
 @foreach(\App\Models\WebinarExtraDescription::$types as $upcomingCourseExtraDescriptionType)
-    <section class="mt-50">
+     <section class="k-section-card mt-50">
         <div class="">
             <h2 class="section-title after-line">{{ trans('update.'.$upcomingCourseExtraDescriptionType) }} ({{ trans('public.optional') }})</h2>
         </div>
@@ -90,7 +167,7 @@
 @endforeach
 
 
-<section class="mt-50">
+ <section class="k-section-card mt-50">
     <div class="">
         <h2 class="section-title after-line">{{ trans('update.related_courses') }} ({{ trans('public.optional') }})</h2>
     </div>

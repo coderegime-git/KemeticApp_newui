@@ -143,6 +143,7 @@ class WebinarController extends Controller
 
                 return $webinar;
             })
+            
             ->flatten(1); // Flatten the result into a single-level collection
  
 
@@ -366,160 +367,63 @@ class WebinarController extends Controller
         $sort = $request->get('sort', 'newest');
         $categorySlug = $request->get('category', null);
         $isFree = filter_var($request->get('free', false), FILTER_VALIDATE_BOOLEAN);
+        $categoryId = null;
 
-        // Cache for 5 minutes
-        $cacheKey = 'webinars_' . md5(json_encode($request->all()));
-
-        $webinarsByCategory = Cache::remember($cacheKey, 300, function () use ($sort, $categorySlug, $isFree) {
-
-            $time = time();
-
-            $query = Webinar::where('webinars.status', 'active')
-                ->with([
-                    'category:id,slug',
-                    'teacher:id,avatar,full_name', // Teacher data
-                    'reviews', // Reviews for this specific webinar
-                    'badges' => function ($query) use ($time) {
-                        $query->where('targetable_type', 'App\Models\Webinar')
-                            ->with(['badge' => function ($query) use ($time) {
-                                $query->where('enable', true)
-                                    ->where(function ($query) use ($time) {
-                                        $query->whereNull('start_at')->orWhere('start_at', '<', $time);
-                                    })
-                                    ->where(function ($query) use ($time) {
-                                        $query->whereNull('end_at')->orWhere('end_at', '>', $time);
-                                    });
-                            }]);
-                    }
-                ])
-                ->leftJoin('apple_product_table', 'webinars.reference_id', '=', 'apple_product_table.id')
-                ->select(
-                    'webinars.*',
-                    'apple_product_table.reference_name',
-                    'apple_product_table.product_id',
-                    'apple_product_table.display_name',
-                    'apple_product_table.description as product_description',
-                    'apple_product_table.type',
-                )
-                ->join('feature_webinars', 'feature_webinars.webinar_id', '=', 'webinars.id')
-                ->where('feature_webinars.status', 'publish')
-                ->whereIn('feature_webinars.page', ['home', 'home_categories']);
-
-            // 🔹 Category filter
-            if (!empty($categorySlug)) {
-                $query->whereHas('category', function ($q) use ($categorySlug) {
-                    $q->where('id', $categorySlug)
-                    ->orWhere('slug', $categorySlug);
-                });
+         // Get category ID if slug is provided
+        if ($categorySlug) {
+            $category = Category::where('id', $categorySlug)->first();
+            if ($category) {
+                $categoryId = $category->id;
             }
-            
-            // 🔹 Free webinars only
-            if ($isFree == '1' || $isFree === true) {
-                $query->where(function ($q) {
-                    $q->whereNull('webinars.price')
-                    ->orWhere('webinars.price', '<=', 0);
-                });
+        }
+
+        // Base query for regular webinars with filters
+        $webinarsQuery = Webinar::where('status', Webinar::$active)
+            ->where('private', false);
+
+        // Apply category filter
+        if ($categoryId) {
+            $webinarsQuery->where('category_id', $categoryId);
+        }
+
+        // Apply free filter
+        if ($isFree) {
+            $webinarsQuery->where(function($query) {
+                $query->where('price', 0)
+                    ->orWhere('price', null);
+            });
+        }
+
+        // Apply sorting
+        switch ($sort) {
+            case 'newest':
+                $webinarsQuery->orderBy('created_at', 'desc');
+                break;
+            case 'oldest':
+                $webinarsQuery->orderBy('created_at', 'asc');
+                break;
+            default:
+                $webinarsQuery->orderBy('created_at', 'desc');
+        }
+
+        // Get regular webinars
+        $webinars = $webinarsQuery->with([
+            'teacher:id,full_name,avatar', 
+            'reviews' => fn($q) => $q->where('status', 'active'), 
+            'tickets', 
+            'feature'
+        ])
+        // ->limit(6)
+        ->get()
+        ->map(function ($course) {
+            $course->thumbnail = url($course->thumbnail);
+            $course->image_cover = url($course->image_cover);
+            if ($course->teacher) {
+                $course->teacher->avatar = url($course->teacher->avatar);
             }
-
-            // 🔹 Sorting
-            switch ($sort) {
-                case 'oldest':
-                    $query->orderBy('webinars.id', 'asc');
-                    break;
-                case 'popular':
-                    $query->orderBy('webinars.downloadable', 'desc');
-                    break;
-                default: // newest
-                    $query->orderBy('webinars.created_at', 'desc');
-                    break;
-            }
-
-            $webinars = $query->get()
-                ->groupBy('id')
-                ->map(function ($group) {
-                    $webinar = $group->first();
-
-                    // Calculate webinar-specific rating data
-                    $reviews = $webinar->reviews->where('status', 'active'); // Only active reviews
-                    $ratingCount = $reviews->count();
-                    $averageRating = $ratingCount > 0 ? $reviews->avg('rates') : 0;
-
-                    // Apple product mapping
-                    $products = $group->map(function ($item) {
-                        return [
-                            'reference_name' => $item->reference_name,
-                            'product_id' => $item->product_id,
-                            'display_name' => $item->display_name,
-                            'description' => $item->product_description,
-                            'type' => $item->type,
-                        ];
-                    })->filter(fn($p) => $p['product_id'] !== null)->values()->toArray();
-
-                    // Add formatted fields
-                    $webinar->product = $products;
-                    $webinar->thumbnail = url($webinar->thumbnail);
-                    $webinar->image_cover = url($webinar->image_cover);
-                    
-                    // Add teacher data (creator_id = teacher)
-                    $webinar->teacher_name = $webinar->teacher ? $webinar->teacher->full_name : null;
-                    $webinar->teacher_image = $webinar->teacher && $webinar->teacher->avatar ? url($webinar->teacher->avatar) : null;
-                    
-                    // Add webinar-specific rating data
-                    $webinar->rating_count = $ratingCount;
-                    $webinar->average_rating = round($averageRating, 1);
-
-                    unset(
-                        $webinar->reference_name,
-                        $webinar->product_id,
-                        $webinar->display_name,
-                        $webinar->product_description,
-                        $webinar->type,
-                        $webinar->reviews // Remove reviews collection to avoid large response
-                    );
-
-                    return $webinar;
-                })
-                ->flatten(1);
-
-            // Get category IDs from webinars
-            $categoryIds = $webinars->pluck('category.id')->filter()->unique()->values();
-            
-            // Get category translations
-            $categoriesWithTranslations = Category::query()
-                ->join('category_translations', function ($join) {
-                    $join->on('categories.id', '=', 'category_translations.category_id')
-                        ->where('category_translations.locale', '=', app()->getLocale());
-                })
-                ->select(
-                    'categories.id',
-                    'categories.slug',
-                    'category_translations.title'
-                )
-                ->whereIn('categories.id', $categoryIds)
-                ->get()
-                ->keyBy('id');
-
-            // Group webinars by category
-            $groupedByCategory = $webinars->groupBy(function ($webinar) {
-                return $webinar->category ? $webinar->category->id : 'uncategorized';
-            })->map(function ($webinars, $categoryId) use ($categoriesWithTranslations) {
-                $categoryData = $categoriesWithTranslations->get($categoryId);
-                
-                return [
-                    'category_id' => $categoryId === 'uncategorized' ? null : $categoryId,
-                    'category_title' => $categoryData ? $categoryData->title : 'Uncategorized',
-                    'category_slug' => $categoryData ? $categoryData->slug : null,
-                    'webinars' => $webinars->map(function ($webinar) {
-                        // Remove category and teacher objects to avoid redundancy
-                        unset($webinar->category, $webinar->teacher);
-                        return $webinar;
-                    })->values()
-                ];
-            })->values();
-
-            return $groupedByCategory;
+            return $course;
         });
-
+        
         $bestSaleWebinarsIds = Sale::whereNotNull('webinar_id')
         ->select(DB::raw('COUNT(id) as cnt,webinar_id'))
         ->groupBy('webinar_id')
@@ -573,7 +477,7 @@ class WebinarController extends Controller
             return $bestRateWebinars;
         });
 
-        $data['course'] = $webinarsByCategory;
+        $data['course'] = $webinars;
         $data['bestrate'] = $bestRateWebinars;
         $data['bestsale'] = $bestSaleWebinars;
 

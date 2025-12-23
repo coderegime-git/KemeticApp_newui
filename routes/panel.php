@@ -507,6 +507,16 @@ Route::group(['namespace' => 'Panel', 'prefix' => 'panel', 'middleware' => ['imp
         });
     });
 
+    Route::group(['prefix' => 'book'], function () {
+
+        Route::get('/', 'BookController@index');
+        Route::get('/new', 'BookController@create');
+        Route::post('/store', 'BookController@store');
+        Route::get('/{id}/edit', 'BookController@edit');
+        Route::post('/{id}/update', 'BookController@update');
+        Route::get('/{id}/delete', 'BookController@delete');
+    });
+
     Route::group(['prefix' => 'ai-contents'], function () {
         Route::get('/', 'AiContentController@index');
         Route::post('/generate', 'AiContentController@generate');

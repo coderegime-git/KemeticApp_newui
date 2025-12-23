@@ -14,7 +14,7 @@
     <section class="container mt-10 mt-md-40">
         <div class="row">
             <div class="col-12">
-                <div class="post-show mt-30">
+                <div class="policy-description">
                     {!! nl2br($page->content) !!}
                 </div>
             </div>

@@ -17,6 +17,163 @@
         {!! !empty(getCustomCssAndJs('css')) ? getCustomCssAndJs('css') : '' !!}
     </style>
 </head>
+<style>
+    /* ======================================================
+   KEMETIC INVOICE THEME
+   Black • Gold • Print Safe
+====================================================== */
+
+:root {
+    --k-bg: #0b0b0b;
+    --k-card: #141414;
+    --k-border: rgba(242,201,76,.25);
+    --k-gold: #F2C94C;
+    --k-gold-soft: rgba(242,201,76,.15);
+    --k-text: #eaeaea;
+    --k-muted: #9a9a9a;
+    --k-radius: 16px;
+}
+
+/* BODY */
+body {
+    background: radial-gradient(circle at top, #121212, #070707);
+    color: var(--k-text);
+}
+
+/* CARD */
+.card-primary {
+    background: linear-gradient(180deg, #161616, #0e0e0e);
+    border-radius: var(--k-radius);
+    border: 1px solid var(--k-border);
+    box-shadow: 0 20px 60px rgba(0,0,0,.7);
+}
+
+/* INVOICE TITLE */
+.invoice-title h2 {
+    color: var(--k-gold);
+    font-weight: 800;
+    letter-spacing: .5px;
+}
+
+.invoice-number {
+    color: var(--k-muted);
+    font-size: 14px;
+}
+
+/* SEPARATORS */
+hr {
+    border-color: var(--k-border);
+}
+
+/* ADDRESS */
+address strong {
+    color: var(--k-gold);
+    font-weight: 600;
+}
+
+address {
+    color: var(--k-text);
+    line-height: 1.7;
+}
+
+/* SECTION TITLE */
+.section-title {
+    font-size: 18px;
+    font-weight: 700;
+    color: var(--k-gold);
+    border-left: 4px solid var(--k-gold);
+    padding-left: 10px;
+    margin-bottom: 15px;
+}
+
+/* TABLE */
+.table {
+    background: transparent;
+}
+
+.table thead th,
+.table th {
+    color: var(--k-gold);
+    border-bottom: 1px solid var(--k-border);
+    font-weight: 700;
+}
+
+.table td {
+    color: var(--k-text);
+    border-top: 1px solid rgba(255,255,255,.05);
+}
+
+.table-striped tbody tr:nth-of-type(odd) {
+    background: rgba(255,255,255,.03);
+}
+
+.table-hover tbody tr:hover {
+    background: rgba(242,201,76,.08);
+}
+
+/* TOTAL SUMMARY */
+.invoice-detail-item {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 8px;
+}
+
+.invoice-detail-name {
+    color: var(--k-muted);
+}
+
+.invoice-detail-value {
+    color: var(--k-text);
+    font-weight: 600;
+}
+
+.invoice-detail-value-lg {
+    font-size: 20px;
+    font-weight: 800;
+    color: var(--k-gold);
+}
+
+/* PRINT BUTTON */
+.btn-warning {
+    background: linear-gradient(135deg, #F2C94C, #E5A100);
+    border: none;
+    color: #000;
+    font-weight: 700;
+    border-radius: 30px;
+    padding: 10px 20px;
+    box-shadow: 0 10px 25px rgba(242,201,76,.4);
+}
+
+.btn-warning:hover {
+    background: linear-gradient(135deg, #E5A100, #F2C94C);
+}
+
+/* ======================================================
+   PRINT MODE
+====================================================== */
+
+@media print {
+    body {
+        background: #fff !important;
+        color: #000 !important;
+    }
+
+    .card-primary {
+        box-shadow: none;
+        border: 1px solid #ccc;
+    }
+
+    .invoice-detail-value-lg,
+    .invoice-title h2 {
+        color: #000 !important;
+    }
+
+    .btn {
+        display: none !important;
+    }
+}
+
+</style>
 <body>
 
 <div id="app">

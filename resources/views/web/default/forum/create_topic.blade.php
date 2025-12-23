@@ -24,7 +24,7 @@
         <form action="{{ !empty($topic) ? $topic->getEditUrl() : '/forums/create-topic' }}" method="post">
             {{ csrf_field() }}
 
-            <div class="rounded-lg px-15 py-20 border bg-white mt-20">
+            <div class="rounded-lg px-15 py-20 border bg-white mt-20" style="padding:10px; background-color: rgb(38 36 36) !important;">
                 <div class="row">
                     <div class="col-12 col-md-6">
                         <div class="form-group">

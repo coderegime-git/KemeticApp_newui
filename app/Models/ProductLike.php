@@ -7,13 +7,13 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 
 class ProductLike extends Model
 {
-    use SoftDeletes;
+    // use SoftDeletes;
 
     protected $table = 'product_like';
-    public $timestamps = true;
+    public $timestamps = false;
     protected $dateFormat = 'U';
     protected $fillable = ['user_id', 'product_id'];
-    protected $dates = ['created_at', 'updated_at', 'deleted_at'];
+    // protected $dates = ['created_at', 'updated_at', 'deleted_at'];
 
     /*
      * Relations

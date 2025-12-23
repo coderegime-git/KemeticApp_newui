@@ -2,7 +2,7 @@
     <div class="col-12 col-md-6">
         <div class="d-flex align-items-center">
             <div class="forums-categories-card__icon p-5">
-                <img src="{{ $forum->icon }}" alt="{{ $forum->title }}" class="img-cover">
+                <img src="{{ $forum->icon }}" alt="{{ $forum->title }}" class="img-cover" width="150">
             </div>
             <div class="ml-10">
                 <a href="{{ $forum->getUrl() }}" class="d-block">
@@ -28,7 +28,7 @@
     <div class="col-8 col-md-4 mt-10 mt-md-0 forums-categories-card__last-post d-flex align-items-center">
         @if(!empty($forum->lastTopic))
             <div class="user-avatar rounded-circle">
-                <img src="{{ $forum->lastTopic->creator->getAvatar(39) }}" class="img-cover rounded-circle" alt="{{ $forum->lastTopic->creator->full_name }}">
+                <img src="{{ $forum->lastTopic->creator->getAvatar(39) }}" class="img-cover rounded-circle" alt="{{ $forum->lastTopic->creator->full_name }}" width="50">
             </div>
 
             <div class="ml-5">

@@ -26,7 +26,7 @@ class RewardCoursesController extends Controller
         }
 
         $webinars = $webinarsQuery->with(['tickets'])
-            ->paginate(6);
+            ->paginate(8);
 
         $seoSettings = getSeoMetas('reward_courses');
         $pageTitle = !empty($seoSettings['title']) ? $seoSettings['title'] : '';

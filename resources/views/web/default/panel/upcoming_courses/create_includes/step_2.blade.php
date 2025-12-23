@@ -2,9 +2,104 @@
     <link rel="stylesheet" href="/assets/default/vendors/daterangepicker/daterangepicker.min.css">
     <link rel="stylesheet" href="/assets/default/vendors/select2/select2.min.css">
     <link rel="stylesheet" href="/assets/default/vendors/bootstrap-tagsinput/bootstrap-tagsinput.min.css">
+
+    <style>
+        /* ================== KEMETIC THEME ================== */
+        .k-form-card {
+            background: #151a23;
+            padding: 20px;
+            border-radius: 12px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.4);
+            color: #e5e7eb;
+        }
+
+        .k-form-card .input-label {
+            color: #F2C94C;
+            font-weight: 600;
+        }
+
+        .k-form-card .form-control,
+        .k-form-card .custom-select,
+        .k-form-card .input-group-text {
+            background: #0e1117;
+            color: #e5e7eb;
+            border: 1px solid #262c3a;
+            border-radius: 8px;
+        }
+
+        .k-form-card .form-control:focus,
+        .k-form-card .custom-select:focus {
+            border-color: #F2C94C;
+            box-shadow: 0 0 0 2px rgba(242,201,76,0.25);
+            background: #0e1117;
+            color: #e5e7eb;
+        }
+
+        .k-form-card .custom-file-label {
+            background: #0e1117;
+            color: #e5e7eb;
+            border: 1px solid #262c3a;
+            border-radius: 8px;
+        }
+
+        .k-form-card .custom-control-input:checked ~ .custom-control-label::before {
+            background-color: #F2C94C;
+            border-color: #F2C94C;
+        }
+
+        .k-form-card .input-group-text i {
+            color: #F2C94C;
+        }
+
+        .k-form-card .invalid-feedback {
+            color: #ff6b6b;
+        }
+
+        .k-form-card .inputtags {
+            background: #0e1117;
+            color: #e5e7eb;
+            border: 1px solid #262c3a;
+            border-radius: 8px;
+        }
+
+        .k-form-card .select2-container--default .select2-selection--single {
+            background: #0e1117;
+            border: 1px solid #262c3a;
+            color: #e5e7eb;
+            border-radius: 8px;
+        }
+
+        .k-form-card .select2-container--default .select2-selection--single .select2-selection__arrow b {
+            border-color: #F2C94C transparent transparent transparent;
+        }
+
+        .k-form-card .text-gray {
+            color: #9ca3af;
+        }
+
+        .k-form-card .webinar-category-filters {
+            background: #0e1117;
+            padding: 12px;
+            border-radius: 10px;
+            margin-bottom: 15px;
+            border: 1px solid #262c3a;
+        }
+
+        .k-form-card .webinar-category-filters .category-filter-title {
+            color: #F2C94C;
+        }
+
+        .k-form-card .custom-control-label::before {
+            border-radius: 50px;
+        }
+
+        .k-form-card .custom-control-label::after {
+            background-color: #151a23;
+        }
+    </style>
 @endpush
 
-<div class="row">
+<div class="row k-form-card">
     <div class="col-12 col-md-6 mt-15">
 
         <div class="form-group">

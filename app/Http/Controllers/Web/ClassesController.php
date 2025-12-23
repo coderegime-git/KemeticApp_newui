@@ -27,6 +27,8 @@ class ClassesController extends Controller
         $webinarsQuery = Webinar::where('webinars.status', 'active');
             // ->where('private', false);
 
+        $data = $request->all();
+
         $type = $request->get('type');
         if (!empty($type) and is_array($type) and in_array('bundle', $type)) {
             $webinarsQuery = Bundle::where('bundles.status', 'active');
@@ -49,7 +51,7 @@ class ClassesController extends Controller
 
         $webinars = $webinarsQuery->with([
             'tickets'
-        ])->paginate(6);
+        ])->paginate(8);
 
         $seoSettings = getSeoMetas('classes');
         $pageTitle = $seoSettings['title'] ?? '';
@@ -115,6 +117,12 @@ class ClassesController extends Controller
         ->get()
         ->makeHidden('translations');
 
+        $selectedCategory = null;
+
+        if (!empty($data['category_id'])) {
+            $selectedCategory = Category::where('id', $data['category_id'])->first();
+        }
+
         $data = [
             'pageTitle' => $pageTitle,
             'pageDescription' => $pageDescription,
@@ -123,6 +131,7 @@ class ClassesController extends Controller
             'bestRateWebinars' => $bestRateWebinars,
             'bestSaleWebinars' => $bestSaleWebinars,
             'categories' => $categories,
+            'selectedCategory' => $selectedCategory,
             'coursesCount' => $webinars->total()
         ];
 
@@ -139,6 +148,8 @@ class ClassesController extends Controller
         $filterOptions = $request->get('filter_option', []);
         $typeOptions = $request->get('type', []);
         $moreOptions = $request->get('moreOptions', []);
+        $search = $request->get('search', null);
+        $categoryId = $request->get('category_id', null);
 
         $query->whereHas('teacher', function ($query) {
             $query->where('status', 'active')
@@ -191,6 +202,14 @@ class ClassesController extends Controller
                     });
                 }
             }
+        }
+
+        if (!empty($search)) {
+            $query->whereTranslationLike('title', '%' . $search . '%');
+        }
+
+        if (!empty($categoryId)) {
+            $query->where('category_id', $categoryId);
         }
 
         if (!empty($isFree) and $isFree == 'on') {

@@ -102,7 +102,7 @@
 </div>
         <div>
           <label class="login-label">Full name</label>
-          <div class="login-inp"><input type="text" name="full_name" placeholder="Shudweney" value="{{ old('full_name') }}" required></div>
+          <div class="login-inp"><input type="text" name="full_name" placeholder="Full name" value="{{ old('full_name') }}" required></div>
           @error('full_name')
           <div class="invalid-feedback">
               {{ $message }}

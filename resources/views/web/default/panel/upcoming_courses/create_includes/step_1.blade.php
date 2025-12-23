@@ -1,8 +1,110 @@
 @push('styles_top')
     <link rel="stylesheet" href="/assets/vendors/summernote/summernote-bs4.min.css">
+    <style>
+        /* ================= KEMETIC THEME ================= */
+        .k-form-card {
+            background: #151a23;
+            border-radius: 12px;
+            padding: 20px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.3);
+            color: #e5e7eb;
+        }
+
+        .k-form-card .input-label {
+            color: #F2C94C;
+            font-weight: 600;
+        }
+
+        .k-form-card .form-control {
+            background: #0e1117;
+            color: #e5e7eb;
+            border: 1px solid #262c3a;
+            border-radius: 8px;
+        }
+
+        .k-form-card .form-control:focus {
+            border-color: #F2C94C;
+            box-shadow: 0 0 0 2px rgba(242,201,76,0.25);
+            background: #0e1117;
+            color: #e5e7eb;
+        }
+
+        .k-form-card .custom-select {
+            background: #0e1117;
+            color: #e5e7eb;
+            border: 1px solid #262c3a;
+            border-radius: 8px;
+        }
+
+        .k-form-card .custom-file-label {
+            background: #0e1117;
+            color: #e5e7eb;
+            border: 1px solid #262c3a;
+            border-radius: 8px;
+        }
+
+        .k-form-card .input-group-text {
+            background: #262c3a;
+            color: #F2C94C;
+            border: 1px solid #262c3a;
+        }
+
+        .k-form-card .panel-file-manager {
+            background: #262c3a;
+            border: none;
+            color: #F2C94C;
+        }
+
+        .k-form-card .invalid-feedback {
+            color: #ff6b6b;
+        }
+
+        .k-form-card textarea.form-control {
+            min-height: 150px;
+            background: #0e1117;
+            color: #e5e7eb;
+        }
+
+        /* Summernote editor */
+        .k-form-card .note-editor.note-frame {
+            background: #0e1117;
+            color: #e5e7eb;
+            border: 1px solid #262c3a;
+        }
+
+        .k-form-card .note-toolbar .note-btn {
+            background: #262c3a;
+            color: #F2C94C;
+        }
+
+        .k-form-card .note-editing-area {
+            background: #0e1117;
+            color: #e5e7eb;
+        }
+
+        .k-form-card .js-video-demo-source {
+            background: #0e1117;
+            color: #e5e7eb;
+            border: 1px solid #262c3a;
+            border-radius: 8px;
+        }
+
+        .k-form-card button {
+            background: #F2C94C;
+            color: #151a23;
+            border: none;
+            border-radius: 8px;
+            padding: 8px 20px;
+            transition: 0.3s;
+        }
+
+        .k-form-card button:hover {
+            background: #e0b93d;
+        }
+    </style>
 @endpush
 
-<div class="row">
+<div class="row k-form-card">
     <div class="col-12 col-md-4 mt-15">
 
         @if(!empty(getGeneralSettings('content_translate')))
@@ -18,16 +120,13 @@
             <input type="hidden" name="locale" value="{{ getDefaultLocale() }}">
         @endif
 
-
-        <div class="form-group mt-15 ">
+        <div class="form-group mt-15">
             <label class="input-label d-block">{{ trans('panel.course_type') }}</label>
-
             <select name="type" class="custom-select @error('type')  is-invalid @enderror">
                 <option value="webinar" @if(!empty($upcomingCourse) and $upcomingCourse->type == 'webinar') selected @endif>{{ trans('webinars.webinar') }}</option>
                 <option value="course" @if(!empty($upcomingCourse) and $upcomingCourse->type == 'course') selected @endif>{{ trans('webinars.video_course') }}</option>
                 <option value="text_lesson" @if(!empty($upcomingCourse) and $upcomingCourse->type == 'text_lesson') selected @endif>{{ trans('webinars.text_lesson') }}</option>
             </select>
-
             @error('type')
             <div class="invalid-feedback">
                 {{ $message }}
@@ -165,7 +264,7 @@
     </div>
 </div>
 
-<div class="row">
+<div class="row k-form-card mt-15">
     <div class="col-12">
         <div class="form-group">
             <label class="input-label">{{ trans('public.description') }}</label>

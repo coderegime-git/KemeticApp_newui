@@ -63,13 +63,44 @@ class UserController extends Controller
                           ->orderBy('created_at', 'desc');
                 },
                 'userMetas'
-            ])
-            ->first();
-
-            //dd($user);
+        ])
+        ->first();
 
         if (!$user) {
             abort(404);
+        }
+
+        $totalCounts = [
+            'likes' => 0,
+            'comments' => 0,
+            'reviews' => 0
+        ];
+
+        foreach ($user->blog as $article) {
+            $totalCounts['likes'] += $article->like()->count();
+            $totalCounts['comments'] += $article->comments()->where('status', 'active')->count();
+            $totalCounts['reviews'] += $article->reviews()->where('status', 'active')->count();
+        }
+
+        // 2. Products counts
+        foreach ($user->products as $product) {
+            $totalCounts['likes'] += $product->likes()->count();
+            $totalCounts['comments'] += $product->comments()->count();
+            $totalCounts['reviews'] += $product->reviews()->where('status', 'active')->count();
+        }
+
+        // 3. Reels counts (reels don't have reviews)
+        foreach ($user->reels as $reel) {
+            $totalCounts['likes'] += $reel->likes()->count();
+            $totalCounts['comments'] += $reel->comments()->count();
+            // Reels don't have reviews
+        }
+
+        // 4. Webinars counts
+        foreach ($user->webinars as $webinar) {
+            // $totalCounts['likes'] += $webinar->likes()->count(); // If webinar has likes relation
+            $totalCounts['comments'] += $webinar->comments()->count();
+            $totalCounts['reviews'] += $webinar->reviews()->where('status', 'active')->count();
         }
 
         $userMetas = $user->userMetas;
@@ -204,7 +235,10 @@ class UserController extends Controller
             'forumTopics' => $this->getUserForumTopics($user->id),
             'cashbackRules' => $cashbackRules,
             'instructorDiscounts' => $instructorDiscounts,
-            'userStories' => $userStories
+            'userStories' => $userStories,
+            'totalLikes' => $totalCounts['likes'],
+            'totalComments' => $totalCounts['comments'],
+            'totalReviews' => $totalCounts['reviews'],
         ];
 
         return view('web.default.user.profile', $data);

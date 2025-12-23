@@ -62,7 +62,7 @@ Route::group([], function () {
 
     Route::get('users/{id}/profile', ['uses' => 'UserController@profile']);
     Route::post('users/{id}/send-message', 'UserController@sendMessage');
-
+    Route::get('users/{id}/dashboard', 'UserController@dashboard');
 
     Route::get('/files/{file_id}/download', ['uses' => 'FilesController@download']);
 

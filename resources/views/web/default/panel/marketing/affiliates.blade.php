@@ -1,123 +1,240 @@
-@extends(getTemplate() .'.panel.layouts.panel_layout')
+@extends('web.default.layouts.newapp')
 
 @push('styles_top')
+<style>
+    :root {
+        --k-bg: #0f0f0f;
+        --k-card: #161616;
+        --k-border: #2a2a2a;
+        --k-gold: #F2C94C;
+        --k-text: #eaeaea;
+        --k-muted: #9aa0a6;
+        --k-radius: 18px;
+    }
 
+    .k-section-title {
+        font-size: 22px;
+        font-weight: 700;
+        color: var(--k-gold);
+        margin-bottom: 20px;
+    }
+
+    .k-card {
+        background: var(--k-card);
+        border: 1px solid var(--k-border);
+        border-radius: var(--k-radius);
+        padding: 25px;
+    }
+
+    .k-stat {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        text-align: center;
+    }
+
+    .k-stat strong {
+        font-size: 32px;
+        color: var(--k-gold);
+    }
+
+    .k-stat span {
+        color: var(--k-muted);
+        margin-top: 6px;
+    }
+
+    .k-summary p {
+        color: var(--k-text);
+        font-size: 14px;
+        margin-bottom: 6px;
+    }
+
+    .k-input {
+        background: #0c0c0c;
+        border: 1px solid var(--k-border);
+        color: var(--k-text);
+    }
+
+    .k-input:focus {
+        border-color: var(--k-gold);
+        box-shadow: none;
+    }
+
+    .k-table {
+        background: var(--k-card);
+        border-radius: var(--k-radius);
+        overflow: hidden;
+    }
+
+    .k-table th {
+        background: #121212;
+        color: var(--k-gold);
+        border-bottom: 1px solid var(--k-border);
+        font-size: 14px;
+    }
+
+    .k-table td {
+        color: var(--k-text);
+        border-top: 1px solid var(--k-border);
+        vertical-align: middle;
+    }
+
+    .k-table tr:hover {
+        background: rgba(242,201,76,0.06);
+    }
+
+    .k-avatar {
+        width: 42px;
+        height: 42px;
+        border-radius: 50%;
+        overflow: hidden;
+        border: 1px solid var(--k-border);
+    }
+
+    .k-avatar img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+    }
+
+</style>
 @endpush
 
 @section('content')
-    <section class="">
-        <h2 class="section-title">{{ trans('panel.affiliate_statistics') }}</h2>
 
-        <div class="activities-container mt-25 p-20 p-lg-35">
-            <div class="row">
+{{-- ================= STATISTICS ================= --}}
+<section>
+    <h2 class="k-section-title">{{ trans('panel.affiliate_statistics') }}</h2>
 
-                <div class="col-4 d-flex align-items-center justify-content-center">
-                    <div class="d-flex flex-column align-items-center text-center">
-                        <img src="/assets/default/img/activity/48.svg" width="64" height="64" alt="">
-                        <strong class="font-30 text-dark-blue font-weight-bold mt-5">{{ $referredUsersCount }}</strong>
-                        <span class="font-16 text-gray font-weight-500">{{ trans('panel.referred_users') }}</span>
-                    </div>
+    <div class="k-card">
+        <div class="row text-center">
+            <div class="col-12 col-md-4">
+                <div class="k-stat">
+                    <img src="/assets/default/img/activity/48.svg" width="54">
+                    <strong>{{ $referredUsersCount }}</strong>
+                    <span>{{ trans('panel.referred_users') }}</span>
                 </div>
+            </div>
 
-                <div class="col-4 d-flex align-items-center justify-content-center">
-                    <div class="d-flex flex-column align-items-center text-center">
-                        <img src="/assets/default/img/activity/38.svg" width="64" height="64" alt="">
-                        <strong class="font-30 text-dark-blue font-weight-bold mt-5">{{ handlePrice($registrationBonus) }}</strong>
-                        <span class="font-16 text-gray font-weight-500">{{ trans('panel.registration_bonus') }}</span>
-                    </div>
+            <div class="col-12 col-md-4 mt-20 mt-md-0">
+                <div class="k-stat">
+                    <img src="/assets/default/img/activity/38.svg" width="54">
+                    <strong>{{ handlePrice($registrationBonus) }}</strong>
+                    <span>{{ trans('panel.registration_bonus') }}</span>
                 </div>
+            </div>
 
-                <div class="col-4 d-flex align-items-center justify-content-center">
-                    <div class="d-flex flex-column align-items-center text-center">
-                        <img src="/assets/default/img/activity/36.svg" width="64" height="64" alt="">
-                        <strong class="font-30 text-dark-blue font-weight-bold mt-5">{{ handlePrice($affiliateBonus) }}</strong>
-                        <span class="font-16 text-gray font-weight-500">{{ trans('panel.affiliate_bonus') }}</span>
-                    </div>
+            <div class="col-12 col-md-4 mt-20 mt-md-0">
+                <div class="k-stat">
+                    <img src="/assets/default/img/activity/36.svg" width="54">
+                    <strong>{{ handlePrice($affiliateBonus) }}</strong>
+                    <span>{{ trans('panel.affiliate_bonus') }}</span>
                 </div>
-
             </div>
         </div>
-    </section>
+    </div>
+</section>
 
-    <section class="mt-25">
-        <h2 class="section-title">{{ trans('panel.affiliate_summary') }}</h2>
+{{-- ================= SUMMARY ================= --}}
+<section class="mt-40">
+    <h2 class="k-section-title">{{ trans('panel.affiliate_summary') }}</h2>
 
+    <div class="k-card k-summary">
         @if(!empty($referralSettings))
-            <div class="mt-15 font-14 text-gray">
-                @if(!empty($referralSettings['affiliate_user_amount']))<p>- {{ trans('panel.user_registration_reward') }}: {{ handlePrice($referralSettings['affiliate_user_amount']) }}</p>@endif
-                @if(!empty($referralSettings['referred_user_amount']))<p>- {{ trans('panel.referred_user_registration_reward') }}: {{ handlePrice($referralSettings['referred_user_amount']) }}</p>@endif
-                @if(!empty($referralSettings['affiliate_user_commission']))<p>- {{ trans('panel.referred_user_purchase_commission') }}: {{ $referralSettings['affiliate_user_commission'] }}%</p>@endif
-                <p>- {{ trans('panel.your_affiliate_code') }}: {{ $affiliateCode->code }}</p>
-                @if(!empty($referralSettings['referral_description']))<p>- {{ $referralSettings['referral_description'] }}</p>@endif
-            </div>
+            @if(!empty($referralSettings['affiliate_user_amount']))
+                <p>• {{ trans('panel.user_registration_reward') }}:
+                    <strong class="text-warning">{{ handlePrice($referralSettings['affiliate_user_amount']) }}</strong>
+                </p>
+            @endif
+
+            @if(!empty($referralSettings['referred_user_amount']))
+                <p>• {{ trans('panel.referred_user_registration_reward') }}:
+                    <strong class="text-warning">{{ handlePrice($referralSettings['referred_user_amount']) }}</strong>
+                </p>
+            @endif
+
+            @if(!empty($referralSettings['affiliate_user_commission']))
+                <p>• {{ trans('panel.referred_user_purchase_commission') }}:
+                    <strong class="text-warning">{{ $referralSettings['affiliate_user_commission'] }}%</strong>
+                </p>
+            @endif
+
+            <p>• {{ trans('panel.your_affiliate_code') }}:
+                <strong class="text-warning">{{ $affiliateCode->code }}</strong>
+            </p>
+
+            @if(!empty($referralSettings['referral_description']))
+                <p class="mt-10">{{ $referralSettings['referral_description'] }}</p>
+            @endif
         @endif
+    </div>
+</section>
 
-        <div class="row mt-15">
-            <div class="col-12 col-lg-5">
-                <h3 class="font-16 font-weight-500">{{ trans('panel.affiliate_url') }}</h3>
+{{-- ================= AFFILIATE URL ================= --}}
+<section class="mt-40">
+    <h2 class="k-section-title">{{ trans('panel.affiliate_url') }}</h2>
 
-                <div class="form-group mt-5">
-                    <div class="input-group">
-                        <div class="input-group-prepend">
-                            <button type="button" class="input-group-text js-copy" data-input="affiliate_url" data-toggle="tooltip" data-placement="top" title="{{ trans('public.copy') }}" data-copy-text="{{ trans('public.copy') }}" data-done-text="{{ trans('public.done') }}">
-                                <i data-feather="copy" width="18" height="18" class="text-white"></i>
-                            </button>
-                        </div>
-                        <input type="text" name="affiliate_url" readonly value="{{ $affiliateCode->getAffiliateUrl() }}" class="form-control"/>
-                    </div>
-                </div>
+    <div class="k-card col-lg-6 px-0">
+        <div class="input-group">
+            <div class="input-group-prepend">
+                <button type="button"
+                        class="input-group-text js-copy"
+                        data-input="affiliate_url"
+                        title="{{ trans('public.copy') }}">
+                    <i data-feather="copy" ></i>
+                </button>
             </div>
+            <input type="text"
+                   name="affiliate_url"
+                   readonly
+                   value="{{ $affiliateCode->getAffiliateUrl() }}"
+                   class="form-control k-input"/>
+        </div>
+    </div>
+</section>
+
+{{-- ================= EARNINGS TABLE ================= --}}
+<section class="mt-40">
+    <h2 class="k-section-title">{{ trans('panel.earnings') }}</h2>
+
+    <div class="k-card">
+        <div class="table-responsive">
+            <table class="table k-table text-center">
+                <thead>
+                <tr>
+                    <th class="text-left">{{ trans('panel.user') }}</th>
+                    <th>{{ trans('panel.registration_bonus') }}</th>
+                    <th>{{ trans('panel.affiliate_bonus') }}</th>
+                    <th>{{ trans('panel.registration_date') }}</th>
+                </tr>
+                </thead>
+                <tbody>
+                @foreach($affiliates as $affiliate)
+                    <tr>
+                        <td class="text-left">
+                            <div class="d-flex align-items-center">
+                                <div class="k-avatar">
+                                    <img src="{{ $affiliate->referredUser->getAvatar() }}">
+                                </div>
+                                <span class="ml-10 font-weight-500">
+                                    {{ $affiliate->referredUser->full_name }}
+                                </span>
+                            </div>
+                        </td>
+
+                        <td>{{ handlePrice($affiliate->getAffiliateRegistrationAmountsOfEachReferral()) }}</td>
+                        <td>{{ handlePrice($affiliate->getTotalAffiliateCommissionOfEachReferral()) }}</td>
+                        <td>{{ dateTimeFormat($affiliate->created_at, 'Y M j | H:i') }}</td>
+                    </tr>
+                @endforeach
+                </tbody>
+            </table>
         </div>
 
-    </section>
-
-    <section class="mt-25">
-        <h2 class="section-title">{{ trans('panel.earnings') }}</h2>
-
-        <div class="panel-section-card py-20 px-25 mt-20">
-            <div class="row">
-                <div class="col-12 ">
-                    <div class="table-responsive">
-                        <table class="table text-center custom-table">
-                            <thead>
-                            <tr>
-                                <th>{{ trans('panel.user') }}</th>
-                                <th class="text-center">{{ trans('panel.registration_bonus') }}</th>
-                                <th class="text-center">{{ trans('panel.affiliate_bonus') }}</th>
-                                <th class="text-center">{{ trans('panel.registration_date') }}</th>
-                            </tr>
-                            </thead>
-                            <tbody>
-
-                            @foreach($affiliates as $affiliate)
-                                <tr>
-                                    <td class="text-left">
-                                        <div class="user-inline-avatar d-flex align-items-center">
-                                            <div class="avatar bg-gray200">
-                                                <img src="{{ $affiliate->referredUser->getAvatar() }}" class="img-cover" alt="{{ $affiliate->referredUser->full_name }}">
-                                            </div>
-                                            <div class=" ml-5">
-                                                <span class="d-block font-weight-500">{{ $affiliate->referredUser->full_name }}</span>
-                                            </div>
-                                        </div>
-                                    </td>
-
-                                    <td>{{ handlePrice($affiliate->getAffiliateRegistrationAmountsOfEachReferral()) }}</td>
-
-                                    <td>{{ handlePrice($affiliate->getTotalAffiliateCommissionOfEachReferral()) }}</td>
-
-                                    <td>{{ dateTimeFormat($affiliate->created_at, 'Y M j | H:i') }}</td>
-                                </tr>
-                            @endforeach
-                            </tbody>
-                        </table>
-                    </div>
-
-                    <div class="my-30">
-                        {{ $affiliates->appends(request()->input())->links('vendor.pagination.panel') }}
-                    </div>
-                </div>
-            </div>
+        <div class="mt-30">
+            {{ $affiliates->appends(request()->input())->links('vendor.pagination.panel') }}
         </div>
-    </section>
+    </div>
+</section>
+
 @endsection

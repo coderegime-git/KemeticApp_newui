@@ -290,27 +290,47 @@ input[type="file"]::file-selector-button:hover {
   transform: translateY(0);
 }
 
-/* Theme Toggle Button (optional, if you want to add theme switching) */
-.theme-toggle {
-  position: fixed;
-  bottom: 20px;
-  right: 20px;
-  background: var(--modal-bg);
-  border: 1px solid var(--modal-border);
-  border-radius: 50%;
-  width: 48px;
-  height: 48px;
-  display: grid;
-  place-items: center;
-  cursor: pointer;
-  z-index: 1000;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+/* Video Player Modal */
+#videoPlayerModal .modal-dialog {
+  max-width: 90%;
+  max-height: 90vh;
 }
 
-.theme-toggle svg {
-  width: 20px;
-  height: 20px;
-  fill: var(--modal-text);
+#videoPlayerModal .modal-content {
+  background: #000;
+  border-radius: 0;
+}
+
+#videoPlayerModal .modal-body {
+  padding: 0;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  background: #000;
+}
+
+#videoPlayerModal #videoPlayer {
+  width: 100%;
+  height: auto;
+  max-height: 80vh;
+}
+
+#videoPlayerModal .modal-header {
+  background: rgba(0, 0, 0, 0.8);
+  border-bottom: 1px solid #333;
+  position: absolute;
+  top: 0;
+  right: 0;
+  left: 0;
+  z-index: 10;
+}
+
+#videoPlayerModal .modal-title {
+  color: white;
+}
+
+#videoPlayerModal .btn-close {
+  filter: brightness(0) invert(1);
 }
 
 </style>
@@ -351,7 +371,7 @@ input[type="file"]::file-selector-button:hover {
           <span class="reels-dot reels-bg-yellow"></span><span class="reels-dot reels-bg-green"></span>
           <span class="reels-dot reels-bg-blue"></span><b style="margin-left:10px">3,255+</b>
         </div>
-        <button class="reels-btn">Watch Portals</button>
+        <button class="reels-btn play-video-btn" data-video-url="{{ $heroreels->video_url }}" data-title="{{ $heroreels->title }}" data-thumbnail="{{ $heroreels->thumbnail_url }}">Watch Portals</button>
         <a class="reels-go-profile" href="/user/1066/profile">→ View profile</a>
       </div>
     </div>
@@ -370,7 +390,6 @@ input[type="file"]::file-selector-button:hover {
           <p class="section-subtitle"></p>
       </div>
       @if (auth()->check()) 
-      {{-- Only show Create Reel button if user is authenticated --}}
       <button type="button" class="reels-btn" data-bs-toggle="modal" data-bs-target="#uploadModal">
           <i data-feather="plus-circle"></i>
           Create Reel
@@ -403,11 +422,21 @@ input[type="file"]::file-selector-button:hover {
           <div class="reels-dot reels-bg-green"></div><div class="reels-dot reels-bg-blue"></div>
           <span class="reels-count">5,340+</span>
         </div>
-        <div class="reels-cta"><button class="reels-btn-sm">Watch</button></div>
+        <div class="reels-cta">
+          <button class="reels-btn-sm play-video-btn" 
+                  data-video-url="{{ $reel->video_url }}" 
+                  data-title="{{ $reel->title }}" 
+                  data-thumbnail="{{ $reel->thumbnail_url }}">
+            Watch
+          </button>
+        </div>
       </article>
       @endforeach
 
       
+    </div>
+    <div class="mt-50 pt-30">
+      {{ $reels->appends(request()->input())->links('vendor.pagination.panel') }}
     </div>
   </section>
 
@@ -439,7 +468,14 @@ input[type="file"]::file-selector-button:hover {
           <div class="reels-dot reels-bg-green"></div><div class="reels-dot reels-bg-blue"></div>
           <span class="reels-count">5,340+</span>
         </div>
-        <div class="reels-cta"><button class="reels-btn-sm">Watch</button></div>
+        <div class="reels-cta">
+          <button class="reels-btn-sm play-video-btn" 
+                  data-video-url="{{ $reel->video_url }}" 
+                  data-title="{{ $reel->title }}" 
+                  data-thumbnail="{{ $reel->thumbnail_url }}">
+            Watch
+          </button>
+        </div>
       </article>
       @endforeach
     </div>
@@ -547,6 +583,22 @@ input[type="file"]::file-selector-button:hover {
     </div>
   </section> -->
 
+  <div class="modal fade" id="videoPlayerModal" tabindex="-1" aria-labelledby="videoPlayerModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title" id="videoPlayerModalLabel">Video Player</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body">
+          <video id="videoPlayer" controls style="width: 100%; border-radius: 8px;">
+            Your browser does not support the video tag.
+          </video>
+        </div>
+      </div>
+    </div>
+  </div>
+
   <div class="modal fade" id="uploadModal" tabindex="-1" aria-labelledby="uploadModalLabel" aria-hidden="true">
     <div class="modal-dialog">
         <div class="modal-content">
@@ -558,7 +610,7 @@ input[type="file"]::file-selector-button:hover {
                 <form id="uploadForm" action="/reels" method="POST" enctype="multipart/form-data">
                     @csrf
                     <div class="mb-3">
-                        <label class="form-label">Video (Max 100MB)</label>
+                        <label class="form-label">Video (Max 250MB)</label>
                         <input type="file" class="form-control" id="videoFile" name="video" accept="video/*" required>
                         <div id="videoPreview" class="mt-2 d-none">
                             <video controls style="max-width: 100%; max-height: 400px">
@@ -600,4 +652,167 @@ input[type="file"]::file-selector-button:hover {
       if(Math.abs(e.deltaY)>Math.abs(e.deltaX)){ s.scrollLeft+=e.deltaY; e.preventDefault(); }
     }, {passive:false});
   });
+</script>
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<script>
+// Video playback functionality
+document.addEventListener('DOMContentLoaded', function() {
+  // Get modal elements
+  const videoPlayerModal = document.getElementById('videoPlayerModal');
+  const videoPlayer = document.getElementById('videoPlayer');
+  const videoPlayerModalLabel = document.getElementById('videoPlayerModalLabel');
+  
+  // Function to play video
+  function playVideo(videoUrl, title) {
+    // Set video source and title
+    videoPlayer.src = videoUrl;
+    videoPlayerModalLabel.textContent = title;
+    
+    // Show modal
+    const modal = new bootstrap.Modal(videoPlayerModal);
+    modal.show();
+    
+    // Play video when modal is shown
+    videoPlayerModal.addEventListener('shown.bs.modal', function() {
+      videoPlayer.play().catch(function(error) {
+        console.log('Autoplay failed:', error);
+        // If autoplay fails, show controls and let user play manually
+        videoPlayer.controls = true;
+      });
+    });
+  }
+  
+  // Add click event to all "Watch" buttons
+  document.querySelectorAll('.play-video-btn').forEach(function(button) {
+    button.addEventListener('click', function() {
+      const videoUrl = this.getAttribute('data-video-url');
+      const title = this.getAttribute('data-title');
+      playVideo(videoUrl, title);
+    });
+  });
+  
+  // Add click event to video thumbnails
+  document.querySelectorAll('.video-thumbnail').forEach(function(thumbnail) {
+    thumbnail.addEventListener('click', function() {
+      const card = this.closest('.reels-card');
+      const watchButton = card.querySelector('.play-video-btn');
+      if (watchButton) {
+        const videoUrl = watchButton.getAttribute('data-video-url');
+        const title = watchButton.getAttribute('data-title');
+        playVideo(videoUrl, title);
+      }
+    });
+  });
+  
+  // Pause video when modal is closed
+  videoPlayerModal.addEventListener('hidden.bs.modal', function() {
+    videoPlayer.pause();
+    videoPlayer.currentTime = 0;
+  });
+  
+  // Handle video upload preview
+  const videoFileInput = document.getElementById('videoFile');
+  const videoPreview = document.getElementById('videoPreview');
+  
+  if (videoFileInput) {
+    videoFileInput.addEventListener('change', function() {
+      const file = this.files[0];
+      if (file && file.type.startsWith('video/')) {
+        const videoElement = videoPreview.querySelector('video');
+        const sourceElement = videoElement.querySelector('source');
+        
+        const url = URL.createObjectURL(file);
+        sourceElement.src = url;
+        videoElement.load();
+        
+        videoPreview.classList.remove('d-none');
+        
+        // Revoke object URL after video is loaded
+        videoElement.onloadeddata = function() {
+          URL.revokeObjectURL(url);
+        };
+      }
+    });
+  }
+  
+  // Handle form submission with progress
+  const uploadForm = document.getElementById('uploadForm');
+  const uploadProgress = document.getElementById('uploadProgress');
+  
+  if (uploadForm) {
+    uploadForm.addEventListener('submit', function(e) {
+      e.preventDefault();
+      
+      uploadProgress.style.width = '0%';
+      uploadProgress.textContent = '0%';
+
+      const formData = new FormData(this);
+
+      const videoFile = document.getElementById('videoFile').files[0];
+
+      if (videoFile && videoFile.size > 250 * 1024 * 1024) {
+        alert('File size exceeds 250MB limit. Please choose a smaller video.');
+        return;
+      }
+      
+      const xhr = new XMLHttpRequest();
+      
+      xhr.upload.addEventListener('progress', function(e) {
+        if (e.lengthComputable) {
+          const percentComplete = (e.loaded / e.total) * 100;
+          uploadProgress.style.width = percentComplete + '%';
+          uploadProgress.textContent = Math.round(percentComplete) + '%';
+        }
+      });
+      
+      xhr.addEventListener('load', function() {
+        if (xhr.status === 200) {
+          // const response = JSON.parse(xhr.responseText);
+
+          //if (response.success) {
+            uploadProgress.style.width = '100%';
+            uploadProgress.textContent = '100%';
+            
+            // Show success message
+            alert('Video uploaded successfully!');
+            
+            // Close modal and reload page
+            const modal = bootstrap.Modal.getInstance(document.getElementById('uploadModal'));
+            modal.hide();
+            setTimeout(() => {
+              window.location.reload();
+            }, 1000);
+          //} else {
+            //alert('Error: ' + (response.message || 'Unknown error occurred'));
+          //}
+          
+        } else {
+          alert('Error uploading video. Please try again.');
+        }
+      });
+      
+      xhr.addEventListener('error', function() {
+        alert('Error uploading video. Please check your connection.');
+      });
+      
+      xhr.open('POST', this.action);
+      xhr.send(formData);
+    });
+  }
+  
+  // Smooth mouse-wheel horizontal scrolling for carousels
+  document.querySelectorAll('.reels-scroller').forEach(function(scroller) {
+    scroller.addEventListener('wheel', function(e) {
+      if (Math.abs(e.deltaY) > Math.abs(e.deltaX)) {
+        this.scrollLeft += e.deltaY;
+        e.preventDefault();
+      }
+    }, { passive: false });
+  });
+});
+
+// Initialize Feather icons
+if (typeof feather !== 'undefined') {
+  feather.replace();
+}
 </script>

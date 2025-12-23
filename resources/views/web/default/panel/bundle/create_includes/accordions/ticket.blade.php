@@ -1,124 +1,214 @@
-<li data-id="{{ !empty($ticket) ? $ticket->id :'' }}" class="accordion-row bg-white rounded-sm panel-shadow mt-20 py-15 py-lg-30 px-10 px-lg-20">
-    <div class="d-flex align-items-center justify-content-between " role="tab" id="ticket_{{ !empty($ticket) ? $ticket->id :'record' }}">
-        <div class="font-weight-bold text-dark-blue" href="#collapseTicket{{ !empty($ticket) ? $ticket->id :'record' }}" aria-controls="collapseTicket{{ !empty($ticket) ? $ticket->id :'record' }}" data-parent="#ticketsAccordion" role="button" data-toggle="collapse" aria-expanded="true">
-            <span>{{ !empty($ticket) ? $ticket->title : trans('public.add_new_ticket') }}</span>
+<style>
+    /* ===== Kemetic Ticket Card ===== */
+
+.kemetic-card {
+    background: linear-gradient(180deg,#141414,#0b0b0b);
+    border-radius: 18px;
+    padding: 18px;
+    border: 1px solid rgba(212,175,55,.25);
+    box-shadow: 0 20px 45px rgba(0,0,0,.6);
+}
+
+.kemetic-title {
+    font-size: 16px;
+    font-weight: 700;
+    color: #d4af37;
+    cursor: pointer;
+}
+
+.kemetic-body {
+    margin-top: 20px;
+    padding-top: 20px;
+    border-top: 1px dashed rgba(212,175,55,.25);
+}
+
+.kemetic-label {
+    font-size: 13px;
+    color: #d4af37;
+    font-weight: 600;
+    margin-bottom: 6px;
+}
+
+.kemetic-input {
+    background: #0f0f0f;
+    border: 1px solid rgba(212,175,55,.3);
+    border-radius: 12px;
+    color: #fff;
+}
+
+.kemetic-input:focus {
+    border-color: #d4af37;
+    box-shadow: 0 0 0 2px rgba(212,175,55,.25);
+}
+
+.kemetic-btn {
+    background: linear-gradient(135deg,#d4af37,#b8962e);
+    border: none;
+    color: #000;
+    padding: 10px 28px;
+    border-radius: 14px;
+    font-weight: 700;
+}
+
+/* ===== Three Dot Gold Menu ===== */
+
+.kemetic-dots {
+    cursor: pointer;
+    color: #d4af37;
+    transition: .2s;
+}
+
+.kemetic-dots:hover {
+    transform: scale(1.15);
+}
+
+.kemetic-dropdown {
+    background: #0b0b0b;
+    border: 1px solid rgba(212,175,55,.3);
+    border-radius: 12px;
+}
+
+/* ===== Icons ===== */
+
+.kemetic-chevron {
+    color: #d4af37;
+    cursor: pointer;
+}
+
+.kemetic-move {
+    color: #777;
+}
+
+</style>
+<li data-id="{{ !empty($ticket) ? $ticket->id :'' }}"
+    class="accordion-row kemetic-card mt-20">
+
+    {{-- Header --}}
+    <div class="d-flex align-items-center justify-content-between"
+         role="tab"
+         id="ticket_{{ !empty($ticket) ? $ticket->id :'record' }}">
+
+        <div class="kemetic-title"
+             href="#collapseTicket{{ !empty($ticket) ? $ticket->id :'record' }}"
+             data-toggle="collapse"
+             aria-expanded="true">
+
+            {{ !empty($ticket) ? $ticket->title : trans('public.add_new_ticket') }}
         </div>
 
         <div class="d-flex align-items-center">
-            <i data-feather="move" class="move-icon mr-10 cursor-pointer" height="20"></i>
+
+            <i data-feather="move"
+               class="move-icon kemetic-move mr-15"
+               height="20"></i>
 
             @if(!empty($ticket))
-                <div class="btn-group dropdown table-actions mr-15 font-weight-normal">
-                    <button type="button" class="btn-transparent dropdown-toggle d-flex align-items-center justify-content-center" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
-                        <i data-feather="more-vertical" height="20"></i>
-                    </button>
-                    <div class="dropdown-menu">
-                        <a href="/panel/tickets/{{ $ticket->id }}/delete" class="delete-action btn btn-sm btn-transparent">{{ trans('public.delete') }}</a>
+                <div class="dropdown mr-15">
+                    <span class="kemetic-dots"
+                          data-toggle="dropdown">
+                        <i data-feather="more-vertical"></i>
+                    </span>
+
+                    <div class="dropdown-menu kemetic-dropdown">
+                        <a href="/panel/tickets/{{ $ticket->id }}/delete"
+                           class="dropdown-item text-danger">
+                            {{ trans('public.delete') }}
+                        </a>
                     </div>
                 </div>
             @endif
 
-            <i class="collapse-chevron-icon" data-feather="chevron-down" height="20" href="#collapseTicket{{ !empty($ticket) ? $ticket->id :'record' }}" aria-controls="collapseTicket{{ !empty($ticket) ? $ticket->id :'record' }}" data-parent="#ticketsAccordion" role="button" data-toggle="collapse" aria-expanded="true"></i>
+            <i data-feather="chevron-down"
+               class="kemetic-chevron"
+               href="#collapseTicket{{ !empty($ticket) ? $ticket->id :'record' }}"
+               data-toggle="collapse"></i>
         </div>
     </div>
 
-    <div id="collapseTicket{{ !empty($ticket) ? $ticket->id :'record' }}" aria-labelledby="ticket_{{ !empty($ticket) ? $ticket->id :'record' }}" class=" collapse @if(empty($ticket)) show @endif" role="tabpanel">
-        <div class="panel-collapse text-gray">
-            <div class="js-content-form ticket-form" data-action="/panel/tickets/{{ !empty($ticket) ? $ticket->id . '/update' : 'store' }}">
-                <input type="hidden" name="ajax[{{ !empty($ticket) ? $ticket->id : 'new' }}][bundle_id]" value="{{ !empty($bundle) ? $bundle->id :'' }}">
+    {{-- Body --}}
+    <div id="collapseTicket{{ !empty($ticket) ? $ticket->id :'record' }}"
+         class="collapse @if(empty($ticket)) show @endif">
 
-                @if(!empty(getGeneralSettings('content_translate')))
-                    <div class="row">
-                        <div class="col-12 col-lg-6">
-                            <div class="form-group">
-                                <label class="input-label">{{ trans('auth.language') }}</label>
-                                <select name="ajax[{{ !empty($ticket) ? $ticket->id : 'new' }}][locale]"
-                                        class="form-control {{ !empty($ticket) ? 'js-bundle-content-locale' : '' }}"
-                                        data-bundle-id="{{ !empty($bundle) ? $bundle->id : '' }}"
-                                        data-id="{{ !empty($ticket) ? $ticket->id : '' }}"
-                                        data-relation="tickets"
-                                        data-fields="title"
-                                >
-                                    @foreach($userLanguages as $lang => $language)
-                                        <option value="{{ $lang }}" {{ (!empty($ticket) and !empty($ticket->locale)) ? (mb_strtolower($ticket->locale) == mb_strtolower($lang) ? 'selected' : '') : ($locale == $lang ? 'selected' : '') }}>{{ $language }}</option>
-                                    @endforeach
-                                </select>
-                            </div>
-                        </div>
-                    </div>
-                @else
-                    <input type="hidden" name="ajax[{{ !empty($ticket) ? $ticket->id : 'new' }}][locale]" value="{{ $defaultLocale }}">
-                @endif
+        <div class="kemetic-body">
+            <div class="js-content-form ticket-form"
+                 data-action="/panel/tickets/{{ !empty($ticket) ? $ticket->id . '/update' : 'store' }}">
 
+                <input type="hidden"
+                       name="ajax[{{ !empty($ticket) ? $ticket->id : 'new' }}][bundle_id]"
+                       value="{{ !empty($bundle) ? $bundle->id :'' }}">
 
+                {{-- Title --}}
                 <div class="row">
-                    <div class="col-12 col-lg-6">
+                    <div class="col-lg-6">
                         <div class="form-group">
-                            <label class="input-label">{{ trans('public.title') }}</label>
-                            <input type="text" name="ajax[{{ !empty($ticket) ? $ticket->id : 'new' }}][title]" class="js-ajax-title form-control" value="{{ !empty($ticket) ? $ticket->title :'' }}" placeholder="{{ trans('forms.maximum_64_characters') }}"/>
-                            <div class="invalid-feedback"></div>
+                            <label class="kemetic-label">{{ trans('public.title') }}</label>
+                            <input type="text"
+                                   name="ajax[{{ !empty($ticket) ? $ticket->id : 'new' }}][title]"
+                                   class="form-control kemetic-input js-ajax-title"
+                                   value="{{ !empty($ticket) ? $ticket->title :'' }}">
                         </div>
                     </div>
                 </div>
 
+                {{-- Discount / Capacity --}}
                 <div class="row">
-                    <div class="col-12 col-lg-4">
+                    <div class="col-lg-4">
                         <div class="form-group">
-                            <label class="input-label">{{ trans('public.discount') }} <span class="braces">(%)</span></label>
-                            <input type="text" name="ajax[{{ !empty($ticket) ? $ticket->id : 'new' }}][discount]" class="js-ajax-discount form-control" value="{{ !empty($ticket) ? $ticket->discount :'' }}"/>
-                            <div class="invalid-feedback"></div>
+                            <label class="kemetic-label">{{ trans('public.discount') }} (%)</label>
+                            <input type="text"
+                                   class="form-control kemetic-input js-ajax-discount"
+                                   name="ajax[{{ !empty($ticket) ? $ticket->id : 'new' }}][discount]"
+                                   value="{{ !empty($ticket) ? $ticket->discount :'' }}">
                         </div>
 
-                        <div class="form-group">
-                            <label class="input-label d-block">{{ trans('public.capacity') }}</label>
-                            <input type="text" name="ajax[{{ !empty($ticket) ? $ticket->id : 'new' }}][capacity]" class="js-ajax-capacity form-control mt-10" value="{{ !empty($ticket) ? $ticket->capacity :'' }}" placeholder="{{ trans('forms.empty_means_unlimited') }}"/>
-                            <div class="invalid-feedback"></div>
+                        <div class="form-group mt-15">
+                            <label class="kemetic-label">{{ trans('public.capacity') }}</label>
+                            <input type="text"
+                                   class="form-control kemetic-input js-ajax-capacity"
+                                   name="ajax[{{ !empty($ticket) ? $ticket->id : 'new' }}][capacity]"
+                                   value="{{ !empty($ticket) ? $ticket->capacity :'' }}">
                         </div>
                     </div>
                 </div>
 
+                {{-- Dates --}}
                 <div class="row">
-                    <div class="col-12 col-lg-6">
+                    <div class="col-lg-6">
                         <div class="row">
-                            <div class="col-12 col-lg-6">
-                                <div class="form-group">
-                                    <label class="input-label">{{ trans('public.start_date') }}</label>
-                                    <div class="input-group">
-                                        <div class="input-group-prepend">
-                                            <span class="input-group-text" id="dateRangeLabel">
-                                                <i data-feather="calendar" width="18" height="18" class="text-white"></i>
-                                            </span>
-                                        </div>
-                                        <input type="text" name="ajax[{{ !empty($ticket) ? $ticket->id : 'new' }}][start_date]" class="js-ajax-start_date form-control datepicker" value="{{ !empty($ticket) ? dateTimeFormat($ticket->start_date, 'Y-m-d', false) :'' }}" aria-describedby="dateRangeLabel"/>
-                                        <div class="invalid-feedback"></div>
-                                    </div>
-                                </div>
+                            <div class="col-lg-6">
+                                <label class="kemetic-label">{{ trans('public.start_date') }}</label>
+                                <input type="text"
+                                       class="form-control kemetic-input datepicker js-ajax-start_date"
+                                       name="ajax[{{ !empty($ticket) ? $ticket->id : 'new' }}][start_date]"
+                                       value="{{ !empty($ticket) ? dateTimeFormat($ticket->start_date,'Y-m-d',false) :'' }}">
                             </div>
-                            <div class="col-12 col-lg-6 mt-15 mt-lg-0">
-                                <div class="form-group">
-                                    <label class="input-label">{{ trans('webinars.end_date') }}</label>
-                                    <div class="input-group">
-                                        <div class="input-group-prepend">
-                                            <span class="input-group-text" id="dateRangeLabel">
-                                                <i data-feather="calendar" width="18" height="18" class="text-white"></i>
-                                            </span>
-                                        </div>
-                                        <input type="text" name="ajax[{{ !empty($ticket) ? $ticket->id : 'new' }}][end_date]" class="js-ajax-end_date form-control datepicker" value="{{ !empty($ticket) ? dateTimeFormat($ticket->end_date, 'Y-m-d', false) :'' }}" aria-describedby="dateRangeLabel"/>
-                                        <div class="invalid-feedback"></div>
-                                    </div>
-                                </div>
+
+                            <div class="col-lg-6 mt-15 mt-lg-0">
+                                <label class="kemetic-label">{{ trans('webinars.end_date') }}</label>
+                                <input type="text"
+                                       class="form-control kemetic-input datepicker js-ajax-end_date"
+                                       name="ajax[{{ !empty($ticket) ? $ticket->id : 'new' }}][end_date]"
+                                       value="{{ !empty($ticket) ? dateTimeFormat($ticket->end_date,'Y-m-d',false) :'' }}">
                             </div>
                         </div>
                     </div>
                 </div>
 
-                <div class="mt-30 d-flex align-items-center">
-                    <button type="button" class="js-save-ticket btn btn-sm btn-primary">{{ trans('public.save') }}</button>
+                {{-- Actions --}}
+                <div class="mt-30 d-flex align-items-center" style="padding:10px;">
+                    <button type="button"
+                            class="btn kemetic-btn js-save-ticket">
+                        {{ trans('public.save') }}
+                    </button>
 
                     @if(empty($ticket))
-                        <button type="button" class="btn btn-sm btn-danger ml-10 cancel-accordion">{{ trans('public.close') }}</button>
+                        <button type="button"
+                                class="btn btn-danger ml-15 cancel-accordion" style="margin-left: 10px;">
+                            {{ trans('public.close') }}
+                        </button>
                     @endif
                 </div>
+
             </div>
         </div>
     </div>

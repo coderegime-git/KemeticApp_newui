@@ -207,7 +207,7 @@
                 <div class="field-row">
                     <div class="field">
                         <label for="city">Province/State/District</label>
-                        <input type="text" name="province_name" class="form-control @error('province_name') is-invalid @enderror" 
+                        <input type="text" name="province_name" id="province" class="form-control @error('province_name') is-invalid @enderror" 
                            value="{{ !empty($user) ? $user->province_name : '' }}" required />
                 
                         @error('province_name')
@@ -295,7 +295,52 @@
     </section>
   </div>
 @endsection
-
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<script>
+$(document).ready(function() {
+    // Calculate shipping when address fields change
+    $('#country, #phone, #province, #city, #zip').on('change', function() {
+        calculateShipping();
+    });
+    
+    function calculateShipping() {
+        var country = $('#country').val();
+        var city = $('#city').val();
+        var zip = $('#zip').val();
+        var phone = $('#phone').val();
+        var province = $('#province').val();
+        
+        if (phone && country && city && zip) {
+            $.ajax({
+                url: '/cart/calculate-shipping',
+                method: 'POST',
+                data: {
+                    _token: '{{ csrf_token() }}',
+                    country_id: country,
+                    city_name: city,
+                    phone: phone,
+                    province_name: province,
+                    zip_code: zip
+                },
+                success: function(response) {
+                    if (response.success) {
+                        alert(response);
+                        // Update shipping display
+                        $('.cart-shipping-value').text(response.shipping_cost_formatted);
+                        $('.cart-total-value').text(response.total_formatted);
+                        
+                        // Update form hidden field
+                        $('#shipping_cost').val(response.shipping_cost);
+                        
+                        // Update shipping note
+                        $('.cart-shipping-note').text('(Calculated)').removeClass('estimated').addClass('calculated');
+                    }
+                }
+            });
+        }
+    }
+});
+</script>
 <script>
     var couponInvalidLng = '{{ trans('cart.coupon_invalid') }}';
     var selectProvinceLang = '{{ trans('update.select_province') }}';

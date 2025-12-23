@@ -1,195 +1,372 @@
-<li data-id="{{ !empty($chapterItem) ? $chapterItem->id :'' }}" class="accordion-row bg-white rounded-sm border border-gray300 mt-20 py-15 py-lg-30 px-10 px-lg-20">
-    <div class="d-flex align-items-center justify-content-between " role="tab" id="file_{{ !empty($file) ? $file->id :'record' }}">
-        <div class="d-flex align-items-center" href="#collapseFile{{ !empty($file) ? $file->id :'record' }}" aria-controls="collapseFile{{ !empty($file) ? $file->id :'record' }}" data-parent="#chapterContentAccordion{{ !empty($chapter) ? $chapter->id :'' }}" role="button" data-toggle="collapse" aria-expanded="true">
-            <span class="chapter-icon chapter-content-icon mr-10">
-                <i data-feather="{{ !empty($file) ? $file->getIconByType() : 'file' }}" class=""></i>
+<style>
+    /* WRAPPER */
+.kemetic-accordion-item{
+    background:#111;
+    border:1px solid rgba(242,201,76,0.25);
+    border-radius:14px;
+    padding:15px 18px;
+    margin-top:18px;
+    transition:.3s ease;
+}
+.kemetic-accordion-item:hover{
+    border-color:#F2C94C;
+    box-shadow:0 0 12px rgba(242,201,76,0.25);
+}
+
+/* HEADER */
+.kemetic-accordion-header{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    cursor:pointer;
+    color:#F2C94C;
+}
+
+.kemetic-accordion-title{
+    display:flex;
+    align-items:center;
+}
+
+.kemetic-icon i{
+    color:#F2C94C;
+    width:22px;
+    height:22px;
+    margin-right:10px;
+}
+
+.kemetic-title-text{
+    color:#fff;
+    font-weight:600;
+}
+
+/* ACTIONS */
+.kemetic-header-actions{
+    display:flex;
+    align-items:center;
+    gap:10px;
+}
+
+.kemetic-move-icon,
+.kemetic-chevron,
+.kemetic-icon-btn i,
+.kemetic-delete-btn i{
+    color:#F2C94C;
+    cursor:pointer;
+    width:20px;
+    height:20px;
+}
+
+.kemetic-badge-disabled{
+    background:#8a0000;
+    color:#fff;
+    padding:2px 8px;
+    border-radius:6px;
+    font-size:12px;
+}
+
+/* COLLAPSE BODY */
+.kemetic-collapse-body{
+    margin-top:12px;
+}
+
+.kemetic-body-inner{
+    background:#0b0b0b;
+    padding:20px;
+    border-radius:12px;
+    border:1px solid rgba(242,201,76,0.18);
+}
+
+/* FORM ELEMENTS */
+.kemetic-form-group label{
+    color:#F2C94C;
+    margin-bottom:6px;
+    font-size:14px;
+}
+
+.kemetic-input{
+    width:100%;
+    background:#111;
+    border:1px solid rgba(242,201,76,0.25);
+    color:#fff;
+    padding:8px 12px;
+    border-radius:10px;
+}
+
+.kemetic-input:focus{
+    border-color:#F2C94C;
+    box-shadow:0 0 6px rgba(242,201,76,0.35);
+}
+
+/* FILE INPUT */
+.kemetic-input-file-group{
+    display:flex;
+    align-items:center;
+}
+
+.kemetic-file-btn{
+    background:#F2C94C;
+    border:none;
+    padding:6px 10px;
+    color:#000;
+    border-radius:8px 0 0 8px;
+}
+
+.kemetic-file-btn i{
+    color:#000;
+}
+
+/* SWITCH */
+.kemetic-switch input{
+    display:none;
+}
+.kemetic-switch span{
+    width:40px;
+    height:20px;
+    background:#444;
+    border-radius:20px;
+    position:relative;
+    display:inline-block;
+}
+.kemetic-switch span::after{
+    content:'';
+    width:18px;
+    height:18px;
+    background:#F2C94C;
+    position:absolute;
+    top:1px;
+    left:1px;
+    border-radius:50%;
+    transition:.3s;
+}
+.kemetic-switch input:checked + span{
+    background:#F2C94C;
+}
+.kemetic-switch input:checked + span::after{
+    left:20px;
+    background:#000;
+}
+
+/* BUTTONS */
+.kemetic-save-row{
+    margin-top:25px;
+    display:flex;
+    align-items:center;
+    gap:15px;
+}
+
+.kemetic-btn-save{
+    background:#F2C94C;
+    color:#000;
+    padding:6px 18px;
+    border-radius:8px;
+    font-weight:600;
+}
+
+.kemetic-btn-cancel{
+    background:#822;
+    color:#fff;
+    padding:6px 18px;
+    border-radius:8px;
+}
+
+</style>
+
+<li data-id="{{ !empty($chapterItem) ? $chapterItem->id :'' }}" 
+    class="kemetic-accordion-item">
+
+    <!-- HEADER -->
+    <div class="kemetic-accordion-header" 
+         role="tab" 
+         id="file_{{ !empty($file) ? $file->id :'record' }}"
+         data-toggle="collapse" 
+         href="#collapseFile{{ !empty($file) ? $file->id :'record' }}"
+         aria-expanded="true">
+
+        <div class="kemetic-accordion-title">
+            <span class="kemetic-icon">
+                <i data-feather="{{ !empty($file) ? $file->getIconByType() : 'file' }}"></i>
             </span>
 
-            <div class="font-weight-bold text-dark-blue d-block">{{ !empty($file) ? $file->title . ($file->accessibility == 'free' ? " (". trans('public.free') .")" : '') : trans('public.add_new_files') }}</div>
+            <div class="kemetic-title-text">
+                {{ !empty($file) ? $file->title . ($file->accessibility == 'free' ? " (". trans('public.free') .")" : '') : trans('public.add_new_files') }}
+            </div>
         </div>
 
-        <div class="d-flex align-items-center">
+        <div class="kemetic-header-actions">
+
             @if(!empty($file) and $file->status != \App\Models\WebinarChapter::$chapterActive)
-                <span class="disabled-content-badge mr-10">{{ trans('public.disabled') }}</span>
+                <span class="kemetic-badge-disabled">{{ trans('public.disabled') }}</span>
             @endif
 
             @if(!empty($file))
-                <button type="button" data-item-id="{{ $file->id }}" data-item-type="{{ \App\Models\WebinarChapterItem::$chapterFile }}" data-chapter-id="{{ !empty($chapter) ? $chapter->id : '' }}" class="js-change-content-chapter btn btn-sm btn-transparent text-gray mr-10">
-                    <i data-feather="grid" class="" height="20"></i>
+                <button type="button"
+                        data-item-id="{{ $file->id }}"
+                        data-item-type="{{ \App\Models\WebinarChapterItem::$chapterFile }}"
+                        class="kemetic-icon-btn js-change-content-chapter">
+                    <i data-feather="grid"></i>
                 </button>
             @endif
 
-            <i data-feather="move" class="move-icon mr-10 cursor-pointer" height="20"></i>
+            <i data-feather="move" class="kemetic-move-icon"></i>
 
             @if(!empty($file))
-                <a href="/panel/files/{{ $file->id }}/delete" class="delete-action btn btn-sm btn-transparent text-gray">
-                    <i data-feather="trash-2" class="mr-10 cursor-pointer" height="20"></i>
+                <a href="/panel/files/{{ $file->id }}/delete" 
+                   class="kemetic-delete-btn">
+                    <i data-feather="trash-2"></i>
                 </a>
             @endif
 
-            <i class="collapse-chevron-icon" data-feather="chevron-down" height="20" href="#collapseFile{{ !empty($file) ? $file->id :'record' }}" aria-controls="collapseFile{{ !empty($file) ? $file->id :'record' }}" data-parent="#chapterContentAccordion{{ !empty($chapter) ? $chapter->id :'' }}" role="button" data-toggle="collapse"
-               aria-expanded="true"></i>
+            <i class="kemetic-chevron" 
+               data-feather="chevron-down"></i>
         </div>
     </div>
 
-    <div id="collapseFile{{ !empty($file) ? $file->id :'record' }}" aria-labelledby="file_{{ !empty($file) ? $file->id :'record' }}" class=" collapse @if(empty($file)) show @endif" role="tabpanel">
-        <div class="panel-collapse text-gray">
-            <div class="js-content-form file-form" data-action="/panel/files/{{ !empty($file) ? $file->id . '/update' : 'store' }}">
-                <input type="hidden" name="ajax[{{ !empty($file) ? $file->id : 'new' }}][webinar_id]" value="{{ !empty($webinar) ? $webinar->id :'' }}">
-                <input type="hidden" name="ajax[{{ !empty($file) ? $file->id : 'new' }}][storage]" value="upload_archive" class="">
-                <input type="hidden" name="ajax[{{ !empty($file) ? $file->id : 'new' }}][file_type]" value="archive" class="">
+
+    <!-- CONTENT -->
+    <div id="collapseFile{{ !empty($file) ? $file->id :'record' }}"
+         class="collapse kemetic-collapse-body @if(empty($file)) show @endif">
+
+        <div class="kemetic-body-inner">
+
+            <div class="js-content-form file-form"
+                 data-action="/panel/files/{{ !empty($file) ? $file->id . '/update' : 'store' }}">
+
+                <input type="hidden" name="ajax[{{ !empty($file) ? $file->id :'new' }}][webinar_id]" 
+                       value="{{ !empty($webinar) ? $webinar->id :'' }}">
+                <input type="hidden" name="ajax[{{ !empty($file) ? $file->id :'new' }}][storage]" value="upload_archive">
+                <input type="hidden" name="ajax[{{ !empty($file) ? $file->id :'new' }}][file_type]" value="archive">
 
                 <div class="row">
                     <div class="col-12 col-lg-6">
 
+                        {{-- LANGUAGE SELECT --}}
                         @if(!empty(getGeneralSettings('content_translate')))
-                            <div class="form-group">
-                                <label class="input-label">{{ trans('auth.language') }}</label>
+                            <div class="kemetic-form-group">
+                                <label>{{ trans('auth.language') }}</label>
+                                
                                 <select name="ajax[{{ !empty($file) ? $file->id : 'new' }}][locale]"
-                                        class="form-control {{ !empty($file) ? 'js-webinar-content-locale' : '' }}"
-                                        data-webinar-id="{{ !empty($webinar) ? $webinar->id : '' }}"
-                                        data-id="{{ !empty($file) ? $file->id : '' }}"
-                                        data-relation="files"
-                                        data-fields="title,description"
-                                >
+                                        class="kemetic-input">
                                     @foreach($userLanguages as $lang => $language)
-                                        <option value="{{ $lang }}" {{ (!empty($file) and !empty($file->locale)) ? (mb_strtolower($file->locale) == mb_strtolower($lang) ? 'selected' : '') : ($locale == $lang ? 'selected' : '') }}>{{ $language }}</option>
+                                        <option value="{{ $lang }}"
+                                            {{ (!empty($file) and $file->locale==$lang) ? 'selected':'' }}>
+                                            {{ $language }}
+                                        </option>
                                     @endforeach
                                 </select>
                             </div>
-                        @else
-                            <input type="hidden" name="ajax[{{ !empty($file) ? $file->id : 'new' }}][locale]" value="{{ $defaultLocale }}">
                         @endif
 
 
-                        <div class="form-group">
-                            <label class="input-label">{{ trans('public.title') }}</label>
-                            <input type="text" name="ajax[{{ !empty($file) ? $file->id : 'new' }}][title]" class="js-ajax-title form-control" value="{{ !empty($file) ? $file->title : '' }}" placeholder="{{ trans('forms.maximum_255_characters') }}"/>
-                            <div class="invalid-feedback"></div>
+                        {{-- TITLE --}}
+                        <div class="kemetic-form-group">
+                            <label>{{ trans('public.title') }}</label>
+                            <input type="text" name="ajax[{{ !empty($file) ? $file->id :'new' }}][title]"
+                                   class="kemetic-input js-ajax-title"
+                                   value="{{ !empty($file) ? $file->title : '' }}">
                         </div>
 
+                        {{-- CHAPTER --}}
                         @if(!empty($file))
-                            <div class="form-group">
-                                <label class="input-label">{{ trans('public.chapter') }}</label>
-                                <select name="ajax[{{ !empty($file) ? $file->id : 'new' }}][chapter_id]" class="js-ajax-chapter_id form-control">
-                                    @foreach($webinar->chapters as $ch)
-                                        <option value="{{ $ch->id }}" {{ ($file->chapter_id == $ch->id) ? 'selected' : '' }}>{{ $ch->title }}</option>
-                                    @endforeach
-                                </select>
-                                <div class="invalid-feedback"></div>
-                            </div>
-                        @else
-                            <input type="hidden" name="ajax[new][chapter_id]" value="" class="chapter-input">
-                        @endif
-
-                        <div class="form-group">
-                            <label class="input-label">{{ trans('update.interactive_type') }}</label>
-                            <select name="ajax[{{ !empty($file) ? $file->id : 'new' }}][interactive_type]" class="js-interactive-type form-control">
-                                <option value="adobe_captivate" {{ (!empty($file) and $file->interactive_type == 'adobe_captivate') ? 'selected' : '' }}>{{ trans('update.adobe_captivate') }}</option>
-                                <option value="i_spring" {{ (!empty($file) and $file->interactive_type == 'i_spring') ? 'selected' : '' }}>{{ trans('update.i_spring') }}</option>
-                                <option value="custom" {{ (!empty($file) and $file->interactive_type == 'custom') ? 'selected' : '' }}>{{ trans('update.custom') }}</option>
+                        <div class="kemetic-form-group">
+                            <label>{{ trans('public.chapter') }}</label>
+                            <select class="kemetic-input js-ajax-chapter_id"
+                                    name="ajax[{{ $file->id }}][chapter_id]">
+                                @foreach($webinar->chapters as $ch)
+                                    <option value="{{ $ch->id }}" {{ $file->chapter_id == $ch->id ? 'selected':'' }}>
+                                        {{ $ch->title }}
+                                    </option>
+                                @endforeach
                             </select>
-                            <div class="invalid-feedback"></div>
                         </div>
-
-                        <div class="js-interactive-file-name-input form-group {{ (!empty($file) and $file->interactive_type == 'custom') ? '' : 'd-none' }}">
-                            <label class="input-label">{{ trans('update.interactive_file_name') }}</label>
-                            <input type="text" name="ajax[{{ !empty($file) ? $file->id : 'new' }}][interactive_file_name]" class="js-ajax-interactive_file_name form-control" value="{{ !empty($file) ? $file->interactive_file_name : '' }}" placeholder="{{ trans('update.interactive_file_name_placeholder') }}"/>
-                            <div class="invalid-feedback"></div>
-                        </div>
-
-                        <div class="form-group">
-                            <label class="input-label">{{ trans('public.accessibility') }}</label>
-
-                            <div class="d-flex align-items-center js-ajax-accessibility">
-                                <div class="custom-control custom-radio">
-                                    <input type="radio" name="ajax[{{ !empty($file) ? $file->id : 'new' }}][accessibility]" value="free" @if(empty($file) or (!empty($file) and $file->accessibility == 'free')) checked="checked" @endif id="accessibilityRadio1_{{ !empty($file) ? $file->id : 'record' }}" class="custom-control-input">
-                                    <label class="custom-control-label font-14 cursor-pointer" for="accessibilityRadio1_{{ !empty($file) ? $file->id : 'record' }}">{{ trans('public.free') }}</label>
-                                </div>
-
-                                <div class="custom-control custom-radio ml-15">
-                                    <input type="radio" name="ajax[{{ !empty($file) ? $file->id : 'new' }}][accessibility]" value="paid" @if(!empty($file) and $file->accessibility == 'paid') checked="checked" @endif id="accessibilityRadio2_{{ !empty($file) ? $file->id : 'record' }}" class="custom-control-input">
-                                    <label class="custom-control-label font-14 cursor-pointer" for="accessibilityRadio2_{{ !empty($file) ? $file->id : 'record' }}">{{ trans('public.paid') }}</label>
-                                </div>
-                            </div>
-
-                            <div class="invalid-feedback"></div>
-                        </div>
-
-                        <div class="form-group js-file-path-input">
-                            <div class="local-input input-group">
-                                <div class="input-group-prepend">
-                                    <button type="button" class="input-group-text panel-file-manager text-white" data-input="file_path{{ !empty($file) ? $file->id : 'record' }}" data-preview="holder">
-                                        <i data-feather="upload" width="18" height="18" class="text-white"></i>
-                                    </button>
-                                </div>
-                                <input type="text" name="ajax[{{ !empty($file) ? $file->id : 'new' }}][file_path]" id="file_path{{ !empty($file) ? $file->id : 'record' }}" value="{{ (!empty($file)) ? $file->file : '' }}" class="js-ajax-file_path form-control" placeholder="{{ trans('update.choose_zip_file') }}"/>
-                                <div class="invalid-feedback"></div>
-                            </div>
-                        </div>
-
-                        <div class="form-group">
-                            <label class="input-label">{{ trans('public.description') }}</label>
-                            <textarea name="ajax[{{ !empty($file) ? $file->id : 'new' }}][description]" class="js-ajax-description form-control" rows="6">{{ !empty($file) ? $file->description : '' }}</textarea>
-                            <div class="invalid-feedback"></div>
-                        </div>
-
-                        <div class="form-group mt-20">
-                            <div class="d-flex align-items-center justify-content-between">
-                                <label class="cursor-pointer input-label" for="fileStatusSwitch{{ !empty($file) ? $file->id : '_record' }}">{{ trans('public.active') }}</label>
-                                <div class="custom-control custom-switch">
-                                    <input type="checkbox" name="ajax[{{ !empty($file) ? $file->id : 'new' }}][status]" class="custom-control-input" id="fileStatusSwitch{{ !empty($file) ? $file->id : '_record' }}" {{ (empty($file) or $file->status == \App\Models\File::$Active) ? 'checked' : ''  }}>
-                                    <label class="custom-control-label" for="fileStatusSwitch{{ !empty($file) ? $file->id : '_record' }}"></label>
-                                </div>
-                            </div>
-                        </div>
-
-                        @if(getFeaturesSettings('sequence_content_status'))
-                            <div class="form-group mt-20">
-                                <div class="d-flex align-items-center justify-content-between">
-                                    <label class="cursor-pointer input-label" for="SequenceContentSwitch{{ !empty($file) ? $file->id : '_record' }}">{{ trans('update.sequence_content') }}</label>
-                                    <div class="custom-control custom-switch">
-                                        <input type="checkbox" name="ajax[{{ !empty($file) ? $file->id : 'new' }}][sequence_content]" class="js-sequence-content-switch custom-control-input"
-                                               id="SequenceContentSwitch{{ !empty($file) ? $file->id : '_record' }}" {{ (!empty($file) and ($file->check_previous_parts or !empty($file->access_after_day))) ? 'checked' : ''  }}>
-                                        <label class="custom-control-label" for="SequenceContentSwitch{{ !empty($file) ? $file->id : '_record' }}"></label>
-                                    </div>
-                                </div>
-                            </div>
-
-                            <div class="js-sequence-content-inputs pl-5 {{ (!empty($file) and ($file->check_previous_parts or !empty($file->access_after_day))) ? '' : 'd-none' }}">
-                                <div class="form-group">
-                                    <div class="d-flex align-items-center justify-content-between">
-                                        <label class="cursor-pointer input-label" for="checkPreviousPartsSwitch{{ !empty($file) ? $file->id : '_record' }}">{{ trans('update.check_previous_parts') }}</label>
-                                        <div class="custom-control custom-switch">
-                                            <input type="checkbox" name="ajax[{{ !empty($file) ? $file->id : 'new' }}][check_previous_parts]" class="custom-control-input" id="checkPreviousPartsSwitch{{ !empty($file) ? $file->id : '_record' }}" {{ (empty($file) or $file->check_previous_parts) ? 'checked' : ''  }}>
-                                            <label class="custom-control-label" for="checkPreviousPartsSwitch{{ !empty($file) ? $file->id : '_record' }}"></label>
-                                        </div>
-                                    </div>
-                                </div>
-
-                                <div class="form-group">
-                                    <label class="input-label">{{ trans('update.access_after_day') }}</label>
-                                    <input type="number" name="ajax[{{ !empty($file) ? $file->id : 'new' }}][access_after_day]" value="{{ (!empty($file)) ? $file->access_after_day : '' }}" class="js-ajax-access_after_day form-control" placeholder="{{ trans('update.access_after_day_placeholder') }}"/>
-                                    <div class="invalid-feedback"></div>
-                                </div>
-                            </div>
                         @endif
+
+
+                        {{-- INTERACTIVE TYPE --}}
+                        <div class="kemetic-form-group">
+                            <label>{{ trans('update.interactive_type') }}</label>
+                            <select class="kemetic-input js-interactive-type"
+                                    name="ajax[{{ !empty($file) ? $file->id :'new' }}][interactive_type]">
+                                <option value="adobe_captivate"
+                                        {{ (!empty($file) && $file->interactive_type=='adobe_captivate') ? 'selected':'' }}>
+                                    {{ trans('update.adobe_captivate') }}
+                                </option>
+
+                                <option value="i_spring"
+                                        {{ (!empty($file) && $file->interactive_type=='i_spring') ? 'selected':'' }}>
+                                    {{ trans('update.i_spring') }}
+                                </option>
+
+                                <option value="custom"
+                                        {{ (!empty($file) && $file->interactive_type=='custom') ? 'selected':'' }}>
+                                    {{ trans('update.custom') }}
+                                </option>
+                            </select>
+                        </div>
+
+
+                        {{-- ZIP FILE --}}
+                        <div class="kemetic-form-group">
+                            <label>{{ trans('update.choose_zip_file') }}</label>
+
+                            <div class="kemetic-input-file-group">
+                                <button type="button" 
+                                        class="kemetic-file-btn panel-file-manager"
+                                        data-input="file_path{{ !empty($file) ? $file->id :'record' }}">
+                                    <i data-feather="upload"></i>
+                                </button>
+
+                                <input type="text"
+                                       id="file_path{{ !empty($file) ? $file->id :'record' }}"
+                                       name="ajax[{{ !empty($file) ? $file->id :'new' }}][file_path]"
+                                       class="kemetic-input js-ajax-file_path"
+                                       value="{{ !empty($file) ? $file->file : '' }}">
+                            </div>
+                        </div>
+
+
+                        {{-- DESCRIPTION --}}
+                        <div class="kemetic-form-group">
+                            <label>{{ trans('public.description') }}</label>
+                            <textarea class="kemetic-input js-ajax-description" rows="5"
+                                      name="ajax[{{ !empty($file) ? $file->id :'new' }}][description]">
+                                {{ !empty($file) ? $file->description : '' }}
+                            </textarea>
+                        </div>
+
+
+                        {{-- STATUS --}}
+                        <div class="kemetic-form-switch">
+                            <label>{{ trans('public.active') }}</label>
+                            <label class="kemetic-switch">
+                                <input type="checkbox" 
+                                       name="ajax[{{ !empty($file) ? $file->id :'new' }}][status]"
+                                       {{ (empty($file) || $file->status==1) ? 'checked':'' }}>
+                                <span></span>
+                            </label>
+                        </div>
 
                     </div>
                 </div>
 
-                <div class="mt-30 d-flex align-items-center">
-                    <button type="button" class="js-save-file btn btn-sm btn-primary">{{ trans('public.save') }}</button>
+
+                <!-- SAVE BUTTON -->
+                <div class="kemetic-save-row">
+                    <button type="button" class="kemetic-btn-save js-save-file">
+                        {{ trans('public.save') }}
+                    </button>
 
                     @if(empty($file))
-                        <button type="button" class="btn btn-sm btn-danger ml-10 cancel-accordion">{{ trans('public.close') }}</button>
+                        <button type="button" class="kemetic-btn-cancel cancel-accordion">
+                            {{ trans('public.close') }}
+                        </button>
                     @endif
                 </div>
+
             </div>
         </div>
     </div>
-</li>
 
+</li>
 @push('scripts_bottom')
     <script>
         var filePathPlaceHolderBySource = {

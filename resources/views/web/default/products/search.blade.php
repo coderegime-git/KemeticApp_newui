@@ -14,8 +14,49 @@
            <button class="shop-cta"><a href="/login">Upgrade</a></button>
           @endif  
     </div>
+    <h2>Trending Products</h2>
 
-    <div class="shop-sp"></div>
+      <!-- Trending cards (horizontal) -->
+      <div class="shop-trend">
+        @foreach($trendingProducts as $product)
+        <!-- {{ clean($product->title,'title') }} -->
+        <article class="shop-card">
+          <div class="shop-media">
+            <a href="{{ $product->getUrl() }}" class="image-box__a"><img src="{{ $product->thumbnail }}" class="img-cover" alt="{{ $product->title }}"></a>
+            <div class="shop-grad"></div>
+            <div class="shop-meta">
+              <div class="shop-vendor"><img src="{{ $product->creator->getAvatar() }}" style="width: 50px;" class="img-cover" alt="{{ $product->creator->full_name }}">
+                <a href="{{ $product->creator->getProfileUrl() }}" target="_blank" class="user-name ml-5 font-14">{{ $product->creator->full_name }}</a></div>
+              <div style="font-weight:900">{{Str::limit($product->title, 13, '..') }}</div>
+              <div class="shop-stars">
+                <!-- Your existing star rating PHP code here -->
+              </div>
+              <div class="shop-price-row">
+              <span class="shop-price">
+                <!-- Your existing price display PHP code here -->
+              </span>
+              </div>
+              <button type="button" data-id="{{ $product->id }}" class="shop-atk btn-add-product-to-cart">Add to Cart</button>
+            </div>
+            
+            <div class="shop-rail">
+              <div class="shop-circle" style="--clr:var(--red)">❤️</div>
+              <div class="shop-tiny" style="--clr:var(--red)">{{ $product->like_count}}</div>
+              <div class="shop-circle" style="--clr:var(--orange)">💬</div>
+              <div class="shop-tiny" style="--clr:var(--orange)">{{ $product->comments_count}}</div>
+              <div class="shop-circle" style="--clr:var(--green)">🎁</div>
+              <div class="shop-tiny" style="--clr:var(--green)">{{ $product->gift_count}}</div>
+              <div class="shop-circle" style="--clr:var(--blue)">🔖</div>
+              <div class="shop-tiny" style="--clr:var(--blue)">{{ $product->saved_count}}</div>
+              <div class="shop-circle" style="--clr:var(--violet)">↗</div>
+              <div class="shop-tiny" style="--clr:var(--blue)">{{ $product->share_count}}</div>
+            </div>
+          </div>
+        </article>
+        @endforeach
+      </div>
+
+      <div class="shop-sp"></div>
 
     <!-- Search -->
     <form action="{{ (!empty($isRewardProducts) and $isRewardProducts) ? '/reward-products' : '/products' }}" method="get">
@@ -55,52 +96,12 @@
         </div>
       @endif
 
-      <h2>Trending Products</h2>
-
-      <!-- Trending cards (horizontal) -->
-      <div class="shop-trend">
-        @foreach($trendingProducts as $product)
-        <article class="shop-card">
-          <div class="shop-media">
-            <a href="{{ $product->getUrl() }}" class="image-box__a"><img src="{{ $product->thumbnail }}" class="img-cover" alt="{{ $product->title }}"></a>
-            <div class="shop-grad"></div>
-            <div class="shop-meta">
-              <div class="shop-vendor"><img src="{{ $product->creator->getAvatar() }}" style="width: 50px;" class="img-cover" alt="{{ $product->creator->full_name }}">
-                <a href="{{ $product->creator->getProfileUrl() }}" target="_blank" class="user-name ml-5 font-14">{{ $product->creator->full_name }}</a></div>
-              <div style="font-weight:900">{{ clean($product->title,'title') }}</div>
-              <div class="shop-stars">
-                <!-- Your existing star rating PHP code here -->
-              </div>
-              <div class="shop-price-row">
-              <span class="shop-price">
-                <!-- Your existing price display PHP code here -->
-              </span>
-              </div>
-              <button type="button" data-id="{{ $product->id }}" class="shop-atk btn-add-product-to-cart">Add to Cart</button>
-            </div>
-            
-            <div class="shop-rail">
-              <div class="shop-circle" style="--clr:var(--red)">❤️</div>
-              <div class="shop-tiny" style="--clr:var(--red)">{{ $product->like_count}}</div>
-              <div class="shop-circle" style="--clr:var(--orange)">💬</div>
-              <div class="shop-tiny" style="--clr:var(--orange)">{{ $product->comments_count}}</div>
-              <div class="shop-circle" style="--clr:var(--green)">🎁</div>
-              <div class="shop-tiny" style="--clr:var(--green)">{{ $product->gift_count}}</div>
-              <div class="shop-circle" style="--clr:var(--blue)">🔖</div>
-              <div class="shop-tiny" style="--clr:var(--blue)">{{ $product->saved_count}}</div>
-              <div class="shop-circle" style="--clr:var(--violet)">↗</div>
-              <div class="shop-tiny" style="--clr:var(--blue)">{{ $product->share_count}}</div>
-            </div>
-          </div>
-        </article>
-        @endforeach
-      </div>
-
       <h2>Popular</h2>
     
       <!-- Popular grid -->
       <section class="shop-grid">
         @foreach($products as $product)
+        <!-- {{ clean($product->title,'title') }} -->
           <article class="shop-p">
             <div class="shop-ph"><img src="{{ $product->creator->getAvatar() }}" class="img-cover" alt="{{ $product->creator->full_name }}">
               <a href="{{ $product->creator->getProfileUrl() }}" target="_blank" class="user-name ml-5 font-14">{{ $product->creator->full_name }}</a>
@@ -111,7 +112,7 @@
               </a>
             </div>
             <div class="shop-pd">
-              <div style="font-weight:900"><a href="{{ $product->getUrl() }}">{{ clean($product->title,'title') }}</a></div>
+              <div style="font-weight:900"><a href="{{ $product->getUrl() }}">{{ Str::limit($product->title, 13, '..') }}</a></div>
               <div class="shop-stars">
                 @php
                   $i = 5;

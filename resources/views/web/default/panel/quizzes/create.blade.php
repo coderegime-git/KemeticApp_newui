@@ -1,4 +1,4 @@
-@extends(getTemplate() .'.panel.layouts.panel_layout')
+@extends('web.default.layouts.newapp')
 
 @push('styles_top')
     <link href="/assets/default/vendors/sortable/jquery-ui.min.css"/>

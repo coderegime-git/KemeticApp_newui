@@ -1,145 +1,383 @@
-@extends(getTemplate() .'.panel.layouts.panel_layout')
+@extends('web.default.layouts.newapp')
 
 @push('styles_top')
-    <link rel="stylesheet" href="/assets/default/vendors/daterangepicker/daterangepicker.min.css">
+<link rel="stylesheet" href="/assets/default/vendors/daterangepicker/daterangepicker.min.css">
+
+<style>
+/* ================= KEMETIC DESIGN ================= */
+:root{
+    --k-bg:#0e1117;
+    --k-card:#151a23;
+    --k-border:#262c3a;
+    --k-gold:#F2C94C;
+    --k-text:#e5e7eb;
+    --k-muted:#9ca3af;
+    --k-radius:16px;
+}
+
+.k-title{
+    color:var(--k-gold);
+    font-weight:700;
+}
+
+.k-card{
+    background:var(--k-card);
+    border:1px solid var(--k-border);
+    border-radius:var(--k-radius);
+    padding:10px;
+}
+
+.k-stat strong{
+    color:var(--k-gold);
+}
+
+.k-label{
+    color:var(--k-muted);
+    font-weight:500;
+}
+
+.k-input,
+.k-select{
+    background:#0e1117;
+    border:1px solid var(--k-border);
+    color:var(--k-text);
+}
+
+.k-input:focus,
+.k-select:focus{
+    border-color:var(--k-gold);
+}
+
+.k-btn{
+    background:linear-gradient(135deg,#F2C94C,#e0b93d);
+    color:#000;
+    font-weight:600;
+    border-radius:12px;
+}
+
+.custom-table thead th{
+    color:var(--k-muted);
+}
+
+.custom-table tbody td{
+    color:var(--k-text);
+}
+
+.dropdown-menu{
+    background:#0e1117;
+    border:1px solid var(--k-border);
+}
+
+.kemetic-section {
+    padding: 15px 0;
+}
+
+.kemetic-title {
+    font-size: 22px;
+    font-weight: 600;
+    color: #f2c94c; /* Gold */
+    border-left: 4px solid #f2c94c;
+    padding-left: 12px;
+    margin-bottom: 15px;
+}
+
+.kemetic-card {
+    background-color: #0f0f0f;
+    border: 1px solid rgba(242,201,76,0.3);
+    border-radius: 14px;
+    box-shadow: 0 0 20px rgba(242,201,76,0.1);
+}
+
+.kemetic-input-group .input-group-text {
+    background-color: #f2c94c;
+    color: #0f0f0f;
+    border-radius: 6px 0 0 6px;
+}
+
+.kemetic-select {
+    background-color: #1a1a1a;
+    color: #f2c94c;
+    border: 1px solid rgba(242,201,76,0.3);
+    border-radius: 6px;
+}
+
+.btn-gold {
+    background-color: #f2c94c;
+    color: #0f0f0f;
+    border-radius: 8px;
+    border: none;
+    transition: 0.3s;
+}
+
+.btn-gold:hover {
+    background-color: #e0b539;
+}
+
+.custom-control {
+  position: relative;
+  z-index: 1;
+  display: block;
+  min-height: 1.3rem;
+  padding-left: 2rem;
+  -webkit-print-color-adjust: exact;
+          print-color-adjust: exact;
+}
+
+.custom-control-inline {
+  display: inline-flex;
+  margin-right: 1rem;
+}
+
+.custom-control-input {
+  position: absolute;
+  left: 0;
+  z-index: -1;
+  width: 1.5rem;
+  height: 1.4rem;
+  opacity: 0;
+}
+.custom-control-input:checked ~ .custom-control-label::before {
+  color: #ffffff;
+  border-color: #f2c94c;
+  background-color: #f2c94c;
+    box-shadow: 0 0 10px rgba(242, 201, 76, 0.45);
+}
+.custom-control-input:focus ~ .custom-control-label::before {
+  box-shadow: none, 1.5rem;
+}
+.custom-control-input:focus:not(:checked) ~ .custom-control-label::before {
+  border-color: #43d477;
+}
+.custom-control-input:not(:disabled):active ~ .custom-control-label::before {
+  color: #ffffff;
+  background-color: #43d477;
+  border-color: #43d477;
+}
+.custom-control-input[disabled] ~ .custom-control-label, .custom-control-input:disabled ~ .custom-control-label {
+  color: #6c757d;
+}
+.custom-control-input[disabled] ~ .custom-control-label::before, .custom-control-input:disabled ~ .custom-control-label::before {
+  background-color: #f1f1f1;
+}
+
+.custom-control-label {
+  position: relative;
+  margin-bottom: 0;
+  vertical-align: top;
+}
+.custom-control-label::before {
+  position: absolute;
+  top: -0.1rem;
+  left: -2rem;
+  display: block;
+  width: 1.5rem;
+  height: 1.5rem;
+  pointer-events: none;
+  content: "";
+  background-color: #ffffff;
+  border: 2px solid #adb5bd;
+  box-shadow: none;
+}
+.custom-control-label::after {
+  position: absolute;
+  top: -0.1rem;
+  left: -2rem;
+  display: block;
+  width: 1.5rem;
+  height: 1.5rem;
+  content: "";
+  background: 50%/50% 50% no-repeat;
+}
+
+.custom-checkbox .custom-control-label::before {
+  border-radius: 0.25rem;
+}
+.custom-checkbox .custom-control-input:checked ~ .custom-control-label::after {
+  background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' width='8' height='8' viewBox='0 0 8 8'%3e%3cpath fill='%23ffffff' d='M6.564.75l-3.59 3.612-1.538-1.55L0 4.26l2.974 2.99L8 2.193z'/%3e%3c/svg%3e");
+}
+.custom-checkbox .custom-control-input:indeterminate ~ .custom-control-label::before {
+  border-color: #F2C94C;
+  background-color: #F2C94C;
+}#
+.custom-checkbox .custom-control-input:indeterminate ~ .custom-control-label::after {
+  background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' width='4' height='4' viewBox='0 0 4 4'%3e%3cpath stroke='%23ffffff' d='M0 2h4'/%3e%3c/svg%3e");
+}
+.custom-checkbox .custom-control-input:disabled:checked ~ .custom-control-label::before {
+  background-color: #F2C94C;
+}
+.custom-checkbox .custom-control-input:disabled:indeterminate ~ .custom-control-label::before {
+  background-color: #F2C94C;
+}
+
+.custom-radio .custom-control-label::before {
+  border-radius: 50%;
+}
+.custom-radio .custom-control-input:checked ~ .custom-control-label::after {
+  background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='-4 -4 8 8'%3e%3ccircle r='3' fill='%23ffffff'/%3e%3c/svg%3e");
+}
+.custom-radio .custom-control-input:disabled:checked ~ .custom-control-label::before {
+  background-color: rgba(67, 212, 119, 0.5);
+}
+
+.custom-switch {
+  padding-left: 3.125rem;
+}
+.custom-switch .custom-control-label::before {
+  left: -3.125rem;
+  width: 2.625rem;
+  pointer-events: all;
+  border-radius: 0.75rem;
+}
+.custom-switch .custom-control-label::after {
+  top: calc(-0.1rem + 4px);
+  left: calc(-3.125rem + 4px);
+  width: calc(1.5rem - 8px);
+  height: calc(1.5rem - 8px);
+  background-color: #adb5bd;
+  border-radius: 0.75rem;
+  transition: transform 0.15s ease-in-out, background-color 0.15s ease-in-out, border-color 0.15s ease-in-out, box-shadow 0.15s ease-in-out;
+}
+@media (prefers-reduced-motion: reduce) {
+  .custom-switch .custom-control-label::after {
+    transition: none;
+  }
+}
+.custom-switch .custom-control-input:checked ~ .custom-control-label::after {
+  background-color: #ffffff;
+  transform: translateX(1.125rem);
+}
+.custom-switch .custom-control-input:disabled:checked ~ .custom-control-label::before {
+  background-color: rgba(67, 212, 119, 0.5);
+}
+</style>
 @endpush
 
 @section('content')
-    <section>
-        <h2 class="section-title">{{ trans('panel.meeting_statistics') }}</h2>
 
-        <div class="activities-container mt-25 p-20 p-lg-35">
-            <div class="row">
-                <div class="col-4 d-flex align-items-center justify-content-center">
-                    <div class="d-flex flex-column align-items-center text-center">
-                        <img src="/assets/default/img/activity/49.svg" width="64" height="64" alt="">
-                        <strong class="font-30 font-weight-bold mt-5">{{ $openReserveCount }}</strong>
-                        <span class="font-16 text-dark-blue text-gray font-weight-500">{{ trans('panel.open_meetings') }}</span>
-                    </div>
-                </div>
+{{-- ================= STATISTICS ================= --}}
+<section>
+    <h2 class="section-title k-title">{{ trans('panel.meeting_statistics') }}</h2>
 
-                <div class="col-4 d-flex align-items-center justify-content-center">
-                    <div class="d-flex flex-column align-items-center text-center">
-                        <img src="/assets/default/img/activity/50.svg" width="64" height="64" alt="">
-                        <strong class="font-30 font-weight-bold mt-5">{{ $totalReserveCount }}</strong>
-                        <span class="font-16 text-dark-blue text-gray font-weight-500">{{ trans('panel.total_meetings') }}</span>
-                    </div>
-                </div>
+    <div class="k-card mt-25 p-30">
+        <div class="row text-center">
 
-                <div class="col-4 d-flex align-items-center justify-content-center">
-                    <div class="d-flex flex-column align-items-center text-center">
-                        <img src="/assets/default/img/activity/hours.svg" width="64" height="64" alt="">
-                        <strong class="font-30 text-dark-blue font-weight-bold mt-5">{{ $activeHoursCount }}</strong>
-                        <span class="font-16 text-gray font-weight-500">{{ trans('panel.active_hours') }}</span>
-                    </div>
-                </div>
-
+            <div class="col-4 k-stat">
+                <img src="/assets/default/img/activity/49.svg" width="60">
+                <strong class="d-block font-28 mt-10">{{ $openReserveCount }}</strong>
+                <span class="k-label">{{ trans('panel.open_meetings') }}</span>
             </div>
+
+            <div class="col-4 k-stat">
+                <img src="/assets/default/img/activity/50.svg" width="60">
+                <strong class="d-block font-28 mt-10">{{ $totalReserveCount }}</strong>
+                <span class="k-label">{{ trans('panel.total_meetings') }}</span>
+            </div>
+
+            <div class="col-4 k-stat">
+                <img src="/assets/default/img/activity/hours.svg" width="60">
+                <strong class="d-block font-28 mt-10">{{ $activeHoursCount }}</strong>
+                <span class="k-label">{{ trans('panel.active_hours') }}</span>
+            </div>
+
         </div>
-    </section>
+    </div>
+</section>
 
-    <section class="mt-25">
-        <h2 class="section-title">{{ trans('panel.filter_meetings') }}</h2>
+    <section class="mt-35 kemetic-section">
+        <h2 class="kemetic-title">{{ trans('panel.filter_meetings') }}</h2>
 
-        <div class="panel-section-card py-20 px-25 mt-20">
-            <form action="/panel/meetings/reservation" method="get" class="row">
+        <div class="kemetic-card mt-20 p-25" style="padding: 10px;">
+            <form action="/panel/meetings/reservation" method="get" class="row gx-3 gy-3">
+                <!-- Date Range -->
                 <div class="col-12 col-lg-4">
-                    <div class="row">
-                        <div class="col-12 col-md-6">
-                            <div class="form-group">
-                                <label class="input-label">{{ trans('public.from') }}</label>
-                                <div class="input-group">
-                                    <div class="input-group-prepend">
-                                        <span class="input-group-text" id="dateInputGroupPrepend">
-                                            <i data-feather="calendar" width="18" height="18" class="text-white"></i>
-                                        </span>
-                                    </div>
-                                    <input type="text" name="from" autocomplete="off" class="form-control @if(!empty(request()->get('from'))) datepicker @else datefilter @endif"
-                                           aria-describedby="dateInputGroupPrepend" value="{{ request()->get('from','') }}"/>
-                                </div>
+                    <div class="row gx-2 gy-2">
+                        <div class="col-6">
+                            <label class="form-label">{{ trans('public.from') }}</label>
+                            <div class="input-group kemetic-input-group">
+                                <span class="input-group-text bg-gold text-dark">
+                                    <i data-feather="calendar" width="18" height="18"></i>
+                                </span>
+                                <input type="text" name="from" autocomplete="off" 
+                                    class="form-control @if(request()->get('from')) datepicker @else datefilter @endif" 
+                                    value="{{ request()->get('from','') }}">
                             </div>
                         </div>
-                        <div class="col-12 col-md-6">
-                            <div class="form-group">
-                                <label class="input-label">{{ trans('public.to') }}</label>
-                                <div class="input-group">
-                                    <div class="input-group-prepend">
-                                        <span class="input-group-text" id="dateInputGroupPrepend">
-                                            <i data-feather="calendar" width="18" height="18" class="text-white"></i>
-                                        </span>
-                                    </div>
-                                    <input type="text" name="to" autocomplete="off" class="form-control @if(!empty(request()->get('to'))) datepicker @else datefilter @endif"
-                                           aria-describedby="dateInputGroupPrepend" value="{{ request()->get('to','') }}"/>
-                                </div>
+                        <div class="col-6">
+                            <label class="form-label">{{ trans('public.to') }}</label>
+                            <div class="input-group kemetic-input-group">
+                                <span class="input-group-text bg-gold text-dark">
+                                    <i data-feather="calendar" width="18" height="18"></i>
+                                </span>
+                                <input type="text" name="to" autocomplete="off" 
+                                    class="form-control @if(request()->get('to')) datepicker @else datefilter @endif" 
+                                    value="{{ request()->get('to','') }}">
                             </div>
                         </div>
                     </div>
                 </div>
-                <div class="col-12 col-lg-6">
-                    <div class="row">
-                        <div class="col-12 col-lg-4">
-                            <div class="form-group">
-                                <label class="input-label">{{ trans('public.day') }}</label>
-                                <select class="form-control" id="day" name="day">
-                                    <option value="all">{{ trans('public.all_days') }}</option>
-                                    <option value="saturday" {{ (request()->get('day') === "saturday") ? 'selected' : '' }}>{{ trans('public.saturday') }}</option>
-                                    <option value="sunday" {{ (request()->get('day') === "sunday") ? 'selected' : '' }}>{{ trans('public.sunday') }}</option>
-                                    <option value="monday" {{ (request()->get('day') === "monday") ? 'selected' : '' }}>{{ trans('public.monday') }}</option>
-                                    <option value="tuesday" {{ (request()->get('day') === "tuesday") ? 'selected' : '' }}>{{ trans('public.tuesday') }}</option>
-                                    <option value="wednesday" {{ (request()->get('day') === "wednesday") ? 'selected' : '' }}>{{ trans('public.wednesday') }}</option>
-                                    <option value="thursday" {{ (request()->get('day') === "thursday") ? 'selected' : '' }}>{{ trans('public.thursday') }}</option>
-                                    <option value="friday" {{ (request()->get('day') === "friday") ? 'selected' : '' }}>{{ trans('public.friday') }}</option>
-                                </select>
-                            </div>
-                        </div>
-                        <div class="col-12 col-lg-8">
-                            <div class="row">
-                                <div class="col-12 col-lg-8">
-                                    <div class="form-group">
-                                        <label class="input-label">{{ trans('public.instructor') }}</label>
-                                        <select name="instructor_id" class="form-control select2 ">
-                                            <option value="all">{{ trans('webinars.all_instructors') }}</option>
 
-                                            @foreach($instructors as $instructor)
-                                                <option value="{{ $instructor->id }}" @if(request()->get('instructor_id') == $instructor->id) selected @endif>{{ $instructor->full_name }}</option>
-                                            @endforeach
-                                        </select>
-                                    </div>
-                                </div>
-                                <div class="col-12 col-lg-4">
-                                    <div class="form-group">
-                                        <label class="input-label">{{ trans('public.status') }}</label>
-                                        <select class="form-control" id="status" name="status">
-                                            <option>{{ trans('public.all') }}</option>
-                                            <option value="open" {{ (request()->get('status') === "open") ? 'selected' : '' }}>{{ trans('public.open') }}</option>
-                                            <option value="finished" {{ (request()->get('status') === "finished") ? 'selected' : '' }}>{{ trans('public.finished') }}</option>
-                                        </select>
-                                    </div>
-                                </div>
-                            </div>
+                <!-- Day & Instructor -->
+                <div class="col-12 col-lg-6">
+                    <div class="row gx-2 gy-2">
+                        <div class="col-4">
+                            <label class="form-label">{{ trans('public.day') }}</label>
+                            <select class="form-control kemetic-select" name="day">
+                                <option value="all">{{ trans('public.all_days') }}</option>
+                                <option value="saturday" {{ (request()->get('day') === "saturday") ? 'selected' : '' }}>{{ trans('public.saturday') }}</option>
+                                <option value="sunday" {{ (request()->get('day') === "sunday") ? 'selected' : '' }}>{{ trans('public.sunday') }}</option>
+                                <option value="monday" {{ (request()->get('day') === "monday") ? 'selected' : '' }}>{{ trans('public.monday') }}</option>
+                                <option value="tuesday" {{ (request()->get('day') === "tuesday") ? 'selected' : '' }}>{{ trans('public.tuesday') }}</option>
+                                <option value="wednesday" {{ (request()->get('day') === "wednesday") ? 'selected' : '' }}>{{ trans('public.wednesday') }}</option>
+                                <option value="thursday" {{ (request()->get('day') === "thursday") ? 'selected' : '' }}>{{ trans('public.thursday') }}</option>
+                                <option value="friday" {{ (request()->get('day') === "friday") ? 'selected' : '' }}>{{ trans('public.friday') }}</option>
+                            </select>
+                        </div>
+                        <div class="col-4">
+                            <label class="form-label">{{ trans('public.instructor') }}</label>
+                            <select name="instructor_id" class="form-control select2 kemetic-select">
+                                <option value="all">{{ trans('webinars.all_instructors') }}</option>
+                                @foreach($instructors as $instructor)
+                                    <option value="{{ $instructor->id }}" @if(request()->get('instructor_id') == $instructor->id) selected @endif>{{ $instructor->full_name }}</option>
+                                @endforeach
+                            </select>
+                        </div>
+                        <div class="col-4 mt-2">
+                            <label class="form-label">{{ trans('public.status') }}</label>
+                            <select class="form-control kemetic-select" name="status">
+                                <option value="all">{{ trans('public.all') }}</option>
+                                <option value="open" {{ (request()->get('status') === "open") ? 'selected' : '' }}>{{ trans('public.open') }}</option>
+                                <option value="finished" {{ (request()->get('status') === "finished") ? 'selected' : '' }}>{{ trans('public.finished') }}</option>
+                            </select>
                         </div>
                     </div>
                 </div>
-                <div class="col-12 col-lg-2 d-flex align-items-center justify-content-end">
-                    <button type="submit" class="btn btn-sm btn-primary w-100 mt-2">{{ trans('public.show_results') }}</button>
+
+                <!-- Submit Button -->
+                <div class="col-12 col-lg-2 d-flex align-items-end justify-content-end">
+                    <button type="submit" class="btn btn-gold w-100">{{ trans('public.show_results') }}</button>
                 </div>
             </form>
         </div>
     </section>
 
 
-    <section class="mt-35">
-        <div class="d-flex align-items-start align-items-md-center justify-content-between flex-column flex-md-row">
-            <h2 class="section-title">{{ trans('panel.meeting_list') }}</h2>
+{{-- ================= LIST ================= --}}
+<section class="mt-35 pb-50">
+    <div class="d-flex justify-content-between align-items-center">
+        <h2 class="section-title k-title">{{ trans('panel.meeting_list') }}</h2>
 
-            <form action="/panel/meetings/reservation?{{ http_build_query(request()->all()) }}" class="d-flex align-items-center flex-row-reverse flex-md-row justify-content-start justify-content-md-center mt-20 mt-md-0">
-                <label class="cursor-pointer mb-0 mr-10 text-gray font-14 font-weight-500" for="openMeetingResult">{{ trans('panel.show_only_open_meetings') }}</label>
-                <div class="custom-control custom-switch">
-                    <input type="checkbox" name="open_meetings" class="js-panel-list-switch-filter custom-control-input" id="openMeetingResult" {{ (request()->get('open_meetings', '') == 'on') ? 'checked' : '' }}>
-                    <label class="custom-control-label" for="openMeetingResult"></label>
-                </div>
-            </form>
-        </div>
+        <form action="/panel/meetings/reservation?{{ http_build_query(request()->all()) }}">
+            <div class="custom-control custom-switch">
+                <input type="checkbox" name="open_meetings"
+                       class="custom-control-input js-panel-list-switch-filter"
+                       id="openMeetingResult"
+                       {{ request('open_meetings')=='on'?'checked':'' }}>
+                <label class="custom-control-label text-gray" for="openMeetingResult">
+                    {{ trans('panel.show_only_open_meetings') }}
+                </label>
+            </div>
+        </form>
+    </div>
 
         @if($reserveMeetings->count() > 0)
 

@@ -1,16 +1,82 @@
-@extends('web.default.panel.layouts.panel_layout')
+@extends('web.default.layouts.newapp')
 
 @push('styles_top')
     <link rel="stylesheet" href="/assets/default/vendors/select2/select2.min.css">
     <link rel="stylesheet" href="/assets/default/vendors/daterangepicker/daterangepicker.min.css">
 @endpush
 
+<style>
+:root{
+    --k-bg:#0f0f0f;
+    --k-card:#181818;
+    --k-border:#2a2a2a;
+    --k-gold:#F2C94C;
+    --k-text:#e6e6e6;
+    --k-muted:#9a9a9a;
+    --k-radius:16px;
+}
+
+.k-card{
+    background:linear-gradient(180deg,#181818,#111);
+    border:1px solid var(--k-border);
+    border-radius:var(--k-radius);
+    box-shadow:0 15px 40px rgba(0,0,0,.45);
+}
+
+.k-card .section-title{
+    color:var(--k-gold);
+}
+
+.k-card .input-label{
+    color:var(--k-muted);
+    font-size:13px;
+}
+
+.k-card .form-control,
+.k-card select{
+    background:#0f0f0f;
+    border:1px solid var(--k-border);
+    color:var(--k-text);
+    border-radius:10px;
+    height:44px;
+}
+
+.k-card .form-control:focus,
+.k-card select:focus{
+    border-color:var(--k-gold);
+    box-shadow:0 0 0 2px rgba(242,201,76,.15);
+}
+
+.k-card .input-group-text{
+    background:#0f0f0f;
+    border:1px solid var(--k-border);
+    color:var(--k-text);
+}
+
+.k-card .btn-kemetic{
+    background:linear-gradient(135deg,#F2C94C,#E0B83E);
+    color:#111;
+    border-radius:12px;
+    padding:10px 36px;
+    font-weight:600;
+    border:none;
+}
+
+.k-card .btn-kemetic:hover{
+    transform:translateY(-1px);
+    box-shadow:0 10px 25px rgba(242,201,76,.35);
+}
+
+.k-card .text-gray{
+    color:var(--k-muted)!important;
+}
+</style>
 @section('content')
-    <div class="">
+    <div class="container mt-30">
         <form action="/panel/marketing/discounts/{{ !empty($discount) ? $discount->id.'/update' : 'store' }}" method="post" class="">
             {{ csrf_field() }}
 
-            <section>
+            <section class="k-card p-25">
                 <h2 class="section-title after-line">{{ !empty($discount) ? (trans('public.edit').' ('. $discount->title .')') : trans('update.new_coupon') }}</h2>
 
                 <div class="row  mt-25">

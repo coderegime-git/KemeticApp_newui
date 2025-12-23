@@ -181,6 +181,8 @@ Route::group(['namespace' => 'Web', 'middleware' => ['check_mobile_app', 'impers
 
             Route::post('/direct-payment', 'WebinarController@directPayment');
 
+            
+
             Route::group(['prefix' => 'personal-notes'], function () {
                 Route::get('/{id}/download-attachment', 'CoursePersonalNotesController@downloadAttachment');
             });
@@ -191,11 +193,14 @@ Route::group(['namespace' => 'Web', 'middleware' => ['check_mobile_app', 'impers
         Route::get('/', 'CertificateValidationController@index');
         Route::post('/validate', 'CertificateValidationController@checkValidate');
     });
+    
 
+    Route::group(['middleware' => 'web.auth'], function () {
 
-    Route::group(['prefix' => 'cart'], function () {
-        Route::post('/store', 'CartManagerController@store');
-        Route::get('/{id}/delete', 'CartManagerController@destroy');
+        Route::group(['prefix' => 'cart'], function () {
+                Route::post('/store', 'CartManagerController@store');
+                Route::get('/{id}/delete', 'CartManagerController@destroy');
+            });
     });
 
     Route::group(['middleware' => 'web.auth'], function () {
@@ -229,6 +234,7 @@ Route::group(['namespace' => 'Web', 'middleware' => ['check_mobile_app', 'impers
             // Route::get('/', 'CartController@index');
 
             Route::post('/coupon/validate', 'CartController@couponValidate');
+            Route::post('/calculate-shipping', 'CartController@calculateShipping');
             //Route::post('/checkout', 'CartController@checkout')->name('checkout');
         });
 

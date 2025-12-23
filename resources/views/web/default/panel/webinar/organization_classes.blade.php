@@ -1,5 +1,238 @@
-@extends(getTemplate() .'.panel.layouts.panel_layout')
+@extends('web.default.layouts.newapp')
+<style>
+    /* ======================================================
+   KEMETIC ORGANIZATION CLASSES
+   Black • Gold • Premium Learning UI
+====================================================== */
 
+:root {
+    --k-bg: #0b0b0b;
+    --k-card: #141414;
+    --k-border: rgba(242, 201, 76, 0.28);
+    --k-gold: #F2C94C;
+    --k-gold-soft: rgba(242, 201, 76, 0.18);
+    --k-text: #e8e8e8;
+    --k-muted: #9b9b9b;
+    --k-radius: 16px;
+}
+
+/* PAGE */
+.panel-content,
+section {
+    background: transparent;
+}
+
+/* TITLES */
+.section-title {
+    font-size: 18px;
+    font-weight: 700;
+    color: var(--k-gold);
+    letter-spacing: 0.4px;
+    position: relative;
+}
+
+.section-title::after {
+    content: "";
+    display: block;
+    width: 65px;
+    height: 1px;
+    margin-top: 6px;
+    background: linear-gradient(to right, var(--k-gold), transparent);
+}
+
+/* FILTER CARD */
+.panel-section-card {
+    background: linear-gradient(180deg, #161616, #0f0f0f);
+    border: 1px solid var(--k-border);
+    border-radius: var(--k-radius);
+    box-shadow: 0 18px 45px rgba(0, 0, 0, 0.75);
+}
+
+/* LABELS */
+.input-label {
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--k-gold);
+}
+
+/* INPUTS & SELECT */
+.form-control,
+.custom-select {
+    background: #0e0e0e;
+    border: 1px solid #2a2a2a;
+    color: var(--k-text);
+    border-radius: 12px;
+    padding: 11px 14px;
+    font-size: 14px;
+    transition: 0.25s ease;
+}
+
+.form-control:focus,
+.custom-select:focus {
+    background: #141414;
+    border-color: var(--k-gold);
+    box-shadow: 0 0 0 2px var(--k-gold-soft);
+    outline: none;
+}
+
+.form-control::placeholder {
+    color: var(--k-muted);
+}
+
+/* INPUT GROUP ICON */
+.input-group-text {
+    background: #1a1a1a;
+    border: 1px solid #2a2a2a;
+    color: var(--k-gold);
+    border-radius: 12px 0 0 12px;
+}
+
+/* BUTTON */
+.btn-primary {
+    background: linear-gradient(135deg, #F2C94C, #E3AA17);
+    border: none;
+    color: #000;
+    font-weight: 700;
+    border-radius: 12px;
+    transition: 0.25s ease;
+}
+
+.btn-primary:hover {
+    box-shadow: 0 14px 35px rgba(242, 201, 76, 0.45);
+    transform: translateY(-2px);
+}
+
+/* SWITCH */
+.custom-switch .custom-control-label::before {
+    background: #2a2a2a;
+    border-radius: 20px;
+}
+
+.custom-switch .custom-control-input:checked ~ .custom-control-label::before {
+    background: var(--k-gold);
+}
+
+/* WEBINAR CARD */
+.webinar-card.webinar-list {
+    background: linear-gradient(180deg, #151515, #101010);
+    border: 1px solid var(--k-border);
+    border-radius: 18px;
+    overflow: hidden;
+    transition: 0.3s ease;
+}
+
+.webinar-card.webinar-list:hover {
+    box-shadow: 0 22px 60px rgba(242, 201, 76, 0.18);
+    transform: translateY(-4px);
+}
+
+/* IMAGE */
+.webinar-card .image-box {
+    width: 260px;
+    position: relative;
+    background: #000;
+}
+
+.webinar-card .image-box img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+/* BADGES */
+.badges-lists .badge {
+    background: rgba(0, 0, 0, 0.7);
+    border: 1px solid var(--k-gold);
+    color: var(--k-gold);
+    font-size: 11px;
+    font-weight: 600;
+    padding: 5px 10px;
+    border-radius: 10px;
+}
+
+/* PROGRESS */
+.webinar-card .progress {
+    height: 5px;
+    background: #1e1e1e;
+}
+
+.webinar-card .progress-bar {
+    background: linear-gradient(90deg, #F2C94C, #E3AA17);
+}
+
+/* CARD BODY */
+.webinar-card-body {
+    padding: 20px 25px;
+}
+
+/* TITLE */
+.webinar-card-body h3 {
+    color: var(--k-text);
+}
+
+.webinar-card-body h3 span.badge {
+    background: rgba(242, 201, 76, 0.15);
+    border: none;
+    color: var(--k-gold);
+}
+
+/* PRICE */
+.webinar-price-box .real {
+    color: var(--k-gold);
+    font-size: 18px;
+    font-weight: 700;
+}
+
+.webinar-price-box .off {
+    color: #888;
+    text-decoration: line-through;
+}
+
+/* STATS */
+.stat-title {
+    font-size: 12px;
+    color: var(--k-muted);
+}
+
+.stat-value {
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--k-text);
+}
+
+/* PAGINATION */
+.pagination .page-link {
+    background: #141414;
+    border: 1px solid #2a2a2a;
+    color: var(--k-text);
+}
+
+.pagination .page-item.active .page-link {
+    background: var(--k-gold);
+    border-color: var(--k-gold);
+    color: #000;
+}
+
+/* NO RESULT */
+.no-result-card {
+    background: #141414;
+    border: 1px dashed var(--k-border);
+    border-radius: var(--k-radius);
+}
+
+/* RESPONSIVE */
+@media (max-width: 768px) {
+    .webinar-card.webinar-list {
+        flex-direction: column;
+    }
+
+    .webinar-card .image-box {
+        width: 100%;
+        height: 200px;
+    }
+}
+
+</style>
 @push('styles_top')
     <link rel="stylesheet" href="/assets/default/vendors/daterangepicker/daterangepicker.min.css">
 @endpush
