@@ -158,7 +158,7 @@
         </button>
 
         @if($canSale and !empty($course->points))
-          <a href="{{ !(auth()->check()) ? '/login' : '#' }}" class="{{ (auth()->check()) ? 'js-buy-with-point' : '' }} coursedetail-btn btn btn-outline-warning mt-20 {{ (!$canSale) ? 'disabled' : '' }}" rel="nofollow">
+          <a href="{{ !(auth()->check()) ? '/login' : '#' }}" class="{{ (auth()->check()) ? 'js-buy-with-point' : '' }} coursedetail-btn btn btn-outline-warning mt-10 {{ (!$canSale) ? 'disabled' : '' }}" rel="nofollow">
             {!! trans('update.buy_with_n_points',['points' => $course->points]) !!}
           </a>
         @endif
@@ -468,15 +468,55 @@
     const teacher = document.getElementById('coursedetail-teacher');
     const tip = document.getElementById('coursedetail-tip');
     
+    // if (teacher && tip) {
+    //   teacher.addEventListener('mouseenter', e => {
+    //     const r = teacher.getBoundingClientRect();
+    //     tip.style.left = r.left + 'px';
+    //     tip.style.top = (r.bottom + 8) + 'px';
+    //     tip.style.display = 'block';
+    //   });
+      
+    //   teacher.addEventListener('mouseleave', () => tip.style.display = 'none');
+    // }
+
     if (teacher && tip) {
-      teacher.addEventListener('mouseenter', e => {
+      // Function to show tooltip
+      function showTip() {
         const r = teacher.getBoundingClientRect();
         tip.style.left = r.left + 'px';
         tip.style.top = (r.bottom + 8) + 'px';
         tip.style.display = 'block';
+      }
+      
+      // Function to hide tooltip
+      function hideTip() {
+        tip.style.display = 'none';
+      }
+      
+      // Click on teacher to show tooltip
+      teacher.addEventListener('click', (e) => {
+        e.stopPropagation(); // Prevent click from bubbling to document
+        if (tip.style.display === 'none' || tip.style.display === '') {
+          showTip();
+        } else {
+          hideTip();
+        }
       });
       
-      teacher.addEventListener('mouseleave', () => tip.style.display = 'none');
+      // Click outside to hide tooltip
+      document.addEventListener('click', (e) => {
+        // Check if click is outside both teacher and tip elements
+        if (!teacher.contains(e.target) && !tip.contains(e.target)) {
+          hideTip();
+        }
+      });
+      
+      // Also hide when clicking on the tip itself (optional)
+      tip.addEventListener('click', (e) => {
+        e.stopPropagation(); // Prevent tip click from triggering document click
+        // You can choose whether clicking tip should hide it or not
+        // hideTip(); // Uncomment if you want tip click to hide it
+      });
     }
   });
 </script>

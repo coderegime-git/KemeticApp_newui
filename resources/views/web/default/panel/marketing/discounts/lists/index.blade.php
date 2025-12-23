@@ -1,50 +1,128 @@
-@extends('web.default.panel.layouts.panel_layout')
+@extends('web.default.layouts.newapp')
 
 @push('styles_top')
-    <link rel="stylesheet" href="/assets/default/vendors/daterangepicker/daterangepicker.min.css">
+<link rel="stylesheet" href="/assets/default/vendors/daterangepicker/daterangepicker.min.css">
+
+<style>
+:root{
+    --k-bg:#0f0f0f;
+    --k-card:#181818;
+    --k-border:#2a2a2a;
+    --k-gold:#F2C94C;
+    --k-text:#e6e6e6;
+    --k-muted:#9a9a9a;
+    --k-radius:16px;
+}
+
+.k-card{
+    background:linear-gradient(180deg,#181818,#111);
+    border:1px solid var(--k-border);
+    border-radius:var(--k-radius);
+    box-shadow:0 15px 45px rgba(0,0,0,.45);
+}
+
+.k-card .section-title{
+    color:var(--k-gold);
+}
+
+.k-card .input-label{
+    color:var(--k-muted);
+    font-size:13px;
+}
+
+.k-card .form-control,
+.k-card select{
+    background:#0f0f0f;
+    border:1px solid var(--k-border);
+    color:var(--k-text);
+    border-radius:10px;
+    height:44px;
+}
+
+.k-card .form-control:focus{
+    border-color:var(--k-gold);
+    box-shadow:0 0 0 2px rgba(242,201,76,.15);
+}
+
+.k-card .btn-kemetic{
+    background:linear-gradient(135deg,#F2C94C,#E0B83E);
+    color:#111;
+    border-radius:12px;
+    font-weight:600;
+    border:none;
+}
+
+.k-stat{
+    background:#121212;
+    border:1px solid var(--k-border);
+    border-radius:14px;
+    padding:20px;
+    transition:.25s;
+}
+
+.k-stat:hover{
+    transform:translateY(-4px);
+    box-shadow:0 15px 35px rgba(242,201,76,.15);
+}
+
+.k-stat strong{color:var(--k-gold);}
+.k-stat span{color:var(--k-muted);}
+
+.custom-table thead th{
+    border-bottom:1px solid var(--k-border);
+    color:var(--k-muted);
+}
+
+.custom-table tbody tr{
+    border-bottom:1px solid var(--k-border);
+}
+
+.custom-table tbody tr:hover{
+    background:#141414;
+}
+</style>
 @endpush
 
 @section('content')
 
-    <section>
-        <h2 class="section-title">{{ trans('update.coupons_overview') }}</h2>
+{{-- OVERVIEW --}}
+<section>
+<h2 class="section-title">{{ trans('update.coupons_overview') }}</h2>
 
-        <div class="activities-container mt-25 p-20 p-lg-35">
-            <div class="row">
-                <div class="col-6 col-md-3 mt-30 mt-md-0 d-flex align-items-center justify-content-center">
-                    <div class="d-flex flex-column align-items-center text-center">
-                        <img src="/assets/default/img/activity/upcoming.svg" width="64" height="64" alt="">
-                        <strong class="font-30 text-dark-blue font-weight-bold mt-5">{{ $totalCoupons }}</strong>
-                        <span class="font-16 text-gray font-weight-500">{{ trans('update.total_coupons') }}</span>
-                    </div>
-                </div>
-
-                <div class="col-6 col-md-3 mt-30 mt-md-0 d-flex align-items-center justify-content-center">
-                    <div class="d-flex flex-column align-items-center text-center">
-                        <img src="/assets/default/img/activity/webinars.svg" width="64" height="64" alt="">
-                        <strong class="font-30 text-dark-blue font-weight-bold mt-5">{{ $activeCoupons }}</strong>
-                        <span class="font-16 text-gray font-weight-500">{{ trans('update.active_coupons') }}</span>
-                    </div>
-                </div>
-
-                <div class="col-6 col-md-3 mt-30 mt-md-0 d-flex align-items-center justify-content-center mt-5 mt-md-0">
-                    <div class="d-flex flex-column align-items-center text-center">
-                        <img src="/assets/default/img/activity/hours.svg" width="64" height="64" alt="">
-                        <strong class="font-30 text-dark-blue font-weight-bold mt-5">{{ $couponPurchases }}</strong>
-                        <span class="font-16 text-gray font-weight-500">{{ trans('update.coupon_purchases') }}</span>
-                    </div>
-                </div>
-
-                <div class="col-6 col-md-3 mt-30 mt-md-0 d-flex align-items-center justify-content-center mt-5 mt-md-0">
-                    <div class="d-flex flex-column align-items-center text-center">
-                        <img src="/assets/default/img/activity/49.svg" width="64" height="64" alt="">
-                        <strong class="font-30 text-dark-blue font-weight-bold mt-5">{{ $purchaseAmount }}</strong>
-                        <span class="font-16 text-gray font-weight-500">{{ trans('update.purchase_amount') }}</span>
-                    </div>
-                </div>
-            </div>
+<div class="row mt-25">
+    <div class="col-6 col-md-3 mt-20">
+        <div class="k-stat text-center">
+            <img src="/assets/default/img/activity/upcoming.svg" width="48">
+            <strong class="d-block font-30 mt-10">{{ $totalCoupons }}</strong>
+            <span>{{ trans('update.total_coupons') }}</span>
         </div>
-    </section>
+    </div>
+
+    <div class="col-6 col-md-3 mt-20">
+        <div class="k-stat text-center">
+            <img src="/assets/default/img/activity/webinars.svg" width="48">
+            <strong class="d-block font-30 mt-10">{{ $activeCoupons }}</strong>
+            <span>{{ trans('update.active_coupons') }}</span>
+        </div>
+    </div>
+
+    <div class="col-6 col-md-3 mt-20">
+        <div class="k-stat text-center">
+            <img src="/assets/default/img/activity/hours.svg" width="48">
+            <strong class="d-block font-30 mt-10">{{ $couponPurchases }}</strong>
+            <span>{{ trans('update.coupon_purchases') }}</span>
+        </div>
+    </div>
+
+    <div class="col-6 col-md-3 mt-20">
+        <div class="k-stat text-center">
+            <img src="/assets/default/img/activity/49.svg" width="48">
+            <strong class="d-block font-30 mt-10">{{ $purchaseAmount }}</strong>
+            <span>{{ trans('update.purchase_amount') }}</span>
+        </div>
+    </div>
+</div>
+</section>
 
 
     <section class="mt-25">

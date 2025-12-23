@@ -18,6 +18,46 @@ class ReelController extends Controller
         // dd($reels);
         return view('web.default.panel.reels.index', compact('reels'));
     }
+
+    public function edit($id)
+    {
+        $reel = Reel::find($id);
+        return view('web.default.panel.reels.edit', compact('reel'));
+    }
+
+    public function update(Request $request){
+        $request->validate([
+            'video' => 'nullable|mimes:mp4,mov,ogg,webm|max:100000',
+            'title' => 'required|string|max:255',
+            'caption' => 'required|string|max:1000',
+        ]);
+        $reel = Reel::find($request->id);
+        if(!$reel){
+            return redirect()->back()->with('danger','Reel not found!');
+        }
+
+        $filename = $reel->video_path;
+        if($request->file('video')){
+            $video = $request->file('video');
+            $filename = time() . '_' . uniqid() . '.' . $video->getClientOriginalExtension();
+
+            // Create directories if they don't exist
+            $videoPath = public_path('store/reels/videos');
+            if (!file_exists($videoPath)) {
+                mkdir($videoPath, 0777, true);
+            }
+
+            $video->move($videoPath, $filename);
+        }
+
+        $reel->update([
+            'title' => $request->title,
+            'caption' => $request->caption,
+            'video_path' => $filename
+        ]);
+        return redirect()->route('reels.index')->with('success', 'Reel updated!');
+    }
+
     public function destroy($id)
     {
         $reel = Reel::find($id);
@@ -29,6 +69,7 @@ class ReelController extends Controller
             Storage::disk('public')->delete($reel->video_url);
         }
         $reel->delete();
+
         return redirect()->back()->with('success', 'Reel deleted successfully.');
     }
 

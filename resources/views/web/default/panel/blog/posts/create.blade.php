@@ -1,112 +1,211 @@
-@extends('web.default.panel.layouts.panel_layout')
+@extends('web.default.layouts.newapp')
 
 @push('styles_top')
-    <link rel="stylesheet" href="/assets/vendors/summernote/summernote-bs4.min.css">
+<link rel="stylesheet" href="/assets/vendors/summernote/summernote-bs4.min.css">
+
+<style>
+/* ===============================
+   KEMETIC BLOG CREATE / EDIT
+================================ */
+.kemetic-form-card {
+    background: linear-gradient(180deg, #0b0b0b, #121212);
+    border: 1px solid rgba(242,201,76,0.25);
+    border-radius: 20px;
+    padding: 25px;
+}
+
+/* Titles */
+.kemetic-title {
+    color: #f2c94c;
+    font-weight: 600;
+}
+
+/* Labels */
+.kemetic-form-card .input-label {
+    color: #c9b26d;
+    font-size: 13px;
+}
+
+/* Inputs */
+.kemetic-form-card .form-control {
+    background: #0e0e0e;
+    border: 1px solid rgba(242,201,76,0.3);
+    color: #fff;
+    border-radius: 12px;
+}
+
+.kemetic-form-card .form-control:focus {
+    border-color: #f2c94c;
+    box-shadow: 0 0 0 2px rgba(242,201,76,0.15);
+}
+
+/* Select */
+.kemetic-form-card select option {
+    background: #0e0e0e;
+}
+
+/* File manager */
+.kemetic-form-card .input-group-text {
+    background: linear-gradient(135deg, #f2c94c, #caa63c);
+    border: none;
+}
+
+/* Summernote */
+.note-editor.note-frame {
+    background: #0e0e0e;
+    border: 1px solid rgba(242,201,76,0.3);
+    border-radius: 16px;
+}
+
+.note-toolbar {
+    background: #151515;
+    border-bottom: 1px solid rgba(242,201,76,0.25);
+}
+
+.note-editor .note-editable {
+    background: #0e0e0e;
+    color: #fff;
+}
+
+/* Save button */
+.kemetic-save-btn {
+    background: linear-gradient(135deg, #f2c94c, #caa63c);
+    color: #000;
+    font-weight: 600;
+    border-radius: 14px;
+    padding: 10px 26px;
+}
+</style>
 @endpush
 
 @section('content')
 
-    <section>
+<section class="mt-25">
 
-        <form action="/panel/blog/posts/{{ (!empty($post) ? $post->id.'/update' : 'store') }}" method="post">
-            {{ csrf_field() }}
+    <h2 class="section-title kemetic-title mb-20">
+        {{ !empty($post) ? trans('admin/main.edit') : trans('admin/main.create') }} {{ trans('admin/main.blog') }}
+    </h2>
+
+    <form action="/panel/blog/posts/{{ (!empty($post) ? $post->id.'/update' : 'store') }}" method="post">
+        {{ csrf_field() }}
+
+        <div class="kemetic-form-card">
 
             <div class="row">
                 <div class="col-12 col-md-6">
 
-                    @if(!empty(getGeneralSettings('content_translate')) and !empty($userLanguages))
+                    {{-- LANGUAGE --}}
+                    @if(!empty(getGeneralSettings('content_translate')) && !empty($userLanguages))
                         <div class="form-group">
                             <label class="input-label">{{ trans('auth.language') }}</label>
-                            <select name="locale" class="form-control {{ !empty($post) ? 'js-edit-content-locale' : '' }}">
+                            <select name="locale"
+                                    class="form-control {{ !empty($post) ? 'js-edit-content-locale' : '' }}">
                                 @foreach($userLanguages as $lang => $language)
-                                    <option value="{{ $lang }}" @if(mb_strtolower(request()->get('locale', app()->getLocale())) == mb_strtolower($lang)) selected @endif>{{ $language }}</option>
+                                    <option value="{{ $lang }}"
+                                        {{ mb_strtolower(request()->get('locale', app()->getLocale())) == mb_strtolower($lang) ? 'selected' : '' }}>
+                                        {{ $language }}
+                                    </option>
                                 @endforeach
                             </select>
-                            @error('locale')
-                            <div class="invalid-feedback">
-                                {{ $message }}
-                            </div>
-                            @enderror
                         </div>
                     @else
                         <input type="hidden" name="locale" value="{{ getDefaultLocale() }}">
                     @endif
 
+                    {{-- TITLE --}}
                     <div class="form-group">
                         <label class="input-label">{{ trans('admin/main.title') }}</label>
                         <input type="text" name="title"
-                               class="form-control  @error('title') is-invalid @enderror"
-                               value="{{ (!empty($post) and !empty($post->translate($locale))) ? $post->translate($locale)->title : old('title') }}"
-                               placeholder="{{ trans('admin/main.choose_title') }}"/>
+                               class="form-control @error('title') is-invalid @enderror"
+                               value="{{ (!empty($post) && !empty($post->translate($locale))) ? $post->translate($locale)->title : old('title') }}"
+                               placeholder="{{ trans('admin/main.choose_title') }}">
                         @error('title')
-                        <div class="invalid-feedback">
-                            {{ $message }}
-                        </div>
+                        <div class="invalid-feedback">{{ $message }}</div>
                         @enderror
                     </div>
 
+                    {{-- CATEGORY --}}
                     <div class="form-group">
                         <label class="input-label">{{ trans('/admin/main.category') }}</label>
-                        <select class="form-control @error('category_id') is-invalid @enderror" name="category_id">
-                            <option selected disabled>{{ trans('admin/main.choose_category') }}</option>
-
+                        <select name="category_id"
+                                class="form-control @error('category_id') is-invalid @enderror">
+                            <option disabled selected>{{ trans('admin/main.choose_category') }}</option>
                             @foreach($blogCategories as $blogCategory)
-                                <option value="{{ $blogCategory->id }}" {{ (((!empty($post) and $post->category_id == $blogCategory->id) or (old('category_id') == $blogCategory->id)) ? 'selected="selected"' : '') }}>{{ $blogCategory->title }}</option>
+                                <option value="{{ $blogCategory->id }}"
+                                    {{ ((!empty($post) && $post->category_id == $blogCategory->id) || old('category_id') == $blogCategory->id) ? 'selected' : '' }}>
+                                    {{ $blogCategory->title }}
+                                </option>
                             @endforeach
                         </select>
-
                         @error('category_id')
-                        <div class="invalid-feedback">
-                            {{ $message }}
-                        </div>
+                        <div class="invalid-feedback">{{ $message }}</div>
                         @enderror
                     </div>
 
+                    {{-- COVER IMAGE --}}
                     <div class="form-group">
                         <label class="input-label">{{ trans('public.cover_image') }}</label>
                         <div class="input-group">
                             <div class="input-group-prepend">
-                                <button type="button" class="input-group-text panel-file-manager" data-input="image" data-preview="holder">
-                                    <i data-feather="upload" class="text-white" width="18" height="18"></i>
+                                <button type="button"
+                                        class="input-group-text panel-file-manager"
+                                        data-input="image"
+                                        data-preview="holder">
+                                    <i data-feather="upload" width="18"></i>
                                 </button>
                             </div>
-                            <input type="text" name="image" id="image" value="{{ (!empty($post)) ? $post->image : old('image') }}" class="form-control @error('image') is-invalid @enderror" placeholder="{{ trans('update.blog_cover_image_placeholder') }}"/>
-                            @error('image')
-                            <div class="invalid-feedback">
-                                {{ $message }}
-                            </div>
-                            @enderror
+                            <input type="text" name="image" id="image"
+                                   value="{{ !empty($post) ? $post->image : old('image') }}"
+                                   class="form-control @error('image') is-invalid @enderror"
+                                   placeholder="{{ trans('update.blog_cover_image_placeholder') }}">
                         </div>
+                        @error('image')
+                        <div class="invalid-feedback">{{ $message }}</div>
+                        @enderror
                     </div>
+
                 </div>
             </div>
 
-            <div class="form-group mt-15">
+            {{-- DESCRIPTION --}}
+            <div class="form-group mt-20">
                 <label class="input-label">{{ trans('public.description') }}</label>
-                <textarea id="summernote" name="description" class="main-summernote summernote form-control @error('description')  is-invalid @enderror" placeholder="{{ trans('admin/main.create_blog_description_hint') }}">{!! (!empty($post) and !empty($post->translate($locale))) ? $post->translate($locale)->description : old('description') !!}</textarea>
+                <textarea id="summernote"
+                          name="description"
+                          class="summernote form-control @error('description') is-invalid @enderror">
+{!! (!empty($post) && !empty($post->translate($locale))) ? $post->translate($locale)->description : old('description') !!}
+                </textarea>
                 @error('description')
-                <div class="invalid-feedback">
-                    {{ $message }}
-                </div>
+                <div class="invalid-feedback">{{ $message }}</div>
                 @enderror
             </div>
 
-            <div class="form-group mt-15">
+            {{-- CONTENT --}}
+            <div class="form-group mt-20">
                 <label class="input-label">{{ trans('admin/main.content') }}</label>
-                <textarea id="contentSummernote" name="content" class="main-summernote summernote form-control @error('content')  is-invalid @enderror" placeholder="{{ trans('admin/main.create_blog_content_hint') }}">{!! (!empty($post) and !empty($post->translate($locale))) ? $post->translate($locale)->content : old('content')  !!}</textarea>
+                <textarea id="contentSummernote"
+                          name="content"
+                          class="summernote form-control @error('content') is-invalid @enderror">
+{!! (!empty($post) && !empty($post->translate($locale))) ? $post->translate($locale)->content : old('content') !!}
+                </textarea>
                 @error('content')
-                <div class="invalid-feedback">
-                    {{ $message }}
-                </div>
+                <div class="invalid-feedback">{{ $message }}</div>
                 @enderror
             </div>
 
-            <button type="submit" class="btn btn-primary btn-sm mt-1">{{ trans('admin/main.save_change') }}</button>
-        </form>
+            {{-- SAVE --}}
+            <div class="mt-30" style="padding:10px;">
+                <button type="submit" class="btn kemetic-save-btn">
+                    {{ trans('admin/main.save_change') }}
+                </button>
+            </div>
 
-    </section>
+        </div>
+    </form>
+
+</section>
 @endsection
 
 @push('scripts_bottom')
-    <script src="/assets/vendors/summernote/summernote-bs4.min.js"></script>
+<script src="/assets/vendors/summernote/summernote-bs4.min.js"></script>
 @endpush

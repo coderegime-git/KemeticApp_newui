@@ -1,7 +1,51 @@
 @extends('web.default.layouts.app')
 
 @section('content')
+<style>
 
+/* Video Player Modal */
+#videoPlayerModal .modal-dialog {
+  max-width: 90%;
+  max-height: 90vh;
+}
+
+#videoPlayerModal .modal-content {
+  background: #000;
+  border-radius: 0;
+}
+
+#videoPlayerModal .modal-body {
+  padding: 0;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  background: #000;
+}
+
+#videoPlayerModal #videoPlayer {
+  width: 100%;
+  height: auto;
+  max-height: 80vh;
+}
+
+#videoPlayerModal .modal-header {
+  background: rgba(0, 0, 0, 0.8);
+  border-bottom: 1px solid #333;
+  position: absolute;
+  top: 0;
+  right: 0;
+  left: 0;
+  z-index: 10;
+}
+
+#videoPlayerModal .modal-title {
+  color: white;
+}
+
+#videoPlayerModal .btn-close {
+  filter: brightness(0) invert(1);
+}
+</style>
     
 <header class="home-topnav">
   <div class="home-nav-row">
@@ -132,7 +176,13 @@
               <span>⭐</span><span class="home-gold">{{ $reel->likes_count ?: 0 }}</span>
             </div>
             <div class="home-actions">
-              <a href="{{ $reel->id }}"><button class="home-btn">{{ trans('Watch') }}</button></a>
+                <button class="home-btn play-video-btn" 
+                    data-video-url="{{ $reel->video_url }}" 
+                    data-title="{{ $reel->title }}" 
+                    data-thumbnail="{{ $reel->thumbnail_url }}">
+              Watch
+            </button>
+              <!-- <a href="{{ $reel->id }}"><button class="home-btn">{{ trans('Watch') }}</button></a> -->
               <div class="home-chakra">
                 <span class="home-dot"></span><span class="home-dot"></span><span class="home-dot"></span><span class="home-dot"></span><span class="home-dot"></span>
               </div>
@@ -151,7 +201,7 @@
           @foreach($latestWebinars as $latestWebinar)
           <div class="home-tile">
             <div class="home-thumb"><img src="{{ $latestWebinar->getImage() }}" alt="{{ $latestWebinar->title }}"></div>
-            <div class="home-title">{{ Str::limit($latestWebinar->title, 15, '..') }}</div>
+            <div class="home-title">{{ Str::limit($latestWebinar->title, 13, '..') }}</div>
             <div class="home-meta"><span>⏱</span><span>{{ convertMinutesToHourAndMinute($latestWebinar->duration) }} {{ trans('hours') }}</span></div>
             <div class="home-actions">
               <a href="{{ $latestWebinar->getUrl() }}"><button class="home-btn">{{ trans('Enroll Now') }}</button></a>
@@ -170,7 +220,7 @@
           @foreach($newProducts as $product)
           <div class="home-tile">
             <div class="home-thumb"><img src="{{ $product->thumbnail }}" alt="{{ $product->title }}"></div>
-            <div class="home-title">{{ Str::limit($product->title, 15, '..') }} </div>
+            <div class="home-title">{{ Str::limit($product->title, 13, '..') }} </div>
             <div class="home-price">{{ handlePrice($product->price, true, true, false, null, true) }}</div>
             <div class="home-actions">
                 <a href="{{ $product->getUrl() }}"><button class="home-btn">{{ trans('Add to Cart') }}</button></a>
@@ -189,7 +239,7 @@
           @foreach($books as $book)
           <div class="home-tile">
             <div class="home-thumb"><img src="{{ $book->getImage() }}" alt="{{ $book->title }}"></div>
-            <div class="home-title">{{ Str::limit($book->title, 15, '..') }} </div>
+            <div class="home-title">{{ Str::limit($book->title, 13, '..') }} </div>
             <div class="home-meta">
               @if($book->price == 0)
                 <span class="home-chip">{{ trans('Free with Membership') }}</span>
@@ -234,7 +284,7 @@
           @foreach($blog as $post)
           <div class="home-tile">
             <div class="home-thumb"><img src="{{ $post->image }}" alt="{{ $post->title }}"></div>
-            <div class="home-title">{{ Str::limit($post->title, 15, '..') }} </div>
+            <div class="home-title">{{ Str::limit($post->title, 13, '..') }} </div>
             <div class="home-meta"><span>❤️ {{ $post->likes_count }}</span><span style="margin-left:10px">💬 {{ $post->comments_count }}</span></div>
             <div class="home-actions">
               <a href="{{ $post->getUrl() }}"><button class="home-btn">{{ trans('Read') }}</button></a>
@@ -252,6 +302,21 @@
           <span class="home-chip">{{ trans('membership') }} €1/mo or €10/yr</span>
         </div>
       </section>
+        <div class="modal fade" id="videoPlayerModal" tabindex="-1" aria-labelledby="videoPlayerModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title" id="videoPlayerModalLabel">Video Player</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body">
+          <video id="videoPlayer" controls style="width: 100%; border-radius: 8px;">
+            Your browser does not support the video tag.
+          </video>
+        </div>
+      </div>
+    </div>
+  </div>
     </main>
 @endsection
 
@@ -272,6 +337,152 @@
         })(jQuery)
     </script>
 @endif
+
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<script>
+// Video playback functionality
+document.addEventListener('DOMContentLoaded', function() {
+  // Get modal elements
+  const videoPlayerModal = document.getElementById('videoPlayerModal');
+  const videoPlayer = document.getElementById('videoPlayer');
+  const videoPlayerModalLabel = document.getElementById('videoPlayerModalLabel');
+  
+  // Function to play video
+  function playVideo(videoUrl, title) {
+    // Set video source and title
+    videoPlayer.src = videoUrl;
+    videoPlayerModalLabel.textContent = title;
+    
+    // Show modal
+    const modal = new bootstrap.Modal(videoPlayerModal);
+    modal.show();
+    
+    // Play video when modal is shown
+    videoPlayerModal.addEventListener('shown.bs.modal', function() {
+      videoPlayer.play().catch(function(error) {
+        console.log('Autoplay failed:', error);
+        // If autoplay fails, show controls and let user play manually
+        videoPlayer.controls = true;
+      });
+    });
+  }
+  
+  // Add click event to all "Watch" buttons
+  document.querySelectorAll('.play-video-btn').forEach(function(button) {
+    button.addEventListener('click', function() {
+      const videoUrl = this.getAttribute('data-video-url');
+      const title = this.getAttribute('data-title');
+      playVideo(videoUrl, title);
+    });
+  });
+  
+  // Add click event to video thumbnails
+  document.querySelectorAll('.video-thumbnail').forEach(function(thumbnail) {
+    thumbnail.addEventListener('click', function() {
+      const card = this.closest('.reels-card');
+      const watchButton = card.querySelector('.play-video-btn');
+      if (watchButton) {
+        const videoUrl = watchButton.getAttribute('data-video-url');
+        const title = watchButton.getAttribute('data-title');
+        playVideo(videoUrl, title);
+      }
+    });
+  });
+  
+  // Pause video when modal is closed
+  videoPlayerModal.addEventListener('hidden.bs.modal', function() {
+    videoPlayer.pause();
+    videoPlayer.currentTime = 0;
+  });
+  
+  // Handle video upload preview
+  const videoFileInput = document.getElementById('videoFile');
+  const videoPreview = document.getElementById('videoPreview');
+  
+  if (videoFileInput) {
+    videoFileInput.addEventListener('change', function() {
+      const file = this.files[0];
+      if (file && file.type.startsWith('video/')) {
+        const videoElement = videoPreview.querySelector('video');
+        const sourceElement = videoElement.querySelector('source');
+        
+        const url = URL.createObjectURL(file);
+        sourceElement.src = url;
+        videoElement.load();
+        
+        videoPreview.classList.remove('d-none');
+        
+        // Revoke object URL after video is loaded
+        videoElement.onloadeddata = function() {
+          URL.revokeObjectURL(url);
+        };
+      }
+    });
+  }
+  
+  // Handle form submission with progress
+  const uploadForm = document.getElementById('uploadForm');
+  const uploadProgress = document.getElementById('uploadProgress');
+  
+  if (uploadForm) {
+    uploadForm.addEventListener('submit', function(e) {
+      e.preventDefault();
+      
+      const formData = new FormData(this);
+      const xhr = new XMLHttpRequest();
+      
+      xhr.upload.addEventListener('progress', function(e) {
+        if (e.lengthComputable) {
+          const percentComplete = (e.loaded / e.total) * 100;
+          uploadProgress.style.width = percentComplete + '%';
+          uploadProgress.textContent = Math.round(percentComplete) + '%';
+        }
+      });
+      
+      xhr.addEventListener('load', function() {
+        if (xhr.status === 200) {
+          uploadProgress.style.width = '100%';
+          uploadProgress.textContent = '100%';
+          
+          // Show success message
+          alert('Video uploaded successfully!');
+          
+          // Close modal and reload page
+          const modal = bootstrap.Modal.getInstance(document.getElementById('uploadModal'));
+          modal.hide();
+          setTimeout(() => {
+            window.location.reload();
+          }, 1000);
+        } else {
+          alert('Error uploading video. Please try again.');
+        }
+      });
+      
+      xhr.addEventListener('error', function() {
+        alert('Error uploading video. Please check your connection.');
+      });
+      
+      xhr.open('POST', this.action);
+      xhr.send(formData);
+    });
+  }
+  
+  // Smooth mouse-wheel horizontal scrolling for carousels
+  document.querySelectorAll('.reels-scroller').forEach(function(scroller) {
+    scroller.addEventListener('wheel', function(e) {
+      if (Math.abs(e.deltaY) > Math.abs(e.deltaX)) {
+        this.scrollLeft += e.deltaY;
+        e.preventDefault();
+      }
+    }, { passive: false });
+  });
+});
+
+// Initialize Feather icons
+if (typeof feather !== 'undefined') {
+  feather.replace();
+}
+</script>
 
 <script src="https://code.jquery.com/jquery-3.7.1.js" integrity="sha256-eKhayi8LEQwp4NKxN+CfCh+3qOVUtJn3QNZ0TciWLP4=" crossorigin="anonymous"></script>
 

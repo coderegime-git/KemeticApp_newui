@@ -400,6 +400,8 @@ class Webinar extends Model implements TranslatableContract
             $user = apiAuth();
         }
 
+        
+
         if (!empty($user)) {
             $sale = $this->getSaleItem($user);
 
@@ -460,6 +462,8 @@ class Webinar extends Model implements TranslatableContract
                 }
             }
 
+            
+
             if (!$hasBought) {
                 $hasBought = ($this->creator_id == $user->id or $this->teacher_id == $user->id);
 
@@ -469,11 +473,11 @@ class Webinar extends Model implements TranslatableContract
                     $hasBought = in_array($user->id, $partnerTeachers);
                 }
             }
-
+            
             if (!$hasBought) {
                 $hasBought = $user->isAdmin();
             }
-
+            // dd('user',$hasBought);
             if (!$hasBought) {
                 $bundleWebinar = BundleWebinar::where('webinar_id', $this->id)
                     ->with([

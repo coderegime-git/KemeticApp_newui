@@ -138,6 +138,8 @@ class LoginController extends Controller
             return $this->afterLogged($request);
         }
 
+       
+
         return $this->sendFailedLoginResponse($request);
     }
 
@@ -217,9 +219,18 @@ class LoginController extends Controller
 
     public function sendFailedLoginResponse(Request $request)
     {
-        throw ValidationException::withMessages([
-            $this->getUsername($request) => [trans('validation.password_or_username')],
-        ]);
+         $toastData = [
+            'title' => trans('public.request_failed'),
+            'msg' => trans('validation.password_or_username'),
+            'status' => 'error'
+        ];
+
+        return redirect('/login')->with(['toast' => $toastData]);
+
+        // throw ValidationException::withMessages([
+        //     $this->getUsername($request) => [trans('validation.password_or_username')],
+        // ]);
+         
     }
 
     protected function sendBanResponse(Request $request, $user)

@@ -1,3 +1,170 @@
+<style>
+    /* =========================================================
+   KEMETIC MODAL – NEXT SESSION FORM
+   Black • Gold • Premium
+========================================================= */
+
+/* ROOT COLORS */
+:root {
+    --k-bg: #0f0f0f;
+    --k-card: #161616;
+    --k-border: rgba(242, 201, 76, 0.28);
+    --k-gold: #F2C94C;
+    --k-gold-soft: rgba(242, 201, 76, 0.18);
+    --k-text: #e6e6e6;
+    --k-muted: #9a9a9a;
+    --k-radius: 16px;
+}
+
+/* MODAL WRAPPER */
+#webinarNextSessionModal {
+    background: var(--k-bg);
+    border-radius: var(--k-radius);
+    padding: 28px;
+    border: 1px solid var(--k-border);
+    box-shadow: 0 25px 70px rgba(0, 0, 0, 0.85);
+    max-width: 900px;
+    margin: auto;
+}
+
+/* SECTION TITLES */
+#webinarNextSessionModal .section-title {
+    font-size: 16px;
+    font-weight: 700;
+    color: var(--k-gold);
+    margin-bottom: 20px;
+    letter-spacing: 0.4px;
+    position: relative;
+}
+
+#webinarNextSessionModal .section-title:after {
+    content: "";
+    display: block;
+    height: 1px;
+    width: 60px;
+    margin-top: 6px;
+    background: linear-gradient(to right, var(--k-gold), transparent);
+}
+
+/* FORM GROUP */
+#webinarNextSessionModal .form-group {
+    margin-bottom: 20px;
+}
+
+/* LABEL */
+#webinarNextSessionModal .input-label {
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--k-gold);
+    margin-bottom: 6px;
+}
+
+/* INPUTS */
+#webinarNextSessionModal .form-control {
+    background: #101010;
+    border: 1px solid #2a2a2a;
+    border-radius: 12px;
+    color: var(--k-text);
+    padding: 12px 14px;
+    font-size: 14px;
+    transition: all 0.25s ease;
+}
+
+#webinarNextSessionModal .form-control::placeholder {
+    color: var(--k-muted);
+}
+
+#webinarNextSessionModal .form-control:focus {
+    border-color: var(--k-gold);
+    box-shadow: 0 0 0 2px var(--k-gold-soft);
+    background: #141414;
+    outline: none;
+}
+
+/* TEXTAREA */
+#webinarNextSessionModal textarea.form-control {
+    resize: none;
+}
+
+/* INPUT GROUP */
+#webinarNextSessionModal .input-group-text {
+    background: #1a1a1a;
+    border: 1px solid #2a2a2a;
+    border-radius: 12px 0 0 12px;
+    color: var(--k-gold);
+}
+
+#webinarNextSessionModal .input-group .form-control {
+    border-left: none;
+}
+
+/* COPY BUTTON */
+#webinarNextSessionModal .js-copy {
+    cursor: pointer;
+    transition: 0.25s ease;
+}
+
+#webinarNextSessionModal .js-copy:hover {
+    background: var(--k-gold);
+    color: #000;
+}
+
+/* INVALID FEEDBACK */
+#webinarNextSessionModal .invalid-feedback {
+    color: #ff6b6b;
+    font-size: 12px;
+}
+
+/* BUTTONS */
+#webinarNextSessionModal .btn {
+    border-radius: 12px;
+    padding: 10px 22px;
+    font-size: 14px;
+    font-weight: 600;
+    transition: all 0.25s ease;
+}
+
+/* SAVE BUTTON */
+#webinarNextSessionModal .btn-primary {
+    background: linear-gradient(135deg, #F2C94C, #E5A100);
+    border: none;
+    color: #000;
+}
+
+#webinarNextSessionModal .btn-primary:hover {
+    box-shadow: 0 10px 25px rgba(242, 201, 76, 0.4);
+    transform: translateY(-2px);
+}
+
+/* CLOSE BUTTON */
+#webinarNextSessionModal .btn-danger {
+    background: transparent;
+    border: 1px solid #444;
+    color: #ccc;
+}
+
+#webinarNextSessionModal .btn-danger:hover {
+    background: #1f1f1f;
+    color: #fff;
+}
+
+/* ICONS */
+#webinarNextSessionModal svg {
+    stroke: var(--k-gold);
+}
+
+/* RESPONSIVE */
+@media (max-width: 768px) {
+    #webinarNextSessionModal {
+        padding: 20px;
+    }
+
+    #webinarNextSessionModal .section-title {
+        font-size: 15px;
+    }
+}
+
+</style>
 <div class="d-none" id="webinarNextSessionModal">
     <form action="/panel/sessions/store" method="post">
         {{ csrf_field() }}

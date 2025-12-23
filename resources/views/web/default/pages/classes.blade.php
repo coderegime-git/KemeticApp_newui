@@ -79,11 +79,34 @@
      
     </div>
   </section>
+  <div class="shop-sp"></div>
+  <form action="/classes" method="get">
+    <div class="shop-search">
+      <span style="color:var(--gold);font-weight:900">🔎</span>
+      <input type="text" name="search" class="form-control border-0" value="{{ request()->get('search') }}" placeholder="What are you looking for?"/>
+      <button class="shop-ghost">{{ trans('home.find') }}</button>
+    </div>
+  </form>
+  <div class="shop-sp"></div>
    <div class="shop-chips">
-         @foreach($categories as $categorie)
-        <span class="shop-pill">{{$categorie->title}}</span>
-        @endforeach
-      </div>
+    <form action="/classes" method="get">
+
+    @if(!empty($categories))
+        @if(!empty($selectedCategory))
+            <input type="hidden" name="category_id" value="{{ $selectedCategory->id }}">
+        @endif
+        <div class="shop-chips">
+          @foreach($categories as $categorie)
+            <a href="/classes?category_id={{$categorie->id}}" class="d-flex align-items-center font-14 font-weight-bold mt-20 {{ (!empty($selectedCategory) and $selectedCategory->id == $categorie->id) ? 'text-primary' : '' }}">
+              <div class="shop-pill @if(!empty($selectedCategory) and $selectedCategory->id == $categorie->id) active @endif">
+                {{ $categorie->title }}
+              </div>
+            </a>
+          @endforeach
+        </div>
+      @endif
+    </form>
+  </div>
   
 
   <!-- Trending Courses -->
@@ -91,14 +114,15 @@
     <h2>🔥 Trending Courses</h2>
     <form action="/classes" method="get" id="filtersForm">
     <div class="course-row">
-      <!-- card -->
+      <!-- card  -->
        
        @foreach($webinars as $webinar)
+       <!-- {{ clean($webinar->title,'title') }} -->
         <article class="course-item">
           <div class="course-thumb">
             <a href="{{ $webinar->getUrl() }}"><img src="{{ $webinar->getImage() }}" class="img-cover" alt="{{ $webinar->title }}"></a>
           </div>
-          <div class="course-name"><a href="{{ $webinar->getUrl() }}">{{ clean($webinar->title,'title') }}</a></div>
+          <div class="course-name"><a href="{{ $webinar->getUrl() }}">{{ Str::limit($webinar->title, 13, '..') }}</a></div>
           <div class="course-meta">{{ convertMinutesToHourAndMinute($webinar->duration) }} {{ trans('home.hours') }} · <a href="{{ $webinar->teacher->getProfileUrl() }}" target="_blank" class="user-name ml-5 font-14">{{ $webinar->teacher->full_name }}</a></div>
           <div class="course-bar">
             <div class="course-stars">
@@ -150,7 +174,7 @@
           <div class="course-thumb">
             <a href="{{ $webinar->getUrl() }}"><img src="{{ $webinar->getImage() }}" class="img-cover" alt="{{ $webinar->title }}"></a>
           </div>
-          <div class="course-name"><a href="{{ $webinar->getUrl() }}">{{ clean($webinar->title,'title') }}</a></div>
+          <div class="course-name"><a href="{{ $webinar->getUrl() }}">{{ Str::limit($webinar->title, 13, '..') }}</a></div>
           <div class="course-meta">{{ convertMinutesToHourAndMinute($webinar->duration) }} {{ trans('home.hours') }} · <a href="{{ $webinar->teacher->getProfileUrl() }}" target="_blank" class="user-name ml-5 font-14">{{ $webinar->teacher->full_name }}</a></div>
           <div class="course-bar">
             <div class="course-stars">★★★★★</div>

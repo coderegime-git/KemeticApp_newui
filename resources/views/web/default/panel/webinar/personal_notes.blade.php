@@ -1,8 +1,187 @@
-@extends(getTemplate() .'.panel.layouts.panel_layout')
+@extends('web.default.layouts.newapp')
 
-@push('styles_top')
+<style>
+    /* ======================================================
+   KEMETIC COURSE NOTES
+   Black • Gold • Learning Dashboard
+====================================================== */
 
-@endpush
+:root {
+    --k-bg: #0b0b0b;
+    --k-card: #141414;
+    --k-border: rgba(242, 201, 76, 0.28);
+    --k-gold: #F2C94C;
+    --k-gold-soft: rgba(242, 201, 76, 0.18);
+    --k-text: #e8e8e8;
+    --k-muted: #9b9b9b;
+    --k-radius: 16px;
+}
+
+/* SECTION TITLE */
+.section-title {
+    font-size: 18px;
+    font-weight: 700;
+    color: var(--k-gold);
+    letter-spacing: 0.4px;
+    position: relative;
+}
+
+.section-title::after {
+    content: "";
+    display: block;
+    width: 70px;
+    height: 1px;
+    margin-top: 6px;
+    background: linear-gradient(to right, var(--k-gold), transparent);
+}
+
+/* CARD */
+.panel-section-card {
+    background: linear-gradient(180deg, #161616, #0f0f0f);
+    border: 1px solid var(--k-border);
+    border-radius: var(--k-radius);
+    box-shadow: 0 18px 45px rgba(0, 0, 0, 0.75);
+}
+
+/* TABLE */
+.custom-table {
+    border-collapse: separate;
+    border-spacing: 0 12px;
+}
+
+.custom-table thead th {
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--k-gold);
+    border: none;
+}
+
+.custom-table tbody tr {
+    background: #101010;
+    border-radius: 14px;
+    transition: 0.3s ease;
+}
+
+.custom-table tbody tr:hover {
+    background: #151515;
+    box-shadow: 0 10px 28px rgba(242, 201, 76, 0.12);
+}
+
+.custom-table tbody td,
+.custom-table tbody th {
+    border: none;
+    padding: 16px 18px;
+    vertical-align: middle;
+    color: var(--k-text);
+}
+
+/* COURSE NAME */
+.custom-table th span:first-child {
+    font-weight: 600;
+    color: var(--k-text);
+}
+
+.custom-table .text-gray {
+    color: var(--k-muted) !important;
+}
+
+/* BUTTONS */
+.btn-gray200 {
+    background: rgba(242, 201, 76, 0.12);
+    border: 1px solid var(--k-border);
+    color: var(--k-gold);
+    border-radius: 10px;
+    font-size: 13px;
+    font-weight: 600;
+    padding: 6px 14px;
+    transition: 0.25s ease;
+}
+
+.btn-gray200:hover {
+    background: var(--k-gold);
+    color: #000;
+}
+
+/* DROPDOWN */
+.table-actions .dropdown-toggle {
+    color: var(--k-gold);
+}
+
+.dropdown-menu {
+    background: #141414;
+    border: 1px solid var(--k-border);
+    border-radius: 12px;
+    padding: 6px;
+}
+
+.dropdown-menu a {
+    color: var(--k-text);
+    font-size: 13px;
+    padding: 8px 12px;
+    border-radius: 8px;
+}
+
+.dropdown-menu a:hover {
+    background: var(--k-gold-soft);
+    color: var(--k-gold);
+}
+
+/* DATE */
+.custom-table td.align-middle {
+    font-size: 13px;
+}
+
+/* NO RESULT */
+.no-result {
+    background: #101010;
+    border: 1px dashed var(--k-border);
+    border-radius: 18px;
+    padding: 50px 20px;
+}
+
+.no-result h2 {
+    color: var(--k-gold);
+    font-size: 20px;
+    margin-top: 15px;
+}
+
+.no-result p {
+    color: var(--k-muted);
+    font-size: 14px;
+}
+
+/* PAGINATION */
+.pagination .page-link {
+    background: #141414;
+    border: 1px solid #2a2a2a;
+    color: var(--k-text);
+}
+
+.pagination .page-item.active .page-link {
+    background: var(--k-gold);
+    border-color: var(--k-gold);
+    color: #000;
+}
+
+/* RESPONSIVE */
+@media (max-width: 768px) {
+    .custom-table thead {
+        display: none;
+    }
+
+    .custom-table tbody tr {
+        display: block;
+        margin-bottom: 15px;
+    }
+
+    .custom-table tbody td,
+    .custom-table tbody th {
+        display: block;
+        text-align: left;
+    }
+}
+
+</style>
 
 @section('content')
 

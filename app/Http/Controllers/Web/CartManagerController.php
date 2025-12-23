@@ -159,10 +159,10 @@ class CartManagerController extends Controller
             ->where('private', false)
             ->where('status', 'active')
             ->first();
-
+        
         if (!empty($webinar) and !empty($user)) {
             $checkCourseForSale = checkCourseForSale($webinar, $user);
-
+// dd('user');
             if ($checkCourseForSale != 'ok') {
                 return $checkCourseForSale;
             }
@@ -367,6 +367,7 @@ class CartManagerController extends Controller
             $result = null;
 
             if ($item_name == 'webinar_id') {
+                //dd($data,$user,$user_as_a_guest);
                 $result = $this->storeUserWebinarCart($user, $data,$user_as_a_guest);
             } elseif ($item_name == 'product_id') {
                 $productOrder = ProductOrder::where('product_id', $request->input('item_id'))->where('buyer_id', $user->id)->first();
@@ -465,8 +466,15 @@ class CartManagerController extends Controller
             // }
         }
 
-        return response()->json([
-            'code' => 200
-        ], 200);
+        $toastData = [
+            'title' => trans('Cart Removed Successfully'),
+            'msg' => trans('Cart Removed Successfully'),
+            'status' => 'success'
+        ];
+        return back()->with(['toast' => $toastData]);
+
+        // return response()->json([
+        //     'code' => 200
+        // ], 200);
     }
 }

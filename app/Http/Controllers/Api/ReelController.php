@@ -124,12 +124,21 @@ class ReelController extends Controller
         if (!Auth::check()) {
             return response()->json(['error' => 'Not authenticated', 'user' => Auth::user()], 401);
         }
+
+        ini_set('upload_max_filesize', '250M');
+        ini_set('post_max_size', '250M');
         
 
         $video = $request->file('video');
         $filename = time() . '_' . uniqid() . '.' . $video->getClientOriginalExtension();
-        $video->move(public_path('store\\reels\\videos'), $filename);
 
+        $videoPath = public_path('store/reels/videos');
+        if (!file_exists($videoPath)) {
+            mkdir($videoPath, 0777, true);
+        }
+        $video->move($videoPath, $filename);
+
+        
         $now = time();
         $reel = Reel::create([
             'user_id' => Auth::id(),
@@ -207,7 +216,7 @@ class ReelController extends Controller
 
     public function reelgift()
     {
-        print_r("hello");exit;
+        //print_r("hello");exit;
         $reelgift = GiftReel::get()
             ->map(function ($reelgift) {
             $reelgift->thumbnail = url($reelgift->thumbnail);

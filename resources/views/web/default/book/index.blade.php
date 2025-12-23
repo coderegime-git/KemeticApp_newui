@@ -123,7 +123,7 @@
               <span class="book-badge-tag">New</span>
             @endif
           </div>
-          <div class="book-book-title">{{ Str::limit($book->title, 40) }}</div>
+          <div class="book-book-title">{{ Str::limit($book->title, 13, '..') }}</div>
           <div class="book-book-category">
             @if($book->categories)
               {{ $book->categories->title }}
@@ -154,12 +154,15 @@
       </div>
 
       <!-- Pagination -->
-      @if($books->hasPages())
+      <!-- @if($books->hasPages())
       <div style="margin-top: 20px; display: flex; justify-content: center;">
         {{ $books->links() }}
       </div>
-      @endif
+      @endif -->
     </section>
+    <div class="mt-50 pt-30">
+      {{ $books->appends(request()->input())->links('vendor.pagination.panel') }}
+    </div>
 
     <!-- Trending Strip -->
     <section class="book-trending-strip">
@@ -172,12 +175,13 @@
         <!-- You can add trending collections logic here -->
         @foreach($books->take(3) as $book)
           @if($book->likes_count > 50)
+          <!-- {{ $book->title }} -->
           <article class="book-book-card">
             <div class="book-book-cover">
               <img src="{{ $book->getImage()}}" alt="{{ $book->title }}">
               <span class="book-badge-tag">Trending</span>
             </div>
-            <div class="book-book-title">{{ $book->title }}</div>
+            <div class="book-book-title">{{ Str::limit(clean($book->title,'title'), 13, '..') }}</div>
             <div class="book-book-category">
               @if($book->categories)
                 {{ $book->categories->title }}

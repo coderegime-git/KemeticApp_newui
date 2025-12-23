@@ -27,9 +27,9 @@
         <div class="profile-subtitle">{{ $user["caption"] }}</div>
 
         <div class="profile-counters">
-          <div class="profile-chip"><span class="profile-dot like"></span> <span>Likes</span> <span style="opacity:.8;">45.2K</span></div>
-          <div class="profile-chip"><span class="profile-dot rev"></span> <span>Reviews</span> <span style="opacity:.8;">1.2K</span></div>
-          <div class="profile-chip"><span class="profile-dot com"></span> <span>Comments</span> <span style="opacity:.8;">8.9K</span></div>
+          <div class="profile-chip"><span class="profile-dot like"></span> <span>Likes</span> <span style="opacity:.8;">{{ $totalLikes ?? 0 }}</span></div>
+          <div class="profile-chip"><span class="profile-dot rev"></span> <span>Reviews</span> <span style="opacity:.8;">{{ $totalReviews ?? 0 }}</span></div>
+          <div class="profile-chip"><span class="profile-dot com"></span> <span>Comments</span> <span style="opacity:.8;">{{ $totalComments ?? 0 }}</span></div>
         </div>
       </div>
 
@@ -263,11 +263,12 @@
                name="title" 
                placeholder="Story Title (Optional)" 
                maxlength="100">
-        
+               <input type="hidden" name="link">
+<!--         
         <input type="text" 
                class="story-input" 
                name="link" 
-               placeholder="Add a link (Optional)">
+               placeholder="Add a link (Optional)"> -->
         
         <div class="upload-progress" id="uploadProgress">
           <div class="upload-progress-bar" id="uploadProgressBar"></div>

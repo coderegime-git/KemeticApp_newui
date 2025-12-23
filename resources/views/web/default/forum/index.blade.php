@@ -1,6 +1,7 @@
 @extends('web.default.layouts.app')
 
 @section('content')
+<div style="width: 1100px;">
     <section class="forum-hero-section mt-50 position-relative">
         <div class="container forum-hero-section__container">
             <div class="row">
@@ -90,7 +91,7 @@
                                 <div class="forums-featured-card-users-avatar d-flex align-items-center mr-10">
                                     @foreach($featuredTopic->usersAvatars as $userAvatar)
                                         <div class="user-avatar-card rounded-circle">
-                                            <img src="{{ $userAvatar->getAvatar(32) }}" class="img-cover rounded-circle" alt="{{ $userAvatar->full_name }}">
+                                            <img src="{{ $userAvatar->getAvatar(32) }}" class="img-cover rounded-circle" alt="{{ $userAvatar->full_name }}" width="50">
                                         </div>
                                     @endforeach
 
@@ -203,3 +204,4 @@
         </div>
     </section>
 @endsection
+</div>

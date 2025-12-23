@@ -156,11 +156,19 @@ class NotificationsController extends Controller
             }
         }
 
-        return response()->json([
-            'code' => 200,
+        // return response()->json([
+        //     'code' => 200,
+        //     'title' => trans('public.request_success'),
+        //     'text' => trans('update.all_your_notifications_have_been_marked_as_read'),
+        //     'timeout' => 2000
+        // ]);
+
+        $toastData = [
             'title' => trans('public.request_success'),
-            'text' => trans('update.all_your_notifications_have_been_marked_as_read'),
-            'timeout' => 2000
-        ]);
+            'msg' => trans('update.all_your_notifications_have_been_marked_as_read'),
+            'status' => 'success'
+        ];
+        return back()->with(['toast' => $toastData]);
+
     }
 }

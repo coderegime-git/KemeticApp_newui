@@ -1,17 +1,56 @@
+<style>
+    .course-forum-answer-card {
+    background-color: #222; /* dark card */
+    border: 1px solid #444;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+    transition: transform 0.2s ease;
+}
+
+.course-forum-answer-card:hover {
+    transform: translateY(-2px);
+}
+
+.user-avatar.is-instructor {
+    border: 2px solid #F2C94C; /* gold border for instructors */
+}
+
+.text-gold {
+    color: #F2C94C !important;
+}
+
+.bg-gray900 {
+    background-color: #1C1C1C;
+}
+
+.bg-gray800 {
+    background-color: #2A2A2A;
+}
+
+.btn-transparent {
+    background: transparent;
+    border: none;
+    cursor: pointer;
+}
+
+.resolved-answer-badge {
+    color: #F2C94C;
+}
+
+</style>
 @php
     $cardUser = !empty($answer) ? $answer->user : $courseForum->user;
 @endphp
 
-<div class="course-forum-answer-card py-15 m-15 rounded-lg {{ (!empty($answer) and $answer->resolved) ? 'resolved' : '' }}">
+<div class="course-forum-answer-card py-15 m-15 rounded-lg bg-gray900 border border-gray700 {{ (!empty($answer) and $answer->resolved) ? 'resolved' : '' }}">
     <div class="d-flex flex-wrap">
         <div class="col-12 col-md-3">
-            <div class="position-relative bg-info-light d-flex flex-column align-items-center justify-content-center rounded-lg w-100 h-100 p-20">
-                <div class="user-avatar rounded-circle {{ (!empty($answer) and $cardUser->isTeacher()) ? 'is-instructor' : '' }}">
+            <div class="position-relative bg-gray800 d-flex flex-column align-items-center justify-content-center rounded-lg w-100 h-100 p-20">
+                <div class="user-avatar rounded-circle {{ (!empty($answer) and $cardUser->isTeacher()) ? 'is-instructor' : '' }} border border-gold">
                     <img src="{{ $cardUser->getAvatar(72) }}" class="img-cover rounded-circle" alt="{{ $cardUser->full_name }}">
                 </div>
-                <h4 class="font-14 text-secondary mt-15 font-weight-bold">{{ $cardUser->full_name }}</h4>
+                <h4 class="font-14 text-gold mt-15 font-weight-bold">{{ $cardUser->full_name }}</h4>
 
-                <span class="px-10 py-5 mt-5 rounded-lg border bg-info-light text-center font-12 text-gray">
+                <span class="px-10 py-5 mt-5 rounded-lg border bg-gray900 text-center font-12 text-gray">
                     @if($cardUser->isUser())
                         {{ trans('quiz.student') }}
                     @elseif($cardUser->isTeacher())
@@ -25,7 +64,7 @@
 
                 @if(!empty($answer) and $answer->pin)
                     <span class="pinned-icon d-flex align-items-center justify-content-center">
-                        <img src="/assets/default/img/learning/un_pin.svg" alt="pin icon" class="">
+                        <img src="/assets/default/img/learning/un_pin.svg" alt="pin icon">
                     </span>
                 @endif
             </div>
@@ -33,31 +72,31 @@
 
         <div class="col-12 col-md-9 mt-15 mt-md-0">
             <div class="d-flex flex-column justify-content-between h-100">
-                <div class="">
+                <div>
                     <p class="font-14 text-gray d-block white-space-pre-wrap">{{ !empty($answer) ? $answer->description : $courseForum->description }}</p>
 
                     @if(empty($answer) and !empty($courseForum->attach))
                         <div class="mt-25 d-inline-block">
-                            <a href="{{ $course->getForumPageUrl() }}/{{ $courseForum->id }}/downloadAttach" target="_blank" class="d-flex align-items-center text-gray bg-info-light border px-10 py-5 rounded-pill">
-                                <i data-feather="paperclip" class="text-gray" width="16" height="16"></i>
-                                <span class="ml-5 font-12 text-gray">{{ trans('update.attachment') }}</span>
+                            <a href="{{ $course->getForumPageUrl() }}/{{ $courseForum->id }}/downloadAttach" target="_blank" class="d-flex align-items-center text-gray bg-gray800 border px-10 py-5 rounded-pill">
+                                <i data-feather="paperclip" class="text-gold" width="16" height="16"></i>
+                                <span class="ml-5 font-12 text-gold">{{ trans('update.attachment') }}</span>
                             </a>
                         </div>
                     @endif
                 </div>
 
-                <div class="d-flex align-items-center justify-content-between mt-15 pt-15 border-top">
+                <div class="d-flex align-items-center justify-content-between mt-15 pt-15 border-top border-gray700">
                     <span class="font-12 font-weight-500 text-gray">{{ dateTimeFormat(!empty($answer) ? $answer->created_at : $courseForum->created_at,'j M Y | H:i') }}</span>
 
                     <div class="d-flex align-items-center">
                         @if(empty($answer) and $user->id == $courseForum->user_id)
-                            <button type="button" data-action="{{ $course->getForumPageUrl() }}/{{ $courseForum->id }}/edit" class="js-edit-forum btn-transparent font-12 font-weight-500 text-gray">{{ trans('public.edit') }}</button>
+                            <button type="button" data-action="{{ $course->getForumPageUrl() }}/{{ $courseForum->id }}/edit" class="js-edit-forum btn-transparent font-12 font-weight-500 text-gold">{{ trans('public.edit') }}</button>
                         @elseif(!empty($answer))
                             @if($course->isOwner($user->id))
                                 @if($answer->pin)
                                     <button type="button" data-action="{{ $course->getForumPageUrl() }}/{{ $courseForum->id }}/answers/{{ $answer->id }}/un_pin" class="js-btn-answer-un_pin btn-transparent font-12 font-weight-500 text-warning">{{ trans('update.un_pin') }}</button>
                                 @else
-                                    <button type="button" data-action="{{ $course->getForumPageUrl() }}/{{ $courseForum->id }}/answers/{{ $answer->id }}/pin" class="js-btn-answer-pin btn-transparent font-12 font-weight-500 text-gray">{{ trans('update.pin') }}</button>
+                                    <button type="button" data-action="{{ $course->getForumPageUrl() }}/{{ $courseForum->id }}/answers/{{ $answer->id }}/pin" class="js-btn-answer-pin btn-transparent font-12 font-weight-500 text-gold">{{ trans('update.pin') }}</button>
                                 @endif
                             @endif
 
@@ -65,7 +104,7 @@
                                 @if($answer->resolved)
                                     <button type="button" data-action="{{ $course->getForumPageUrl() }}/{{ $courseForum->id }}/answers/{{ $answer->id }}/mark_as_not_resolved" class="js-btn-answer-mark_as_not_resolved btn-transparent font-12 font-weight-500 text-gray ml-20">{{ trans('update.mark_as_not_resolved') }}</button>
                                 @else
-                                    <button type="button" data-action="{{ $course->getForumPageUrl() }}/{{ $courseForum->id }}/answers/{{ $answer->id }}/mark_as_resolved" class="js-btn-answer-mark_as_resolved btn-transparent font-12 font-weight-500 text-gray ml-20">{{ trans('update.mark_as_resolved') }}</button>
+                                    <button type="button" data-action="{{ $course->getForumPageUrl() }}/{{ $courseForum->id }}/answers/{{ $answer->id }}/mark_as_resolved" class="js-btn-answer-mark_as_resolved btn-transparent font-12 font-weight-500 text-gold ml-20">{{ trans('update.mark_as_resolved') }}</button>
                                 @endif
                             @endif
 
@@ -81,7 +120,6 @@
                                     {{ trans('update.resolved') }}
                                 </div>
                             @endif
-
                         @endif
                     </div>
                 </div>
@@ -89,3 +127,4 @@
         </div>
     </div>
 </div>
+

@@ -1,14 +1,87 @@
-@extends(getTemplate() .'.panel.layouts.panel_layout')
+@extends('web.default.layouts.newapp')
 
 @push('styles_top')
-    <link rel="stylesheet" href="/assets/default/vendors/daterangepicker/daterangepicker.min.css">
-    <link rel="stylesheet" href="/assets/default/vendors/select2/select2.min.css">
+<link rel="stylesheet" href="/assets/default/vendors/daterangepicker/daterangepicker.min.css">
+<link rel="stylesheet" href="/assets/default/vendors/select2/select2.min.css">
+
+<style>
+/* ===== Kemetic Theme ===== */
+:root{
+    --k-bg:#0f1115;
+    --k-card:#161a22;
+    --k-border:#262c3a;
+    --k-gold:#F2C94C;
+    --k-text:#e5e7eb;
+    --k-muted:#9ca3af;
+    --k-radius:16px;
+}
+
+.k-section-title{
+    font-size:20px;
+    font-weight:700;
+    color:var(--k-gold);
+}
+
+.k-card{
+    background:var(--k-card);
+    border:1px solid var(--k-border);
+    border-radius:var(--k-radius);
+}
+
+.k-label{
+    color:var(--k-muted);
+    font-size:13px;
+    margin-bottom:6px;
+}
+
+.k-input,
+.k-select{
+    background:#0b0e14;
+    border:1px solid var(--k-border);
+    color:var(--k-text);
+    border-radius:12px;
+}
+
+.k-input:focus,
+.k-select:focus{
+    border-color:var(--k-gold);
+    box-shadow:none;
+}
+
+.k-btn{
+    background:linear-gradient(135deg,#F2C94C,#E0B93D);
+    color:#000;
+    border:none;
+    border-radius:12px;
+    font-weight:600;
+}
+
+.k-table th{
+    color:var(--k-muted);
+    font-size:13px;
+    border-bottom:1px solid var(--k-border);
+}
+
+.k-table td{
+    color:var(--k-text);
+    border-bottom:1px solid var(--k-border);
+}
+
+.badge-active{
+    background:rgba(34,197,94,.15);
+    color:#22c55e;
+}
+.badge-inactive{
+    background:rgba(245,158,11,.15);
+    color:#f59e0b;
+}
+</style>
 @endpush
 
 @section('content')
 
     <section>
-        <h2 class="section-title">{{ trans('panel.create_a_new_discount') }}</h2>
+        <h2 class="k-section-title">{{ trans('panel.create_a_new_discount') }}</h2>
         @if (\Session::has('msg'))
             <div class="alert alert-warning">
                 <ul>
@@ -16,99 +89,71 @@
                 </ul>
             </div>
         @endif
-        <div class="panel-section-card py-20 px-25 mt-20">
-            <form action="/panel/marketing/special_offers/store" method="post" class="row">
-                {{ csrf_field() }}
 
-                <div class="col-12 col-lg-6">
-                    <div class="row">
-                        <div class="col-12 col-lg-5">
-                            <div class="form-group">
-                                <label class="input-label">{{ trans('public.title') }}</label>
-                                <input type="text" name="name"
-                                       class="form-control @error('name')  is-invalid @enderror"/>
+        <div class="k-card p-25 mt-20" style="padding: 10px;">
+        <form action="/panel/marketing/special_offers/store" method="post" class="row">
+            {{ csrf_field() }}
 
-                                <div class="invalid-feedback"></div>
-                            </div>
+            <div class="col-12 col-lg-6">
+                <div class="row">
+                    <div class="col-lg-5">
+                        <div class="form-group">
+                            <label class="k-label">{{ trans('public.title') }}</label>
+                            <input type="text" name="name" class="form-control k-input">
                         </div>
-                        <div class="col-12 col-lg-4">
-                            <div class="form-group">
-                                <label class="input-label d-block">{{ trans('panel.webinar') }}</label>
-                                <select name="webinar_id"
-                                        class="form-control custom-select @error('webinar_id')  is-invalid @enderror">
-                                    <option selected disabled>{{ trans('panel.select_course') }}</option>
+                    </div>
 
-                                    @foreach($webinars as $webinar)
-                                        <option value="{{ $webinar->id }}">{{ $webinar->title }}</option>
-                                    @endforeach
-                                </select>
-
-                                <div class="invalid-feedback"></div>
-                            </div>
+                    <div class="col-lg-4">
+                        <div class="form-group">
+                            <label class="k-label">{{ trans('panel.webinar') }}</label>
+                            <select name="webinar_id" class="form-control k-select">
+                                <option disabled selected>{{ trans('panel.select_course') }}</option>
+                                @foreach($webinars as $webinar)
+                                    <option value="{{ $webinar->id }}">{{ $webinar->title }}</option>
+                                @endforeach
+                            </select>
                         </div>
-                        <div class="col-12 col-lg-3">
-                            <div class="form-group">
-                                <label class="input-label">{{ trans('panel.amount') }}(%)</label>
-                                <input type="text" name="percent"
-                                       class="form-control @error('percent')  is-invalid @enderror"/>
+                    </div>
 
-                                <div class="invalid-feedback"></div>
-                            </div>
+                    <div class="col-lg-3">
+                        <div class="form-group">
+                            <label class="k-label">{{ trans('panel.amount') }} (%)</label>
+                            <input type="text" name="percent" class="form-control k-input">
                         </div>
                     </div>
                 </div>
+            </div>
 
-                <div class="col-12 col-lg-5">
-                    <div class="row">
-                        <div class="col-12 col-md-5">
-                            <div class="form-group">
-                                <label class="input-label">{{ trans('public.from') }}</label>
-                                <div class="input-group">
-                                    <div class="input-group-prepend">
-                                        <span class="input-group-text" id="dateInputGroupPrepend">
-                                            <i data-feather="calendar" width="18" height="18" class="text-white"></i>
-                                        </span>
-                                    </div>
-                                    <input type="text" name="from_date" autocomplete="off"
-                                           class="form-control datetimepicker @error('from_date')  is-invalid @enderror"
-                                           aria-describedby="dateInputGroupPrepend"/>
-
-                                    <div class="invalid-feedback"></div>
-                                </div>
-                            </div>
+            <div class="col-12 col-lg-5">
+                <div class="row">
+                    <div class="col-md-6">
+                        <div class="form-group">
+                            <label class="k-label">{{ trans('public.from') }}</label>
+                            <input type="text" name="from_date" class="form-control k-input datetimepicker">
                         </div>
-                        <div class="col-12 col-md-5">
-                            <div class="form-group">
-                                <label class="input-label">{{ trans('public.to') }}</label>
-                                <div class="input-group">
-                                    <div class="input-group-prepend">
-                                        <span class="input-group-text" id="dateInputGroupPrepend">
-                                            <i data-feather="calendar" width="18" height="18" class="text-white"></i>
-                                        </span>
-                                    </div>
-                                    <input type="text" name="to_date" autocomplete="off"
-                                           class="form-control datetimepicker @error('to_date')  is-invalid @enderror"
-                                           aria-describedby="dateInputGroupPrepend"/>
+                    </div>
 
-                                    <div class="invalid-feedback"></div>
-                                </div>
-                            </div>
+                    <div class="col-md-6">
+                        <div class="form-group">
+                            <label class="k-label">{{ trans('public.to') }}</label>
+                            <input type="text" name="to_date" class="form-control k-input datetimepicker">
                         </div>
                     </div>
                 </div>
+            </div>
 
-                <div class="col-12 col-lg-1 d-flex align-items-center justify-content-end">
-                    <button type="button" id="formSubmit" class="btn btn-sm btn-primary">{{ trans('public.create') }}</button>
-                </div>
-            </form>
-        </div>
-    </section>
+            <div class="col-12 col-lg-1 d-flex align-items-end">
+                <button type="submit" class="btn k-btn w-100">{{ trans('public.create') }}</button>
+            </div>
+        </form>
+    </div>
+</section>
 
     @if(!empty($specialOffers) and $specialOffers->count() > 0)
 
         <section class="mt-35">
             <div class="d-flex align-items-start align-items-md-center justify-content-between flex-column flex-md-row">
-                <h2 class="section-title">{{ trans('panel.discounts') }}</h2>
+                 <h2 class="k-section-title">{{ trans('panel.discounts') }}</h2>
 
                 <form action="" method="get" class="d-flex align-items-center flex-row-reverse flex-md-row justify-content-start justify-content-md-center mt-20 mt-md-0">
                     <label class="cursor-pointer mb-0 mr-10 text-gray font-14 font-weight-500" for="activeDiscountsSwitch">{{ trans('panel.show_only_active_discounts') }}</label>

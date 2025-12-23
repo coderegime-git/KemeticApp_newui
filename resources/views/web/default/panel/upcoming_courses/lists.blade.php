@@ -1,8 +1,187 @@
-@extends('web.default.panel.layouts.panel_layout')
+@extends('web.default.layouts.newapp')
 
-@push('styles_top')
+<style>
+    :root {
+        --k-bg: #0b0b0b;
+        --k-card: #141414;
+        --k-gold: #f2c94c;
+        --k-gold-soft: #e6b93d;
+        --k-border: rgba(242,201,76,0.25);
+        --k-text: #eaeaea;
+        --k-muted: #9a9a9a;
+        --k-radius: 16px;
+    }
 
-@endpush
+    body {
+        background: var(--k-bg);
+        color: var(--k-text);
+        font-family: 'Nunito', sans-serif;
+    }
+
+    .section-title {
+        font-size: 1.5rem;
+        color: var(--k-gold);
+        font-weight: bold;
+        margin-bottom: 1rem;
+    }
+
+    .activities-container {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 20px;
+    }
+
+    .activities-container .col-6 {
+        background: var(--k-card);
+        border-radius: var(--k-radius);
+        box-shadow: 0 4px 20px rgba(242,201,76,0.1);
+        padding: 20px;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        transition: transform 0.2s ease;
+    }
+
+    .activities-container .col-6:hover {
+        transform: translateY(-5px);
+    }
+
+    .font-dark {
+        color: var(--k-text);
+    }
+
+    .text-gray {
+        color: var(--k-muted);
+    }
+
+    .webinar-card {
+        background: var(--k-card);
+        border-radius: var(--k-radius);
+        overflow: hidden;
+        box-shadow: 0 4px 20px rgba(242,201,76,0.1);
+        margin-bottom: 20px;
+        display: flex;
+        flex-direction: row;
+        transition: transform 0.2s ease;
+    }
+
+    .webinar-card:hover {
+        transform: translateY(-5px);
+    }
+
+    .webinar-card .image-box {
+        width: 200px;
+        position: relative;
+    }
+
+    .webinar-card img.img-cover {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+    }
+
+    .badges-lists {
+        position: absolute;
+        top: 10px;
+        left: 10px;
+        display: flex;
+        gap: 5px;
+        flex-wrap: wrap;
+    }
+
+    .badge {
+        background: var(--k-gold);
+        color: #000;
+        font-size: 12px;
+        font-weight: 600;
+        border-radius: var(--k-radius);
+        padding: 2px 8px;
+    }
+
+    .badge-secondary {
+        background: #333;
+        color: var(--k-text);
+    }
+
+    .progress {
+        position: absolute;
+        bottom: 0;
+        left: 0;
+        width: 100%;
+        height: 6px;
+        background: rgba(255,255,255,0.1);
+    }
+
+    .progress-bar {
+        display: block;
+        height: 100%;
+        background: var(--k-gold);
+    }
+
+    .webinar-card-body {
+        flex: 1;
+        padding: 15px 20px;
+        display: flex;
+        flex-direction: column;
+    }
+
+    .webinar-card-body h3 {
+        color: var(--k-text);
+        font-weight: 700;
+        font-size: 16px;
+    }
+
+    .status-badge-dark {
+        background: #333;
+        color: var(--k-gold);
+        padding: 2px 6px;
+        border-radius: var(--k-radius);
+        font-size: 12px;
+        font-weight: 600;
+    }
+
+    .webinar-actions {
+        color: var(--k-gold);
+        cursor: pointer;
+        font-weight: 500;
+        display: block;
+        margin: 5px 0;
+        transition: 0.2s;
+    }
+
+    .webinar-actions:hover {
+        color: var(--k-gold-soft);
+    }
+
+    .stat-title {
+        color: var(--k-muted);
+        font-size: 12px;
+    }
+
+    .stat-value {
+        color: var(--k-text);
+        font-weight: 600;
+    }
+
+    .btn-transparent {
+        background: transparent;
+        border: none;
+        color: var(--k-gold);
+    }
+
+    .custom-control-label::before,
+    .custom-control-label::after {
+        background: var(--k-card);
+        border-color: var(--k-gold);
+    }
+
+    .custom-control-input:checked~.custom-control-label::before {
+        background-color: var(--k-gold);
+        border-color: var(--k-gold);
+    }
+
+</style>
 
 @section('content')
     <section>

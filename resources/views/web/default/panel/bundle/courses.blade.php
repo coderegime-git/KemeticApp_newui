@@ -1,7 +1,131 @@
-@extends(getTemplate() .'.panel.layouts.panel_layout')
+@extends('web.default.layouts.newapp')
 
 @push('styles_top')
     <link rel="stylesheet" href="/assets/default/vendors/daterangepicker/daterangepicker.min.css">
+    <style>
+    :root {
+        --k-bg: #0b0b0b;
+        --k-card: #141414;
+        --k-gold: #f2c94c;
+        --k-gold-soft: #e6b93d;
+        --k-border: rgba(242,201,76,0.25);
+        --k-text: #eaeaea;
+        --k-muted: #9a9a9a;
+        --k-radius: 16px;
+    }
+
+    body {
+        background: var(--k-bg);
+        color: var(--k-text);
+        font-family: 'Nunito', sans-serif;
+    }
+
+    .webinar-card {
+        background: var(--k-card);
+        border-radius: var(--k-radius);
+        overflow: hidden;
+        box-shadow: 0 4px 20px rgba(242,201,76,0.1);
+        margin-bottom: 20px;
+        display: flex;
+        flex-direction: row;
+        transition: transform 0.2s;
+    }
+
+    .webinar-card:hover {
+        transform: translateY(-4px);
+        box-shadow: 0 8px 30px rgba(242,201,76,0.2);
+    }
+
+    .image-box {
+        position: relative;
+        flex: 0 0 220px;
+        height: 140px;
+        overflow: hidden;
+        border-radius: var(--k-radius) 0 0 var(--k-radius);
+    }
+
+    .image-box img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        transition: transform 0.3s;
+    }
+
+    .image-box:hover img {
+        transform: scale(1.05);
+    }
+
+    .badges-lists {
+        position: absolute;
+        top: 10px;
+        left: 10px;
+        display: flex;
+        flex-wrap: wrap;
+        gap: 5px;
+    }
+
+    .badge-primary { background: var(--k-gold); color: #000; border-radius: var(--k-radius); }
+    .badge-secondary { background: #6b6b6b; color: #fff; border-radius: var(--k-radius); }
+    .badge-danger { background: #eb5757; color: #000; border-radius: var(--k-radius); }
+    .badge-warning { background: #f2994a; color: #000; border-radius: var(--k-radius); }
+    .badge-dark { background: #222; color: var(--k-gold); border-radius: var(--k-radius); }
+
+    .progress {
+        height: 8px;
+        background: #1c1c1c;
+        border-radius: var(--k-radius);
+        overflow: hidden;
+        margin-top: 10px;
+    }
+
+    .progress-bar {
+        background: var(--k-gold);
+        height: 100%;
+        transition: width 0.3s;
+    }
+
+    .webinar-card-body {
+        flex: 1;
+        padding: 20px;
+        display: flex;
+        flex-direction: column;
+        justify-content: space-between;
+    }
+
+    .webinar-actions {
+        color: var(--k-gold);
+        font-weight: 500;
+        display: block;
+    }
+
+    .webinar-actions:hover {
+        color: var(--k-gold-soft);
+    }
+
+    .stat-title {
+        color: var(--k-muted);
+        font-size: 12px;
+    }
+
+    .stat-value {
+        font-size: 14px;
+        font-weight: 600;
+        color: var(--k-text);
+    }
+
+    .webinar-price-box .real {
+        font-weight: 700;
+        color: var(--k-gold);
+        font-size: 16px;
+    }
+
+    .webinar-price-box .off {
+        text-decoration: line-through;
+        color: var(--k-muted);
+        font-size: 14px;
+        margin-left: 10px;
+    }
+</style>
 @endpush
 
 @section('content')

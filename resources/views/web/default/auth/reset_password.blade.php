@@ -4,7 +4,7 @@
     <div class="container">
         <div class="row login-container">
             <div class="col-12 col-md-6 pl-0">
-                <img src="{{ getPageBackgroundSettings('remember_pass') }}" class="img-cover" alt="Login">
+                <img src="{{ getPageBackgroundSettings('remember_pass') }}" class="img-cover" alt="Login" style="width:-webkit-fill-available;">
             </div>
 
             <div class="col-12 col-md-6">

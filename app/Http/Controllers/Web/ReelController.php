@@ -51,7 +51,7 @@ class ReelController extends Controller
             })
             ->where('is_hidden', false)
             ->latest()
-            ->paginate(10);
+            ->paginate(5);
 
         $heroreels = Reel::with([
             'user',
@@ -74,8 +74,13 @@ class ReelController extends Controller
 
     public function store(Request $request)
     {
+        ini_set('upload_max_filesize', '250M');
+        ini_set('post_max_size', '250M');
+        // ini_set('max_execution_time', '300');
+        // ini_set('max_input_time', '300');
+        
         $request->validate([
-            'video' => 'required|mimes:mp4,mov,ogg,webm|max:100000',
+            'video' => 'required|mimes:mp4,mov,ogg,webm|max:256000',
             'title' => 'required|string|max:255',
             'caption' => 'required|string|max:1000',
         ]);
@@ -135,20 +140,39 @@ class ReelController extends Controller
             $isLiked = true;
         }
 
-        if ($request->ajax()) {
-            return response()->json([
-                'success' => true,
-                'likes_count' => $reel->likes_count,
-                'is_liked' => $isLiked
-            ]);
+        // if ($request->ajax()) {
+        //     return response()->json([
+        //         'success' => true,
+        //         'likes_count' => $reel->likes_count,
+        //         'is_liked' => $isLiked
+        //     ]);
+        // }
+        // $reel->likes_count = ReelLike::where('reel_id', $reel->id)->count();
+        // return response()->json([
+        //     'success' => true,
+        //     'likes_count' => $reel->likes_count,
+        //     'is_liked' => $isLiked
+        // ]);
+
+        if($isLiked)
+        {
+            $success = 'Reel liked successfully';
         }
-        $reel->likes_count = ReelLike::where('reel_id', $reel->id)->count();
-        return response()->json([
-            'success' => true,
-            'likes_count' => $reel->likes_count,
-            'is_liked' => $isLiked
-        ]);
-        // return back()->with('success', $isLiked ? 'Reel liked successfully' : 'Reel unliked successfully');
+        else
+        {
+            $success = 'Reel unliked successfully';
+        }
+         
+
+        $toastData = [
+            'title' => trans($success),
+            'msg' => trans($success),
+            'status' => 'success'
+        ];
+        return back()->with(['toast' => $toastData]);
+
+
+        //return back()->with('success', $isLiked ? 'Reel liked successfully' : 'Reel unliked successfully');
     }
 
     public function comment(Request $request, Reel $reel)
@@ -176,7 +200,14 @@ class ReelController extends Controller
                 ]);
             }
 
-            return back()->with('success', 'Comment added successfully');
+        $toastData = [
+            'title' => trans("Comment added successfully"),
+            'msg' => trans("Comment added successfully"),
+            'status' => 'success'
+        ];
+        return back()->with(['toast' => $toastData]);
+
+            // return back()->with('success', 'Comment added successfully');
     }
 
     public function report(Request $request, Reel $reel)
@@ -208,13 +239,20 @@ class ReelController extends Controller
             }
         }
 
-        if ($request->ajax()) {
-            return response()->json([
-                'success' => true,
-                'message' => 'Report submitted successfully'
-            ]);
-        }
+        $toastData = [
+            'title' => trans("Report submitted successfully"),
+            'msg' => trans("Report submitted successfully"),
+            'status' => 'success'
+        ];
+        return back()->with(['toast' => $toastData]);
 
-        return back()->with('success', 'Report submitted successfully');
+        // if ($request->ajax()) {
+        //     return response()->json([
+        //         'success' => true,
+        //         'message' => 'Report submitted successfully'
+        //     ]);
+        // }
+
+        // return back()->with('success', 'Report submitted successfully');
     }
 }
