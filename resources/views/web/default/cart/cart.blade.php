@@ -38,7 +38,7 @@
                   <div class="cart-cart-thumb"><img src="{{ $cartItemInfo['imgPath'] }}" width="50" alt="user avatar"></div>
                   <div class="cart-cart-meta">
                     <div class="cart-cart-title">{{ $cartItemInfo['title'] }}</div>
-                    <div class="cart-cart-type"> @if(!empty($cartItemInfo['quantity'])) Product @else Course @endif</div>
+                    <div class="cart-cart-type"> {{ $cartItemInfo['type'] }}</div>
                   </div>
                 </div>
               </td>

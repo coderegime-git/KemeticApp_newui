@@ -97,7 +97,7 @@ class ReelController extends Controller
                     'reel_id' => $comment->reel_id,
                     'content' => $comment->content,
                     'created_at' => $comment->created_at,
-                    'username' => $comment->user ? $comment->user->name : '',
+                    'username' => $comment->user ? $comment->user->full_name : '',
                 ];
             }
             $reelData['likes'] = $likesArr;

@@ -5,7 +5,7 @@
 <meta http-equiv="X-UA-Compatible" content="IE=edge">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 
-<meta name='robots' content="{{ $pageRobot ?? 'NOODP, nofollow, noindex' }}">
+<meta name="robots" content="{{ $pageRobot ?? 'index, follow' }}">
 
 @if (isset($pageDescription) and !empty($pageDescription))
     <meta name="description" content="{{ $pageDescription }}">
@@ -44,7 +44,7 @@
     }
 @endphp
 
-<meta property='og:site_name' content='{{ url(!empty($generalSettings['site_name']) ? $generalSettings['site_name'] : '') }}'>
+<meta property="og:site_name" content="{{ $generalSettings['site_name'] ?? 'Kemetic App' }}">
 <meta property='og:image' content='{{ url($pageMetaImage) }}'>
 <meta name='twitter:image' content='{{ url($pageMetaImage) }}'>
 <meta property='og:locale' content='{{ url(!empty($generalSettings['locale']) ? $generalSettings['locale'] : 'en_US') }}'>

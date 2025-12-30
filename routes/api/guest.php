@@ -66,6 +66,13 @@ Route::group([], function () {
 
     Route::get('/files/{file_id}/download', ['uses' => 'FilesController@download']);
 
+    Route::prefix('fmd')->group(function () {
+        Route::get('/adreels', 'AdReelController@adreels');
+        Route::get('/plans', 'AdReelController@plans');
+        Route::post('/add',  ['uses' => 'AdReelController@store','middleware' => 'api.auth']);
+        Route::post('/purchase', ['uses' => 'AdReelController@purchase','middleware' => 'api.auth']);
+    });
+
     Route::group(['prefix' => 'blogs'], function () {
 
         Route::get('/', ['uses' => 'BlogController@index']);

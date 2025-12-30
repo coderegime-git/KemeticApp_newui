@@ -18,6 +18,10 @@ class CartItemInfo
             $product = $cart->productOrder->product;
 
             return $this->getProductInfo($cart, $product);
+        } elseif (!empty($cart->bookOrder) and !empty($cart->bookOrder->book)) {
+            $book = $cart->bookOrder->book;
+
+            return $this->getBookInfo($cart, $book);
         } elseif (!empty($cart->reserve_meeting_id)) {
             $creator = $cart->reserveMeeting->meeting->creator;
 
@@ -41,6 +45,7 @@ class CartItemInfo
         $info['rate'] = $webinar->getRate();
         $info['price'] = $webinar->price;
         $info['discountPrice'] = $webinar->getDiscount($cart->ticket) ? ($webinar->price - $webinar->getDiscount($cart->ticket)) : null;
+        $info['type'] = 'Course';
 
         return $info;
     }
@@ -57,6 +62,7 @@ class CartItemInfo
         $info['rate'] = $bundle->getRate();
         $info['price'] = $bundle->price;
         $info['discountPrice'] = $bundle->getDiscount($cart->ticket) ? ($bundle->price - $bundle->getDiscount($cart->ticket)) : null;
+        $info['type'] = 'Bundle';
 
         return $info;
     }
@@ -75,6 +81,24 @@ class CartItemInfo
         $info['quantity'] = $cart->productOrder ? $cart->productOrder->quantity : 1;
         $info['price'] = $product->price;
         $info['discountPrice'] = ($product->getPriceWithActiveDiscountPrice() < $product->price) ? $product->getPriceWithActiveDiscountPrice() : null;
+         $info['type'] = 'Product';
+        return $info;
+    }
+
+    private function getBookInfo($cart, $book)
+    {
+        $info = [];
+
+        $info['isBook'] = true;
+        $info['imgPath'] = $book->getImage();
+        $info['itemUrl'] = $book->getUrl();
+        $info['title'] = $book->title;
+        $info['profileUrl'] = $book->creator ? $book->creator->getProfileUrl() : null;
+        $info['teacherName'] = $book->creator ? $book->creator->full_name : null;
+        $info['quantity'] = $cart->bookOrder ? $cart->bookOrder->quantity : 1;
+        $info['price'] = $book->price ?? 0;
+        $info['discountPrice'] = null; // Books might not have discounts initially
+        $info['type'] = 'Book';
 
         return $info;
     }
@@ -90,6 +114,7 @@ class CartItemInfo
         $info['teacherName'] = $creator->full_name;
         $info['rate'] = $creator->rates();
         $info['price'] = $cart->reserveMeeting->paid_amount;
+        $info['type'] = 'Reserve Meeting';
 
         return $info;
     }
@@ -108,6 +133,7 @@ class CartItemInfo
         $info['quantity'] = null;
         $info['price'] = $subscribe->price;
         $info['discountPrice'] = null;
+        $info['type'] = 'Subscribe';
 
         return $info;
     }
@@ -126,6 +152,7 @@ class CartItemInfo
         $info['quantity'] = null;
         $info['price'] = $registrationPackage->price;
         $info['discountPrice'] = null;
+        $info['type'] = 'Registration Package';
 
         return $info;
     }

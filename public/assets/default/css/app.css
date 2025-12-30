@@ -795,7 +795,7 @@
     backdrop-filter: blur(10px);
     background:linear-gradient(180deg, rgba(12,8,20,.7), rgba(12,8,20,.95));
   }
-  .membership-bar{display:flex; align-items:center; justify-content:space-between; gap:14px}
+  .membership-bar{display:flex; align-items:center; justify-content:space-between; gap:14px;padding:10px;}
   .membership-bar .membership-left{display:flex; align-items:center; gap:12px; color:var(--muted)}
 
   /* Responsive */

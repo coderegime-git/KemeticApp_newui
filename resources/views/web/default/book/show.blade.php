@@ -1,15 +1,13 @@
 @extends('web.default.layouts.app')
 
 @section('content')
+<form method="post" id="bookAddToCartForm">
+        {{ csrf_field() }}
   <div class="bookdetail-page">
-
-    <!-- Top bar -->
-    
-
-    <!-- Main layout -->
     <main class="bookdetail-layout">
 
-      <!-- LEFT: cover + preview -->
+      
+        <input type="hidden" name="item_id" value="{{ $book->id }}">
       <section class="bookdetail-panel bookdetail-media-panel">
         <div class="bookdetail-media-cover">
           <img src="{{ $book->getImage() }}" alt="{{ $book->title }}" />
@@ -208,7 +206,7 @@
               Download Free Scrolls
             </button>
           @else
-            <button class="bookdetail-btn bookdetail-btn-gold bookdetail-btn-lg">
+            <button class="bookdetail-btn bookdetail-btn-gold bookdetail-btn-lg js-book-direct-payment" type="button">
               Buy Scrolls Only - €{{ $formattedPrice }}
             </button>
             @if(auth()->check())
@@ -254,10 +252,44 @@
           charging you twice and only process the physical Scrolls or extra items in your cart.
         </p>
       </aside>
-
+    
     </main>
   </div>
+  </form>
 @endsection
+
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<!-- Fallback to CDN if local files don't work -->
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/jquery-toast-plugin/1.3.2/jquery.toast.min.css">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jquery-toast-plugin/1.3.2/jquery.toast.min.js"></script>
+<script>
+   $(document).ready(function() {
+  
+    $('body').on('click', '.js-book-direct-payment', function (e) {
+      const $this = $(this);
+      $this.addClass('loadingbar danger').prop('disabled', true);
+      alert('Processing your purchase. Please wait...');
+      const $form = $this.closest('form');
+      $form.attr('action', '/book/direct-payment');
+      $form.trigger('submit');
+    });
+  });
+
+   @if(session()->has('toast'))
+    (function() {
+        const toastData = @json(session()->get('toast'));
+        $.toast({
+            heading: toastData.title || '',
+            text: toastData.msg || '',
+            bgColor: toastData.status === 'success' ? '#43d477' : '#f63c3c',
+            textColor: 'white',
+            hideAfter: 10000,
+            position: 'bottom-right',
+            icon: toastData.status
+        });
+    })();
+    @endif
+</script>
 <script>
   
 // Audio Book Functions

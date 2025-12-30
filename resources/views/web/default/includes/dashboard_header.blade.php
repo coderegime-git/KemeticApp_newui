@@ -395,7 +395,7 @@
 
         
         <a href="{{ route('reels.index') }}" class="{{ Request::is('reels*') ? 'active' : '' }}">
-            <span class="dashboard-ms">movie</span> Reels
+            <span class="dashboard-ms">movie</span> Portals
         </a>
         @endif
         <!-- ========== COURSES ========== -->
@@ -1020,6 +1020,7 @@
                 </div>
                 @endcan
             @endif
+            
 
             @php
                 $rewardSetting = getRewardsSettings();
@@ -1042,6 +1043,27 @@
                 </div>
                 @endcan
             @endif
+        
+            <div class="nav-collapsible {{ (request()->is('panel/adreel') or request()->is('panel/adreel/*')) ? 'open' : '' }}">
+                <a class="nav-collapsible-toggle {{ (request()->is('panel/adreel') or request()->is('panel/adreel/*')) ? 'active' : '' }}">
+                    <span class="dashboard-ms">ad</span>FMD
+                    <span class="nav-arrow">›</span>
+                </a>
+                <div class="nav-collapsible-content">
+                    <a href="/panel/adreel/create" class="{{ (request()->is('panel/adreel/create')) ? 'active' : '' }}">
+                        <span class="dashboard-ms">add_circle</span> New FMD
+                    </a>
+
+                    <a href="/panel/adreel/" class="{{ (request()->is('panel/adreel/')) ? 'active' : '' }}">
+                        <span class="dashboard-ms">ad</span> FMD
+                    </a>
+                    @if($authUser->isTeacher())
+                        <a href="/panel/plan/" class="{{ (request()->is('panel/plan/')) ? 'active' : '' }}">
+                            <span class="dashboard-ms">ad</span> Plan
+                        </a>
+                    @endif
+                </div>
+            </div>
         
         
 

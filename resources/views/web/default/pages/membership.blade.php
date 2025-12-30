@@ -43,6 +43,18 @@
     <h2>Choose your plan</h2>
     <div class="membership-pricing-grid">
       @foreach($subscribes as $subscribe)
+        @php
+          $membershipType = '';
+          if ($subscribe->days == 31) {
+              $membershipType = 'Monthly Membership';
+          } elseif ($subscribe->days == 365) {
+              $membershipType = 'Yearly Membership';
+          } elseif ($subscribe->days == 100000) {
+              $membershipType = 'Lifetime access to the full platform';
+          } else {
+              $membershipType = $subscribe->days . ' days';
+          }
+        @endphp
         <form action="/panel/financial/recurringPay-subscribes?auto_redirect=1" method="post" class="membership-w-100">
           {{ csrf_field() }}
           <input name="amount" value="{{ $subscribe->price }}" type="hidden">
@@ -51,7 +63,7 @@
           <article class="membership-card" id="plan-monthly" data-eur="€{{ $subscribe->price }}" data-usd="${{ $subscribe->price }}">
             <div class="membership-small">{{ $subscribe->title }}</div>
             <div class="membership-price js-price">€{{ $subscribe->price }}</div>
-            <div class="membership-small">{{ $subscribe->days }}</div>
+            <div class="membership-small">{{ $membershipType }}</div>
             <button type='submit' class="membership-cta" data-join="monthly">Join Now</button>
           </article>
         </form>

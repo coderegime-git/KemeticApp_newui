@@ -4,6 +4,8 @@ namespace App\Http\Controllers\Web;
 
 use App\Http\Controllers\Controller;
 use App\Models\Book;
+use App\Models\Cart;
+use App\Models\BookOrder;
 use App\Models\BookCategory;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Http; // Add this line
@@ -202,5 +204,54 @@ class BookController extends Controller
         ) DESC')
         ->limit(1)
         ->get();
+    }
+
+    public function directPayment(Request $request)
+    {
+        $user = auth()->user();
+
+        if (!empty($user)) {
+            $this->validate($request, [
+                'item_id' => 'required',
+            ]);
+
+            $data = $request->except('_token');
+
+            $bookid = $data['item_id'];
+            $specifications = $data['specifications'] ?? null;
+            $quantity = $data['quantity'] ?? 1;
+
+            $book = Book::where('id', $bookid)
+                ->first();
+
+            if (!empty($book)) {
+                $checkCourseForSale = checkBookForSale($book, $user);
+                if ($checkCourseForSale != 'ok') {
+                    return $checkCourseForSale;
+                }
+
+                $bookOrder = BookOrder::updateOrCreate([
+                    'book_id' => $book->id,
+                    'seller_id' => $book->creator_id,
+                    'buyer_id' => $user->id,
+                ], [
+                    'quantity' => $quantity,
+                    'status' => 'pending',
+                    'created_at' => time()
+                ]);
+
+
+                Cart::updateOrCreate([
+                    'creator_id' => $user->id,
+                    'book_order_id' => $book->id,
+                ], [
+                    'created_at' => time()
+                ]);
+
+                return redirect('/cart');
+            }
+        }
+
+        abort(404);
     }
 }

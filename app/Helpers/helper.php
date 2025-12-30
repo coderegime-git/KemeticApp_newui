@@ -2256,6 +2256,29 @@ function checkProductForSale($product, $user)
     return 'ok';
 }
 
+function checkBookForSale($book, $user)
+{
+    // if ($book->getAvailability() < 1) {
+    //     $toastData = [
+    //         'title' => trans('public.request_failed'),
+    //         'msg' => trans('update.product_not_availability'),
+    //         'status' => 'error'
+    //     ];
+    //     return back()->with(['toast' => $toastData]);
+    // }
+
+    if ($book->creator_id == $user->id) {
+        $toastData = [
+            'title' => trans('public.request_failed'),
+            'msg' => trans('Cant purchase your own book'),
+            'status' => 'error'
+        ];
+        return back()->with(['toast' => $toastData]);
+    }
+
+    return 'ok';
+}
+
 function isAdminUrl($url = null)
 {
     if (empty($url)) {

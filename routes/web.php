@@ -319,6 +319,10 @@ Route::group(['namespace' => 'Web', 'middleware' => ['check_mobile_app', 'impers
         Route::get('/categories/{category}', 'BookController@index');
         Route::get('/{slug}', 'BookController@show');
         Route::get('/lulu/details', 'LuluController@showBookDetails');
+
+        Route::group(['middleware' => 'web.auth'], function () {
+            Route::post('/direct-payment', 'BookController@directPayment');
+        });
     });
 
     Route::prefix('api/lulu')->group(function () {

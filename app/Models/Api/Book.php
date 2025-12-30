@@ -139,4 +139,20 @@ class Book extends Model
     {
         return $this->price === null || $this->price == 0;
     }
+
+    public function checkBookForSale($user)
+    {
+        // if ($this->getAvailability() < 1) {
+
+
+        //     return apiResponse2(0, 'not_availability', trans('update.product_not_availability'));
+        // }
+
+        if ($this->creator_id == $user->id) {
+
+            return apiResponse2(0, 'same_user', trans('Cant purchase your own book'));
+        }
+
+        return 'ok';
+    }
 }
