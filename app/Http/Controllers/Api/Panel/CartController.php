@@ -7,6 +7,7 @@ use App\Http\Resources\CartResource;
 use App\Mixins\Cashback\CashbackRules;
 use App\Models\Product;
 use App\Models\ProductOrder;
+use App\Models\BookOrder;
 use App\User;
 use Illuminate\Http\Request;
 use App\Models\Api\Cart;
@@ -37,6 +38,9 @@ class CartController extends Controller
             ->with([
                 'productOrder' => function ($query) {
                     $query->whereHas('product');
+                },
+                'bookOrder' => function ($query) {
+                    $query->whereHas('book')->with('book');
                 }
             ])
             ->get();
@@ -47,6 +51,9 @@ class CartController extends Controller
             ->with([
                 'productOrder' => function ($query) {
                     $query->whereHas('product');
+                },
+                'bookOrder' => function ($query) {
+                    $query->whereHas('book')->with('book');
                 }
             ])
             ->get();
@@ -829,7 +836,33 @@ class CartController extends Controller
                 $totalDiscount += $discount;
                 $subTotal += $price;
             }
-        }
+        } elseif (!empty($cart->book_order_id)) {
+            $book = $cart->bookOrder->book;
+
+            if (!empty($book)) {
+                $bookQuantity = $cart->bookOrder->quantity;
+                $price = ($book->price * $bookQuantity);
+                $discount = 0; // Books might have discounts in future, you can add getDiscountPrice() method to Book model
+
+                $priceWithoutDiscount = $price - $discount;
+                
+                if (method_exists($book, 'getTax')) {
+                    $bookTax = $book->getTax();
+                    $taxIsDifferent = ($taxIsDifferent and $tax != $bookTax);
+                    $tax = $bookTax;
+                }
+
+                if ($tax > 0 and $priceWithoutDiscount > 0) {
+                    $taxPrice += $priceWithoutDiscount * $tax / 100;
+                }
+                
+                $source = 'books'; // You'll need to add 'books' to your commission settings
+                $commissionPrice += $this->getCommissionPrice($source, $priceWithoutDiscount, $seller);
+
+                $totalDiscount += $discount;
+                $subTotal += $price;
+            }
+        } 
 
         if ($totalDiscount > $subTotal) {
             $totalDiscount = $subTotal;
