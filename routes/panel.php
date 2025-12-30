@@ -517,6 +517,29 @@ Route::group(['namespace' => 'Panel', 'prefix' => 'panel', 'middleware' => ['imp
         Route::get('/{id}/delete', 'BookController@delete');
     });
 
+    // Plan Routes
+    Route::group(['prefix' => 'plan'], function () {
+        
+        Route::get('/', 'PlanController@index');
+        Route::get('/create', 'PlanController@create');
+        Route::post('/store', 'PlanController@store');
+        Route::get('/{id}/edit', 'PlanController@edit');
+        Route::post('/{id}/update', 'PlanController@update');
+        Route::delete('/{id}/delete', 'PlanController@destroy');
+        Route::post('/{id}/toggle-status', 'PlanController@toggleStatus');
+    });
+
+    Route::group(['prefix' => 'adreel'], function () {
+        
+        Route::get('/', 'AdReelController@index');
+        Route::get('/create', 'AdReelController@create');
+        Route::post('/store', 'AdReelController@store');
+        Route::get('/{id}/edit', 'AdReelController@edit');
+        Route::post('/{id}/update', 'AdReelController@update');
+        Route::delete('/{id}/delete', 'AdReelController@destroy');
+    });
+
+
     Route::group(['prefix' => 'ai-contents'], function () {
         Route::get('/', 'AiContentController@index');
         Route::post('/generate', 'AiContentController@generate');

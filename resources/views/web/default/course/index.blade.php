@@ -93,7 +93,7 @@
       <div class="coursedetail-glass"><span>⏱</span><span>{{ convertMinutesToHourAndMinute(!empty($course->duration) ? $course->duration : 0) }} {{ trans('home.hours') }} · {{ $course->textLessons->count() }} lessons</span></div>
     </div>
     <div class="coursedetail-hero-top-right">
-      <button class="coursedetail-glass" id="openCurr"><span>📖</span><span>Open curriculum</span></button>
+      <!-- <button class="coursedetail-glass" id="openCurr"><span>📖</span><span>Open curriculum</span></button> -->
     </div>
     @if($videoDemo && $videoSource)
       @if($isVideoTag)

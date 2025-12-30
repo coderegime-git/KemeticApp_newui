@@ -44,6 +44,11 @@ class Cart extends Model
         return $this->belongsTo('App\Models\ProductOrder', 'product_order_id', 'id');
     }
 
+    public function bookOrder()
+    {
+        return $this->belongsTo('App\Models\BookOrder', 'book_order_id', 'id');
+    }
+
     public function subscribe()
     {
         return $this->belongsTo('App\Models\Subscribe', 'subscribe_id', 'id');

@@ -191,7 +191,7 @@ class AddCartController extends Controller
         $user = apiAuth();
         validateParam($request->all(), [
             'item_id' => 'required',
-            'item_name' => 'required|in:webinar,bundle,product',
+            'item_name' => 'required|in:webinar,bundle,product,book',
             'ticket_id' => 'nullable',
             'specifications' => 'nullable',
             'quantity' => 'nullable'
@@ -238,6 +238,35 @@ class AddCartController extends Controller
                 return apiResponse2(0, 'already_in_cart', 'this item is in the cart');
             }
             $result = $this->storeUserBundleCart($user, $data,$user_as_a_guest);
+        } elseif ($item_name == 'book') {
+            // Check if book already in cart
+            $book = Book::find($request->input('item_id'));
+            if ($book) {
+                if ($user_as_a_guest) {
+                    // For guest users, check if any cart item has this book
+                    $existingCart = Cart::where('creator_guest_id', $user->id)
+                        ->whereHas('bookOrder', function($query) use ($book) {
+                            $query->where('book_id', $book->id);
+                        })->exists();
+                        
+                    if ($existingCart) {
+                        return apiResponse2(0, 'already_in_cart', 'This item is already in the cart');
+                    }
+                } else {
+                    // For registered users, check via bookOrder
+                    $bookOrder = BookOrder::where('book_id', (int) $request->input('item_id'))
+                        ->where('buyer_id', $user->id)
+                        ->orderBy('id', 'desc')
+                        ->first();
+                        
+                    if (!empty($bookOrder)) {
+                        if (Cart::where('book_order_id', $bookOrder->id)->where('creator_id', $user->id)->exists()) {
+                            return apiResponse2(0, 'already_in_cart', 'This item is already in the cart');
+                        }
+                    }
+                }
+            }
+            $result = $this->storeUserBookCart($user, $data, $user_as_a_guest);
         }
 
         if ($result != 'ok') {
@@ -247,6 +276,57 @@ class AddCartController extends Controller
 
     }
 
+    private function storeUserBookCart($user, $data, $isGuest = false)
+    {
+        $book_id = (int) $data['item_id'];
+        $quantity = $data['quantity'] ?? 1;
+
+    
+        $book = Book::where('id', $book_id)
+            ->first();
+
+
+        if (!empty($book) and !empty($user)) {
+
+            $checkProductForSale = $book->checkBookForSale($user);
+
+            if ($checkProductForSale != 'ok') {
+                return $checkProductForSale;
+            }
+
+            $bookOrder = BookOrder::updateOrCreate([
+                'book_id' => $book->id,
+                'seller_id' => $book->creator_id,
+                'buyer_id' => $user->id,
+                'sale_id' => null,
+            ], [
+                'quantity' => $quantity,
+                'status' => 'pending',
+                'created_at' => time()
+            ]);
+            
+            if($user_as_a_guest){
+                Cart::updateOrCreate([
+                    'creator_id'=> 0,
+                    'creator_guest_id' => $user->id,
+                   'book_order_id' => $bookOrder->id,
+                ], [
+                    'created_at' => time()
+                ]);
+            }
+            else{
+                Cart::updateOrCreate([
+                    'creator_id' => $user->id,
+                    'book_order_id' => $bookOrder->id,
+                ], [
+                    'created_at' => time()
+                ]);
+            }
+            
+
+            return 'ok';
+        }
+    }
 
     public function destroy($id)
     {

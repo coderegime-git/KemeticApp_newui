@@ -518,6 +518,18 @@ Route::group(['prefix' => $prefix, 'namespace' => 'Admin', 'middleware' => ['web
             });
         });
 
+
+        Route::group(['prefix' => 'plan'], function () {
+        
+            Route::get('/', 'PlanController@index');
+            Route::get('/create', 'PlanController@create');
+            Route::post('/store', 'PlanController@store');
+            Route::get('/{id}/edit', 'PlanController@edit');
+            Route::post('/{id}/update', 'PlanController@update');
+            Route::get('/{id}/delete', 'PlanController@delete');
+            Route::post('/{id}/toggle-status', 'PlanController@toggleStatus');
+        });
+
         Route::group(['prefix' => 'blog'], function () {
             Route::get('/', 'BlogController@index');
             Route::get('/create', 'BlogController@create');
