@@ -165,4 +165,37 @@ class Book extends Model
     {
         return $this->sample_pdf_path ? url($this->sample_pdf_path) : null;
     }
+
+    public function getCommission()
+    {
+        // Return book-specific commission or default commission
+        if (!empty($this->commission)) {
+            return $this->commission;
+        }
+        
+        $financialSettings = getFinancialSettings();
+        return $financialSettings['book_commission'] ?? ($financialSettings['commission'] ?? 0);
+    }
+    
+    public function getTax()
+    {
+        // Return book-specific tax or default tax
+        if (!empty($this->tax)) {
+            return $this->tax;
+        }
+        
+        $financialSettings = getFinancialSettings();
+        return $financialSettings['book_tax'] ?? ($financialSettings['tax'] ?? 0);
+    }
+
+    public function getDiscountPrice()
+    {
+        // Implement your discount logic for books
+        // For example:
+        if (!empty($this->discount) and $this->discount > 0) {
+            return $this->price * $this->discount / 100;
+        }
+        
+        return 0;
+    }
 }

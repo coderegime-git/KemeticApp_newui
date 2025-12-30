@@ -93,6 +93,7 @@ class CartItemInfo
         $info['imgPath'] = $book->getImage();
         $info['itemUrl'] = $book->getUrl();
         $info['title'] = $book->title;
+        $info['rate'] = null;
         $info['profileUrl'] = $book->creator ? $book->creator->getProfileUrl() : null;
         $info['teacherName'] = $book->creator ? $book->creator->full_name : null;
         $info['quantity'] = $cart->bookOrder ? $cart->bookOrder->quantity : 1;

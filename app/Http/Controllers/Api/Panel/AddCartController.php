@@ -5,6 +5,8 @@ namespace App\Http\Controllers\Api\Panel;
 use App\Http\Controllers\Controller;
 use App\Models\Api\Bundle;
 use App\Models\Cart;
+use App\Models\Api\Book;
+use App\Models\BookOrder;
 use App\Models\Api\Product;
 use App\Models\ProductOrder;
 use App\Models\ReserveMeeting;
@@ -276,7 +278,7 @@ class AddCartController extends Controller
 
     }
 
-    private function storeUserBookCart($user, $data, $isGuest = false)
+    private function storeUserBookCart($user, $data, $user_as_a_guest = false)
     {
         $book_id = (int) $data['item_id'];
         $quantity = $data['quantity'] ?? 1;
