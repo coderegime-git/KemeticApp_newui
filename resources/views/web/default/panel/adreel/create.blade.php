@@ -257,7 +257,7 @@
             @endif
         </h2>
 
-        <a href="/adreel" class="kemetic-btn-cancel">
+        <a href="/panel/adreel" class="kemetic-btn-cancel">
             <i data-feather="arrow-left" width="16"></i>
             <span>Back to List</span>
         </a>
@@ -419,7 +419,7 @@
             {{-- Actions --}}
             <div class="form-group mt-40 pt-20 border-top border-gold-20" style="padding:10px;">
                 <div class="d-flex justify-content-between">
-                    <a href="/adreel" class="kemetic-btn-cancel">
+                    <a href="/panel/adreel" class="kemetic-btn-cancel">
                         <i data-feather="x" width="16"></i>
                         Cancel
                     </a>

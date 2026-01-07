@@ -217,8 +217,8 @@ class DashboardController extends Controller
                     'method' => $payout->payout_method ?? 'Bank Transfer',
                     'status' => $payout->status,
                     'status_badge' => $this->getPayoutStatusBadge($payout->status),
-                    'date' => date('Y-m-d H:i', $payout->created_at),
-                    'processed_at' => $payout->paid_at ? date('Y-m-d H:i', $payout->paid_at) : null,
+                    'date' => $payout->created_at,
+                    'processed_at' => $payout->paid_at ? $payout->paid_at : null,
                 ];
             })
             ->toArray();
@@ -239,7 +239,7 @@ class DashboardController extends Controller
                     'type' => 'Earning',
                     'description' => $sale->webinar->title ?? 'Product Sale',
                     'amount' => $this->formatPrice($sale->total_amount),
-                    'date' => date('Y-m-d H:i', $sale->created_at),
+                    'date' => $sale->created_at,
                     'status' => 'Completed',
                 ];
             })
@@ -302,7 +302,7 @@ class DashboardController extends Controller
                     'sales' => $book->sales_count ?? 0,
                     // 'rating' => $book->getRate(),
                     'status' => $book->status,
-                    'created_at' => date('Y-m-d H:i', $book->created_at),
+                    'created_at' => $book->created_at,
                     'url' => '/books/' . $book->slug,
                 ];
             })
@@ -324,7 +324,7 @@ class DashboardController extends Controller
                     'book_title' => $book->title,
                     'royalty_rate' => $book->royalty_rate . '%',
                     'earnings' => $this->formatPrice($book->royalty_earnings ?? 0),
-                    'last_payout' => $book->last_payout_date ? date('Y-m-d H:i', $book->last_payout_date) : 'No payout yet',
+                    'last_payout' => $book->last_payout_date ? $book->last_payout_date : 'No payout yet',
                     'total_sales' => $book->sales_count ?? 0,
                 ];
             })
@@ -360,7 +360,7 @@ class DashboardController extends Controller
                     'inventory' => $product->inventory ?? 'N/A',
                     'sales' => $product->sales_count ?? 0,
                     'status' => $product->status,
-                    'created_at' => date('Y-m-d H:i', $product->created_at),
+                    'created_at' => $product->created_at,
                     'url' => '/products/' . $product->slug,
                 ];
             })
@@ -440,7 +440,7 @@ class DashboardController extends Controller
                     'item_title' => $itemTitle,
                     'quantity' => $totalQuantity,
                     'total' => $this->formatPrice($totalAmount),
-                    'date' => date('Y-m-d H:i', $order->created_at),
+                    'date' => $order->created_at,
                     'status' => $order->status,
                     'payment_method' => $order->payment_method ?? 'N/A',
                 ];
@@ -655,7 +655,7 @@ class DashboardController extends Controller
                             'title' => $webinar->title,
                             'instructor' => $webinar->creator->full_name ?? $webinar->creator->username,
                             'progress' => $progress,
-                            'updated_at' => date('Y-m-d H:i', $webinar->updated_at),
+                            'updated_at' => $webinar->updated_at,
                             'url' => $webinar->getLearningPageUrl(),
                         ];
                     }
@@ -693,7 +693,7 @@ class DashboardController extends Controller
                         'title' => $webinar->title,
                         'instructor' => $webinar->creator->full_name ?? $webinar->creator->username,
                         'type' => $webinar->type == 'course' ? 'Course' : ($webinar->type == 'webinar' ? 'Webinar' : 'Text Lesson'),
-                        'enrolled_at' => $purchase ? date('Y-m-d H:i', $purchase->created_at) : date('Y-m-d H:i', time()),
+                        'enrolled_at' => $purchase ? $purchase->created_at : now(),
                         'progress' => $webinar->getProgress(),
                         'url' => $webinar->getLearningPageUrl(),
                     ];
@@ -707,7 +707,7 @@ class DashboardController extends Controller
     private function getSavedReelsData($user)
     {
         $reels = ReelSaved::where('user_id', $user->id)
-            ->with(['reel.creator'])
+            ->with(['reel.user'])
             ->orderBy('created_at', 'desc')
             ->limit(50)
             ->get()
@@ -719,7 +719,7 @@ class DashboardController extends Controller
                     'id' => $reel->id,
                     'title' => $reel->title ?? 'Untitled Reel',
                     'creator' => $reel->creator->full_name ?? $reel->creator->username ?? 'Unknown',
-                    'saved_at' => date('Y-m-d H:i', $savedReel->created_at),
+                    'saved_at' => $savedReel->created_at,
                     'views' => $reel->views ?? 0,
                     'duration' => $reel->duration ?? '0:00',
                 ];
@@ -749,7 +749,7 @@ class DashboardController extends Controller
                     'order_number' => $order->order_number ?? 'N/A',
                     'items' => $items,
                     'total' => $this->formatPrice($order->total_amount),
-                    'date' => date('Y-m-d H:i', $order->created_at),
+                    'date' => $order->created_at,
                     'status' => $order->status,
                 ];
             })
@@ -798,7 +798,7 @@ class DashboardController extends Controller
                     'price' => $this->formatPrice($course->price),
                     'enrollments' => $course->enrollments_count,
                     'rating' => $course->getRate(),
-                    'updated_at' => date('Y-m-d H:i', $course->updated_at),
+                    'updated_at' => $course->updated_at,
                     'url' => $course->getUrl(),
                 ];
             })
@@ -836,8 +836,8 @@ class DashboardController extends Controller
                         'course_id' => $course->id,
                         'course_title' => $course->title,
                         'progress' => $progress,
-                        'enrolled_at' => date('Y-m-d H:i', $course->created_at),
-                        'last_access' => date('Y-m-d H:i', $student->last_access_at ?? time()),
+                        'enrolled_at' => $course->created_at,
+                        'last_access' => $student->last_access_at ?? time(),
                     ]);
                 }
             }

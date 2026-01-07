@@ -245,7 +245,7 @@
                                     <!-- </div> -->
                                     <div class="topheader-cart-info">Profile</div>
                                 </div></a>
-                                <a href="panel/notifications" class="active"><div class="topheader-cart-item">
+                                <a href="/panel/notifications" class="active"><div class="topheader-cart-item">
                                     <!-- <div class="topheader-cart-thumb"> -->
                                         <span class="dashboard-ms">notifications</span>
                                     <!-- </div> -->

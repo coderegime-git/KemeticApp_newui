@@ -28,8 +28,8 @@ class AdReelController extends Controller
         if ($request->has('search')) {
             $search = $request->get('search');
             $query->where(function($q) use ($search) {
-                $q->where('title', 'like', "%{$search}%")
-                  ->orWhere('caption', 'like', "%{$search}%");
+                $q->where('title', 'like', "%{$search}%");
+                //   ->orWhere('caption', 'like', "%{$search}%");
             });
         }
 
@@ -116,7 +116,7 @@ class AdReelController extends Controller
             $reel = AdReel::create([
                 'user_id' => auth()->id(),
                 'title' => $request->title,
-                'caption' => $request->caption,
+                // 'caption' => $request->caption,
                 'media_image' => $filename,
                 'product_id' => $request->product_id,
                 'plan_code' => $request->plan_code,
@@ -171,20 +171,19 @@ class AdReelController extends Controller
             abort(403);
         }
 
-        $request->validate([
-            'title' => 'required|string|max:255',
-            'caption' => 'nullable|string',
-            'video' => 'nullable|mimes:mp4,mov,avi,wmv|max:250000',
-            'product_id' => 'nullable|exists:products,id',
-            'plan_code' => 'nullable|exists:plans,code',
-            'starts_at' => 'nullable|date',
-            'expires_at' => 'nullable|date|after:starts_at',
-        ]);
+        // $request->validate([
+        //     'title' => 'required|string|max:255',
+        //     'video' => 'nullable|mimes:mp4,mov,avi,wmv|max:250000',
+        //     'product_id' => 'nullable|exists:products,id',
+        //     'plan_code' => 'nullable|exists:plans,code',
+        //     'starts_at' => 'nullable|date',
+        //     'expires_at' => 'nullable|date|after:starts_at',
+        // ]);
 
         try {
             $data = [
                 'title' => $request->title,
-                'caption' => $request->caption,
+                // 'caption' => $request->caption,
                 'product_id' => $request->product_id,
                 'plan_code' => $request->plan_code,
             ];

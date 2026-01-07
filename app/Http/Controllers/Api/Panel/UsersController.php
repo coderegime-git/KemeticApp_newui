@@ -151,37 +151,40 @@ class UsersController extends Controller
             $mediaType = $isVideo ? 'video' : 'image';
             
             // // Create directory if it doesn't exist
-            // $directory = 'stories/' . $user->id . '/' . date('Y/m');
-            // Storage::disk('public')->makeDirectory($directory);
+            $directory = 'stories/' . $user->id . '/' . date('Y/m');
+            Storage::disk('public')->makeDirectory($directory);
             
-            // // Generate unique filename
-            // $filename = uniqid() . '_' . time() . '.' . $file->getClientOriginalExtension();
-            // $path = $directory . '/' . $filename;
+            // Generate unique filename
+            $filename = uniqid() . '_' . time() . '.' . $file->getClientOriginalExtension();
+            $path = $directory . '/' . $filename;
             
-            // // Store the file
-            // Storage::disk('public')->put($path, file_get_contents($file));
+            // Store the file
+            Storage::disk('public')->put($path, file_get_contents($file));
             
-            // $mediaUrl = Storage::disk('public')->url($path);
-            // $thumbnailUrl = null;
+            $mediaUrl = Storage::disk('public')->url($path);
+            $thumbnailUrl = null;
             
-            // // Generate thumbnail
-            // if ($isVideo) {
-            //     $thumbnailUrl = $this->generateVideoThumbnail($file, $directory);
-            // } else {
-            //     $thumbnailUrl = $this->createImageThumbnail($file, $directory);
-            // }
+            // Generate thumbnail
+            if ($isVideo) {
+                $thumbnailUrl = $this->generateVideoThumbnail($file, $directory);
+            } else {
+                $thumbnailUrl = $this->createImageThumbnail($file, $directory);
+            }
 
             if ($request->file('story')) {
-                $storage = new UploadFileManager($request->file('story'));
+                // $storage = new UploadFileManager($request->file('story'));
             }
             
             // Create story record
             $story = UserStory::create([
                 'user_id' => $user->id,
                 'title' => $request->input('title'),
-                'media_url' => $storage->storage_path,
-                'media_type' => $mediaType ?? 'image',
+                'media_url' => $mediaUrl ?? null,
+                'media_type' => $mediaType ?? null,
                 'thumbnail_url' => $thumbnailUrl ?? null,
+                // 'media_url' => $storage->storage_path,
+                // 'media_type' => $mediaType ?? 'image',
+                // 'thumbnail_url' => $thumbnailUrl ?? null,
                 'link' => $request->input('link'),
                 'is_active' => true,
                 'expires_at' => Carbon::now()->addHours(24),

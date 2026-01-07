@@ -325,7 +325,7 @@ class Product extends Model implements TranslatableContract
 
     public function getUrl()
     {
-        return url('/products/' . $this->slug);
+        return url('/products/' . rawurlencode($this->slug));
     }
 
     public function getShareLink($social)

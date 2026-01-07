@@ -277,7 +277,11 @@
 
                         <!-- Image -->
                         <div class="kemetic-image-box">
-                            <img src="{{ $product->thumbnail }}" alt="">
+                            @if(!empty($product->thumbnail))
+                                <img src="{{ $product->thumbnail }}" class="img-cover" alt="">
+                            @else
+                                <img src="/noimage.png" class="img-cover" alt="">
+                            @endif
 
                             <div class="kemetic-badges">
                                 @if($product->ordering and !empty($product->inventory) and $product->getAvailability() < 1)

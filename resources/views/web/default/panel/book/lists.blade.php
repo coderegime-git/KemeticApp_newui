@@ -393,7 +393,7 @@
 
     <section class="card kemetic-card">
         <div class="card-body kemetic-body">
-            <form action="/book" method="get" class="mb-0">
+            <form action="/panel/book" method="get" class="mb-0">
                 <div class="row">
 
                     <!-- Search -->

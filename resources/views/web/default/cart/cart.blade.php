@@ -129,8 +129,8 @@
                         <!-- Phone -->
                         <div class="field-single">
                             <label for="phone">Phone Number</label>
-                            <input type="text" name="phone"  id="phone" class="form-control @error('phone') is-invalid @enderror" 
-                            required value="{{ !empty($user) ? $user->mobile : '' }}" />
+                            <input type="number" name="phone"  id="phone" class="form-control @error('phone') is-invalid @enderror" 
+                            required value="{{ !empty($user) ? $user->mobile : '' }}" min-length="6"/>
                             @error('phone')
                             <div class="invalid-feedback">
                                 {{ $message }}
@@ -176,8 +176,8 @@
                 @endif
                 <div class="field-single">
                     <label for="phone">Phone Number</label>
-                    <input type="text" name="phone"  id="phone" class="form-control @error('phone') is-invalid @enderror" 
-                    required value="{{ !empty($user) ? $user->mobile : '' }}" />
+                    <input type="number" name="phone"  id="phone" class="form-control @error('phone') is-invalid @enderror" 
+                    required value="{{ !empty($user) ? $user->mobile : '' }}" min-length="6"/>
                     @error('phone')
                     <div class="invalid-feedback">
                         {{ $message }}
@@ -244,7 +244,7 @@
                     </div>
                     <div class="field">
                         <label for="zip">ZIP / Postal Code</label>
-                        <input id="zip" name="zip_code" value="{{ !empty($user) ? $user->zip_code : '' }}" class="form-control @error('zip_code')  is-invalid @enderror" required />
+                        <input id="zip" type="text" name="zip_code" value="{{ !empty($user) ? $user->zip_code : '' }}" class="form-control @error('zip_code')  is-invalid @enderror" required />
                         @error('zip_code')
                         <div class="invalid-feedback">
                             {{ $message }}
@@ -339,6 +339,25 @@ $(document).ready(function() {
             });
         }
     }
+});
+</script>
+<script>
+$(document).ready(function() {
+    $('#cartForm').on('submit', function(e) {
+        var phoneInput = $('#phone');
+        var phoneValue = phoneInput.val();
+        
+        // Remove any non-digit characters
+        var digitsOnly = phoneValue.replace(/\D/g, '');
+        
+        // Check if we have at least 6 digits
+        if (digitsOnly.length < 6) {
+            e.preventDefault();
+            alert('Phone number must be at least 6 digits');
+            phoneInput.focus();
+            return false;
+        }
+    });
 });
 </script>
 <script>
