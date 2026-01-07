@@ -124,21 +124,18 @@ class ReelController extends Controller
         if (!Auth::check()) {
             return response()->json(['error' => 'Not authenticated', 'user' => Auth::user()], 401);
         }
-
+        
         ini_set('upload_max_filesize', '250M');
         ini_set('post_max_size', '250M');
         
-
         $video = $request->file('video');
         $filename = time() . '_' . uniqid() . '.' . $video->getClientOriginalExtension();
-
         $videoPath = public_path('store/reels/videos');
         if (!file_exists($videoPath)) {
             mkdir($videoPath, 0777, true);
         }
         $video->move($videoPath, $filename);
 
-        
         $now = time();
         $reel = Reel::create([
             'user_id' => Auth::id(),
@@ -340,7 +337,15 @@ class ReelController extends Controller
         return response()->json([
             'status' => 'success',
             'message' => 'Comment added successfully',
-            'data' => $comment->load('user')
+            'data' => [
+                'id' => $comment->id,
+                'user_id' => $comment->user_id,
+                'reel_id' => $comment->reel_id,
+                'content' => $comment->content,
+                'created_at' => $comment->created_at, // Convert to timestamp
+                'username' => $comment->user->full_name
+            ]
+            // 'data' => $comment->load('user')
         ], 201);
     }
 

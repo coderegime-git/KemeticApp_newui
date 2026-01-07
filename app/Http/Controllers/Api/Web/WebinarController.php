@@ -13,6 +13,7 @@ use App\Models\CourseLearning;
 use App\Models\Ticket;
 use App\Models\Category;
 use App\Models\Api\Book;
+use App\Models\Livestream;
 use App\Models\Api\FeatureWebinar;
 use App\Models\Api\Webinar;
 use App\Models\WebinarChapter;
@@ -151,22 +152,256 @@ class WebinarController extends Controller
 
     }
 
+    private function getUserIdFromToken(Request $request)
+    {
+        $authorizationHeader = $request->header('Authorization');
+        
+        if (!$authorizationHeader || !str_starts_with($authorizationHeader, 'Bearer ')) {
+            return null;
+        }
+        
+        $token = substr($authorizationHeader, 7);
+        
+        if (empty($token)) {
+            return null;
+        }
+        
+        try {
+            $user = auth('api')->setToken($token)->user();
+            return $user ? $user->id : null;
+        } catch (\Exception $e) {
+            return null;
+        }
+    }
+
+    // public function home(Request $request)
+    // {
+    //     $userId = $this->getUserIdFromToken($request);
+
+    //     $homeSections = HomeSection::orderBy('order', 'asc')->get();
+    //     $selectedSectionsName = $homeSections->pluck('name')->toArray();
+
+    //     $data = [];
+
+    //     // Featured Webinars
+    //     // if (in_array(HomeSection::$featured_classes, $selectedSectionsName)) {
+    //     //     $data['featureWebinars'] = FeatureWebinar::whereIn('page', ['home', 'home_categories'])
+    //     //         ->where('status', 'publish')
+    //     //         ->whereHas('webinar', fn($q) => $q->where('status', Webinar::$active))
+    //     //         ->with(['webinar.teacher:id,full_name,avatar', 'webinar.reviews' => fn($q) => $q->where('status', 'active'), 'webinar.tickets', 'webinar.feature'])
+    //     //         ->orderBy('updated_at', 'desc')
+    //     //         ->get();
+    //     // }
+
+    //     // Latest Webinars
+    //     if (in_array(HomeSection::$latest_classes, $selectedSectionsName)) {
+    //         $data['course'] = Webinar::where('status', Webinar::$active)
+    //             ->where('private', false)
+    //             ->orderBy('updated_at', 'desc')
+    //             ->with(['teacher:id,full_name,avatar', 'reviews' => fn($q) => $q->where('status', 'active'), 'tickets', 'feature'])
+    //             ->limit(6)
+    //             ->get()
+    //             ->map(function ($course) {
+    //                 $course->thumbnail = url($course->thumbnail);
+    //                 $course->image_cover = url($course->image_cover);
+    //                 $course->teacher->avatar = url($course->teacher->avatar);
+    //                 return $course;
+    //             });
+
+    //     }
+
+    //     // Latest Bundles
+    //     // if (in_array(HomeSection::$latest_bundles, $selectedSectionsName)) {
+    //     //     $data['latestBundles'] = Bundle::where('status', Webinar::$active)
+    //     //         ->orderBy('updated_at', 'desc')
+    //     //         ->with(['teacher:id,full_name,avatar', 'reviews' => fn($q) => $q->where('status', 'active'), 'tickets'])
+    //     //         ->limit(6)
+    //     //         ->get();
+    //     // }
+
+    //     // // Upcoming Courses
+    //     // if (in_array(HomeSection::$upcoming_courses, $selectedSectionsName)) {
+    //     //     $data['upcomingCourses'] = UpcomingCourse::where('status', Webinar::$active)
+    //     //         ->orderBy('created_at', 'desc')
+    //     //         ->with(['teacher:id,full_name,avatar'])
+    //     //         ->limit(6)
+    //     //         ->get();
+    //     // }
+
+    //     // Best Sellers
+    //     if (in_array(HomeSection::$best_sellers, $selectedSectionsName)) {
+    //         $bestSaleWebinarsIds = Sale::whereNotNull('webinar_id')
+    //             ->select(DB::raw('COUNT(id) as cnt, webinar_id'))
+    //             ->groupBy('webinar_id')
+    //             ->orderBy('cnt', 'DESC')
+    //             ->limit(1)
+    //             ->pluck('webinar_id')
+    //             ->toArray();
+
+    //         $data['topsale'] = Webinar::whereIn('id', $bestSaleWebinarsIds)
+    //             ->where('status', Webinar::$active)
+    //             ->where('private', false)
+    //             ->with(['teacher:id,full_name,avatar', 'reviews' => fn($q) => $q->where('status', 'active'), 'sales', 'tickets', 'feature'])
+    //             ->get()
+    //             ->map(function ($topsale) {
+    //                 $topsale->thumbnail = url($topsale->thumbnail);
+    //                 $topsale->image_cover = url($topsale->image_cover);
+    //                 $topsale->teacher->avatar = url($topsale->teacher->avatar);
+    //                 return $topsale;
+    //             });
+    //     }
+
+    //     // Best Rated
+    //     if (in_array(HomeSection::$best_rates, $selectedSectionsName)) {
+    //         $data['toprate'] = Webinar::join('webinar_reviews', 'webinars.id', '=', 'webinar_reviews.webinar_id')
+    //             ->select('webinars.*', DB::raw('avg(webinar_reviews.rates) as avg_rates'))
+    //             ->where('webinars.status', 'active')
+    //             ->where('webinars.private', false)
+    //             ->where('webinar_reviews.status', 'active')
+    //             ->groupBy('webinars.id')
+    //             ->orderBy('avg_rates', 'desc')
+    //             ->with(['teacher:id,full_name,avatar'])
+    //             ->limit(1)
+    //             ->get()
+    //             ->map(function ($toprate) {
+    //                 $toprate->thumbnail = url($toprate->thumbnail);
+    //                 $toprate->image_cover = url($toprate->image_cover);
+    //                 $toprate->teacher->avatar = url($toprate->teacher->avatar);
+    //                 return $toprate;
+    //             });
+    //     }
+
+    //     // Discounted Webinars
+    //     // if (in_array(HomeSection::$discount_classes, $selectedSectionsName)) {
+    //     //     $now = time();
+    //     //     $webinarIdsHasDiscount = [];
+
+    //     //     $tickets = Ticket::where('start_date', '<', $now)->where('end_date', '>', $now)->get();
+    //     //     foreach ($tickets as $ticket) {
+    //     //         if ($ticket->isValid()) $webinarIdsHasDiscount[] = $ticket->webinar_id;
+    //     //     }
+
+    //     //     $specialOffersWebinarIds = SpecialOffer::where('status', 'active')
+    //     //         ->where('from_date', '<', $now)
+    //     //         ->where('to_date', '>', $now)
+    //     //         ->pluck('webinar_id')
+    //     //         ->toArray();
+
+    //     //     $webinarIdsHasDiscount = array_merge($specialOffersWebinarIds, $webinarIdsHasDiscount);
+
+    //     //     $data['hasDiscountWebinars'] = Webinar::whereIn('id', array_unique($webinarIdsHasDiscount))
+    //     //         ->where('status', Webinar::$active)
+    //     //         ->where('private', false)
+    //     //         ->with(['teacher:id,full_name,avatar', 'reviews' => fn($q) => $q->where('status', 'active'), 'sales', 'tickets', 'feature'])
+    //     //         ->limit(6)
+    //     //         ->get();
+    //     // }
+
+    //     // Free Webinars
+    //     // if (in_array(HomeSection::$free_classes, $selectedSectionsName)) {
+    //     //     $data['freeWebinars'] = Webinar::where('status', Webinar::$active)
+    //     //         ->where('private', false)
+    //     //         ->where(fn($q) => $q->whereNull('price')->orWhere('price', '0'))
+    //     //         ->orderBy('updated_at', 'desc')
+    //     //         ->with(['teacher:id,full_name,avatar', 'reviews' => fn($q) => $q->where('status', 'active'), 'tickets', 'feature'])
+    //     //         ->limit(6)
+    //     //         ->get();
+    //     // }
+
+    //     // Store Products
+    //     if (in_array(HomeSection::$store_products, $selectedSectionsName)) {
+    //         $data['shop'] = Product::where('status', Product::$active)
+    //             ->orderBy('updated_at', 'desc')
+    //             ->with(['creator:id,full_name,avatar'])
+    //             ->limit(6)
+    //             ->get()
+    //             ->map(function ($shop) {
+    //                 $shop->creator->avatar = url($shop->creator->avatar);
+    //                 return $shop;
+    //             });
+    //     }
+
+    //     // Trend Categories
+    //     // if (in_array(HomeSection::$trend_categories, $selectedSectionsName)) {
+    //     //     $data['trendCategories'] = TrendCategory::with(['category' => fn($q) => $q->withCount(['webinars' => fn($w) => $w->where('status', 'active')])])
+    //     //         ->orderBy('created_at', 'desc')
+    //     //         ->get();
+    //     // }
+
+    //     // Blogs
+    //     if (in_array(HomeSection::$blog, $selectedSectionsName)) {
+    //         $data['articles'] = Blog::where('status', 'publish')
+    //             ->with(['category', 'author:id,full_name'])
+    //             ->withCount('comments')
+    //             ->orderBy('created_at', 'desc')
+    //             ->limit(3)
+    //             ->get()
+    //             ->map(function ($articles) {
+    //                 $articles->image = url($articles->image);
+    //                 return $articles;
+    //             });
+    //     }
+
+    //     // Instructors
+    //     // if (in_array(HomeSection::$instructors, $selectedSectionsName)) {
+    //     //     $data['instructors'] = User::where('role_name', Role::$teacher)
+    //     //         ->select('id', 'full_name', 'avatar', 'bio')
+    //     //         ->where('status', 'active')
+    //     //         ->where(fn($q) => $q->where('ban', false)->orWhere(fn($sub) => $sub->whereNotNull('ban_end_at')->where('ban_end_at', '<', time())))
+    //     //         ->limit(8)
+    //     //         ->get();
+    //     // }
+
+    //     // Organizations
+    //     // if (in_array(HomeSection::$organizations, $selectedSectionsName)) {
+    //     //     $data['organizations'] = User::where('role_name', Role::$organization)
+    //     //         ->where('status', 'active')
+    //     //         ->where(fn($q) => $q->where('ban', false)->orWhere(fn($sub) => $sub->whereNotNull('ban_end_at')->where('ban_end_at', '<', time())))
+    //     //         ->withCount('webinars')
+    //     //         ->orderBy('webinars_count', 'desc')
+    //     //         ->limit(6)
+    //     //         ->get();
+    //     // }
+
+    //     // // Testimonials
+    //     // if (in_array(HomeSection::$testimonials, $selectedSectionsName)) {
+    //     //     $data['testimonials'] = Testimonial::where('status', 'active')->get();
+    //     // }
+
+    //     $data['reels'] = Reel::where('is_hidden','0')->orderby('id','desc')->limit(6)->get();
+    //     $data['books'] = Book::orderby('id','desc')->limit(6)->get()
+    //     ->map(function ($books) {
+    //         $books->image_cover = url($books->image_cover);
+    //         $books->url = url($books->url);
+    //         return $books;
+    //     });
+
+    //     if($userId){
+    //         $data['livestream'] = Livestream::where('creator_id', $userId)
+    //         ->orderBy('created_at', 'desc')
+    //         ->get();
+    //     }else{
+    //         $data['livestream'] = [];
+    //     }
+
+    //     // Advertising Banners
+    //     //$banners = AdvertisingBanner::where('published', true)->whereIn('position', ['home1', 'home2'])->get();
+    //     //$data['advertisingBanners1'] = $banners->where('position', 'home1')->values();
+    //     //$data['advertisingBanners2'] = $banners->where('position', 'home2')->values();
+
+    //     // Response
+    //     return apiResponse2(1, 'retrieved', trans('api.public.retrieved'), $data);
+
+    // }
+
     public function home(Request $request)
     {
+        $userId = $this->getUserIdFromToken($request);
+
         $homeSections = HomeSection::orderBy('order', 'asc')->get();
         $selectedSectionsName = $homeSections->pluck('name')->toArray();
 
         $data = [];
-
-        // Featured Webinars
-        // if (in_array(HomeSection::$featured_classes, $selectedSectionsName)) {
-        //     $data['featureWebinars'] = FeatureWebinar::whereIn('page', ['home', 'home_categories'])
-        //         ->where('status', 'publish')
-        //         ->whereHas('webinar', fn($q) => $q->where('status', Webinar::$active))
-        //         ->with(['webinar.teacher:id,full_name,avatar', 'webinar.reviews' => fn($q) => $q->where('status', 'active'), 'webinar.tickets', 'webinar.feature'])
-        //         ->orderBy('updated_at', 'desc')
-        //         ->get();
-        // }
 
         // Latest Webinars
         if (in_array(HomeSection::$latest_classes, $selectedSectionsName)) {
@@ -177,31 +412,16 @@ class WebinarController extends Controller
                 ->limit(6)
                 ->get()
                 ->map(function ($course) {
-                    $course->thumbnail = url($course->thumbnail);
-                    $course->image_cover = url($course->image_cover);
-                    $course->teacher->avatar = url($course->teacher->avatar);
+                    $course->thumbnail = !empty($course->thumbnail) ? url($course->thumbnail) : null;
+                    $course->image_cover = !empty($course->image_cover) ? url($course->image_cover) : null;
+                    
+                    if ($course->teacher && !empty($course->teacher->avatar)) {
+                        $course->teacher->avatar = url($course->teacher->avatar);
+                    }
+                    
                     return $course;
                 });
-
         }
-
-        // Latest Bundles
-        // if (in_array(HomeSection::$latest_bundles, $selectedSectionsName)) {
-        //     $data['latestBundles'] = Bundle::where('status', Webinar::$active)
-        //         ->orderBy('updated_at', 'desc')
-        //         ->with(['teacher:id,full_name,avatar', 'reviews' => fn($q) => $q->where('status', 'active'), 'tickets'])
-        //         ->limit(6)
-        //         ->get();
-        // }
-
-        // // Upcoming Courses
-        // if (in_array(HomeSection::$upcoming_courses, $selectedSectionsName)) {
-        //     $data['upcomingCourses'] = UpcomingCourse::where('status', Webinar::$active)
-        //         ->orderBy('created_at', 'desc')
-        //         ->with(['teacher:id,full_name,avatar'])
-        //         ->limit(6)
-        //         ->get();
-        // }
 
         // Best Sellers
         if (in_array(HomeSection::$best_sellers, $selectedSectionsName)) {
@@ -209,7 +429,7 @@ class WebinarController extends Controller
                 ->select(DB::raw('COUNT(id) as cnt, webinar_id'))
                 ->groupBy('webinar_id')
                 ->orderBy('cnt', 'DESC')
-                ->limit(6)
+                ->limit(1)
                 ->pluck('webinar_id')
                 ->toArray();
 
@@ -219,9 +439,13 @@ class WebinarController extends Controller
                 ->with(['teacher:id,full_name,avatar', 'reviews' => fn($q) => $q->where('status', 'active'), 'sales', 'tickets', 'feature'])
                 ->get()
                 ->map(function ($topsale) {
-                    $topsale->thumbnail = url($topsale->thumbnail);
-                    $topsale->image_cover = url($topsale->image_cover);
-                    $topsale->teacher->avatar = url($topsale->teacher->avatar);
+                    $topsale->thumbnail = !empty($topsale->thumbnail) ? url($topsale->thumbnail) : null;
+                    $topsale->image_cover = !empty($topsale->image_cover) ? url($topsale->image_cover) : null;
+                    
+                    if ($topsale->teacher && !empty($topsale->teacher->avatar)) {
+                        $topsale->teacher->avatar = url($topsale->teacher->avatar);
+                    }
+                    
                     return $topsale;
                 });
         }
@@ -236,52 +460,19 @@ class WebinarController extends Controller
                 ->groupBy('webinars.id')
                 ->orderBy('avg_rates', 'desc')
                 ->with(['teacher:id,full_name,avatar'])
-                ->limit(6)
+                ->limit(1)
                 ->get()
                 ->map(function ($toprate) {
-                    $toprate->thumbnail = url($toprate->thumbnail);
-                    $toprate->image_cover = url($toprate->image_cover);
-                    $toprate->teacher->avatar = url($toprate->teacher->avatar);
+                    $toprate->thumbnail = !empty($toprate->thumbnail) ? url($toprate->thumbnail) : null;
+                    $toprate->image_cover = !empty($toprate->image_cover) ? url($toprate->image_cover) : null;
+                    
+                    if ($toprate->teacher && !empty($toprate->teacher->avatar)) {
+                        $toprate->teacher->avatar = url($toprate->teacher->avatar);
+                    }
+                    
                     return $toprate;
                 });
         }
-
-        // Discounted Webinars
-        // if (in_array(HomeSection::$discount_classes, $selectedSectionsName)) {
-        //     $now = time();
-        //     $webinarIdsHasDiscount = [];
-
-        //     $tickets = Ticket::where('start_date', '<', $now)->where('end_date', '>', $now)->get();
-        //     foreach ($tickets as $ticket) {
-        //         if ($ticket->isValid()) $webinarIdsHasDiscount[] = $ticket->webinar_id;
-        //     }
-
-        //     $specialOffersWebinarIds = SpecialOffer::where('status', 'active')
-        //         ->where('from_date', '<', $now)
-        //         ->where('to_date', '>', $now)
-        //         ->pluck('webinar_id')
-        //         ->toArray();
-
-        //     $webinarIdsHasDiscount = array_merge($specialOffersWebinarIds, $webinarIdsHasDiscount);
-
-        //     $data['hasDiscountWebinars'] = Webinar::whereIn('id', array_unique($webinarIdsHasDiscount))
-        //         ->where('status', Webinar::$active)
-        //         ->where('private', false)
-        //         ->with(['teacher:id,full_name,avatar', 'reviews' => fn($q) => $q->where('status', 'active'), 'sales', 'tickets', 'feature'])
-        //         ->limit(6)
-        //         ->get();
-        // }
-
-        // Free Webinars
-        // if (in_array(HomeSection::$free_classes, $selectedSectionsName)) {
-        //     $data['freeWebinars'] = Webinar::where('status', Webinar::$active)
-        //         ->where('private', false)
-        //         ->where(fn($q) => $q->whereNull('price')->orWhere('price', '0'))
-        //         ->orderBy('updated_at', 'desc')
-        //         ->with(['teacher:id,full_name,avatar', 'reviews' => fn($q) => $q->where('status', 'active'), 'tickets', 'feature'])
-        //         ->limit(6)
-        //         ->get();
-        // }
 
         // Store Products
         if (in_array(HomeSection::$store_products, $selectedSectionsName)) {
@@ -291,17 +482,12 @@ class WebinarController extends Controller
                 ->limit(6)
                 ->get()
                 ->map(function ($shop) {
-                    $shop->creator->avatar = url($shop->creator->avatar);
+                    if ($shop->creator && !empty($shop->creator->avatar)) {
+                        $shop->creator->avatar = url($shop->creator->avatar);
+                    }
                     return $shop;
                 });
         }
-
-        // Trend Categories
-        // if (in_array(HomeSection::$trend_categories, $selectedSectionsName)) {
-        //     $data['trendCategories'] = TrendCategory::with(['category' => fn($q) => $q->withCount(['webinars' => fn($w) => $w->where('status', 'active')])])
-        //         ->orderBy('created_at', 'desc')
-        //         ->get();
-        // }
 
         // Blogs
         if (in_array(HomeSection::$blog, $selectedSectionsName)) {
@@ -312,53 +498,28 @@ class WebinarController extends Controller
                 ->limit(3)
                 ->get()
                 ->map(function ($articles) {
-                    $articles->image = url($articles->image);
+                    $articles->image = !empty($articles->image) ? url($articles->image) : null;
                     return $articles;
                 });
         }
 
-        // Instructors
-        // if (in_array(HomeSection::$instructors, $selectedSectionsName)) {
-        //     $data['instructors'] = User::where('role_name', Role::$teacher)
-        //         ->select('id', 'full_name', 'avatar', 'bio')
-        //         ->where('status', 'active')
-        //         ->where(fn($q) => $q->where('ban', false)->orWhere(fn($sub) => $sub->whereNotNull('ban_end_at')->where('ban_end_at', '<', time())))
-        //         ->limit(8)
-        //         ->get();
-        // }
-
-        // Organizations
-        // if (in_array(HomeSection::$organizations, $selectedSectionsName)) {
-        //     $data['organizations'] = User::where('role_name', Role::$organization)
-        //         ->where('status', 'active')
-        //         ->where(fn($q) => $q->where('ban', false)->orWhere(fn($sub) => $sub->whereNotNull('ban_end_at')->where('ban_end_at', '<', time())))
-        //         ->withCount('webinars')
-        //         ->orderBy('webinars_count', 'desc')
-        //         ->limit(6)
-        //         ->get();
-        // }
-
-        // // Testimonials
-        // if (in_array(HomeSection::$testimonials, $selectedSectionsName)) {
-        //     $data['testimonials'] = Testimonial::where('status', 'active')->get();
-        // }
-
         $data['reels'] = Reel::where('is_hidden','0')->orderby('id','desc')->limit(6)->get();
         $data['books'] = Book::orderby('id','desc')->limit(6)->get()
         ->map(function ($books) {
-            $books->image_cover = url($books->image_cover);
-            $books->url = url($books->url);
+            $books->image_cover = !empty($books->image_cover) ? url($books->image_cover) : null;
+            $books->url = !empty($books->url) ? url($books->url) : null;
             return $books;
         });
 
-        // Advertising Banners
-        //$banners = AdvertisingBanner::where('published', true)->whereIn('position', ['home1', 'home2'])->get();
-        //$data['advertisingBanners1'] = $banners->where('position', 'home1')->values();
-        //$data['advertisingBanners2'] = $banners->where('position', 'home2')->values();
+        if($userId){
+            $data['livestream'] = Livestream::where('creator_id', $userId)
+            ->orderBy('created_at', 'desc')
+            ->get();
+        }else{
+            $data['livestream'] = [];
+        }
 
-        // Response
         return apiResponse2(1, 'retrieved', trans('api.public.retrieved'), $data);
-
     }
 
     public function getWebinarsCombined(Request $request)
@@ -369,7 +530,7 @@ class WebinarController extends Controller
         $isFree = filter_var($request->get('free', false), FILTER_VALIDATE_BOOLEAN);
         $categoryId = null;
 
-         // Get category ID if slug is provided
+        // Get category ID if slug is provided
         if ($categorySlug) {
             $category = Category::where('id', $categorySlug)->first();
             if ($category) {
@@ -416,11 +577,21 @@ class WebinarController extends Controller
         // ->limit(6)
         ->get()
         ->map(function ($course) {
-            $course->thumbnail = url($course->thumbnail);
-            $course->image_cover = url($course->image_cover);
-            if ($course->teacher) {
+            // Add proper null checking for thumbnail
+            if (!empty($course->thumbnail)) {
+                $course->thumbnail = url($course->thumbnail);
+            }
+            
+            // Add proper null checking for image_cover
+            if (!empty($course->image_cover)) {
+                $course->image_cover = url($course->image_cover);
+            }
+            
+            // Add proper null checking for teacher avatar
+            if ($course->teacher && !empty($course->teacher->avatar)) {
                 $course->teacher->avatar = url($course->teacher->avatar);
             }
+            
             return $course;
         });
         
@@ -428,7 +599,7 @@ class WebinarController extends Controller
         ->select(DB::raw('COUNT(id) as cnt,webinar_id'))
         ->groupBy('webinar_id')
         ->orderBy('cnt', 'DESC')
-        ->limit(6)
+        ->limit(1)
         ->pluck('webinar_id')
         ->toArray();
 
@@ -449,9 +620,19 @@ class WebinarController extends Controller
         ->limit(1)
         ->get()
         ->map(function ($bestSaleWebinars) {
-            $bestSaleWebinars->thumbnail = url($bestSaleWebinars->thumbnail);
-            $bestSaleWebinars->image_cover = url($bestSaleWebinars->image_cover);
-            $bestSaleWebinars->teacher->avatar = url($bestSaleWebinars->teacher->avatar);
+            // Add proper null checking
+            if (!empty($bestSaleWebinars->thumbnail)) {
+                $bestSaleWebinars->thumbnail = url($bestSaleWebinars->thumbnail);
+            }
+            
+            if (!empty($bestSaleWebinars->image_cover)) {
+                $bestSaleWebinars->image_cover = url($bestSaleWebinars->image_cover);
+            }
+            
+            if ($bestSaleWebinars->teacher && !empty($bestSaleWebinars->teacher->avatar)) {
+                $bestSaleWebinars->teacher->avatar = url($bestSaleWebinars->teacher->avatar);
+            }
+            
             return $bestSaleWebinars;
         });
 
@@ -471,15 +652,104 @@ class WebinarController extends Controller
         //->limit(6)
         ->get()
         ->map(function ($bestRateWebinars) {
-            $bestRateWebinars->thumbnail = url($bestRateWebinars->thumbnail);
-            $bestRateWebinars->image_cover = url($bestRateWebinars->image_cover);
-            $bestRateWebinars->teacher->avatar = url($bestRateWebinars->teacher->avatar);
+            // Add proper null checking
+            if (!empty($bestRateWebinars->thumbnail)) {
+                $bestRateWebinars->thumbnail = url($bestRateWebinars->thumbnail);
+            }
+            
+            if (!empty($bestRateWebinars->image_cover)) {
+                $bestRateWebinars->image_cover = url($bestRateWebinars->image_cover);
+            }
+            
+            if ($bestRateWebinars->teacher && !empty($bestRateWebinars->teacher->avatar)) {
+                $bestRateWebinars->teacher->avatar = url($bestRateWebinars->teacher->avatar);
+            }
+            
             return $bestRateWebinars;
         });
+
+        $liveClassesQuery = Webinar::where('status', 'active')
+            ->where('type', 'webinar')
+            ->where('private', false);
+
+        // Apply category filter to live classes if needed
+        if ($categoryId) {
+            $liveClassesQuery->where('category_id', $categoryId);
+        }
+
+        // Apply free filter to live classes if needed
+        if ($isFree) {
+            $liveClassesQuery->where(function($query) {
+                $query->where('price', 0)
+                    ->orWhere('price', null);
+            });
+        }
+
+        // Newest Live Classes
+        $newestLiveClasses = clone $liveClassesQuery;
+        $newestLiveClasses = $newestLiveClasses->orderBy('created_at', 'desc')
+            ->with([
+                'teacher:id,full_name,avatar', 
+                'reviews' => fn($q) => $q->where('status', 'active'), 
+                'tickets', 
+                'feature'
+            ])
+            ->get()
+            ->map(function ($liveClass) {
+                // Add proper null checking
+                if (!empty($liveClass->thumbnail)) {
+                    $liveClass->thumbnail = url($liveClass->thumbnail);
+                }
+                
+                if (!empty($liveClass->image_cover)) {
+                    $liveClass->image_cover = url($liveClass->image_cover);
+                }
+                
+                if ($liveClass->teacher && !empty($liveClass->teacher->avatar)) {
+                    $liveClass->teacher->avatar = url($liveClass->teacher->avatar);
+                }
+                
+                return $liveClass;
+            });
+
+        // Top Rated Live Classes
+        $topRatedLiveClasses = Webinar::join('webinar_reviews', 'webinars.id', '=', 'webinar_reviews.webinar_id')
+            ->select('webinars.*', 'webinar_reviews.rates', 'webinar_reviews.status', DB::raw('avg(rates) as avg_rates'))
+            ->where('webinars.status', 'active')
+            ->where('webinars.type', 'webinar')
+            ->where('webinars.private', false)
+            ->where('webinar_reviews.status', 'active')
+            ->groupBy('webinars.id')
+            ->orderBy('avg_rates', 'desc')
+            ->with([
+                'teacher:id,full_name,avatar', 
+                'reviews' => fn($q) => $q->where('status', 'active'), 
+                'tickets', 
+                'feature'
+            ])
+            ->get()
+            ->map(function ($liveClass) {
+                // Add proper null checking
+                if (!empty($liveClass->thumbnail)) {
+                    $liveClass->thumbnail = url($liveClass->thumbnail);
+                }
+                
+                if (!empty($liveClass->image_cover)) {
+                    $liveClass->image_cover = url($liveClass->image_cover);
+                }
+                
+                if ($liveClass->teacher && !empty($liveClass->teacher->avatar)) {
+                    $liveClass->teacher->avatar = url($liveClass->teacher->avatar);
+                }
+                
+                return $liveClass;
+            });
 
         $data['course'] = $webinars;
         $data['bestrate'] = $bestRateWebinars;
         $data['bestsale'] = $bestSaleWebinars;
+        $data['newest_live_classes'] = $newestLiveClasses;
+        $data['top_rated_live_classes'] = $topRatedLiveClasses;
 
         return apiResponse2(1, 'retrieved', trans('api.public.retrieved'), $data);
     }
@@ -1160,6 +1430,26 @@ class WebinarController extends Controller
                 ->first();
         }
         return ($isFavorite) ? true : false;
+    }
+    
+    public function communitychat(Request $request)
+    {
+        $webinar = Webinar::where('id', $request->webinar_id)->first();
+        if (empty($webinar)) {
+            return apiResponse2(0, 'invalid', trans('api.public.invalid'));
+        }
+
+        if(!empty($webinar)) {
+            $webinarCommunityChat = Webinar::UpdateOrCreate([
+                'id' => $webinar->id,
+            ], [
+                'cummnity_chat' => $request->community_chat,
+            ]);
+            
+        }
+        
+        return apiResponse2(1, 'retrieved', 'Success', $webinarCommunityChat);
+        
     }
 
 

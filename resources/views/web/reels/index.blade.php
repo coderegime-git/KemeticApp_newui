@@ -392,7 +392,7 @@ input[type="file"]::file-selector-button:hover {
       @if (auth()->check()) 
       <button type="button" class="reels-btn" data-bs-toggle="modal" data-bs-target="#uploadModal">
           <i data-feather="plus-circle"></i>
-          Create Reel
+          Create Portals
       </button>
       @endif
     </div>
@@ -603,7 +603,7 @@ input[type="file"]::file-selector-button:hover {
     <div class="modal-dialog">
         <div class="modal-content">
             <div class="modal-header">
-                <h5 class="modal-title" id="uploadModalLabel">Upload New Reel</h5>
+                <h5 class="modal-title" id="uploadModalLabel">Upload New Portals</h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
             <div class="modal-body">
@@ -621,7 +621,7 @@ input[type="file"]::file-selector-button:hover {
                     </div>
                     <div class="mb-3">
                         <label class="form-label">Title</label>
-                        <input type="text" class="form-control" id="title" name="title" required maxlength="255" placeholder="Enter a title for your reel">
+                        <input type="text" class="form-control" id="title" name="title" required maxlength="255" placeholder="Enter a title for your portals">
                     </div>
                     <div class="mb-3">
                         <label class="form-label">Caption</label>

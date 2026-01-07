@@ -821,26 +821,26 @@ class CartController extends Controller
     private function calculateLuluShipping($carts, $addressData)
     {
         
-         $accessToken = Cache::get('cj_access_token');
+        //  $accessToken = Cache::get('cj_access_token');
 
-        if (!$accessToken) {
-            $accessToken = $this->getCJAccessToken();
-            if (!$accessToken) {
-                throw new \Exception('Failed to get access token');
-            }
-        }
+        // if (!$accessToken) {
+        //     $accessToken = $this->getCJAccessToken();
+        //     if (!$accessToken) {
+        //         throw new \Exception('Failed to get access token');
+        //     }
+        // }
 
-        // dd($accessToken);
-        // dd($accessToken);
+        // // dd($accessToken);
+        // // dd($accessToken);
 
-        //$response = $this->createCJOrder();
-        if($accessToken)
-        {
-            // dd('hi');
-            $response = $this->submitToCJDropshipping();
-        }
+        // //$response = $this->createCJOrder();
+        // if($accessToken)
+        // {
+        //     // dd('hi');
+        //     $response = $this->submitToCJDropshipping();
+        // }
 
-        dd($response);
+        // dd($response);
         
         $token = $this->getLuluAccessTokenUsingCurl();
         
@@ -859,12 +859,12 @@ class CartController extends Controller
                 // && $cart->productOrder->product->type == Product::$physical) {
                 
                 $product = $cart->productOrder->product;
-                $pageCount =100; // Default page count
+                $pageCount =426; // Default page count
                 
                 
                 // Get PDF URL from product
                 //$pdfUrl = $product->getPdfUrl(); // You need to implement this method
-                $pdfUrl = "https://kemetic.app/store/1/pdf/traffic_pub_gen19.pdf";
+                $pdfUrl = "https://kemetic.app/store/1/pdf/400page.pdf";
                 
                 if (!$pdfUrl) {
                     // Use a fallback PDF URL or skip
@@ -881,7 +881,7 @@ class CartController extends Controller
                 {
                     $actualPageCount = $pageCount;
                 }
-                
+                // dd($actualPageCount);
                 
                 if ($actualPageCount === false) {
                     $actualPageCount = $pageCount;
@@ -908,19 +908,21 @@ class CartController extends Controller
             'line_items' => $lineItems,
             'shipping_address' => [
                 'city' => $addressData['city_name'],
-                'country_code' => 'IND',
+                'country_code' => 'UK',
                 'postcode' => $addressData['zip_code'],
                 'state_code' => $addressData['province_name'],
                 // 'street1' => ($addressData['house_no'] ?? '') . ' ' . ($addressData['address'] ?? ''),
-                'street1' => '101 Independence Ave SE',
+                'street1' => '231D, munichalai Road',
                 'phone_number' => $addressData['phone']
             ],
-            'shipping_option' => 'EXPRESS' // Standard shipping
+            'shipping_option' => 'MAIL' // Standard shipping
         ];
+
+        // dd($lineItems);
     
         $response = $this->getLuluPriceUsingCurl('/print-job-cost-calculations/', 'POST', $requestData, $token);
         
-        dd('hi1');
+        // dd('hi1');
         if (isset($response['total_cost_incl_tax'])) {
             return $response['total_cost_incl_tax'];
         } elseif (isset($response['shipping_cost'])) {
@@ -1048,8 +1050,6 @@ class CartController extends Controller
             elseif($user_as_a_guest){
                 $this->updateProductOrders($request, $carts, $user,$user_as_a_guest);
             }
-            
-//dd('check2');
 
             if (!empty($order) and $order->total_amount > 0) {
                 $razorpay = false;
@@ -1632,14 +1632,44 @@ class CartController extends Controller
         // dd($token);
         
         // $url = env('LULU_BASE_URL', 'https://api.sandbox.lulu.com') . $endpoint;
-        // $url = "https://api.sandbox.lulu.com/print-job-cost-calculations/";
+        $url = "https://api.sandbox.lulu.com/print-job-cost-calculations/";
 
-        $printurl = 'https://api.lulu.com/print-jobs/';
+        // $printurl = 'https://api.lulu.com/print-jobs/';
 
-        $pdfUrl = "https://kemetic.app/store/1/pdf/traffic_pub_gen19.pdf";
-        $title = "Test Print Job via Curl";
-        $quantity = 1;
-        //  dd('hi1');
+        // $pdfUrl = "https://kemetic.app/store/1/pdf/400page.pdf";
+        // $title = "Test Print Job via Curl";
+        // $quantity = 1;
+        // //  dd('hi1');
+
+        // // $data = [
+        // //     "contact_email" => "test@test.com",
+        // //     "external_id" => "demo-time",
+        // //     "line_items" => [
+        // //         [
+        // //             "external_id" => "item-reference-1",
+        // //             "title" => "My Book",
+        // //             "quantity" => $quantity,
+        // //             "pod_package_id" => "0600X0900BWSTDPB060UW444MXX", // Moved here
+        // //             "cover" => [
+        // //                 "source_url" => $pdfurl,
+        // //             ],
+        // //             "interior" => [
+        // //                 "source_url" => $pdfurl,
+        // //                 "page_count" => 100 // You need to add the correct page count
+        // //             ]
+        // //         ]
+        // //     ],
+        // //     "production_delay" => 120,
+        // //     "shipping_address" => [
+        // //         "city" => "Lübeck",
+        // //         "country_code" => "GB",
+        // //         "name" => "Hans Dampf",
+        // //         "phone_number" => "844-212-0689",
+        // //         "postcode" => "PO1 3AX",
+        // //         "street1" => "Holstenstr. 48"
+        // //     ],
+        // //     "shipping_level" => "MAIL"
+        // // ];
 
         // $data = [
         //     "contact_email" => "test@test.com",
@@ -1648,14 +1678,14 @@ class CartController extends Controller
         //         [
         //             "external_id" => "item-reference-1",
         //             "title" => "My Book",
-        //             "quantity" => $quantity,
+        //             "quantity" => 1,
         //             "pod_package_id" => "0600X0900BWSTDPB060UW444MXX", // Moved here
         //             "cover" => [
         //                 "source_url" => $pdfurl,
         //             ],
         //             "interior" => [
         //                 "source_url" => $pdfurl,
-        //                 "page_count" => 100 // You need to add the correct page count
+        //                 "page_count" => 426 // You need to add the correct page count
         //             ]
         //         ]
         //     ],
@@ -1671,86 +1701,56 @@ class CartController extends Controller
         //     "shipping_level" => "MAIL"
         // ];
 
-        $data = [
-            "contact_email" => "test@test.com",
-            "external_id" => "demo-time",
-            "line_items" => [
-                [
-                    "external_id" => "item-reference-1",
-                    "title" => "My Book",
-                    "quantity" => 30,
-                    "pod_package_id" => "0600X0900BWSTDPB060UW444MXX", // Moved here
-                    "cover" => [
-                        "source_url" => $pdfurl,
-                    ],
-                    "interior" => [
-                        "source_url" => $pdfurl,
-                        "page_count" => 100 // You need to add the correct page count
-                    ]
-                ]
-            ],
-            "production_delay" => 120,
-            "shipping_address" => [
-                "city" => "Lübeck",
-                "country_code" => "GB",
-                "name" => "Hans Dampf",
-                "phone_number" => "844-212-0689",
-                "postcode" => "PO1 3AX",
-                "street1" => "Holstenstr. 48"
-            ],
-            "shipping_level" => "MAIL"
-        ];
-
-        // dd($data);
+        // // dd($data);
         
-        $printcurl = curl_init();
-        curl_setopt_array($printcurl, [
-            CURLOPT_URL => $printurl,
-            CURLOPT_RETURNTRANSFER => true,
-            CURLOPT_ENCODING => '',
-            CURLOPT_MAXREDIRS => 10,
-            CURLOPT_TIMEOUT => 30,
-            CURLOPT_FOLLOWLOCATION => true,
-            CURLOPT_HTTP_VERSION => CURL_HTTP_VERSION_1_1,
-            CURLOPT_CUSTOMREQUEST => 'POST',
-            CURLOPT_HTTPHEADER => [
-                'Authorization: Bearer ' . $token,
-                'Cache-Control: no-cache',
-                'Content-Type: application/json'
-            ],
-        ]);
+        // $printcurl = curl_init();
+        // curl_setopt_array($printcurl, [
+        //     CURLOPT_URL => $printurl,
+        //     CURLOPT_RETURNTRANSFER => true,
+        //     CURLOPT_ENCODING => '',
+        //     CURLOPT_MAXREDIRS => 10,
+        //     CURLOPT_TIMEOUT => 30,
+        //     CURLOPT_FOLLOWLOCATION => true,
+        //     CURLOPT_HTTP_VERSION => CURL_HTTP_VERSION_1_1,
+        //     CURLOPT_CUSTOMREQUEST => 'POST',
+        //     CURLOPT_HTTPHEADER => [
+        //         'Authorization: Bearer ' . $token,
+        //         'Cache-Control: no-cache',
+        //         'Content-Type: application/json'
+        //     ],
+        // ]);
 
-        // Certificate verification handling
-        if ($this->laragonCertPath && file_exists($this->laragonCertPath)) {
-            $options[CURLOPT_CAINFO] = $this->laragonCertPath;
-            $options[CURLOPT_CAPATH] = dirname($this->laragonCertPath);
-            $options[CURLOPT_SSL_VERIFYPEER] = true;
-            $options[CURLOPT_SSL_VERIFYHOST] = 2;
-        } else {
-            $options[CURLOPT_SSL_VERIFYPEER] = false;
-            $options[CURLOPT_SSL_VERIFYHOST] = false;
-        }
+        // // Certificate verification handling
+        // if ($this->laragonCertPath && file_exists($this->laragonCertPath)) {
+        //     $options[CURLOPT_CAINFO] = $this->laragonCertPath;
+        //     $options[CURLOPT_CAPATH] = dirname($this->laragonCertPath);
+        //     $options[CURLOPT_SSL_VERIFYPEER] = true;
+        //     $options[CURLOPT_SSL_VERIFYHOST] = 2;
+        // } else {
+        //     $options[CURLOPT_SSL_VERIFYPEER] = false;
+        //     $options[CURLOPT_SSL_VERIFYHOST] = false;
+        // }
 
         
 
-        if (!empty($data)) {
-            $options[CURLOPT_POSTFIELDS] = json_encode($data);
-        }
+        // if (!empty($data)) {
+        //     $options[CURLOPT_POSTFIELDS] = json_encode($data);
+        // }
 
-        curl_setopt_array($printcurl, $options);
+        // curl_setopt_array($printcurl, $options);
 
-        $response = curl_exec($printcurl);
-        $httpCode = curl_getinfo($printcurl, CURLINFO_HTTP_CODE);
-        $error = curl_error($printcurl);
-        if ($error) {
-            $errorNo = curl_errno($printcurl);
-            \Log::error("cURL Error #{$errorNo}: {$error}");
-            \Log::error("Certificate path used: " . ($this->laragonCertPath ?? 'none'));
-            \Log::error("File exists: " . (file_exists($this->laragonCertPath) ? 'Yes' : 'No'));
-        }
+        // $response = curl_exec($printcurl);
+        // $httpCode = curl_getinfo($printcurl, CURLINFO_HTTP_CODE);
+        // $error = curl_error($printcurl);
+        // if ($error) {
+        //     $errorNo = curl_errno($printcurl);
+        //     \Log::error("cURL Error #{$errorNo}: {$error}");
+        //     \Log::error("Certificate path used: " . ($this->laragonCertPath ?? 'none'));
+        //     \Log::error("File exists: " . (file_exists($this->laragonCertPath) ? 'Yes' : 'No'));
+        // }
 
-        // dd($data);
-        dd($response);
+        // // dd($data);
+        // dd($response);
 
 
         $curl = curl_init();
@@ -1801,7 +1801,7 @@ class CartController extends Controller
             \Log::error("File exists: " . (file_exists($this->laragonCertPath) ? 'Yes' : 'No'));
         }
 
-        
+        dd($response);
         
         // Enhanced error logging
         if ($error) {
@@ -2113,15 +2113,13 @@ class CartController extends Controller
                 curl_setopt($curl, CURLOPT_SSL_VERIFYHOST, false);
             }
 
-           
-            
             $response = curl_exec($curl);
             $httpCode = curl_getinfo($curl, CURLINFO_HTTP_CODE);
             $error = curl_error($curl);
             curl_close($curl);
 
             
-            dd($jsonData);
+            // dd($response);
             if ($error) {
                 \Log::error('CJ Dropshipping Order Error: ' . $error);
                 throw new \Exception('Failed to create CJ order: ' . $error);
@@ -2228,13 +2226,13 @@ class CartController extends Controller
                 'shippingZip' => '10001',
                 'shippingCountry' => 'United States',
                 'shippingCountryCode' => 'US',
-                'shippingProvince' => 'New York',
-                'shippingCity' => 'New York',
-                'shippingCounty' => '',
-                'shippingPhone' => '+1 123 456 7890',
+                'shippingProvince' => 'DC',
+                'shippingCity' => 'Washington',
+                'shippingCounty' => 'United States',
+                'shippingPhone' => '+1 206 555 0100',
                 'shippingCustomerName' => 'Test Customer',
-                'shippingAddress' => '123 Test Street',
-                'shippingAddress2' => 'Apt 4B',
+                'shippingAddress' => '101 Independence Ave SE',
+                'shippingAddress2' => '20540',
                 'taxId' => '',
                 'remark' => 'Test order',
                 'email' => 'test@example.com',
@@ -2245,10 +2243,9 @@ class CartController extends Controller
                 'fromCountryCode' => 'CN',
                 'houseNumber' => '123',
                 'iossType' => '',
-                'platform' => 'custom',
+                'platform' => 'shopify',
                 'iossNumber' => '',
-                'shopLogisticsType' => 1,
-                'storageId' => '201e67f6ba4644c0a36d63bf4989dd70',
+                'storageId' => '',
                 'products' => [
                     [
                         'vid' => '92511400-C758-4474-93CA-66D442F5F787',
@@ -2259,7 +2256,8 @@ class CartController extends Controller
             ];
             
             // Submit to CJ
-            $result = $this->createCJOrder($sampleOrderData);
+            $result = $this->getTrackingInfo('SD2601030613480657800');
+            // $result = $this->createCJOrder($sampleOrderData);
             
             dd($result);
             if ($result) {
@@ -2270,6 +2268,8 @@ class CartController extends Controller
                     'cj_tracking_number' => $result['trackingNumber'] ?? null,
                     'cj_status' => 'submitted'
                 ]);
+
+                // $result = $this->getTrackingInfo($result['orderNumber']);
                 
                 // Log success
                 \Log::info('CJ Dropshipping order submitted successfully', [
@@ -2297,6 +2297,124 @@ class CartController extends Controller
                 'success' => false,
                 'message' => 'Failed to submit to CJ Dropshipping: ' . $e->getMessage()
             ];
+        }
+    }
+
+    public function getTrackingInfo($trackNumber)
+    {
+        try {
+            // Validate tracking number
+            if (empty($trackNumber)) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Tracking number is required'
+                ], 400);
+            }
+
+            // Get access token from cache or fetch new one
+            $accessToken = Cache::get('cj_access_token');
+            if (!$accessToken) {
+                $accessToken = $this->getCJAccessToken();
+                if (!$accessToken) {
+                    throw new \Exception('Failed to get CJ access token');
+                }
+            }
+
+            // Prepare API URL
+            $url = "https://developers.cjdropshipping.com/api2.0/v1/logistic/getTrackInfo/trackNumber=" . urlencode($trackNumber);
+
+            // Initialize cURL
+            $curl = curl_init();
+            
+            curl_setopt_array($curl, [
+                CURLOPT_URL => $url,
+                CURLOPT_RETURNTRANSFER => true,
+                CURLOPT_ENCODING => '',
+                CURLOPT_MAXREDIRS => 10,
+                CURLOPT_TIMEOUT => 30,
+                CURLOPT_FOLLOWLOCATION => true,
+                CURLOPT_HTTP_VERSION => CURL_HTTP_VERSION_1_1,
+                CURLOPT_CUSTOMREQUEST => 'GET',
+                CURLOPT_HTTPHEADER => [
+                    'CJ-Access-Token: ' . $accessToken,
+                    'Accept: application/json',
+                ],
+            ]);
+
+            // SSL certificate handling
+            if ($this->laragonCertPath && file_exists($this->laragonCertPath)) {
+                curl_setopt($curl, CURLOPT_CAINFO, $this->laragonCertPath);
+                curl_setopt($curl, CURLOPT_CAPATH, dirname($this->laragonCertPath));
+                curl_setopt($curl, CURLOPT_SSL_VERIFYPEER, true);
+                curl_setopt($curl, CURLOPT_SSL_VERIFYHOST, 2);
+            } else {
+                curl_setopt($curl, CURLOPT_SSL_VERIFYPEER, false);
+                curl_setopt($curl, CURLOPT_SSL_VERIFYHOST, false);
+            }
+
+            // Execute request
+            $response = curl_exec($curl);
+            $httpCode = curl_getinfo($curl, CURLINFO_HTTP_CODE);
+            $error = curl_error($curl);
+            curl_close($curl);
+
+            dd($response);
+
+            // Handle cURL errors
+            if ($error) {
+                Log::error('CJ Tracking API cURL Error: ' . $error);
+                throw new \Exception('Failed to fetch tracking information: ' . $error);
+            }
+
+            // Parse response
+            $data = json_decode($response, true);
+
+            // Handle token expiration (retry once with fresh token)
+            if (($httpCode === 401 || (isset($data['code']) && $data['code'] === 1002)) && 
+                Cache::get('cj_tracking_retry_attempt', 0) < 1) {
+                
+                Cache::forget('cj_access_token');
+                Cache::increment('cj_tracking_retry_attempt');
+                
+                return $this->getTrackingInfo($trackNumber);
+            }
+
+            // Reset retry counter
+            Cache::forget('cj_tracking_retry_attempt');
+
+            // Check for API errors
+            if ($httpCode !== 200) {
+                Log::error('CJ Tracking API HTTP Error: ' . $httpCode . ' - ' . $response);
+                throw new \Exception('API returned HTTP ' . $httpCode);
+            }
+
+            // Check response code
+            if (!isset($data['code']) || $data['code'] !== 200) {
+                $errorMsg = $data['message'] ?? 'Unknown API error';
+                Log::error('CJ Tracking API Error: ' . $errorMsg);
+                
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Failed to get tracking info: ' . $errorMsg,
+                    'api_code' => $data['code'] ?? null
+                ], 400);
+            }
+
+            // Return success response
+            return response()->json([
+                'success' => true,
+                'message' => 'Tracking information retrieved successfully',
+                'data' => $data['data'] ?? [],
+                'tracking_number' => $trackNumber
+            ]);
+
+        } catch (\Exception $e) {
+            Log::error('CJ Tracking Failed: ' . $e->getMessage());
+            
+            return response()->json([
+                'success' => false,
+                'message' => 'Failed to get tracking information: ' . $e->getMessage()
+            ], 500);
         }
     }
 }

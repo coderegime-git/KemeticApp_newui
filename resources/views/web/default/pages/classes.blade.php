@@ -165,26 +165,87 @@
   <section>
     <div class="course-row-top">
       <h2 style="margin:0">🔴 Live Classes</h2>
-      <span class="course-subfilter active">Newest</span>
-      <span class="course-subfilter">Top Rated</span>
+       <span class="course-subfilter active"  onclick="filterLiveClasses('newest')"  data-filter="newest">Newest</span>
+        <span class="course-subfilter"  onclick="filterLiveClasses('topRated')" data-filter="topRated">Top Rated</span>
     </div>
-    <div class="course-row">
-      @foreach($webinars as $webinar)
-        <article class="course-item">
-          <div class="course-thumb">
-            <a href="{{ $webinar->getUrl() }}"><img src="{{ $webinar->getImage() }}" class="img-cover" alt="{{ $webinar->title }}"></a>
-          </div>
-          <div class="course-name"><a href="{{ $webinar->getUrl() }}">{{ Str::limit($webinar->title, 13, '..') }}</a></div>
-          <div class="course-meta">{{ convertMinutesToHourAndMinute($webinar->duration) }} {{ trans('home.hours') }} · <a href="{{ $webinar->teacher->getProfileUrl() }}" target="_blank" class="user-name ml-5 font-14">{{ $webinar->teacher->full_name }}</a></div>
-          <div class="course-bar">
-            <div class="course-stars">★★★★★</div>
-            <a href="{{ $webinar->getUrl() }}"><button class="course-cta">Join Live</button></a>
-          </div>
-        </article>
-      @endforeach
-      
+     <div class="course-row" id="newestLiveClasses">
+        @foreach($newestLiveClasses as $webinar)
+            <article class="course-item">
+                <div class="course-thumb">
+                    <a href="{{ $webinar->getUrl() }}"><img src="{{ $webinar->getImage() }}" class="img-cover" alt="{{ $webinar->title }}"></a>
+                </div>
+                <div class="course-name"><a href="{{ $webinar->getUrl() }}">{{ Str::limit($webinar->title, 13, '..') }}</a></div>
+                <div class="course-meta">{{ convertMinutesToHourAndMinute($webinar->duration) }} {{ trans('home.hours') }} · <a href="{{ $webinar->teacher->getProfileUrl() }}" target="_blank" class="user-name ml-5 font-14">{{ $webinar->teacher->full_name }}</a></div>
+                <div class="course-bar">
+                    <div class="course-stars">
+                        @php
+                            $rating = $webinar->reviews->avg('rates') ?? 0;
+                            $filledStars = min(5, max(0, round($rating)));
+                            $emptyStars = 5 - $filledStars;
+                        @endphp
+                        @for($i = 0; $i < $filledStars; $i++)
+                            ★
+                        @endfor
+                        @for($i = 0; $i < $emptyStars; $i++)
+                            ☆
+                        @endfor
+                    </div>
+                    <a href="{{ $webinar->getUrl() }}"><button class="course-cta">Join Live</button></a>
+                </div>
+            </article>
+        @endforeach
+    </div>
+
+    <div class="course-row" id="topRatedLiveClasses" style="display: none;">
+        @foreach($topRatedLiveClasses as $webinar)
+            <article class="course-item">
+                <div class="course-thumb">
+                    <a href="{{ $webinar->getUrl() }}"><img src="{{ $webinar->getImage() }}" class="img-cover" alt="{{ $webinar->title }}"></a>
+                </div>
+                <div class="course-name"><a href="{{ $webinar->getUrl() }}">{{ Str::limit($webinar->title, 13, '..') }}</a></div>
+                <div class="course-meta">{{ convertMinutesToHourAndMinute($webinar->duration) }} {{ trans('home.hours') }} · <a href="{{ $webinar->teacher->getProfileUrl() }}" target="_blank" class="user-name ml-5 font-14">{{ $webinar->teacher->full_name }}</a></div>
+                <div class="course-bar">
+                    <div class="course-stars">
+                        @php
+                            $rating = $webinar->avg_rates ?? $webinar->reviews->avg('rates') ?? 0;
+                            $filledStars = min(5, max(0, round($rating)));
+                            $emptyStars = 5 - $filledStars;
+                        @endphp
+                        @for($i = 0; $i < $filledStars; $i++)
+                            ★
+                        @endfor
+                        @for($i = 0; $i < $emptyStars; $i++)
+                            ☆
+                        @endfor
+                    </div>
+                    <a href="{{ $webinar->getUrl() }}"><button class="course-cta">Join Live</button></a>
+                </div>
+            </article>
+        @endforeach
     </div>
   </section>
 
 </main>
 @endsection
+@push('scripts_bottom')
+<script>
+function filterLiveClasses(filterType) {
+    console.log('Filtering:', filterType);
+    
+    // Remove active class from all filters
+    document.querySelectorAll('.course-subfilter').forEach(f => f.classList.remove('active'));
+    
+    // Add active class to clicked filter
+    event.target.classList.add('active');
+    
+    // Show/hide sections
+    if (filterType === 'newest') {
+        document.getElementById('newestLiveClasses').style.display = 'grid';
+        document.getElementById('topRatedLiveClasses').style.display = 'none';
+    } else if (filterType === 'topRated') {
+        document.getElementById('newestLiveClasses').style.display = 'none';
+        document.getElementById('topRatedLiveClasses').style.display = 'grid';
+    }
+}
+</script>
+@endpush

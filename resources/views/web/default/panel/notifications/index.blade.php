@@ -269,24 +269,26 @@
       console.log('DOM loaded - initializing event listeners');
 
       // Notification Settings Toggle Handling
-      document.querySelectorAll('.notifications-feature-toggle-pill').forEach(pill => {
-        pill.addEventListener('click', function(e) {
-          e.preventDefault();
-          console.log('Feature toggle clicked');
-          const checkbox = this.querySelector('input[type="checkbox"]');
-          checkbox.checked = !checkbox.checked;
-          
-          if (checkbox.checked) {
-            this.classList.remove('notifications-off');
-            this.classList.add('notifications-on');
-            this.querySelector('.notifications-toggle-text').textContent = 'On';
-          } else {
-            this.classList.remove('notifications-on');
-            this.classList.add('notifications-off');
-            this.querySelector('.notifications-toggle-text').textContent = 'Off';
-          }
-        });
+      document.querySelectorAll('.notifications-feature-toggle-pill input[type="checkbox"]')
+        .forEach(checkbox => {
+
+          checkbox.addEventListener('change', function () {
+            const pill = this.closest('.notifications-feature-toggle-pill');
+            const text = pill.querySelector('.notifications-toggle-text');
+
+            if (this.checked) {
+              pill.classList.remove('notifications-off');
+              pill.classList.add('notifications-on');
+              text.textContent = 'On';
+            } else {
+              pill.classList.remove('notifications-on');
+              pill.classList.add('notifications-off');
+              text.textContent = 'Off';
+            }
+          });
+
       });
+
 
       // Save Settings Form Submission - USING GET METHOD
       document.getElementById('notificationSettingsForm').addEventListener('submit', function(e) {

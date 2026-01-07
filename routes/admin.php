@@ -518,6 +518,17 @@ Route::group(['prefix' => $prefix, 'namespace' => 'Admin', 'middleware' => ['web
             });
         });
 
+        Route::prefix('livestream')->group(function () {
+            Route::get('/', 'LivestreamController@index');
+            Route::get('/create', 'LivestreamController@create');
+            Route::post('/store', 'LivestreamController@store');
+            Route::get('/{id}/edit', 'LivestreamController@edit');
+            Route::post('/{id}/update', 'LivestreamController@update');
+            Route::get('/{id}/delete', 'LivestreamController@delete');
+            Route::get('/{id}/create-stream-key', 'LivestreamController@createStreamKey');
+            Route::get('/{id}/sync', 'LivestreamController@sync');
+        });
+
 
         Route::group(['prefix' => 'plan'], function () {
         

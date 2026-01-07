@@ -342,7 +342,7 @@
      <script src="/vendor/laravel-filemanager/js/stand-alone-button.js"></script>
         <script>
             var videoDemoPathPlaceHolderBySource = {
-                upload: '{{ trans('update.file_source_upload_placeholder') }}',
+                upload: 'Path',
                 youtube: '{{ trans('update.file_source_youtube_placeholder') }}',
                 vimeo: '{{ trans('update.file_source_vimeo_placeholder') }}',
                 external_link: '{{ trans('update.file_source_external_link_placeholder') }}',

@@ -81,7 +81,7 @@ class UserController extends Controller
 
         if ($user) {
             // Set full URL for avatar
-            $user->avatar = url($user->avatar);
+            $user->avatar = !empty($user->avatar) ? url($user->avatar) : "";
             
             // Set full URLs for each story's media_url
             if ($user->stories) {
@@ -198,12 +198,24 @@ class UserController extends Controller
         $followings = $user->following();
         $followers = $user->followers();
 
+        $authUser = apiAuth();
+        
         $authUserIsFollower = false;
-        if (auth()->check()) {
-            $authUserIsFollower = $followers->where('follower', auth()->id())
+        
+        if ($authUser) {
+            // $authUserIsFollower = $followers->where('follower', $authUser->id)
+            //     ->where('status', Follow::$accepted)
+            //     ->first();
+            $authUserIsFollower = Follow::where('user_id', $user->id)  // users who follow the current user
+                ->where('follower', $authUser->id)  // where follower is the auth user
                 ->where('status', Follow::$accepted)
-                ->first();
+                ->exists();
+            $authUserIsFollower = !is_null($authUserIsFollower);
+        } else {
+            $authUserIsFollower = false;
         }
+        
+        $user->auth_user_is_follower = $authUserIsFollower;
 
         $userMetas = $user->userMetas;
         $occupations = $user->occupations()
@@ -292,7 +304,7 @@ class UserController extends Controller
             'userRates' => $user->rates(),
             'userFollowers' => $followers,
             'userFollowing' => $followings,
-            'authUserIsFollower' => $authUserIsFollower,
+            'auth_user_is_follower' => $authUserIsFollower,
             'educations' => $userMetas->where('name', 'education'),
             'experiences' => $userMetas->where('name', 'experience'),
             'occupations' => $occupations,
@@ -1148,7 +1160,7 @@ class UserController extends Controller
                     'id' => $order->id,
                     'order_number' => $order->order_number ?? 'N/A',
                     'items' => $items,
-                    'total' => formatPrice($order->total_amount),
+                    'total' => $order->total_amount,
                     'date' => date('Y-m-d H:i', $order->created_at),
                     'status' => $order->status,
                 ];
@@ -1197,7 +1209,7 @@ class UserController extends Controller
                     'id' => $course->id,
                     'title' => $course->title,
                     'type' => $course->type == 'course' ? 'Course' : ($course->type == 'webinar' ? 'Webinar' : 'Text Lesson'),
-                    'price' => formatPrice($course->price),
+                    'price' => $course->price,
                     'enrollments' => $course->enrollments_count,
                     'rating' => $course->getRate(),
                     'updated_at' => date('Y-m-d H:i', $course->updated_at),

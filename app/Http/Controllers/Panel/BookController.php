@@ -88,17 +88,17 @@ class BookController extends Controller
         //$this->authorize('admin_book_create');
 
         
-        // $this->validate($request, [
-        //     'locale' => 'required',
-        //     'title' => 'required|string|max:255',
-        //     'category_id' => 'required|numeric',
-        //     'image_cover' => 'required|string',
-        //     'image_path' => 'required|string',
-        //     'type' => 'required|string',
-        //     'price' => 'nullable|integer',
-        //     'description' => 'required|string',
-        //     'content' => 'required|string',
-        // ]);
+        $this->validate($request, [
+            'locale' => 'required',
+            'title' => 'required|string|max:255',
+            'category_id' => 'required|numeric',
+            'image_cover' => 'required|string',
+            // 'image_path' => 'required|string',
+            'type' => 'required|string',
+            'price' => 'nullable|integer',
+            'description' => 'required|string',
+            'content' => 'required|string',
+        ]);
        
         $data = $request->all();
 
@@ -151,17 +151,17 @@ class BookController extends Controller
     {
         //$this->authorize('admin_book_edit');
 
-        // $this->validate($request, [
-        //     'locale' => 'required',
-        //     'title' => 'required|string|max:255',
-        //     'category_id' => 'required|numeric',
-        //     'image_cover' => 'required|string',
-        //     'image_path' => 'required|string',
-        //     'type' => 'required|string',
-        //     'price' => 'nullable',
-        //     'description' => 'required|string',
-        //     'content' => 'required|string',
-        // ]);
+        $this->validate($request, [
+            'locale' => 'required',
+            'title' => 'required|string|max:255',
+            'category_id' => 'required|numeric',
+            'image_cover' => 'required|string',
+            // 'image_path' => 'required|string',
+            'type' => 'required|string',
+            'price' => 'nullable',
+            'description' => 'required|string',
+            'content' => 'required|string',
+        ]);
 
         $data = $request->all();
         $book = Book::findOrFail($id);

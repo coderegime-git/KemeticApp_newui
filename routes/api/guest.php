@@ -30,6 +30,7 @@ Route::group([], function () {
 
         Route::get('reports/reasons', ['uses' => 'ReportsController@index']);
 
+        Route::post('/communitychat', ['uses' => 'WebinarController@communitychat', 'middleware' => 'api.auth']);
 
         Route::post('/{id}/report', ['uses' => 'WebinarController@report', 'middleware' => 'api.auth']);
 
@@ -71,6 +72,15 @@ Route::group([], function () {
         Route::get('/plans', 'AdReelController@plans');
         Route::post('/add',  ['uses' => 'AdReelController@store','middleware' => 'api.auth']);
         Route::post('/purchase', ['uses' => 'AdReelController@purchase','middleware' => 'api.auth']);
+
+        Route::post('/{id}/like', ['uses' => 'AdReelController@toggleLike','middleware' => 'api.auth']);
+        Route::post('/{id}/share', ['uses' => 'AdReelController@share','middleware' => 'api.auth']);
+        Route::post('/{id}/save', ['uses' => 'AdReelController@save','middleware' => 'api.auth']);
+        Route::post('/{id}/gift', ['uses' => 'AdReelController@gift','middleware' => 'api.auth']);
+        Route::post('/{id}/comment', ['uses' => 'AdReelController@comment','middleware' => 'api.auth']);
+        Route::post('/{id}/report', ['uses' => 'AdReelController@report','middleware' => 'api.auth']);
+        Route::post('/{id}/view', ['uses' => 'AdReelController@view','middleware' => 'api.auth']);
+        Route::delete('/comment/{commentId}', ['uses' => 'AdReelController@deleteComment','middleware' => 'api.auth']);
     });
 
     Route::group(['prefix' => 'blogs'], function () {
@@ -104,6 +114,21 @@ Route::group([], function () {
         Route::post('/{book}/comment', ['uses' => 'BookController@bookcomment','middleware' => 'api.auth']);
         Route::post('/{book}/save', ['uses' => 'BookController@booksave','middleware' => 'api.auth']);
     });
+
+    Route::group(['prefix' => 'livestream'], function () {
+
+        Route::get('/', ['uses' => 'LivestreamController@index', 'middleware' => 'api.auth']);
+        Route::get('/{id}/end', ['uses' => 'LivestreamController@delete', 'middleware' => 'api.auth']);
+    });
+
+    Route::group(['prefix' => 'notification'], function () {
+
+        Route::post('/send', 'NotificationController@sendNotification');
+        Route::post('/savetoken',['uses' => 'NotificationController@saveFcmToken', 'middleware' => 'api.auth']);
+    });
+    
+
+    
 
     Route::get('advertising-banner', ['uses' => 'AdvertisingBannerController@list']);
 

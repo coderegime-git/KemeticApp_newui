@@ -25,23 +25,23 @@
         <div class="bookdetail-media-actions">
           @if($book->type === 'Audio Book')
             <!-- Audio Book Actions -->
-            <button class="bookdetail-btn bookdetail-btn-gold" onclick="playAudioSample('{{ url($book->url) ?? '#' }}')">
+            <button type="button" class="bookdetail-btn bookdetail-btn-gold" onclick="playAudioSample('{{ url($book->url) ?? '#' }}')">
                 ▶ Listen Sample (5 min)
             </button>
-            <button class="bookdetail-btn bookdetail-btn-ghost" onclick="showAudioDetails()">
+            <button type="button" class="bookdetail-btn bookdetail-btn-ghost" onclick="showAudioDetails()">
                 📖 Read Description
                 </button>
             @elseif($book->type === 'E-book' || $book->type === 'digital')
                 <!-- E-book/Digital Book Actions -->
-                <button class="bookdetail-btn bookdetail-btn-gold" onclick="previewPdf('{{ url($book->url) ?? '#' }}')">
+                <button type="button" class="bookdetail-btn bookdetail-btn-gold" onclick="previewPdf('{{ url($book->url) ?? '#' }}')">
                     📖 Preview PDF
                 </button>
-                <button class="bookdetail-btn bookdetail-btn-ghost" onclick="readOnline('{{ url($book->url) }}')">
+                <button type="button" class="bookdetail-btn bookdetail-btn-ghost" onclick="readOnline('{{ url($book->url) }}')">
                     🌐 Read Online
                 </button>
             @elseif($book->type === 'Print' || $book->type === 'physical')
                 <!-- Print Book Actions -->
-                <button class="bookdetail-btn bookdetail-btn-gold" onclick="previewPdf('{{ url($book->url) ?? '#' }}')">
+                <button type="button" class="bookdetail-btn bookdetail-btn-gold" onclick="previewPdf('{{ url($book->url) ?? '#' }}')">
                     📖 Preview PDF
                 </button>
                 <!-- <button class="bookdetail-btn bookdetail-btn-ghost" onclick="showPrintDetails()">
@@ -49,10 +49,10 @@
                 </button> -->
             @else
               <!-- Default Actions -->
-              <button class="bookdetail-btn bookdetail-btn-gold" onclick="previewPdf('{{ url($book->url) ?? '#' }}')">
+              <button type="button" class="bookdetail-btn bookdetail-btn-gold" onclick="previewPdf('{{ url($book->url) ?? '#' }}')">
                   ▶ Preview Book
               </button>
-              <button class="bookdetail-btn bookdetail-btn-ghost" onclick="readOnline('{{ url($book->url) }}')">
+              <button type="button" class="bookdetail-btn bookdetail-btn-ghost" onclick="readOnline('{{ url($book->url) }}')">
                   🔊 Listen Sample
               </button>
           @endif

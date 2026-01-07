@@ -334,7 +334,7 @@
         </h2>
 
         <div class="kemetic-card mt-20">
-            <form action="/panel/webinars/comments" method="get" class="row g-3 align-items-end">
+            <form action="/panel/assignments/my-assignments" method="get" class="row g-3 align-items-end">
 
                 {{-- Date Range --}}
                 <div class="col-12 col-lg-4">

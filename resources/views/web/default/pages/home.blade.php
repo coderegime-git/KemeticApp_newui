@@ -263,13 +263,13 @@
         <div class="home-row-head"><h2>{{ trans('Live Now') }}</h2><a class="home-chip" href="#">{{ trans('Join Live') }}</a></div>
         <div class="home-tv">
           <div class="home-tile" style="position:relative;text-align:center">
-            <div class="home-thumb-round"><img src="https://images.unsplash.com/photo-1544717305-2782549b5136?q=80&w=900"></div>
+            <div class="home-thumb-round"><img src="https://images.unsplash.com/photo-1544717305-2782549b5136?q=80&w=900" alt="image"></div>
             <div class="home-badge-live">LIVE</div>
             <div class="home-meta" style="justify-content:center"><span>👁️</span><span class="home-gold">9.2k</span></div>
             <button class="home-btn">{{ trans('Join Live') }}</button>
           </div>
           <div class="home-tile" style="text-align:center">
-            <div class="home-thumb-round"><img src="https://images.unsplash.com/photo-1516826957135-700dedea698c?q=80&w=900"></div>
+            <div class="home-thumb-round"><img src="https://images.unsplash.com/photo-1516826957135-700dedea698c?q=80&w=900" alt="image"></div>
             <div class="home-meta" style="justify-content:center"><span>⭐</span><span class="home-gold">{{ trans('preview') }}</span></div>
             <button class="home-btn">{{ trans('Set Reminder') }}</button>
           </div>

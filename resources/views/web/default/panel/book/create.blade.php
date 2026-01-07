@@ -100,7 +100,7 @@
                         <div class="form-group">
                             <label class="input-label">{{ trans('auth.language') }}</label>
                             <select name="locale"
-                                    class="form-control {{ !empty($book) ? 'js-edit-content-locale' : '' }}">
+                                    class="form-control {{ !empty($book) ? 'js-edit-content-locale' : '' }}" required>
                                 @foreach($userLanguages as $lang => $language)
                                     <option value="{{ $lang }}"
                                         {{ mb_strtolower(request()->get('locale', app()->getLocale())) == mb_strtolower($lang) ? 'selected' : '' }}>
@@ -119,7 +119,7 @@
                         <input type="text" name="title"
                                class="form-control @error('title') is-invalid @enderror"
                                value="{{ (!empty($book)) ? $book->title : old('title') }}"
-                               placeholder="{{ trans('admin/main.choose_title') }}">
+                               placeholder="{{ trans('admin/main.choose_title') }}" required>
                         @error('title')
                         <div class="invalid-feedback">{{ $message }}</div>
                         @enderror
@@ -129,7 +129,7 @@
                     <div class="form-group">
                         <label class="input-label">{{ trans('/admin/main.category') }}</label>
                         <select name="category_id"
-                                class="form-control @error('category_id') is-invalid @enderror">
+                                class="form-control @error('category_id') is-invalid @enderror" required>
                             <option disabled selected>{{ trans('admin/main.choose_category') }}</option>
                             @foreach($categories as $category)
                                 <option value="{{ $category->id }}"
@@ -158,7 +158,7 @@
                             <input type="text" name="image_cover" id="image"
                                    value="{{ !empty($book) ? $book->image_cover : old('image_cover') }}"
                                    class="form-control @error('image') is-invalid @enderror"
-                                   placeholder="{{ trans('update.blog_cover_image_placeholder') }}">
+                                   placeholder="{{ trans('update.blog_cover_image_placeholder') }}" required>
                         </div>
                         @error('image')
                         <div class="invalid-feedback">{{ $message }}</div>
@@ -173,7 +173,7 @@
                 <input type="text" name="price"
                         class="form-control @error('price') is-invalid @enderror"
                         value="{{ !empty($book) ? $book->price : old('price') }}"
-                        placeholder="{{ trans('public.0_for_free') }}">
+                        placeholder="{{ trans('public.0_for_free') }}" required>
                 @error('price')
                 <div class="invalid-feedback">{{ $message }}</div>
                 @enderror
@@ -181,7 +181,7 @@
 
             <div class="form-group">
                 <label class="input-label">{{ trans('admin/main.type') }}</label>
-                  <select name="type" class="form-control kemetic-select">
+                  <select name="type" class="form-control kemetic-select" required>
                     <option value="">Choose type</option>
                     <option value="E-book" {{ (!empty($book) && $book->type == 'E-book') ? 'selected' : '' }}>E-book</option>
                     <option value="Audio Book" {{ (!empty($book) && $book->type == 'Audio Book') ? 'selected' : '' }}>Audio Book</option>

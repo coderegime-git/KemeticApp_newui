@@ -123,6 +123,28 @@ class ClassesController extends Controller
             $selectedCategory = Category::where('id', $data['category_id'])->first();
         }
 
+        $liveClassesQuery = Webinar::where('status', 'active')
+            ->where('type', 'webinar')
+            ->where('private', false);
+
+        // Newest Live Classes
+        $newestLiveClasses = clone $liveClassesQuery;
+        $newestLiveClasses = $newestLiveClasses->orderBy('created_at', 'desc')
+            ->limit(8)
+            ->get();
+
+        // Top Rated Live Classes
+        $topRatedLiveClasses = Webinar::join('webinar_reviews', 'webinars.id', '=', 'webinar_reviews.webinar_id')
+            ->select('webinars.*', 'webinar_reviews.rates', 'webinar_reviews.status', DB::raw('avg(rates) as avg_rates'))
+            ->where('webinars.status', 'active')
+            ->where('webinars.type', 'webinar')
+            ->where('webinars.private', false)
+            ->where('webinar_reviews.status', 'active')
+            ->groupBy('webinars.id')
+            ->orderBy('avg_rates', 'desc')
+            ->limit(8)
+            ->get();
+
         $data = [
             'pageTitle' => $pageTitle,
             'pageDescription' => $pageDescription,
@@ -132,6 +154,8 @@ class ClassesController extends Controller
             'bestSaleWebinars' => $bestSaleWebinars,
             'categories' => $categories,
             'selectedCategory' => $selectedCategory,
+            'newestLiveClasses' => $newestLiveClasses,
+            'topRatedLiveClasses' => $topRatedLiveClasses,
             'coursesCount' => $webinars->total()
         ];
 
