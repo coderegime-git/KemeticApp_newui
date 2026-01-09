@@ -291,7 +291,7 @@ class ReelController extends Controller
         ], 201);
     }
 
-    public function giftreel(ReelCommentRequest $request, Reel $reel)
+    public function giftreel(Request $request, Reel $reel)
     {
         if ($reel->is_hidden) {
             abort(404);

@@ -506,7 +506,7 @@ class UsersController extends Controller
             'full_name' => 'string',
             'language' => 'string',
             'email' => 'email|unique:users,email,' . $user->id,
-            'mobile' => 'numeric|unique:users,mobile,' . $user->id,
+            // 'mobile' => 'numeric|unique:users,mobile,' . $user->id,
             'timezone' => ['string', Rule::in(getListOfTimezones())],
             'public_message' => 'boolean',
             'newsletter' => 'boolean',

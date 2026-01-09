@@ -274,8 +274,16 @@
     <!-- Community -->
     <section id="community" class="coursedetail-panel" style="margin-top:18px;display:none">
       <h3>Community</h3>
-      <div class="coursedetail-lesson"><span>Maya: Day 4 and I nailed the cadence!</span></div>
-      <div class="coursedetail-lesson" style="margin-top:8px"><span>Imani: Grounded all day after practice.</span></div>
+      @php
+        $chatData = json_decode($course->cummnity_chat ?? '[]', true);
+      @endphp
+      @if(!empty($chatData) && count($chatData) > 0)
+        @foreach($chatData as $chat)
+          <div class="coursedetail-lesson"><span>{{ $chat['userName'] ?? '' }}:  {{ $chat['message'] ?? '' }}</span></div>
+        @endforeach
+      @else  
+        <div class="coursedetail-lesson" style="margin-top:8px"><span>No community messages yet.</span></div>
+      @endif 
     </section>
 
     <!-- Resources -->

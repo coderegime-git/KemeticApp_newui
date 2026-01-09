@@ -585,7 +585,7 @@
                             </div>
 
                             <div class="settings-bottom-actions">
-                                <button class="settings-btn settings-btn-ghost">Discard changes</button>
+                                <!-- <button class="settings-btn settings-btn-ghost">Discard changes</button> -->
                                 <button type="submit" class="settings-btn settings-btn-primary">Save photos</button>
                             </div>
                             <div class="settings-muted-link">
@@ -729,7 +729,7 @@
                     </div>
 
                     <div class="settings-save-row">
-                        <button type="button" class="settings-btn settings-btn-ghost">Cancel</button>
+                        <!-- <button type="button" class="settings-btn settings-btn-ghost">Cancel</button> -->
                         <button type="submit" class="settings-btn settings-btn-primary">Save Changes</button>
                     </div>
                 </div>
@@ -860,47 +860,51 @@
                             </div>
 
                             <div class="settings-form-grid">
-                                <div class="settings-form-group">
-                                    <label for="legal-name">Full legal name</label>
-                                    <input id="legal-name" name="legal_name" type="text" placeholder="As shown on your ID" value="{{ $usersidentity->legal_name ?? '' }}" />
-                                </div>
-                                <div class="settings-form-group">
-                                    <label for="dob">Date of birth</label>
-                                    <input id="dob" type="date" name="dob" value="{{ !empty($usersidentity->dob) ? \Carbon\Carbon::parse($usersidentity->dob)->format('Y-m-d') : '' }}" />
-                                </div>
+                                
 
                                 <div class="settings-form-group">
-                                    <label for="country">Country of residence</label>
-                                    <select name="country_id" class="settings-field-input">
-                                        <option value="">Select country</option>
-                                        @if(!empty($countries))
-                                            @foreach($countries as $country)
-                                                <option value="{{ $country->id }}" @if(!empty($usersidentity) && $usersidentity->country_id == $country->id) selected @endif>
-                                                    {{ $country->title }}
-                                                </option>
-                                            @endforeach
-                                        @endif
+                                    <label for="bank">{{ trans('financial.select_account_type') }}</label>
+                                    <select name="bank_id" class="js-user-bank-input settings-field-input @error('bank_id')  is-invalid @enderror" {{ ($user->financial_approval) ? 'disabled' : '' }}">
+                                        <option selected disabled>{{ trans('financial.select_account_type') }}</option>
+
+                                        @foreach($userBanks as $userBank)
+                                            <option value="{{ $userBank->id }}" @if(!empty($user->selectedBank) and $user->selectedBank->user_bank_id == $userBank->id) selected="selected" @endif data-specifications="{{ json_encode($userBank->specifications->pluck('name','id')->toArray()) }}">{{ $userBank->title }}</option>
+                                        @endforeach
                                     </select>
+                                    @error('bank_id')
+                                    <div class="invalid-feedback">
+                                        {{ $message }}
+                                    </div>
+                                    @enderror
                                 </div>
 
-                                <div class="settings-form-group">
-                                    <label for="city">City</label>
-                                    <input id="city" name="city" type="text" placeholder="Rotterdam" value="{{ $usersidentity->city ?? '' }}" />
+                                <div class="js-bank-specifications-card settings-form-group">
+                                    @if(!empty($user) and !empty($user->selectedBank) and !empty($user->selectedBank->bank))
+                                        @foreach($user->selectedBank->bank->specifications as $specification)
+                                            @php
+                                                $selectedBankSpecification = $user->selectedBank->specifications->where('user_selected_bank_id', $user->selectedBank->id)->where('user_bank_specification_id', $specification->id)->first();
+                                            @endphp
+                                            <div class="settings-form-group">
+                                                <label class="font-weight-500 text-dark-blue">{{ $specification->name }}</label>
+                                                <input type="text" name="bank_specifications[{{ $specification->id }}]" value="{{ (!empty($selectedBankSpecification)) ? $selectedBankSpecification->value : '' }}" class="form-control" {{ ($user->financial_approval) ? 'disabled' : '' }}/>
+                                            </div>
+                                        @endforeach
+                                    @endif
                                 </div>
 
                                 <div class="settings-form-group settings-full">
-                                    <label>ID document</label>
+                                    <label>{{ trans('financial.identity_scan') }}</label>
                                     <p class="settings-upload-hint">Passport, ID card, or driver's license.</p>
                                     
                                     <div class="settings-identity-upload">
                                         <!-- Preview area -->
                                         <div class="settings-doc-preview-container" id="idScanPreviewContainer">
-                                            @if(!empty($user) && !empty($usersidentity->identity_scan))
+                                            @if(!empty($user) && !empty($user->identity_scan))
                                                 <div class="settings-doc-preview-card">
                                                     <div class="settings-doc-preview">
-                                                        <img src="{{ $usersidentity->identity_scan }}" alt="ID Document" class="settings-doc-preview-image">
+                                                        <img src="{{ $user->identity_scan }}" alt="ID Document" class="settings-doc-preview-image">
                                                         <div class="settings-doc-preview-overlay">
-                                                            <button type="button" class="settings-doc-action-btn" onclick="viewFullImage('{{ $usersidentity->identity_scan }}', 'ID Document')">
+                                                            <button type="button" class="settings-doc-action-btn" onclick="viewFullImage('{{ $user->identity_scan }}', 'ID Document')">
                                                                 <i class="fa fa-search"></i>
                                                             </button>
                                                             <button type="button" class="settings-doc-action-btn settings-doc-delete" onclick="removeDocument('identity_scan')">
@@ -932,7 +936,7 @@
                                             <input type="hidden" 
                                                 name="identity_scan" 
                                                 id="identity_scan" 
-                                                value="{{ (!empty($usersidentity) and empty($new_user)) ? $usersidentity->identity_scan : old('identity_scan') }}" 
+                                                value="{{ (!empty($user) and empty($new_user)) ? $user->identity_scan : old('identity_scan') }}" 
                                                 class="form-control @error('identity_scan')  is-invalid @enderror" 
                                                 {{ ($user->financial_approval) ? 'disabled' : '' }}/>
                                             
@@ -956,17 +960,17 @@
 
                                 <div class="settings-form-group settings-full">
                                     <label>Proof of address</label>
-                                    <p class="settings-upload-hint">Utility bill, bank statement, or official document with your address.</p>
+                                    <p class="settings-upload-hint">{{ trans('public.certificate_and_documents') }}</p>
                                     
                                     <div class="settings-identity-upload">
                                         <!-- Preview area -->
                                         <div class="settings-doc-preview-container" id="certificatePreviewContainer">
-                                            @if(!empty($usersidentity) && !empty($usersidentity->certificate))
+                                            @if(!empty($user) && !empty($user->certificate))
                                                 <div class="settings-doc-preview-card">
                                                     <div class="settings-doc-preview">
-                                                        <img src="{{ $usersidentity->certificate }}" alt="Proof of Address" class="settings-doc-preview-image">
+                                                        <img src="{{ $user->certificate }}" alt="Proof of Address" class="settings-doc-preview-image">
                                                         <div class="settings-doc-preview-overlay">
-                                                            <button type="button" class="settings-doc-action-btn" onclick="viewFullImage('{{ $usersidentity->certificate }}', 'Proof of Address')">
+                                                            <button type="button" class="settings-doc-action-btn" onclick="viewFullImage('{{ $user->certificate }}', 'Proof of Address')">
                                                                 <i class="fa fa-search"></i>
                                                             </button>
                                                             <button type="button" class="settings-doc-action-btn settings-doc-delete" onclick="removeDocument('certificate')">
@@ -998,7 +1002,7 @@
                                             <input type="hidden" 
                                                 name="certificate" 
                                                 id="certificate" 
-                                                value="{{ (!empty($usersidentity) and empty($new_user)) ? $usersidentity->certificate : old('certificate') }}" 
+                                                value="{{ (!empty($user) and empty($new_user)) ? $user->certificate : old('certificate') }}" 
                                                 class="form-control"/>
                                             
                                             <button type="button" 
@@ -1016,18 +1020,19 @@
 
                                 <div class="settings-form-group settings-full">
                                     <label for="extra-notes">
-                                        Extra info for compliance
-                                        <span class="settings-pill-small">Optional</span>
+                                        {{ trans('financial.address') }}
                                     </label>
-                                    <textarea
-                                        id="extra-notes" name="notes"
-                                        placeholder="Share any extra info our team might need to verify you (stage name, company structure, etc.)."
-                                    >{{ (!empty($usersidentity) and empty($new_user)) ? $usersidentity->notes : old('notes') }}</textarea>
+                                    <input type="text" name="address" value="{{ (!empty($user) and empty($new_user)) ? $user->address : old('address') }}" class="form-control @error('address')  is-invalid @enderror" placeholder=""/>
+                                    @error('address')
+                                    <div class="invalid-feedback">
+                                        {{ $message }}
+                                    </div>
+                                    @enderror
                                 </div>
                             </div>
 
                             <div class="settings-card-footer">
-                                <button class="settings-btn-ghost">Discard</button>
+                                <!-- <button type="button" class="settings-btn-ghost">Discard</button> -->
                                 <button type="submit" class="settings-btn-gold">Save verification</button>
                             </div>
                         </section>
@@ -1041,36 +1046,61 @@
                                 </div>
                                 <span class="settings-wallet-badge">
                                     <span class="settings-status-dot" style="background: var(--chakra-5);"></span>
-                                    Wisdom Keeper wallet active
+                                    {{ $user->role->caption }} wallet active
                                 </span>
                             </div>
 
                             <div>
-                                <div class="settings-wallet-balance">€842,30</div>
-                                <div class="settings-wallet-sub">Available to withdraw</div>
+                                <div class="settings-wallet-balance">€{{($availableBalance) }}</div>
+                                <!-- <div class="settings-wallet-sub">Available to withdraw</div> -->
 
-                                <div class="settings-wallet-actions">
-                                    <button class="settings-btn-outline">Withdraw to bank</button>
-                                    <button class="settings-btn-outline">Send to Kemetic Wallet</button>
-                                </div>
+                                <!-- <div class="wallet-stats">
+                                    <div class="wallet-stat-item">
+                                        <span class="wallet-stat-label">Total Income:</span>
+                                        <span class="wallet-stat-value text-success">{{ handlePrice($totalAddition) }}</span>
+                                    </div>
+                                    <div class="wallet-stat-item">
+                                        <span class="wallet-stat-label">Total Expenses:</span>
+                                        <span class="wallet-stat-value text-danger">{{ handlePrice($totalDeduction) }}</span>
+                                    </div>
+                                </div> -->
+
+                                <!-- <div class="settings-wallet-actions">
+                                    <button type="button" class="settings-btn-outline">Withdraw to bank</button>
+                                    <button type="button" class="settings-btn-outline">Send to Kemetic Wallet</button>
+                                </div> -->
                             </div>
 
                             <div class="settings-method-list">
+                                <!-- @if($userSelectedBank)
+                                @php
+                                    $bank = $userSelectedBank->bank;
+                                    $specifications = $userSelectedBank->specifications;
+                                @endphp
+                                @if($bank)
                                 <div class="settings-method-item">
                                     <div class="settings-method-main">
-                                        <div class="settings-method-icon">€</div>
+                                        <div class="settings-method-icon">€{{ substr($bank->title, 0, 1) }}</div>
                                         <div class="settings-method-label">
-                                            <span>Primary Bank Account</span>
-                                            <span>NL32 KEME 1234 5678 90 &bull; BLACKBEACON B.V.</span>
+                                            <span>{{ $bank->title }}</span>
+                                            <span> @if($specifications->isNotEmpty())
+                                                @foreach($specifications as $spec) name
+                                                    {{ $spec->name }}: {{ $spec->value }}
+                                                    @if(!$loop->last) &bull; @endif
+                                                @endforeach
+                                                @else
+                                                    No bank details provided
+                                                @endif
+                                            </span>
                                         </div>
                                     </div>
                                     <div class="settings-method-tags">
                                         <span class="settings-tag-primary">Default payout</span>
-                                        <a href="#" class="settings-link-mini">Edit</a>
+                                        <a href="#" class="settings-link-mini" data-toggle="modal" data-target="#addBankModal">Edit</a>
                                     </div>
-                                </div>
+                                </div> -->
 
-                                <div class="settings-method-item">
+                                <!-- <div class="settings-method-item">
                                     <div class="settings-method-main">
                                         <div class="settings-method-icon">W</div>
                                         <div class="settings-method-label">
@@ -1082,25 +1112,41 @@
                                         <span class="settings-tag-muted">Backup method</span>
                                         <a href="#" class="settings-link-mini">Edit</a>
                                     </div>
-                                </div>
-
-                                <div class="settings-method-item">
-                                    <div class="settings-method-main">
-                                        <div class="settings-method-icon">★</div>
-                                        <div class="settings-method-label">
-                                            <span>Kemetic Wallet</span>
-                                            <span>Used to pay for courses, books, and shop orders.</span>
+                                </div> -->
+                                <!-- @endif
+                                @else
+                                    <div class="settings-method-item">
+                                        <div class="settings-method-main">
+                                            <div class="settings-method-icon">€</div>
+                                            <div class="settings-method-label">
+                                                <span>No Bank Account Added</span>
+                                                <span>Add a bank account to receive payments</span>
+                                            </div>
+                                        </div>
+                                        <div class="settings-method-tags">
+                                            <a href="#" class="settings-link-mini" data-toggle="modal" data-target="#addBankModal">Add Bank</a>
                                         </div>
                                     </div>
-                                    <div class="settings-method-tags">
-                                        <a href="#" class="settings-link-mini">View history</a>
+                                @endif -->
+                                @foreach($accountings as $accounting)
+                                    <div class="settings-method-item">
+                                        <div class="settings-method-main">
+                                            <div class="settings-method-icon">★</div>
+                                            <div class="settings-method-label">
+                                                <span>Kemetic Wallet</span>
+                                                <span>{{ $accounting->description }}</span>
+                                            </div>
+                                        </div>
+                                        <div class="settings-method-tags">
+                                            <!-- <a href="#" class="settings-link-mini">View history</a> -->
+                                        </div>
                                     </div>
-                                </div>
+                                @endforeach
                             </div>
 
                             <div class="settings-card-footer">
-                                <button class="settings-btn-ghost">Cancel</button>
-                                <button class="settings-btn-gold">Save payout settings</button>
+                                <!-- <button type="button" class="settings-btn-ghost">Cancel</button> -->
+                                <!-- <button class="settings-btn-gold">Save payout settings</button> -->
                             </div>
                         </section>
                     </main>
@@ -1109,6 +1155,7 @@
         </div>
         </form>
     </main>
+    
 
     <!-- Education Modal -->
     <div class="settings-modal" id="educationModal">
