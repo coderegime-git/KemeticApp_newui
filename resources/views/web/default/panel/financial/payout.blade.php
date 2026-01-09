@@ -150,7 +150,7 @@
     @if(!$authUser->financial_approval)
         <div class="not-verified-alert">
             {{ trans('panel.not_verified_alert') }}
-            <a href="/panel/setting/step/7" class="text-decoration-underline">{{ trans('panel.this_link') }}</a>.
+           {{ trans('panel.this_link') }}.
         </div>
     @endif
 

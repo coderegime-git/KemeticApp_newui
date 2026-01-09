@@ -18,11 +18,14 @@ use App\Models\BookOrder;
 use App\User;
 use Carbon\Carbon;
 use App\Models\Region;
+use Aws\S3\S3Client;
+use Aws\S3\Exception\S3Exception;
 use Illuminate\Http\Request;
 use Illuminate\Validation\Rule;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 
 class CartController extends Controller
 {
@@ -908,7 +911,7 @@ class CartController extends Controller
             'line_items' => $lineItems,
             'shipping_address' => [
                 'city' => $addressData['city_name'],
-                'country_code' => 'UK',
+                'country_code' => 'US',
                 'postcode' => $addressData['zip_code'],
                 'state_code' => $addressData['province_name'],
                 // 'street1' => ($addressData['house_no'] ?? '') . ' ' . ($addressData['address'] ?? ''),
@@ -1632,13 +1635,117 @@ class CartController extends Controller
         // dd($token);
         
         // $url = env('LULU_BASE_URL', 'https://api.sandbox.lulu.com') . $endpoint;
-        $url = "https://api.sandbox.lulu.com/print-job-cost-calculations/";
+        // $url = "https://api.sandbox.lulu.com/print-job-cost-calculations/";
 
-        // $printurl = 'https://api.lulu.com/print-jobs/';
+        $printurl = 'https://api.lulu.com/print-jobs/';
 
-        // $pdfUrl = "https://kemetic.app/store/1/pdf/400page.pdf";
-        // $title = "Test Print Job via Curl";
-        // $quantity = 1;
+        $sourcePdfUrl = "https://kemetic.app/store/1/pdf/400page.pdf";
+        
+        // $tempDir = sys_get_temp_dir();
+        // $localPdfPath = tempnam($tempDir, 'lulu_upload_') . '.pdf';
+
+        // if (!is_writable($tempDir)) {
+        //     // Fallback to current directory if temp isn't writable
+        //     $localPdfPath = tempnam(__DIR__, 'lulu_upload_') . '.pdf';
+            
+        //     // Create a temp directory in current folder if needed
+        //     $customTempDir = __DIR__ . '/temp';
+        //     if (!file_exists($customTempDir)) {
+        //         mkdir($customTempDir, 0755, true);
+        //     }
+        //     if (is_writable($customTempDir)) {
+        //         $localPdfPath = tempnam($customTempDir, 'lulu_upload_') . '.pdf';
+        //     }
+        // }
+
+        // $downloadCurl = curl_init($sourcePdfUrl);
+        // curl_setopt_array($downloadCurl, [
+        //     CURLOPT_RETURNTRANSFER => true,
+        //     CURLOPT_FOLLOWLOCATION => true,
+        //     CURLOPT_TIMEOUT => 30,
+        //     CURLOPT_USERAGENT => 'Mozilla/5.0 (compatible; Lulu-API-Uploader/1.0)',
+        //     // Important: If your app requires a session/cookie, you may need to pass headers here
+        //     // CURLOPT_HTTPHEADER => ['Cookie: your_session_key=...']
+        // ]);
+        
+        // $pdfData = curl_exec($downloadCurl);
+        // $httpCodeDownload = curl_getinfo($downloadCurl, CURLINFO_HTTP_CODE);
+        // $downloadError = curl_error($downloadCurl);
+        // curl_close($downloadCurl);
+
+        // if ($httpCodeDownload !== 200) {
+        //     Log::error("Failed to download PDF from your server. HTTP Code: $httpCodeDownload");
+        // }
+
+        // if (!$pdfData) {
+        //     Log::error("PDF data is empty despite HTTP 200 response");
+        // }
+
+        // $bytesWritten = file_put_contents($localPdfPath, $pdfData);
+
+        // if ($bytesWritten === false) {
+        //     \Log::error("Failed to save PDF to: $localPdfPath");
+        //     \Log::error("Directory permissions: " . decoct(fileperms(dirname($localPdfPath))));
+        // }
+
+        // // Verify the file was created and is readable
+        // if (!file_exists($localPdfPath) || filesize($localPdfPath) === 0) {
+        //     \Log::error("PDF file is empty or doesn't exist: $localPdfPath");
+        // }
+
+        // \Log::info("PDF downloaded successfully. Size: " . filesize($localPdfPath) . " bytes");
+
+        try {    // Use NEW credentials after revoking the compromised ones!
+
+            $pdfContent = file_get_contents($sourcePdfUrl);
+            
+            if ($pdfContent === false) {
+                throw new Exception("Failed to download PDF from URL: $sourcePdfUrl");
+            }
+            
+            $s3Client = new \Aws\S3\S3Client([
+                'version' => 'latest',
+                'region'  => env('AWS_DEFAULT_REGION', 'us-east-1'),
+                'credentials' => [
+                    'key'    => env('AWS_ACCESS_KEY_ID', 'YOUR_NEW_KEY_HERE'),
+                    'secret' => env('AWS_SECRET_ACCESS_KEY', 'YOUR_NEW_SECRET_HERE'),
+                ]
+            ]);
+
+            $bucket = env('AWS_BUCKET', 'lulu-pdfs-01');
+            $fileName = 'lulu-uploads/' . uniqid() . '_' . time() . '.pdf';
+            
+            // Upload to S3 with public read access
+            $result = $s3Client->putObject([
+                'Bucket' => $bucket,
+                'Key'    => $fileName,
+                'Body' => $pdfContent,
+                'ContentType' => 'application/pdf',
+                'ACL'    => 'public-read', // This makes it publicly accessible
+                'Metadata' => [
+                    'Uploaded-By' => 'Lulu-API',
+                    'Expires' => gmdate('D, d M Y H:i:s T', time() + 3600) // 1 hour expiry
+                ]
+            ]);
+
+            $publicUrl = $result['ObjectURL'];
+            Log::info("PDF uploaded to S3. Public URL: " . $publicUrl);
+            //    dd($publicUrl);
+            
+            // Schedule cleanup of S3 file after 24 hours
+            //$this->scheduleS3Cleanup($s3Client, $bucket, $fileName);
+
+        } catch (\Exception $e) {
+            Log::error("S3 Upload failed: " . $e->getMessage());
+            // throw new Exception("Failed to upload PDF to S3: " . $e->getMessage());
+        } 
+
+        // dd($publicUrl);
+        
+        // $pdfCurlFile = new \CURLFile($localPdfPath, 'application/pdf', basename($sourcePdfUrl));
+
+        $title = "Test Print Job via Curl";
+        $quantity = 1;
         // //  dd('hi1');
 
         // // $data = [
@@ -1671,86 +1778,85 @@ class CartController extends Controller
         // //     "shipping_level" => "MAIL"
         // // ];
 
-        // $data = [
-        //     "contact_email" => "test@test.com",
-        //     "external_id" => "demo-time",
-        //     "line_items" => [
-        //         [
-        //             "external_id" => "item-reference-1",
-        //             "title" => "My Book",
-        //             "quantity" => 1,
-        //             "pod_package_id" => "0600X0900BWSTDPB060UW444MXX", // Moved here
-        //             "cover" => [
-        //                 "source_url" => $pdfurl,
-        //             ],
-        //             "interior" => [
-        //                 "source_url" => $pdfurl,
-        //                 "page_count" => 426 // You need to add the correct page count
-        //             ]
-        //         ]
-        //     ],
-        //     "production_delay" => 120,
-        //     "shipping_address" => [
-        //         "city" => "Lübeck",
-        //         "country_code" => "GB",
-        //         "name" => "Hans Dampf",
-        //         "phone_number" => "844-212-0689",
-        //         "postcode" => "PO1 3AX",
-        //         "street1" => "Holstenstr. 48"
-        //     ],
-        //     "shipping_level" => "MAIL"
-        // ];
+        $data = [
+            "contact_email" => "info@kemetic.com",
+            "external_id" => "Kemetic APP",
+            "line_items" => [
+                [
+                    "external_id" => "item-reference-1",
+                    "title" => "My Book",
+                    "quantity" => 1,
+                    "pod_package_id" => "0600X0900BWSTDPB060UW444MXX", // Moved here
+                    "cover" => [
+                        "source_url" => $publicUrl,
+                    ],
+                    "interior" => [
+                        "source_url" => $publicUrl,
+                        "page_count" => 426 // You need to add the correct page count
+                    ]
+                ]
+            ],
+            "production_delay" => 120,
+            "shipping_address" => [
+                "city" => "Lübeck",
+                "country_code" => "GB",
+                "name" => "Hans Dampf",
+                "phone_number" => "844-212-0689",
+                "state_code" => "SH",
+                "postcode" => "PO1 3AX",
+                "street1" => "Holstenstr. 48"
+            ],
+            "shipping_level" => "MAIL"
+        ];
 
         // // dd($data);
         
-        // $printcurl = curl_init();
-        // curl_setopt_array($printcurl, [
-        //     CURLOPT_URL => $printurl,
-        //     CURLOPT_RETURNTRANSFER => true,
-        //     CURLOPT_ENCODING => '',
-        //     CURLOPT_MAXREDIRS => 10,
-        //     CURLOPT_TIMEOUT => 30,
-        //     CURLOPT_FOLLOWLOCATION => true,
-        //     CURLOPT_HTTP_VERSION => CURL_HTTP_VERSION_1_1,
-        //     CURLOPT_CUSTOMREQUEST => 'POST',
-        //     CURLOPT_HTTPHEADER => [
-        //         'Authorization: Bearer ' . $token,
-        //         'Cache-Control: no-cache',
-        //         'Content-Type: application/json'
-        //     ],
-        // ]);
+        $printcurl = curl_init();
+        curl_setopt_array($printcurl, [
+            CURLOPT_URL => $printurl,
+            CURLOPT_RETURNTRANSFER => true,
+            CURLOPT_ENCODING => '',
+            CURLOPT_MAXREDIRS => 10,
+            CURLOPT_TIMEOUT => 30,
+            CURLOPT_FOLLOWLOCATION => true,
+            CURLOPT_HTTP_VERSION => CURL_HTTP_VERSION_1_1,
+            CURLOPT_CUSTOMREQUEST => 'POST',
+            CURLOPT_HTTPHEADER => [
+                'Authorization: Bearer ' . $token,
+                'Cache-Control: no-cache',
+                'Content-Type: application/json'
+            ],
+        ]);
 
-        // // Certificate verification handling
-        // if ($this->laragonCertPath && file_exists($this->laragonCertPath)) {
-        //     $options[CURLOPT_CAINFO] = $this->laragonCertPath;
-        //     $options[CURLOPT_CAPATH] = dirname($this->laragonCertPath);
-        //     $options[CURLOPT_SSL_VERIFYPEER] = true;
-        //     $options[CURLOPT_SSL_VERIFYHOST] = 2;
-        // } else {
-        //     $options[CURLOPT_SSL_VERIFYPEER] = false;
-        //     $options[CURLOPT_SSL_VERIFYHOST] = false;
-        // }
+        // Certificate verification handling
+        if ($this->laragonCertPath && file_exists($this->laragonCertPath)) {
+            $options[CURLOPT_CAINFO] = $this->laragonCertPath;
+            $options[CURLOPT_CAPATH] = dirname($this->laragonCertPath);
+            $options[CURLOPT_SSL_VERIFYPEER] = true;
+            $options[CURLOPT_SSL_VERIFYHOST] = 2;
+        } else {
+            $options[CURLOPT_SSL_VERIFYPEER] = false;
+            $options[CURLOPT_SSL_VERIFYHOST] = false;
+        }
 
-        
+        if (!empty($data)) {
+            $options[CURLOPT_POSTFIELDS] = json_encode($data);
+        }
 
-        // if (!empty($data)) {
-        //     $options[CURLOPT_POSTFIELDS] = json_encode($data);
-        // }
+        curl_setopt_array($printcurl, $options);
 
-        // curl_setopt_array($printcurl, $options);
+        $response = curl_exec($printcurl);
+        $httpCode = curl_getinfo($printcurl, CURLINFO_HTTP_CODE);
+        $error = curl_error($printcurl);
+        if ($error) {
+            $errorNo = curl_errno($printcurl);
+            \Log::error("cURL Error #{$errorNo}: {$error}");
+            \Log::error("Certificate path used: " . ($this->laragonCertPath ?? 'none'));
+            \Log::error("File exists: " . (file_exists($this->laragonCertPath) ? 'Yes' : 'No'));
+        }
 
-        // $response = curl_exec($printcurl);
-        // $httpCode = curl_getinfo($printcurl, CURLINFO_HTTP_CODE);
-        // $error = curl_error($printcurl);
-        // if ($error) {
-        //     $errorNo = curl_errno($printcurl);
-        //     \Log::error("cURL Error #{$errorNo}: {$error}");
-        //     \Log::error("Certificate path used: " . ($this->laragonCertPath ?? 'none'));
-        //     \Log::error("File exists: " . (file_exists($this->laragonCertPath) ? 'Yes' : 'No'));
-        // }
-
-        // // dd($data);
-        // dd($response);
+        // dd($data);
+        dd($response);
 
 
         $curl = curl_init();
@@ -1822,6 +1928,78 @@ class CartController extends Controller
         $responseData = json_decode($response, true);
        
         return $responseData;
+    }
+
+    private function scheduleS3Cleanup($s3Client, $bucket, $fileName)
+    {
+        // You can use Laravel Jobs or simple delayed execution
+        // Option 1: Using Laravel Job (recommended)
+        // dispatch(new DeleteS3File($bucket, $fileName))->delay(now()->addHours(24));
+        
+        // Option 2: Set S3 lifecycle policy on the bucket instead
+        
+        // For now, just log it
+        Log::info("S3 file scheduled for cleanup: {$fileName}");
+    }
+
+    private function uploadToS3($filePath)
+    {
+        // You need AWS SDK: composer require aws/aws-sdk-php
+        $s3 = new \Aws\S3\S3Client([
+            'version' => 'latest',
+            'region'  => 'us-east-1',
+            'credentials' => [
+                'key'    => env("AWS_ACCESS_KEY_ID"),
+                'secret' => env("AWS_SECRET_ACCESS_KEY"),
+            ]
+        ]);
+        
+        $bucket = 'cart_book';
+        $key = 'pdfs/' . basename($filePath);
+        
+        $result = $s3->putObject([
+            'Bucket' => $bucket,
+            'Key'    => $key,
+            'SourceFile' => $filePath,
+            'ContentType' => 'application/pdf',
+            'ACL'    => 'public-read'
+        ]);
+        
+        return $result['ObjectURL']; // Public URL
+    }
+
+    // Helper method for OPTION B: Create public endpoint on your server
+    private function createPublicEndpoint($filePath)
+    {
+        // Create a unique filename
+        $uniqueName = 'pdf_' . uniqid() . '.pdf';
+        $publicDir = public_path('temp_pdfs');
+        
+        if (!file_exists($publicDir)) {
+            mkdir($publicDir, 0755, true);
+        }
+        
+        $publicPath = $publicDir . '/' . $uniqueName;
+        copy($filePath, $publicPath);
+        
+        // Return full public URL
+        return url('temp_pdfs/' . $uniqueName);
+        
+        // IMPORTANT: Set up a cleanup job to delete old files
+        // You can use Laravel Scheduler or a cron job
+    }
+
+    // Helper method for OPTION D: ngrok for testing
+    private function exposeViaNgrok($filePath)
+    {
+        // For testing only! Install ngrok from https://ngrok.com/
+        // This exposes your local file via a public URL
+        
+        // 1. Start ngrok: ngrok http 8000
+        // 2. Create a simple PHP server to serve the file
+        // 3. Return the ngrok URL
+        
+        return 'https://YOUR_NGROK_SUBDOMAIN.ngrok.io/temp.pdf';
     }
 
     private function luluprintjob($path)

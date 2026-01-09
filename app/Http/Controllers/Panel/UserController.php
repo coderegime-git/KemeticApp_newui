@@ -14,6 +14,7 @@ use App\Models\ReserveMeeting;
 use App\Models\Reward;
 use App\Models\RewardAccounting;
 use App\Models\Role;
+use App\Models\Accounting;
 use App\Models\UserBank;
 use App\Models\UserLoginHistory;
 use App\Models\UserMeta;
@@ -122,12 +123,33 @@ class UserController extends Controller
             $formFieldsHtml = $this->getFormFieldsByUserType($request, $userType, true, $user);
         }
 
+        $accountings = Accounting::where('user_id', $user->id)
+        ->orderBy('created_at', 'desc')
+        ->paginate(10);
+
+        // Calculate wallet totals
+        $totalAddition = Accounting::where('user_id', $user->id)
+            ->where('type', Accounting::$addiction)
+            ->where('type_account', Accounting::$asset)
+            ->sum('amount');
+
+        $totalDeduction = Accounting::where('user_id', $user->id)
+            ->where('type', Accounting::$deduction)
+            ->where('type_account', Accounting::$asset)
+            ->sum('amount');
+
+        $availableBalance = $totalAddition - $totalDeduction;
+
+        // Get available payout methods
         $userBanks = UserBank::query()
             ->with([
                 'specifications'
             ])
             ->orderBy('created_at', 'desc')
             ->get();
+
+        // Get user's selected bank
+        $userSelectedBank = UserSelectedBank::where('user_id', $user->id)->first();
 
         $data = [
             'pageTitle' => trans('panel.settings'),
@@ -146,6 +168,11 @@ class UserController extends Controller
             'usersidentity' => $usersidentity,
             'formFieldsHtml' => $formFieldsHtml,
             'userLoginHistories' => $userLoginHistories,
+            'accountings' => $accountings,
+            'totalAddition' => $totalAddition,
+            'totalDeduction' => $totalDeduction,
+            'availableBalance' => $availableBalance,
+            'userSelectedBank' => $userSelectedBank,
         ];
 
         return view(getTemplate() . '.panel.setting.index', $data);
@@ -267,21 +294,30 @@ class UserController extends Controller
                 ];
             } elseif ($step == 6) {
 
-                UsersIdentity::where('user_id', $user->id)->delete();
-                $identity_scan = $this->createImage($user, $data['identity_scan']);
-                $certificate = $this->createImage($user, $data['certificate']);
+                 if (!$user->isUser()) {
+                    $updateData = $this->handleUserIdentityAndFinancial($user, $data);
+                } else {
+                    $handleUserExtraForm = $this->handleUserExtraForm($request, $user);
+                    if ($handleUserExtraForm != "ok") {
+                        return $handleUserExtraForm;
+                    }
+                }
+
+                // UsersIdentity::where('user_id', $user->id)->delete();
+                // $identity_scan = $this->createImage($user, $data['identity_scan']);
+                // $certificate = $this->createImage($user, $data['certificate']);
                 
-                UsersIdentity::create([
-                    'user_id' => $user->id,
-                    'legal_name' => $data['legal_name'] ?? '',
-                    'country_id' => $data['country_id'] ?? null,
-                    'dob' => !empty($data['dob']) ? strtotime($data['dob']) : null,
-                    'city' => $data['city'] ?? '',
-                    'identity_scan' => $identity_scan ?? '',
-                    'certificate' => $certificate ?? '',
-                    'notes' => $data['notes'] ?? '',
-                    'created_at' => time(),
-                ]);
+                // UsersIdentity::create([
+                //     'user_id' => $user->id,
+                //     'legal_name' => $data['legal_name'] ?? '',
+                //     'country_id' => $data['country_id'] ?? null,
+                //     'dob' => !empty($data['dob']) ? strtotime($data['dob']) : null,
+                //     'city' => $data['city'] ?? '',
+                //     'identity_scan' => $identity_scan ?? '',
+                //     'certificate' => $certificate ?? '',
+                //     'notes' => $data['notes'] ?? '',
+                //     'created_at' => time(),
+                // ]);
 
                 // if (!$user->isUser()) {
                 //     UserOccupation::where('user_id', $user->id)->delete();
@@ -386,9 +422,12 @@ class UserController extends Controller
 
     private function handleUserIdentityAndFinancial($user, $data)
     {
+        $identity_scan = $this->createImage($user, $data['identity_scan']);
+        $certificate = $this->createImage($user, $data['certificate']);
+                
         $updateData = [
-            'identity_scan' => $data['identity_scan'] ?? '',
-            'certificate' => $data['certificate'] ?? '',
+            'identity_scan' => $identity_scan ?? '',
+            'certificate' => $certificate ?? '',
             'address' => $data['address'] ?? '',
         ];
 
@@ -480,7 +519,7 @@ class UserController extends Controller
 
     public function createImage($user, $img)
     {
-        $folderPath = "/" . $user->id . '/avatar/';
+        $folderPath = "/" . $user->id . '/';
 
         $image_parts = explode(";base64,", $img);
         $image_type_aux = explode("image/", $image_parts[0]);
