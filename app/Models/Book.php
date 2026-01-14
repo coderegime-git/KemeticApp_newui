@@ -30,8 +30,12 @@ class Book extends Model
         'slug',
         'image_cover',
         'url',
-        'type',
         'price',
+        'shipping_price',
+        'book_price',
+        'cover_pdf',
+        'page_count',
+        'type',
         'created_at',
         'updated_at',
     ];

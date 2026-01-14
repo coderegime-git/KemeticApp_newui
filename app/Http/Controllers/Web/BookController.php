@@ -243,7 +243,7 @@ class BookController extends Controller
 
                 Cart::updateOrCreate([
                     'creator_id' => $user->id,
-                    'book_order_id' => $book->id,
+                    'book_order_id' => $bookOrder->id,
                 ], [
                     'created_at' => time()
                 ]);

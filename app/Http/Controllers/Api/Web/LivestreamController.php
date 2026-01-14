@@ -13,6 +13,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
+use \Illuminate\Support\Str;
 
 class LivestreamController extends Controller
 {
@@ -54,6 +55,86 @@ class LivestreamController extends Controller
                 'success' => false,
                 'message' => 'Unauthorized. Invalid or missing token.'
             ], 401);
+        }
+
+        $count = Livestream::where('creator_id', $userId)
+            ->orderBy('created_at', 'desc')
+            ->get();
+        if($count->count() == 0)
+        {
+            
+            $originalName = $userId;
+                
+                // Clean the name: remove spaces and special characters
+            $cleanName = preg_replace('/[^a-zA-Z0-9-_]/', '', $originalName);
+            
+            // If after cleaning it's empty, use a default
+            if (empty($cleanName)) {
+                $cleanName = 'channel';
+            }
+            
+            // Add random string and ensure it's not too long (max 128 chars for AWS)
+            $channelName = $cleanName . '-' . Str::random(8);
+            $channelName = substr($channelName, 0, 128); 
+
+            // Prepare options for channel creation
+            $options = [
+                'type' => "BASIC",
+                'latencyMode' => "LOW",
+                'tags' => [
+                    'environment' => config('app.env'),
+                    'created_by' => 'laravel-system'
+                ]
+            ];
+
+            // Create channel in AWS IVS
+            $result = $this->ivsService->createChannel($channelName, $options);
+
+            
+
+            if (!$result['success']) {
+                throw new \Exception('Failed to create IVS channel: ' . ($result['error'] ?? 'Unknown error'));
+            }
+
+            
+            $channelData = $result['channel'];
+            $streamKeyData = $result['streamKey'];
+
+            // Parse ingest endpoint from channel endpoint
+            $ingestEndpoint = '';
+            if (isset($channelData['ingestEndpoint'])) {
+                $urlParts = parse_url($channelData['ingestEndpoint']);
+                $ingestEndpoint = $urlParts['host'] ?? '';
+            }
+            
+            // Parse playback URL
+            $playbackUrl = '';
+            if (isset($channelData['playbackUrl'])) {
+                $urlParts = parse_url($channelData['playbackUrl']);
+                $playbackUrl = $urlParts['host'] ?? '';
+            }
+
+            // Save to database
+            $ivsChannel = Livestream::create([
+                'channel_name' => $userId,
+                'channel_arn' => $channelData['arn'],
+                'ingest_endpoint' => $channelData['ingestEndpoint'],
+                'stream_key' => $streamKeyData['value'],
+                'stream_key_arn' => $streamKeyData['arn'],
+                'playback_url' => $channelData['playbackUrl'],
+                'channel_id' => $channelData['id'] ?? Str::random(16),
+                'region' => config('ivs.region'),
+                'type' => "BASIC",
+                'latency_mode' => "LOW",
+                'recording_configuration_arn' => null,
+                'creator_id' => auth()->id(),
+                'tags' => $options['tags'],
+                'is_active' => true,
+                'created_at' => time(),
+                'updated_at' => time(),
+            ]);
+
+            DB::commit();
         }
 
         // Get user's livestreams

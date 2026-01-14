@@ -250,7 +250,7 @@
     {{-- FILTER SECTION --}}
     <section class="card kemetic-filter-card mb-4">
         <div class="card-body">
-            <form action="/panel/plans" method="get" class="mb-0">
+            <form action="/panel/plan" method="get" class="mb-0">
                 <div class="row">
                     {{-- SEARCH BY NAME --}}
                     <div class="col-md-4">

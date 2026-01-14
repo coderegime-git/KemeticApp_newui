@@ -11,28 +11,34 @@ class PlanController extends Controller
 {
     public function index(Request $request)
     {
+        $request->validate([
+            'min_price' => 'nullable|numeric|min:0',
+            'max_price' => 'nullable|numeric|min:0',
+            'status' => 'nullable|in:active,inactive',
+        ]);
+
         $query = Plan::query();
         
         // Search filter
         if ($request->has('search')) {
             $query->where(function($q) use ($request) {
                 $q->where('code', 'LIKE', '%' . $request->get('search') . '%')
-                  ->orWhere('name', 'LIKE', '%' . $request->get('search') . '%');
+                  ->orWhere('title', 'LIKE', '%' . $request->get('search') . '%');
             });
         }
         
         // Status filter
-        if ($request->has('status')) {
+        if ($request->filled('status')) {
             $isActive = $request->get('status') == 'active' ? 1 : 0;
             $query->where('is_membership', $isActive);
         }
-        
-        // Price range filter
-        if ($request->has('min_price')) {
+    
+        // Price range filter (now safe)
+        if ($request->filled('min_price')) {
             $query->where('price', '>=', $request->get('min_price'));
         }
         
-        if ($request->has('max_price')) {
+        if ($request->filled('max_price')) {
             $query->where('price', '<=', $request->get('max_price'));
         }
         

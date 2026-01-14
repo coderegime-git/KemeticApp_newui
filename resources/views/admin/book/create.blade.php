@@ -115,9 +115,29 @@
                                             </div>
                                         </div>
 
+                                       <div class="form-group">
+                                            <label class="input-label">Shipping Price ({{ $currency }})</label>
+                                            <input type="number" id="shipping_price" name="shipping_price" value="{{ !empty($book) ? $book->shipping_price : old('shipping_price', '14.85') }}" class="form-control @error('shipping_price')  is-invalid @enderror" placeholder="{{ trans('public.0_for_free') }}"/>
+                                            @error('shipping_price')
+                                            <div class="invalid-feedback">
+                                                {{ $message }}
+                                            </div>
+                                            @enderror
+                                        </div>
+
+                                        <div class="form-group">
+                                            <label class="input-label">Book Price ({{ $currency }})</label>
+                                            <input type="number" id="book_price" name="book_price" value="{{ !empty($book) ? $book->book_price : old('book_price') }}" class="form-control @error('book_price')  is-invalid @enderror" placeholder="{{ trans('public.0_for_free') }}"/>
+                                            @error('book_price')
+                                            <div class="invalid-feedback">
+                                                {{ $message }}
+                                            </div>
+                                            @enderror
+                                        </div>
+
                                         <div class="form-group">
                                             <label class="input-label">{{ trans('public.price') }} ({{ $currency }})</label>
-                                            <input type="number" name="price" value="{{ !empty($book) ? $book->price : old('price') }}" class="form-control @error('price')  is-invalid @enderror" placeholder="{{ trans('public.0_for_free') }}"/>
+                                            <input type="number" id="total_price" name="price" value="{{ !empty($book) ? $book->price : old('price') }}" class="form-control @error('price')  is-invalid @enderror" placeholder="{{ trans('public.0_for_free') }}"/>
                                             @error('price')
                                             <div class="invalid-feedback">
                                                 {{ $message }}
@@ -183,4 +203,38 @@
 @endsection
 @push('scripts_bottom')
     <script src="/assets/vendors/summernote/summernote-bs4.min.js"></script>
+    
+    <script>
+    document.addEventListener('DOMContentLoaded', function() {
+        
+        // alert('Note: Shipping price is fixed at 14.85 and cannot be changed.');
+
+        // Get price elements
+        const shippingInput = document.getElementById('shipping_price');
+        const bookInput = document.getElementById('book_price');
+        const totalInput = document.getElementById('total_price');
+
+        // Function to calculate total price
+        function calculateTotalPrice() {
+            // alert('Calculating total price...');
+            const shippingPrice = parseFloat(shippingInput.value) || 0;
+            const bookPrice = parseFloat(bookInput.value) || 0;
+            const totalPrice = shippingPrice + bookPrice;
+            
+            // Update total price input
+            totalInput.value = totalPrice.toFixed(2);
+        }
+
+        // Add event listeners to price inputs
+        shippingInput.addEventListener('input', calculateTotalPrice);
+        bookInput.addEventListener('input', calculateTotalPrice);
+        
+        // Also update when shipping input loses focus (for manual editing)
+        shippingInput.addEventListener('change', calculateTotalPrice);
+        bookInput.addEventListener('change', calculateTotalPrice);
+
+        // Initialize calculation on page load
+        calculateTotalPrice();
+    });
+    </script>
 @endpush

@@ -17,6 +17,8 @@ use App\Models\Reward;
 use App\Models\RewardAccounting;
 use App\Models\Sale;
 use App\Models\TicketUser;
+use App\Models\Subscribe;
+use App\Models\Country;
 use App\PaymentChannels\ChannelManager;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Redirect;
@@ -895,9 +897,306 @@ class PaymentController extends Controller
 
             // Set Cashback Accounting For All Order Items
             $cashbackAccounting->setAccountingForOrderItems($order->orderItems);
+            if ($order->status == Order::$paid) {
+                $this->handleLuluPrintJobAfterPayment($order);
+            }
         }
 
         Cart::emptyCart($order->user_id);
+    }
+
+    private function handleLuluPrintJobAfterPayment($order)
+    {
+        try {
+            // Check if order contains book products
+            foreach ($order->orderItems as $orderItem) {
+                if (!empty($orderItem->book_id)) {
+                    $this->getLuluPriceUsingCurl($orderItem->book_id, $orderItem->user_id);
+                }
+            }
+        } catch (\Exception $e) {
+            \Log::error('Failed to initiate Lulu print job: ' . $e->getMessage());
+            // Don't throw exception to avoid disrupting payment flow
+        }
+    }
+
+    private function getLuluPriceUsingCurl($bookid, $userid, $token = null)
+    {
+        if (!$token) {
+            $token = $this->getLuluAccessTokenUsingCurl();
+        }
+        
+        // dd($token);
+        
+        // $url = env('LULU_BASE_URL', 'https://api.sandbox.lulu.com') . $endpoint;
+        // $url = "https://api.sandbox.lulu.com/print-job-cost-calculations/";
+
+        // try {    // Use NEW credentials after revoking the compromised ones!
+
+        //     $pdfContent = file_get_contents($sourcePdfUrl);
+            
+        //     if ($pdfContent === false) {
+        //         throw new Exception("Failed to download PDF from URL: $sourcePdfUrl");
+        //     }
+            
+        //     $s3Client = new \Aws\S3\S3Client([
+        //         'version' => 'latest',
+        //         'region'  => env('AWS_DEFAULT_REGION', 'us-east-1'),
+        //         'credentials' => [
+        //             'key'    => env('AWS_ACCESS_KEY_ID', 'YOUR_NEW_KEY_HERE'),
+        //             'secret' => env('AWS_SECRET_ACCESS_KEY', 'YOUR_NEW_SECRET_HERE'),
+        //         ]
+        //     ]);
+
+        //     $bucket = env('AWS_BUCKET', 'lulu-pdfs-01');
+        //     $fileName = 'lulu-uploads/' . uniqid() . '_' . time() . '.pdf';
+            
+        //     // Upload to S3 with public read access
+        //     $result = $s3Client->putObject([
+        //         'Bucket' => $bucket,
+        //         'Key'    => $fileName,
+        //         'Body' => $pdfContent,
+        //         'ContentType' => 'application/pdf',
+        //         'ACL'    => 'public-read', // This makes it publicly accessible
+        //         'Metadata' => [
+        //             'Uploaded-By' => 'Lulu-API',
+        //             'Expires' => gmdate('D, d M Y H:i:s T', time() + 3600) // 1 hour expiry
+        //         ]
+        //     ]);
+
+        //     $publicUrl = $result['ObjectURL'];
+        //     Log::info("PDF uploaded to S3. Public URL: " . $publicUrl);
+
+        // } catch (\Exception $e) {
+        //     Log::error("S3 Upload failed: " . $e->getMessage());
+        // } 
+
+        
+
+        // $pdfurl = "https://studiocaribbean.com/400page.pdf";
+        // $pdfpathurl = "https://kemetic.app/store/1/Where-the-Crawdads-Sing.pdf";
+        // // $pdfpathurl = "https://kemetic.app/store/1/pdf/traffic_pub_gen19.pdf";
+
+        // // dd('hi');
+        // $result = $this->pdfResizer->resizeForLulu($pdfpathurl, false);
+
+        // $cover    = $this->pdfResizer->generateCoverFromPdf($pdfpathurl, $result['page_count']);
+        // $coverurl = $cover['local_path'];
+        // dd($coverurl);
+
+        // Simulate your API call structure
+        // dd($pdfpathurl);
+        // $pdfurl = $result['lulu_pdf_url'];
+
+        // $sourcePdfUrl = "https://kemetic.app/store/1/pdf/400page.pdf";
+        // $title = "Test Print Job via Curl";
+        // $pdfurl = "https://kemetic.app/store/lulu/interior/interior_1768311771.pdf";
+        // $coverurl = "https://kemetic.app/store/lulu/cover/cover_1768311014.pdf";
+
+        $book = Book::select('id', 'title', 'url as interior_pdf_url', 'cover_pdf', 'page_count', 'slug', 'price')
+                ->find($bookid);
+    
+        if (!$book) {
+            throw new Exception("Book not found with ID: $bookid");
+        }
+        
+        // 2. FETCH USER/BUYER DATA
+        $user = User::select('id', 'full_name', 'email', 'mobile', 'country_id', 'province_name', 
+                            'city_name', 'address', 'zip_code')
+                    ->find($userid);
+        
+        if (!$user) {
+            throw new Exception("User not found with ID: $userid");
+        }
+
+        if ($user->country_id) {
+            $country = Region::select('title', 'code')
+                            ->where('id', $user->country_id)
+                            ->where('type', Region::$country)
+                            ->first();
+            
+            if ($country) {
+                $countryName = $country->title;
+            }
+        }
+
+        $countrycode = Country::where('country_name', $countryName)->value('country_code');
+        // 4. FORMAT PHONE
+        $phone = $user->mobile ?: '+1 206 555 0100';
+        if (!str_starts_with($phone, '+')) {
+            $phone = '+1' . preg_replace('/[^0-9]/', '', $phone);
+        }
+
+        $printurl = 'https://api.lulu.com/print-jobs/';
+        
+        $quantity = 1;
+
+        $data = [
+            "contact_email" => $user->email ?: "info@kemetic.app",
+            "external_id" => "Kemetic APP",
+            "line_items" => [
+                [
+                    "external_id" => "item-reference-1",
+                    "printable_normalization" =>[
+                        "cover" => [
+                            "source_url" => $book->cover_pdf,
+                        ],
+                        "interior" => [
+                            "source_url" => $book->interior_pdf_url,
+                            "page_count" => $book->page_count // You need to add the correct page count
+                        ],
+                        "pod_package_id" => "0600X0900BWSTDPB060UW444MXX"
+                    ],
+                    "title" => $book->title,
+                    "quantity" => 1, 
+                ]
+            ],
+            "production_delay" => 120,
+            "shipping_address" => [
+                "city" =>  $user->city_name,
+                "country_code" => $countrycode,
+                "name" => $user->full_name,
+                "phone_number" => $phone,
+                "state_code" => $user->province_name,
+                "postcode" => $user->zip_code,
+                "street1" => $user->address,
+
+                // "city" => "L\u00fcbeck",
+                // "country_code" => "GB",
+                // "name" => "Kemetic User",
+                // "phone_number" => "844-212-0689",
+                // "state_code" => "PO1 3AX",
+                // "postcode" => "",
+                // "street1" => "Holstenstr. 48"
+            ],
+            "shipping_level" => "MAIL"
+        ];
+
+        // // dd($data);
+        
+        $printcurl = curl_init();
+        curl_setopt_array($printcurl, [
+            CURLOPT_URL => $printurl,
+            CURLOPT_RETURNTRANSFER => true,
+            CURLOPT_ENCODING => '',
+            CURLOPT_MAXREDIRS => 10,
+            CURLOPT_TIMEOUT => 30,
+            CURLOPT_FOLLOWLOCATION => true,
+            CURLOPT_HTTP_VERSION => CURL_HTTP_VERSION_1_1,
+            CURLOPT_CUSTOMREQUEST => 'POST',
+            CURLOPT_HTTPHEADER => [
+                'Authorization: Bearer ' . $token,
+                'Cache-Control: no-cache',
+                'Content-Type: application/json'
+            ],
+        ]);
+
+        // Certificate verification handling
+        if ($this->laragonCertPath && file_exists($this->laragonCertPath)) {
+            $options[CURLOPT_CAINFO] = $this->laragonCertPath;
+            $options[CURLOPT_CAPATH] = dirname($this->laragonCertPath);
+            $options[CURLOPT_SSL_VERIFYPEER] = true;
+            $options[CURLOPT_SSL_VERIFYHOST] = 2;
+        } else {
+            $options[CURLOPT_SSL_VERIFYPEER] = false;
+            $options[CURLOPT_SSL_VERIFYHOST] = false;
+        }
+
+        if (!empty($data)) {
+            $options[CURLOPT_POSTFIELDS] = json_encode($data);
+        }
+
+        curl_setopt_array($printcurl, $options);
+
+        $response = curl_exec($printcurl);
+        $httpCode = curl_getinfo($printcurl, CURLINFO_HTTP_CODE);
+        $error = curl_error($printcurl);
+        if ($error) {
+            $errorNo = curl_errno($printcurl);
+            \Log::error("cURL Error #{$errorNo}: {$error}");
+            \Log::error("Certificate path used: " . ($this->laragonCertPath ?? 'none'));
+            \Log::error("File exists: " . (file_exists($this->laragonCertPath) ? 'Yes' : 'No'));
+        }
+
+        // dd($data);
+        //dd($response);
+
+        $responseData = json_decode($response, true);
+       
+        return $responseData;
+    }
+
+    private function getLuluAccessTokenUsingCurl()
+    {
+        
+        $url = "https://api.lulu.com/auth/realms/glasstree/protocol/openid-connect/token";
+        //$url = "https://api.sandbox.lulu.com/auth/realms/glasstree/protocol/openid-connect/token";
+        $authorization = "OWY2MDViMTUtNmMzYy00OWU1LTkxOWItODRmNzM0MWEyMjgzOk50cVpOa2N2aE1nNlJpb25FaEVSbWpyZW5EQTJYU3dW";
+        // $authorization = "9f605b15-6c3c-49e5-919b-84f7341a2283:NtqZNkcvhMg6RionEhERmjrenDA2XSwV"; // Basic xxxx
+
+        $laragonCertPath = "C:/laragon/etc/ssl/cert.pem";
+        $verifyOption = file_exists($laragonCertPath) ? $laragonCertPath : false;
+
+        
+        $curl = curl_init();
+         $authorization = "OWY2MDViMTUtNmMzYy00OWU1LTkxOWItODRmNzM0MWEyMjgzOk50cVpOa2N2aE1nNlJpb25FaEVSbWpyZW5EQTJYU3dW";
+        curl_setopt_array($curl, [
+            CURLOPT_URL => 'https://api.lulu.com/auth/realms/glasstree/protocol/openid-connect/token',
+            CURLOPT_RETURNTRANSFER => true,
+            CURLOPT_ENCODING => '',
+            CURLOPT_MAXREDIRS => 10,
+            CURLOPT_TIMEOUT => 30,
+            CURLOPT_FOLLOWLOCATION => true,
+            CURLOPT_HTTP_VERSION => CURL_HTTP_VERSION_1_1,
+            CURLOPT_CUSTOMREQUEST => 'POST',
+            CURLOPT_POSTFIELDS => 'grant_type=client_credentials',
+            CURLOPT_HTTPHEADER => [
+                'Content-Type: application/x-www-form-urlencoded',
+                'Authorization: Basic ' . $authorization
+            ],
+        ]);
+        
+        
+        if ($this->laragonCertPath && file_exists($this->laragonCertPath)) {
+            // Use Laragon certificate
+            $options[CURLOPT_CAINFO] = $this->laragonCertPath;
+            $options[CURLOPT_CAPATH] = dirname($this->laragonCertPath);
+            $options[CURLOPT_SSL_VERIFYPEER] = true;
+            $options[CURLOPT_SSL_VERIFYHOST] = 2;
+        } else {
+            // Disable SSL verification if no certificate found (NOT RECOMMENDED for production)
+            $options[CURLOPT_SSL_VERIFYPEER] = false;
+            $options[CURLOPT_SSL_VERIFYHOST] = false;
+            
+            \Log::warning('SSL certificate verification disabled. Certificate file not found.');
+        }
+        
+        curl_setopt_array($curl, $options);
+
+        $response = curl_exec($curl);
+        $httpCode = curl_getinfo($curl, CURLINFO_HTTP_CODE);
+        $error = curl_error($curl);
+          
+        if ($error) {
+            $errorNo = curl_errno($curl);
+            \Log::error("cURL Error #{$errorNo}: {$error}");
+            \Log::error("Certificate path used: " . ($this->laragonCertPath ?? 'none'));
+            \Log::error("File exists: " . (file_exists($this->laragonCertPath) ? 'Yes' : 'No'));
+        }
+        
+        curl_close($curl);
+
+        $data = json_decode($response, true);
+
+        // dd($data);
+      
+        // if ($httpCode !== 200) {
+        //     throw new \Exception("Failed to get access token: " . ($data['error_description'] ?? 'Unknown error'));
+        // }
+
+        // dd($authorization, $response, $httpCode, $error, $data, curl_getinfo($curl), $curl);
+
+        return $data['access_token'] ?? null;
     }
 
     public function payStatus(Request $request)

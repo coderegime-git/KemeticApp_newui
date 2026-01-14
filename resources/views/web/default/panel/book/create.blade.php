@@ -165,15 +165,58 @@
                         @enderror
                     </div>
 
+                    <div class="form-group">
+                        <label class="input-label">{{ trans('update.path') }}</label>
+                        <div class="input-group">
+                            <div class="input-group-prepend">
+                                <button type="button"
+                                        class="input-group-text panel-file-manager"
+                                        data-input="image_path"
+                                        data-preview="holder">
+                                    <i data-feather="upload" width="18"></i>
+                                </button>
+                            </div>
+                            <input type="text" name="image_path" id="image_path"
+                                   value="{{ !empty($book) ? $book->image_path : old('image_path') }}"
+                                   class="form-control @error('image_path') is-invalid @enderror"
+                                   placeholder="{{ trans('update.blog_cover_image_placeholder') }}" required>
+                        </div>
+                        @error('image_path')
+                        <div class="invalid-feedback">{{ $message }}</div>
+                        @enderror
+                    </div>
+
                 </div>
             </div>
 
             <div class="form-group">
-                <label class="input-label">{{ trans('public.price') }} ({{ $currency }})</label>
-                <input type="text" name="price"
+                <label class="input-label">Shipping Price ({{ $currency }})</label>
+                <input type="text" id="shipping_price" name="shipping_price"
+                        class="form-control @error('shipping_price') is-invalid @enderror"
+                        value="{{ !empty($book) ? $book->shipping_price : old('shipping_price', '14.85') }}"
+                        placeholder="{{ trans('public.0_for_free') }}" required readonly>
+                @error('shipping_price')
+                <div class="invalid-feedback">{{ $message }}</div>
+                @enderror
+            </div>
+
+            <div class="form-group">
+                <label class="input-label">Book Price ({{ $currency }})</label>
+                <input type="text" id="book_price" name="book_price"
+                        class="form-control @error('book_price') is-invalid @enderror"
+                        value="{{ !empty($book) ? $book->book_price : old('book_price') }}"
+                        placeholder="{{ trans('public.0_for_free') }}" required>
+                @error('book_price')
+                <div class="invalid-feedback">{{ $message }}</div>
+                @enderror
+            </div>
+
+            <div class="form-group">
+                <label class="input-label">Total Price ({{ $currency }})</label>
+                <input type="text" id="total_price" name="price"
                         class="form-control @error('price') is-invalid @enderror"
                         value="{{ !empty($book) ? $book->price : old('price') }}"
-                        placeholder="{{ trans('public.0_for_free') }}" required>
+                        placeholder="{{ trans('public.0_for_free') }}" required readonly>
                 @error('price')
                 <div class="invalid-feedback">{{ $message }}</div>
                 @enderror
@@ -194,7 +237,7 @@
                 <label class="input-label">{{ trans('public.description') }}</label>
                 <textarea id="summernote"
                           name="description"
-                          class="summernote form-control @error('description') is-invalid @enderror">
+                          class="form-control @error('description') is-invalid @enderror">
 {!! (!empty($book) ) ? $book->description : old('description') !!}
                 </textarea>
                 @error('description')
@@ -205,9 +248,9 @@
             {{-- CONTENT --}}
             <div class="form-group mt-20">
                 <label class="input-label">{{ trans('admin/main.content') }}</label>
-                <textarea id="contentSummernote"
+                <textarea id="summernote"
                           name="content"
-                          class="summernote form-control @error('content') is-invalid @enderror">
+                          class="form-control @error('content') is-invalid @enderror">
 {!! (!empty($book)) ? $book->content : old('content') !!}
                 </textarea>
                 @error('content')
@@ -230,4 +273,38 @@
 
 @push('scripts_bottom')
 <script src="/assets/vendors/summernote/summernote-bs4.min.js"></script>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    
+    // alert('Note: Shipping price is fixed at 14.85 and cannot be changed.');
+
+    // Get price elements
+    const shippingInput = document.getElementById('shipping_price');
+    const bookInput = document.getElementById('book_price');
+    const totalInput = document.getElementById('total_price');
+
+    // Function to calculate total price
+    function calculateTotalPrice() {
+        // alert('Calculating total price...');
+        const shippingPrice = parseFloat(shippingInput.value) || 0;
+        const bookPrice = parseFloat(bookInput.value) || 0;
+        const totalPrice = shippingPrice + bookPrice;
+        
+        // Update total price input
+        totalInput.value = totalPrice.toFixed(2);
+    }
+
+    // Add event listeners to price inputs
+    shippingInput.addEventListener('input', calculateTotalPrice);
+    bookInput.addEventListener('input', calculateTotalPrice);
+    
+    // Also update when shipping input loses focus (for manual editing)
+    shippingInput.addEventListener('change', calculateTotalPrice);
+    bookInput.addEventListener('change', calculateTotalPrice);
+
+    // Initialize calculation on page load
+    calculateTotalPrice();
+});
+</script>
 @endpush

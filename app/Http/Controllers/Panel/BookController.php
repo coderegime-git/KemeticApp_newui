@@ -8,6 +8,7 @@ use App\Models\BookCategory;
 use App\User;
 use App\Models\Role;
 use App\Models\BookTranslation;
+use App\Services\PdfResizerService;
 use Illuminate\Http\Request;
 
 class BookController extends Controller
@@ -93,23 +94,48 @@ class BookController extends Controller
             'title' => 'required|string|max:255',
             'category_id' => 'required|numeric',
             'image_cover' => 'required|string',
-            // 'image_path' => 'required|string',
+            'image_path' => 'required|string',
             'type' => 'required|string',
-            'price' => 'nullable|integer',
+            'price' => 'nullable',
             'description' => 'required|string',
             'content' => 'required|string',
         ]);
        
         $data = $request->all();
 
+        $pdfService = new PdfResizerService();
+        
+        $pdfurl = url($data['image_path']);
+
+        $interior = $pdfService->resizeForLulu(
+            $pdfurl, // interior PDF
+            false                // no full bleed
+        );
+
+        $interiorPdfPath = str_replace(public_path(), '', $interior['local_path']);
+        $pageCount = $interior['page_count'];
+
+        $cover = $pdfService->generateCoverFromPdf(
+            $pdfurl, // cover PDF
+            $pageCount
+        );
+
+        $coverPdfPath = str_replace(public_path(), '', $cover['local_path']);
+
         // Create the book
         $book = Book::create([
             'creator_id' => !empty($data['author_id']) ? $data['author_id'] : auth()->id(),
             'category_id' => $data['category_id'],
             'slug' => Book::makeSlug($data['title']),
-            'image_cover' => $data['image_cover'],
+            // 'image_cover' => $data['image_cover'],
             // 'url' => $data['image_path'],
+            'image_cover' => $data['image_cover'],     // ✅ Lulu cover PDF
+            'url'         => $interiorPdfPath,  // ✅ Lulu interior PDF
+            'cover_pdf'   => $coverPdfPath,  
+            'page_count' => $pageCount,
             'price' => $data['price'] ?? null,
+            'shipping_price' => $data['shipping_price'] ?? null,
+            'book_price' => $data['book_price'] ?? null,
             'type' => $data['type'],
             'created_at' => time(),
             'updated_at' => time(),
@@ -156,7 +182,7 @@ class BookController extends Controller
             'title' => 'required|string|max:255',
             'category_id' => 'required|numeric',
             'image_cover' => 'required|string',
-            // 'image_path' => 'required|string',
+            'image_path' => 'required|string',
             'type' => 'required|string',
             'price' => 'nullable',
             'description' => 'required|string',
@@ -166,13 +192,39 @@ class BookController extends Controller
         $data = $request->all();
         $book = Book::findOrFail($id);
 
+        $pdfService = new PdfResizerService();
+        
+        $pdfurl = url($data['image_path']);
+
+        $interior = $pdfService->resizeForLulu(
+            $pdfurl, // interior PDF
+            false                // no full bleed
+        );
+
+        $interiorPdfPath = str_replace(public_path(), '', $interior['local_path']);
+        $pageCount = $interior['page_count'];
+
+        $cover = $pdfService->generateCoverFromPdf(
+            $pdfurl, // cover PDF
+            $pageCount
+        );
+
+        $coverPdfPath = str_replace(public_path(), '', $cover['local_path']);
+
         // Update the book
         $book->update([
             'creator_id' => !empty($data['author_id']) ? $data['author_id'] : auth()->id(),
             'category_id' => $data['category_id'],
             'slug' => Book::makeSlug($data['title']),
-            'image_cover' => $data['image_cover'],
+            // 'image_cover' => $data['image_cover'],
             // 'url' => $data['image_path'],
+            'image_cover' => $data['image_cover'],     // ✅ Lulu cover PDF
+            'url'         => $interiorPdfPath,  // ✅ Lulu interior PDF
+            'cover_pdf'   => $coverPdfPath,  
+            'page_count' => $pageCount,
+            'price' => $data['price'] ?? null,
+            'shipping_price' => $data['shipping_price'] ?? null,
+            'book_price' => $data['book_price'] ?? null,
             'type' => $data['type'],
             'price' => $data['price'] ?? null,
             'updated_at' => time(),

@@ -78,6 +78,7 @@ class ReelController extends Controller
             $isLiked = $reel->likes->contains('user_id', $userId);
              
             $isSaved = $reel->savedreel->contains('user_id', $userId);
+            $username = $reel->user ? $reel->user->full_name : '';
             // Likes array
             $likesArr = [];
             foreach ($reel->likes as $like) {
@@ -100,10 +101,11 @@ class ReelController extends Controller
                     'username' => $comment->user ? $comment->user->full_name : '',
                 ];
             }
-            $reelData['likes'] = $likesArr;
-            $reelData['comments'] = $commentsArr;
+            $reelData['username'] = $username;
             $reelData['is_liked'] = $isLiked;
             $reelData['is_saved'] = $isSaved;
+            $reelData['likes'] = $likesArr;
+            $reelData['comments'] = $commentsArr;
             $reelsArr[] = $reelData;
         }
         // Replace 'data' with 'reels' in pagination array
