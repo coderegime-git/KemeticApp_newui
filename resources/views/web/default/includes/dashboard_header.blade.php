@@ -1071,9 +1071,9 @@
                     <span class="nav-arrow">›</span>
                 </a>
                 <div class="nav-collapsible-content">
-                    <a href="/panel/livestream/create" class="{{ (request()->is('panel/livestream/create')) ? 'active' : '' }}">
+                    <!-- <a href="/panel/livestream/create" class="{{ (request()->is('panel/livestream/create')) ? 'active' : '' }}">
                         <span class="dashboard-ms">add_circle</span> New Livestream
-                    </a>
+                    </a> -->
 
                     <a href="/panel/livestream/" class="{{ (request()->is('panel/livestream/')) ? 'active' : '' }}">
                         <span class="dashboard-ms">live_tv</span> Livestream

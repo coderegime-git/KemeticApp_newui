@@ -155,10 +155,10 @@ class LivestreamController extends Controller
             $ivsChannel = Livestream::create([
                 'channel_name' => $data['channel_name'],
                 'channel_arn' => $channelData['arn'],
-                'ingest_endpoint' => $ingestEndpoint,
+                'ingest_endpoint' => $channelData['ingestEndpoint'],
                 'stream_key' => $streamKeyData['value'],
                 'stream_key_arn' => $streamKeyData['arn'],
-                'playback_url' => $playbackUrl,
+                'playback_url' => $channelData['playbackUrl'],
                 'channel_id' => $channelData['id'] ?? \Illuminate\Support\Str::random(16),
                 'region' => config('ivs.region'),
                 'type' => $data['type'],
@@ -167,7 +167,6 @@ class LivestreamController extends Controller
                 'creator_id' => auth()->id(),
                 'tags' => $options['tags'],
                 'is_active' => true,
-                'creator_id' => auth()->id(),
                 'created_at' => time(),
                 'updated_at' => time(),
             ]);

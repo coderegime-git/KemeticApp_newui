@@ -68,6 +68,16 @@ class OrderItem extends Model
     {
         return $this->belongsTo('App\Models\ProductOrder', 'product_order_id', 'id');
     }
+    
+    public function book()
+    {
+        return $this->belongsTo('App\Models\Book', 'book_id', 'id');
+    }
+
+    public function bookOrder()
+    {
+        return $this->belongsTo('App\Models\BookOrder', 'book_order_id', 'id');
+    }
 
     public function installmentPayment()
     {

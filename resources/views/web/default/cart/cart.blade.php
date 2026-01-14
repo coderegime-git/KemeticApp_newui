@@ -153,16 +153,7 @@
                         </div>
 
                         <!-- Address 2 -->
-                        <div class="field-single">
-                            <label for="address2">{{ trans('update.address') }}</label>
-                            <textarea name="address" rows="6" required class="form-control @error('address')  is-invalid @enderror">{{ !empty($user) ? $user->address : '' }}</textarea>
-
-                            @error('address')
-                            <div class="invalid-feedback">
-                                {{ $message }}
-                            </div>
-                            @enderror
-                        </div>
+                        
 
                         <!-- Checkboxes -->
                         <!-- <div class="checkbox-row">
@@ -242,6 +233,18 @@
                         </div>
                         @enderror
                     </div>
+
+                    <div class="field-single">
+                        <label for="address2">{{ trans('update.address') }}</label>
+                        <textarea name="address" rows="6" required class="form-control @error('address')  is-invalid @enderror">{{ !empty($user) ? $user->address : '' }}</textarea>
+
+                        @error('address')
+                        <div class="invalid-feedback">
+                            {{ $message }}
+                        </div>
+                        @enderror
+                    </div>
+                    
                     <div class="field">
                         <label for="zip">ZIP / Postal Code</label>
                         <input id="zip" type="text" name="zip_code" value="{{ !empty($user) ? $user->zip_code : '' }}" class="form-control @error('zip_code')  is-invalid @enderror" required />

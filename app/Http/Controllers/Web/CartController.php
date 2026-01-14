@@ -20,6 +20,7 @@ use Carbon\Carbon;
 use App\Models\Region;
 use Aws\S3\S3Client;
 use Aws\S3\Exception\S3Exception;
+use App\Services\PdfResizerService;
 use Illuminate\Http\Request;
 use Illuminate\Validation\Rule;
 use Illuminate\Support\Facades\Http;
@@ -32,9 +33,12 @@ class CartController extends Controller
     use RegionsDataByUser;
 
     protected $laragonCertPath;
-    
+    protected $pdfResizer;
+
     public function __construct()
     {
+        $pdfResizer = new PdfResizerService();
+        $this->pdfResizer = $pdfResizer;
         // Laragon certificate path - adjust if different
         $this->laragonCertPath = "C:/laragon/etc/ssl/cert.pem";
         
@@ -632,7 +636,7 @@ class CartController extends Controller
            
             // Try Lulu API first
             try {
-                $shippingCost = $this->calculateLuluShipping($carts, $addressData);
+                //$shippingCost = $this->calculateLuluShipping($carts, $addressData);
                 dd($shippingCost);
                 $shippingMethod = 'lulu_api';
                 $shippingCalculated = true;
@@ -799,7 +803,7 @@ class CartController extends Controller
         if ($hasAddress && !empty($addressData)) {
             // Calculate shipping using Lulu API
             try {
-                $shippingCost = $this->calculateLuluShipping($carts, $addressData);
+                //$shippingCost = $this->calculateLuluShipping($carts, $addressData);
                 return [
                     'shipping_cost' => $shippingCost,
                     'shipping_calculated' => true,
@@ -824,7 +828,7 @@ class CartController extends Controller
     private function calculateLuluShipping($carts, $addressData)
     {
         
-        //  $accessToken = Cache::get('cj_access_token');
+        // $accessToken = Cache::get('cj_access_token');
 
         // if (!$accessToken) {
         //     $accessToken = $this->getCJAccessToken();
@@ -1025,6 +1029,7 @@ class CartController extends Controller
             ];
             $this->validate($request, $rules);
         }
+        
 
         $discountId = $request->input('discount_id');
 
@@ -1039,7 +1044,7 @@ class CartController extends Controller
         if (!empty($carts) and !$carts->isEmpty()) {
             $calculate = $this->calculatePrice($carts, $user);
 
-            $order = $this->createOrderAndOrderItems($carts, $calculate, $user, $discountCoupon);
+            $order = $this->createOrderAndOrderItems($request,$carts, $calculate, $user, $user_as_a_guest, $discountCoupon);
 
             if (!empty($discountCoupon)) {
                 $totalCouponDiscount = $this->handleDiscountPrice($discountCoupon, $carts, $calculate['sub_total']);
@@ -1157,8 +1162,53 @@ class CartController extends Controller
         }
     }
 
-    public function createOrderAndOrderItems($carts, $calculate, $user, $discountCoupon = null)
+    public function createOrderAndOrderItems(Request $request, $carts, $calculate, $user, $user_as_a_guest, $discountCoupon = null)
     {
+        $data = $request->all();
+
+        if(!$user_as_a_guest){
+            $user->update([
+                'mobile' => $data['phone'] ?? $user->mobile,
+                'country_id' => $data['country_id'] ?? $user->country_id,
+                'province_name' => $data['province_name'] ?? $user->province_name,
+                'city_name' => $data['city_name'] ?? $user->city_name,
+                'district_name' => $data['district_name'] ?? $user->district_name,
+                'zip_code' => $data['zip_code'] ?? $user->zip_code,
+                'house_no' => $data['house_no'] ?? $user->house_no,
+                'address' => $data['address'] ?? $user->address,
+            ]);
+        }
+        else{
+            $name = $data['first_name']." ".$data['last_name'];
+            $createuser = User::create([
+                'device_id_or_ip_address' => session('device_id'),
+                'country_id'    => $data['country_id'] ?? null,
+                'province_name' => $data['province_id'] ?? null,
+                'city_name'     => $data['city_id'] ?? null,
+                'zip_code'      => $data['zip_code'] ?? null,
+                'house_no'      => $data['house_no'] ?? null,
+                'address'       => $data['address'] ?? null,
+                'full_name'     => $name ?? null,
+                'email'         => $data['email'] ?? null,
+                'mobile'        => $data['mobile'] ?? null,
+                'role_id'       => 1,
+                'role_name'     => 'user',
+                'created_at'    => Carbon::now()->timestamp,
+                'updated_at'    => Carbon::now()->timestamp
+            ]);
+            if($data['create_account']){    
+                if($createuser->id){
+                    if($data['create_account']){
+                        Cart::where('creator_guest_id', $user->id)
+                        ->update([
+                            'creator_id' => $createuser->id,
+                        ]);
+                    }
+                }
+            }
+                
+        }
+
         $totalCouponDiscount = 0;
 
         if (!empty($discountCoupon)) {
@@ -1226,6 +1276,8 @@ class CartController extends Controller
                 'bundle_id' => $cart->bundle_id ?? null,
                 'product_id' => (!empty($cart->product_order_id) and !empty($cart->productOrder->product)) ? $cart->productOrder->product->id : null,
                 'product_order_id' => (!empty($cart->product_order_id)) ? $cart->product_order_id : null,
+                'book_id' => (!empty($cart->book_order_id) and !empty($cart->bookOrder->book)) ? $cart->bookOrder->book->id : null,
+                'book_order_id' => (!empty($cart->book_order_id)) ? $cart->book_order_id : null,
                 'reserve_meeting_id' => $cart->reserve_meeting_id ?? null,
                 'subscribe_id' => $cart->subscribe_id ?? null,
                 'promotion_id' => $cart->promotion_id ?? null,
@@ -1391,7 +1443,7 @@ class CartController extends Controller
                 $totalDiscount += $discount;
                 $subTotal += $price;
             }
-        } elseif (!empty($cart->book_order_id)) {
+        } elseif (!empty($cart->book_order_id) && !empty($cart->bookOrder->book)) {
             $book = $cart->bookOrder->book;
 
             if (!empty($book)) {
@@ -1639,144 +1691,68 @@ class CartController extends Controller
 
         $printurl = 'https://api.lulu.com/print-jobs/';
 
+        
         $sourcePdfUrl = "https://kemetic.app/store/1/pdf/400page.pdf";
-        
-        // $tempDir = sys_get_temp_dir();
-        // $localPdfPath = tempnam($tempDir, 'lulu_upload_') . '.pdf';
 
-        // if (!is_writable($tempDir)) {
-        //     // Fallback to current directory if temp isn't writable
-        //     $localPdfPath = tempnam(__DIR__, 'lulu_upload_') . '.pdf';
+        // try {    // Use NEW credentials after revoking the compromised ones!
+
+        //     $pdfContent = file_get_contents($sourcePdfUrl);
             
-        //     // Create a temp directory in current folder if needed
-        //     $customTempDir = __DIR__ . '/temp';
-        //     if (!file_exists($customTempDir)) {
-        //         mkdir($customTempDir, 0755, true);
+        //     if ($pdfContent === false) {
+        //         throw new Exception("Failed to download PDF from URL: $sourcePdfUrl");
         //     }
-        //     if (is_writable($customTempDir)) {
-        //         $localPdfPath = tempnam($customTempDir, 'lulu_upload_') . '.pdf';
-        //     }
-        // }
-
-        // $downloadCurl = curl_init($sourcePdfUrl);
-        // curl_setopt_array($downloadCurl, [
-        //     CURLOPT_RETURNTRANSFER => true,
-        //     CURLOPT_FOLLOWLOCATION => true,
-        //     CURLOPT_TIMEOUT => 30,
-        //     CURLOPT_USERAGENT => 'Mozilla/5.0 (compatible; Lulu-API-Uploader/1.0)',
-        //     // Important: If your app requires a session/cookie, you may need to pass headers here
-        //     // CURLOPT_HTTPHEADER => ['Cookie: your_session_key=...']
-        // ]);
-        
-        // $pdfData = curl_exec($downloadCurl);
-        // $httpCodeDownload = curl_getinfo($downloadCurl, CURLINFO_HTTP_CODE);
-        // $downloadError = curl_error($downloadCurl);
-        // curl_close($downloadCurl);
-
-        // if ($httpCodeDownload !== 200) {
-        //     Log::error("Failed to download PDF from your server. HTTP Code: $httpCodeDownload");
-        // }
-
-        // if (!$pdfData) {
-        //     Log::error("PDF data is empty despite HTTP 200 response");
-        // }
-
-        // $bytesWritten = file_put_contents($localPdfPath, $pdfData);
-
-        // if ($bytesWritten === false) {
-        //     \Log::error("Failed to save PDF to: $localPdfPath");
-        //     \Log::error("Directory permissions: " . decoct(fileperms(dirname($localPdfPath))));
-        // }
-
-        // // Verify the file was created and is readable
-        // if (!file_exists($localPdfPath) || filesize($localPdfPath) === 0) {
-        //     \Log::error("PDF file is empty or doesn't exist: $localPdfPath");
-        // }
-
-        // \Log::info("PDF downloaded successfully. Size: " . filesize($localPdfPath) . " bytes");
-
-        try {    // Use NEW credentials after revoking the compromised ones!
-
-            $pdfContent = file_get_contents($sourcePdfUrl);
             
-            if ($pdfContent === false) {
-                throw new Exception("Failed to download PDF from URL: $sourcePdfUrl");
-            }
+        //     $s3Client = new \Aws\S3\S3Client([
+        //         'version' => 'latest',
+        //         'region'  => env('AWS_DEFAULT_REGION', 'us-east-1'),
+        //         'credentials' => [
+        //             'key'    => env('AWS_ACCESS_KEY_ID', 'YOUR_NEW_KEY_HERE'),
+        //             'secret' => env('AWS_SECRET_ACCESS_KEY', 'YOUR_NEW_SECRET_HERE'),
+        //         ]
+        //     ]);
+
+        //     $bucket = env('AWS_BUCKET', 'lulu-pdfs-01');
+        //     $fileName = 'lulu-uploads/' . uniqid() . '_' . time() . '.pdf';
             
-            $s3Client = new \Aws\S3\S3Client([
-                'version' => 'latest',
-                'region'  => env('AWS_DEFAULT_REGION', 'us-east-1'),
-                'credentials' => [
-                    'key'    => env('AWS_ACCESS_KEY_ID', 'YOUR_NEW_KEY_HERE'),
-                    'secret' => env('AWS_SECRET_ACCESS_KEY', 'YOUR_NEW_SECRET_HERE'),
-                ]
-            ]);
+        //     // Upload to S3 with public read access
+        //     $result = $s3Client->putObject([
+        //         'Bucket' => $bucket,
+        //         'Key'    => $fileName,
+        //         'Body' => $pdfContent,
+        //         'ContentType' => 'application/pdf',
+        //         'ACL'    => 'public-read', // This makes it publicly accessible
+        //         'Metadata' => [
+        //             'Uploaded-By' => 'Lulu-API',
+        //             'Expires' => gmdate('D, d M Y H:i:s T', time() + 3600) // 1 hour expiry
+        //         ]
+        //     ]);
 
-            $bucket = env('AWS_BUCKET', 'lulu-pdfs-01');
-            $fileName = 'lulu-uploads/' . uniqid() . '_' . time() . '.pdf';
-            
-            // Upload to S3 with public read access
-            $result = $s3Client->putObject([
-                'Bucket' => $bucket,
-                'Key'    => $fileName,
-                'Body' => $pdfContent,
-                'ContentType' => 'application/pdf',
-                'ACL'    => 'public-read', // This makes it publicly accessible
-                'Metadata' => [
-                    'Uploaded-By' => 'Lulu-API',
-                    'Expires' => gmdate('D, d M Y H:i:s T', time() + 3600) // 1 hour expiry
-                ]
-            ]);
+        //     $publicUrl = $result['ObjectURL'];
+        //     Log::info("PDF uploaded to S3. Public URL: " . $publicUrl);
 
-            $publicUrl = $result['ObjectURL'];
-            Log::info("PDF uploaded to S3. Public URL: " . $publicUrl);
-            //    dd($publicUrl);
-            
-            // Schedule cleanup of S3 file after 24 hours
-            //$this->scheduleS3Cleanup($s3Client, $bucket, $fileName);
-
-        } catch (\Exception $e) {
-            Log::error("S3 Upload failed: " . $e->getMessage());
-            // throw new Exception("Failed to upload PDF to S3: " . $e->getMessage());
-        } 
-
-        // dd($publicUrl);
-        
-        // $pdfCurlFile = new \CURLFile($localPdfPath, 'application/pdf', basename($sourcePdfUrl));
+        // } catch (\Exception $e) {
+        //     Log::error("S3 Upload failed: " . $e->getMessage());
+        // } 
 
         $title = "Test Print Job via Curl";
         $quantity = 1;
-        // //  dd('hi1');
 
-        // // $data = [
-        // //     "contact_email" => "test@test.com",
-        // //     "external_id" => "demo-time",
-        // //     "line_items" => [
-        // //         [
-        // //             "external_id" => "item-reference-1",
-        // //             "title" => "My Book",
-        // //             "quantity" => $quantity,
-        // //             "pod_package_id" => "0600X0900BWSTDPB060UW444MXX", // Moved here
-        // //             "cover" => [
-        // //                 "source_url" => $pdfurl,
-        // //             ],
-        // //             "interior" => [
-        // //                 "source_url" => $pdfurl,
-        // //                 "page_count" => 100 // You need to add the correct page count
-        // //             ]
-        // //         ]
-        // //     ],
-        // //     "production_delay" => 120,
-        // //     "shipping_address" => [
-        // //         "city" => "Lübeck",
-        // //         "country_code" => "GB",
-        // //         "name" => "Hans Dampf",
-        // //         "phone_number" => "844-212-0689",
-        // //         "postcode" => "PO1 3AX",
-        // //         "street1" => "Holstenstr. 48"
-        // //     ],
-        // //     "shipping_level" => "MAIL"
-        // // ];
+        // $pdfurl = "https://studiocaribbean.com/400page.pdf";
+        // $pdfpathurl = "https://kemetic.app/store/1/Where-the-Crawdads-Sing.pdf";
+        // // $pdfpathurl = "https://kemetic.app/store/1/pdf/traffic_pub_gen19.pdf";
+
+        // // dd('hi');
+        // $result = $this->pdfResizer->resizeForLulu($pdfpathurl, false);
+
+        // $cover    = $this->pdfResizer->generateCoverFromPdf($pdfpathurl, $result['page_count']);
+        // $coverurl = $cover['local_path'];
+        // dd($coverurl);
+
+        // Simulate your API call structure
+        // dd($pdfpathurl);
+        // $pdfurl = $result['lulu_pdf_url'];
+        $pdfurl = "https://kemetic.app/store/lulu/interior/interior_1768311771.pdf";
+        $coverurl = "https://kemetic.app/store/lulu/cover/cover_1768311014.pdf";
 
         $data = [
             "contact_email" => "info@kemetic.com",
@@ -1784,27 +1760,37 @@ class CartController extends Controller
             "line_items" => [
                 [
                     "external_id" => "item-reference-1",
-                    "title" => "My Book",
-                    "quantity" => 1,
-                    "pod_package_id" => "0600X0900BWSTDPB060UW444MXX", // Moved here
-                    "cover" => [
-                        "source_url" => $publicUrl,
+                    "printable_normalization" =>[
+                        "cover" => [
+                            "source_url" => $coverurl,
+                        ],
+                        "interior" => [
+                            "source_url" => $pdfurl,
+                            "page_count" => 327 // You need to add the correct page count
+                        ],
+                        "pod_package_id" => "0600X0900BWSTDPB060UW444MXX"
                     ],
-                    "interior" => [
-                        "source_url" => $publicUrl,
-                        "page_count" => 426 // You need to add the correct page count
-                    ]
+                    "title" => "My Book",
+                    "quantity" => 1, 
                 ]
             ],
             "production_delay" => 120,
             "shipping_address" => [
-                "city" => "Lübeck",
-                "country_code" => "GB",
-                "name" => "Hans Dampf",
-                "phone_number" => "844-212-0689",
-                "state_code" => "SH",
-                "postcode" => "PO1 3AX",
-                "street1" => "Holstenstr. 48"
+                "city" => "Washington",
+                "country_code" => "US",
+                "name" => "Kemetic User",
+                "phone_number" => "+1 206 555 0100",
+                "state_code" => "DC",
+                "postcode" => "20540",
+                "street1" => "101 Independence Ave SE"
+
+                // "city" => "L\u00fcbeck",
+                // "country_code" => "GB",
+                // "name" => "Kemetic User",
+                // "phone_number" => "844-212-0689",
+                // "state_code" => "PO1 3AX",
+                // "postcode" => "",
+                // "street1" => "Holstenstr. 48"
             ],
             "shipping_level" => "MAIL"
         ];
@@ -2368,36 +2354,6 @@ class CartController extends Controller
             // // Get country information
             // $country = Region::find($user->country_id);
             // $countryCode = $country ? $country->code : 'US';
-            
-            // // Prepare order data for CJ
-            // $orderData = [
-            //     'orderNumber' => 'ORD_' . $order->id . '_' . time(),
-            //     'shippingZip' => $user->zip_code ?? '00000',
-            //     'shippingCountry' => $country->name ?? 'United States',
-            //     'shippingCountryCode' => $countryCode,
-            //     'shippingProvince' => $user->province_name ?? 'N/A',
-            //     'shippingCity' => $user->city_name ?? 'N/A',
-            //     'shippingCounty' => $user->district_name ?? '',
-            //     'shippingPhone' => $user->mobile ?? $user->phone ?? '0000000000',
-            //     'shippingCustomerName' => $user->full_name ?? 'Customer',
-            //     'shippingAddress' => $user->address ?? 'N/A',
-            //     'shippingAddress2' => $user->house_no ?? '',
-            //     'taxId' => '',
-            //     'remark' => 'Order from ' . config('app.name'),
-            //     'email' => $user->email ?? '',
-            //     'consigneeID' => '',
-            //     'payType' => 'alreadyPaid',
-            //     'shopAmount' => number_format($order->total_amount, 2),
-            //     'logisticName' => env('CJ_DEFAULT_LOGISTIC', 'PostNL'),
-            //     'fromCountryCode' => env('CJ_FROM_COUNTRY', 'CN'),
-            //     'houseNumber' => $user->house_no ?? '',
-            //     'iossType' => '',
-            //     'platform' => 'custom',
-            //     'iossNumber' => '',
-            //     'shopLogisticsType' => 1,
-            //     'storageId' => env('CJ_STORAGE_ID', '201e67f6ba4644c0a36d63bf4989dd70'),
-            //     'products' => $orderItems
-            // ];
 
             $sampleOrderData = [
                 'orderNumber' => 'TEST_' . time(),
@@ -2434,16 +2390,108 @@ class CartController extends Controller
             ];
             
             // Submit to CJ
-            $result = $this->getTrackingInfo('SD2601030613480657800');
-            // $result = $this->createCJOrder($sampleOrderData);
+            // $result = $this->getTrackingInfo('SD2601030613480657800');
+            $result = $this->createCJOrder($sampleOrderData);
             
-            dd($result);
+            // dd($result);
             if ($result) {
                 // Update order with CJ reference
+                $orderId = $result['orderId'] ?? null;
+                if (!$orderId) {
+                    return [
+                        'success' => false,
+                        'message' => 'Failed to Order Id: ' . ($orderId['message'] ?? 'Unknown error')
+                    ];
+                }
+                else
+                {
+                    $addToCartResult = $this->addOrderToCart([$orderId]);
+                }
+                
+                if (!$addToCartResult['success'])
+                {
+                    return [
+                        'success' => false,
+                        'message' => 'Failed to add order to cart: ' . ($addToCartResult['message'] ?? 'Unknown error')
+                    ];
+                }
+                else
+                {
+                    $addSuccessOrders = $addToCartResult['data']['addSuccessOrders'] ?? null;
+                    $confirmCartResult = $this->confirmCart([$orderId]);
+                }
+                dd($addToCartResult);
+
+                if (!$confirmCartResult['success'])
+                {
+                    return [
+                        'success' => false,
+                        'message' => 'Failed to confirm cart: ' . ($confirmCartResult['message'] ?? 'Unknown error')
+                    ];
+                }
+                else
+                {
+                    $shipmentsId = $confirmCartResult['data']['shipmentsId'] ?? null;
+                    $saveorder = $this->saveGenerateParentOrder($shipmentsId);
+                }
+
+                if(!$saveorder['success'])
+                {
+                    return [
+                        'success' => false,
+                        'message' => 'Failed to save order: ' . ($saveorder['message'] ?? 'Unknown error')
+                    ];
+                }
+                else
+                {
+                    $payId = $saveorder['data']['payId'] ?? null;
+                    $payResult = $this->payOrder($shipmentsId, $payId);
+                }
+
+                if(!$payResult['success'])
+                {
+                    return [
+                        'success' => false,
+                        'message' => 'Failed to pay order: ' . ($payResult['message'] ?? 'Unknown error')
+                    ];
+                }
+                else
+                {
+                    $finalOrderDetails = $this->getOrderDetails($orderId);
+                }
+
+                if(!$finalOrderDetails['success'])
+                {
+                    return [
+                        'success' => false,
+                        'message' => 'Failed to get final order details: ' . ($finalOrderDetails['message'] ?? 'Unknown error')
+                    ];
+                }
+                else
+                {
+                    $trackingNumber = $finalOrderDetails['data']['trackNumber'];
+            
+                    // Step 7: Get tracking info
+                    $trackingInfo = $this->getTrackingInfo($trackingNumber);
+                    
+                }
+
+                dd($trackingNumber);
+                dd('hi2');
+                
+                \Log::info('CJ Dropshipping order process completed successfully', [
+                    'order_id' => $order->id,
+                    'cj_order_id' => $result['orderId'] ?? 'N/A'
+                ]);
+
+                
+
+                dd('hi');
+
                 $order->update([
-                    'cj_order_id' => $result['orderId'] ?? null,
-                    'cj_order_number' => $result['orderNumber'] ?? null,
-                    'cj_tracking_number' => $result['trackingNumber'] ?? null,
+                    'cj_order_id' => $orderId ?? null,
+                    // 'cj_order_number' => $result['orderNumber'] ?? null,
+                    'cj_tracking_number' => $trackingNumber ?? null,
                     'cj_status' => 'submitted'
                 ]);
 
@@ -2478,7 +2526,457 @@ class CartController extends Controller
         }
     }
 
-    public function getTrackingInfo($trackNumber)
+    private function addOrderToCart($orderIds)
+    {
+        $accessToken = Cache::get('cj_access_token');
+
+        if (!$accessToken) {
+            $accessToken = $this->getCJAccessToken();
+            if (!$accessToken) {
+                throw new \Exception('Failed to get access token');
+            }
+        }
+        
+        $data = [
+            'cjOrderIdList' => $orderIds
+        ];
+        
+        $jsonData = json_encode($data);
+        
+        $curl = curl_init();
+        
+        curl_setopt_array($curl, [
+            CURLOPT_URL => 'https://developers.cjdropshipping.com/api2.0/v1/shopping/order/addCart',
+            CURLOPT_RETURNTRANSFER => true,
+            CURLOPT_ENCODING => '',
+            CURLOPT_MAXREDIRS => 10,
+            CURLOPT_TIMEOUT => 30,
+            CURLOPT_FOLLOWLOCATION => true,
+            CURLOPT_HTTP_VERSION => CURL_HTTP_VERSION_1_1,
+            CURLOPT_CUSTOMREQUEST => 'POST',
+            CURLOPT_POSTFIELDS => $jsonData,
+            CURLOPT_HTTPHEADER => [
+                'CJ-Access-Token: ' . $accessToken,
+                'Content-Type: application/json',
+                'Accept: application/json',
+                'Content-Length: ' . strlen($jsonData)
+            ],
+        ]);
+        
+        // SSL certificate handling
+        $laragonCertPath = storage_path('certs/cacert.pem');
+        if ($laragonCertPath && file_exists($laragonCertPath)) {
+            curl_setopt($curl, CURLOPT_CAINFO, $laragonCertPath);
+            curl_setopt($curl, CURLOPT_CAPATH, dirname($laragonCertPath));
+            curl_setopt($curl, CURLOPT_SSL_VERIFYPEER, true);
+            curl_setopt($curl, CURLOPT_SSL_VERIFYHOST, 2);
+        } else {
+            curl_setopt($curl, CURLOPT_SSL_VERIFYPEER, false);
+            curl_setopt($curl, CURLOPT_SSL_VERIFYHOST, false);
+        }
+        
+        $response = curl_exec($curl);
+        $httpCode = curl_getinfo($curl, CURLINFO_HTTP_CODE);
+        $error = curl_error($curl);
+        curl_close($curl);
+        
+        if ($error) {
+            return [
+                'success' => false,
+                'message' => 'CURL Error: ' . $error
+            ];
+        }
+        
+        $result = json_decode($response, true);
+        
+        if ($httpCode !== 200 || !isset($result['success']) || !$result['success']) {
+            return [
+                'success' => false,
+                'message' => $result['message'] ?? 'Failed to add order to cart',
+                'http_code' => $httpCode
+            ];
+        }
+        
+        return [
+            'success' => true,
+            'data' => $result ?? []
+        ];
+    }
+
+    private function confirmCart($orderIds)
+    {
+        $accessToken = Cache::get('cj_access_token');
+
+        if (!$accessToken) {
+            $accessToken = $this->getCJAccessToken();
+            if (!$accessToken) {
+                throw new \Exception('Failed to get access token');
+            }
+        }
+        
+        $data = [
+            'cjOrderIdList' => $orderIds
+        ];
+        
+        $jsonData = json_encode($data);
+        
+        $curl = curl_init();
+        
+        curl_setopt_array($curl, [
+            CURLOPT_URL => 'https://developers.cjdropshipping.com/api2.0/v1/shopping/order/addCartConfirm',
+            CURLOPT_RETURNTRANSFER => true,
+            CURLOPT_ENCODING => '',
+            CURLOPT_MAXREDIRS => 10,
+            CURLOPT_TIMEOUT => 30,
+            CURLOPT_FOLLOWLOCATION => true,
+            CURLOPT_HTTP_VERSION => CURL_HTTP_VERSION_1_1,
+            CURLOPT_CUSTOMREQUEST => 'POST',
+            CURLOPT_POSTFIELDS => $jsonData,
+            CURLOPT_HTTPHEADER => [
+                'CJ-Access-Token: ' . $accessToken,
+                'Content-Type: application/json',
+                'Accept: application/json',
+                'Content-Length: ' . strlen($jsonData)
+            ],
+        ]);
+        
+        // SSL certificate handling
+        $laragonCertPath = storage_path('certs/cacert.pem');
+        if ($laragonCertPath && file_exists($laragonCertPath)) {
+            curl_setopt($curl, CURLOPT_CAINFO, $laragonCertPath);
+            curl_setopt($curl, CURLOPT_CAPATH, dirname($laragonCertPath));
+            curl_setopt($curl, CURLOPT_SSL_VERIFYPEER, true);
+            curl_setopt($curl, CURLOPT_SSL_VERIFYHOST, 2);
+        } else {
+            curl_setopt($curl, CURLOPT_SSL_VERIFYPEER, false);
+            curl_setopt($curl, CURLOPT_SSL_VERIFYHOST, false);
+        }
+        
+        $response = curl_exec($curl);
+        $httpCode = curl_getinfo($curl, CURLINFO_HTTP_CODE);
+        $error = curl_error($curl);
+        curl_close($curl);
+        
+        if ($error) {
+            return [
+                'success' => false,
+                'message' => 'CURL Error: ' . $error
+            ];
+        }
+        
+        $result = json_decode($response, true);
+        
+        if ($httpCode !== 200 || !isset($result['success']) || !$result['success']) {
+            return [
+                'success' => false,
+                'message' => $result['message'] ?? 'Failed to confirm cart',
+                'http_code' => $httpCode
+            ];
+        }
+        
+        return [
+            'success' => true,
+            'data' => $result ?? []
+        ];
+    }
+
+    private function payOrder($shipmentOrderId, $payId)
+    {
+        $accessToken = Cache::get('cj_access_token');
+
+        if (!$accessToken) {
+            $accessToken = $this->getCJAccessToken();
+            if (!$accessToken) {
+                throw new \Exception('Failed to get access token');
+            }
+        }
+        
+        $data = [
+            'shipmentOrderId' => $shipmentOrderId,
+            'payId' => $payId
+        ];
+        
+        $jsonData = json_encode($data);
+        
+        $curl = curl_init();
+        
+        curl_setopt_array($curl, [
+            CURLOPT_URL => 'https://developers.cjdropshipping.com/api2.0/v1/shopping/pay/payBalanceV2',
+            CURLOPT_RETURNTRANSFER => true,
+            CURLOPT_ENCODING => '',
+            CURLOPT_MAXREDIRS => 10,
+            CURLOPT_TIMEOUT => 30,
+            CURLOPT_FOLLOWLOCATION => true,
+            CURLOPT_HTTP_VERSION => CURL_HTTP_VERSION_1_1,
+            CURLOPT_CUSTOMREQUEST => 'POST',
+            CURLOPT_POSTFIELDS => $jsonData,
+            CURLOPT_HTTPHEADER => [
+                'CJ-Access-Token: ' . $accessToken,
+                'Content-Type: application/json',
+                'Accept: application/json',
+                'Content-Length: ' . strlen($jsonData)
+            ],
+        ]);
+        
+        // SSL certificate handling
+        $laragonCertPath = storage_path('certs/cacert.pem');
+        if ($laragonCertPath && file_exists($laragonCertPath)) {
+            curl_setopt($curl, CURLOPT_CAINFO, $laragonCertPath);
+            curl_setopt($curl, CURLOPT_CAPATH, dirname($laragonCertPath));
+            curl_setopt($curl, CURLOPT_SSL_VERIFYPEER, true);
+            curl_setopt($curl, CURLOPT_SSL_VERIFYHOST, 2);
+        } else {
+            curl_setopt($curl, CURLOPT_SSL_VERIFYPEER, false);
+            curl_setopt($curl, CURLOPT_SSL_VERIFYHOST, false);
+        }
+        
+        $response = curl_exec($curl);
+        $httpCode = curl_getinfo($curl, CURLINFO_HTTP_CODE);
+        $error = curl_error($curl);
+        curl_close($curl);
+        
+        if ($error) {
+            return [
+                'success' => false,
+                'message' => 'CURL Error: ' . $error
+            ];
+        }
+        
+        $result = json_decode($response, true);
+        
+        if ($httpCode !== 200 || !isset($result['success']) || !$result['success']) {
+            return [
+                'success' => false,
+                'message' => $result['message'] ?? 'Payment failed',
+                'http_code' => $httpCode
+            ];
+        }
+        
+        return [
+            'success' => true,
+            'data' => $result ?? []
+        ];
+    }
+
+    private function saveGenerateParentOrder($shipmentOrderId)
+    {
+        $accessToken = Cache::get('cj_access_token');
+
+        if (!$accessToken) {
+            $accessToken = $this->getCJAccessToken();
+            if (!$accessToken) {
+                throw new \Exception('Failed to get access token');
+            }
+        }
+        
+        $data = [
+            'shipmentOrderId' => $shipmentOrderId
+        ];
+        
+        $jsonData = json_encode($data);
+        
+        $curl = curl_init();
+        
+        curl_setopt_array($curl, [
+            CURLOPT_URL => 'https://developers.cjdropshipping.com/api2.0/v1/shopping/order/saveGenerateParentOrder',
+            CURLOPT_RETURNTRANSFER => true,
+            CURLOPT_ENCODING => '',
+            CURLOPT_MAXREDIRS => 10,
+            CURLOPT_TIMEOUT => 30,
+            CURLOPT_FOLLOWLOCATION => true,
+            CURLOPT_HTTP_VERSION => CURL_HTTP_VERSION_1_1,
+            CURLOPT_CUSTOMREQUEST => 'POST',
+            CURLOPT_POSTFIELDS => $jsonData,
+            CURLOPT_HTTPHEADER => [
+                'CJ-Access-Token: ' . $accessToken,
+                'Content-Type: application/json',
+                'Accept: application/json',
+                'Content-Length: ' . strlen($jsonData)
+            ],
+        ]);
+        
+        // SSL certificate handling
+        $laragonCertPath = storage_path('certs/cacert.pem');
+        if ($laragonCertPath && file_exists($laragonCertPath)) {
+            curl_setopt($curl, CURLOPT_CAINFO, $laragonCertPath);
+            curl_setopt($curl, CURLOPT_CAPATH, dirname($laragonCertPath));
+            curl_setopt($curl, CURLOPT_SSL_VERIFYPEER, true);
+            curl_setopt($curl, CURLOPT_SSL_VERIFYHOST, 2);
+        } else {
+            curl_setopt($curl, CURLOPT_SSL_VERIFYPEER, false);
+            curl_setopt($curl, CURLOPT_SSL_VERIFYHOST, false);
+        }
+        
+        $response = curl_exec($curl);
+        $httpCode = curl_getinfo($curl, CURLINFO_HTTP_CODE);
+        $error = curl_error($curl);
+        curl_close($curl);
+        
+        if ($error) {
+            return [
+                'success' => false,
+                'message' => 'CURL Error: ' . $error
+            ];
+        }
+        
+        $result = json_decode($response, true);
+        
+        if ($httpCode !== 200 || !isset($result['success']) || !$result['success']) {
+            return [
+                'success' => false,
+                'message' => $result['message'] ?? 'Failed to save generate parent order',
+                'http_code' => $httpCode,
+                'response' => $result
+            ];
+        }
+        
+        return [
+            'success' => true,
+            'data' => $result ?? []
+        ];
+    }
+
+    private function getOrderDetails($orderId)
+    {
+        $accessToken = Cache::get('cj_access_token');
+
+        if (!$accessToken) {
+            $accessToken = $this->getCJAccessToken();
+            if (!$accessToken) {
+                throw new \Exception('Failed to get access token');
+            }
+        }
+        
+        $url = 'https://developers.cjdropshipping.com/api2.0/v1/shopping/order/getOrderDetail?orderId=' . urlencode($orderId);
+        
+        $curl = curl_init();
+        
+        curl_setopt_array($curl, [
+            CURLOPT_URL => $url,
+            CURLOPT_RETURNTRANSFER => true,
+            CURLOPT_ENCODING => '',
+            CURLOPT_MAXREDIRS => 10,
+            CURLOPT_TIMEOUT => 30,
+            CURLOPT_FOLLOWLOCATION => true,
+            CURLOPT_HTTP_VERSION => CURL_HTTP_VERSION_1_1,
+            CURLOPT_CUSTOMREQUEST => 'GET',
+            CURLOPT_HTTPHEADER => [
+                'CJ-Access-Token: ' . $accessToken,
+                'Accept: application/json'
+            ],
+        ]);
+        
+        // SSL certificate handling
+        $laragonCertPath = storage_path('certs/cacert.pem');
+        if ($laragonCertPath && file_exists($laragonCertPath)) {
+            curl_setopt($curl, CURLOPT_CAINFO, $laragonCertPath);
+            curl_setopt($curl, CURLOPT_CAPATH, dirname($laragonCertPath));
+            curl_setopt($curl, CURLOPT_SSL_VERIFYPEER, true);
+            curl_setopt($curl, CURLOPT_SSL_VERIFYHOST, 2);
+        } else {
+            curl_setopt($curl, CURLOPT_SSL_VERIFYPEER, false);
+            curl_setopt($curl, CURLOPT_SSL_VERIFYHOST, false);
+        }
+        
+        $response = curl_exec($curl);
+        $httpCode = curl_getinfo($curl, CURLINFO_HTTP_CODE);
+        $error = curl_error($curl);
+        curl_close($curl);
+        
+        if ($error) {
+            return [
+                'success' => false,
+                'message' => 'CURL Error: ' . $error
+            ];
+        }
+        
+        $result = json_decode($response, true);
+        
+        if ($httpCode !== 200 || !isset($result['success']) || !$result['success']) {
+            return [
+                'success' => false,
+                'message' => $result['message'] ?? 'Failed to get order details',
+                'http_code' => $httpCode
+            ];
+        }
+        
+        return [
+            'success' => true,
+            'data' => $result ?? []
+        ];
+    }
+
+    private function getTrackingInfo($trackingNumber)
+    {
+        $accessToken = Cache::get('cj_access_token');
+
+        if (!$accessToken) {
+            $accessToken = $this->getCJAccessToken();
+            if (!$accessToken) {
+                throw new \Exception('Failed to get access token');
+            }
+        }
+        
+        $url = 'https://developers.cjdropshipping.com/api2.0/v1/logistic/trackInfo?trackNumber=' . urlencode($trackingNumber);
+        
+        $curl = curl_init();
+        
+        curl_setopt_array($curl, [
+            CURLOPT_URL => $url,
+            CURLOPT_RETURNTRANSFER => true,
+            CURLOPT_ENCODING => '',
+            CURLOPT_MAXREDIRS => 10,
+            CURLOPT_TIMEOUT => 30,
+            CURLOPT_FOLLOWLOCATION => true,
+            CURLOPT_HTTP_VERSION => CURL_HTTP_VERSION_1_1,
+            CURLOPT_CUSTOMREQUEST => 'GET',
+            CURLOPT_HTTPHEADER => [
+                'CJ-Access-Token: ' . $accessToken,
+                'Accept: application/json'
+            ],
+        ]);
+        
+        // SSL certificate handling
+        $laragonCertPath = storage_path('certs/cacert.pem');
+        if ($laragonCertPath && file_exists($laragonCertPath)) {
+            curl_setopt($curl, CURLOPT_CAINFO, $laragonCertPath);
+            curl_setopt($curl, CURLOPT_CAPATH, dirname($laragonCertPath));
+            curl_setopt($curl, CURLOPT_SSL_VERIFYPEER, true);
+            curl_setopt($curl, CURLOPT_SSL_VERIFYHOST, 2);
+        } else {
+            curl_setopt($curl, CURLOPT_SSL_VERIFYPEER, false);
+            curl_setopt($curl, CURLOPT_SSL_VERIFYHOST, false);
+        }
+        
+        $response = curl_exec($curl);
+        $httpCode = curl_getinfo($curl, CURLINFO_HTTP_CODE);
+        $error = curl_error($curl);
+        curl_close($curl);
+        
+        if ($error) {
+            return [
+                'success' => false,
+                'message' => 'CURL Error: ' . $error
+            ];
+        }
+        
+        $result = json_decode($response, true);
+        
+        if ($httpCode !== 200 || !isset($result['success']) || !$result['success']) {
+            return [
+                'success' => false,
+                'message' => $result['message'] ?? 'Failed to get tracking info',
+                'http_code' => $httpCode
+            ];
+        }
+        
+        return [
+            'success' => true,
+            'data' => $result ?? []
+        ];
+    }
+
+    public function getTrackingInfos($trackNumber)
     {
         try {
             // Validate tracking number
