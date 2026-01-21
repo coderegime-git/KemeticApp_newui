@@ -151,6 +151,7 @@ class RegisterController extends Controller
                 $roleId = Role::getOrganizationRoleId();
             }
         }
+        
         $user = User::create([
             'role_name' => $roleName,
             'role_id' => $roleId,
@@ -161,6 +162,7 @@ class RegisterController extends Controller
             'access_content' => $accessContent,
             'password' => Hash::make($data['password']),
             'affiliate' => $usersAffiliateStatus,
+            'country_id' => $data['country_id'],
             'timezone' => $data['timezone'] ?? null,
             'created_at' => time()
         ]);
@@ -242,6 +244,7 @@ class RegisterController extends Controller
             $data = $request->validate([
                 'account_type' => "required",
                 'timezone' => "required",
+                "country_id" => "required",
                 'full_name' => "required|string|max:255",
                 'email' => "required|email|unique:users,email",
                 'mobile' => "nullable|unique:users,mobile",
@@ -254,6 +257,7 @@ class RegisterController extends Controller
             $data['affiliate'] = 1;
             $data['status'] = 'Active';
             $data['role_name'] = $data['account_type'];
+            $data['country_id'] = $data['country_id'];
             $data['role_id'] = Role::whereName($data['account_type'])->first()->id;
             $data['created_at'] = time();
             $data['user_just_registered'] = 1;

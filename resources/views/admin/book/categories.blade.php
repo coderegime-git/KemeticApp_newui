@@ -3,10 +3,10 @@
 @section('content')
     <section class="section">
         <div class="section-header">
-            <h1>{{ trans('admin/main.book_categories') }}</h1>
+            <h1>Scrolls Categories</h1>
             <div class="section-header-breadcrumb">
                 <div class="breadcrumb-item active"><a href="{{ getAdminPanelUrl() }}">{{ trans('admin/main.dashboard') }}</a></div>
-                <div class="breadcrumb-item">{{ trans('admin/main.book_categories') }}</div>
+                <div class="breadcrumb-item">Scrolls Categories</div>
             </div>
         </div>
 

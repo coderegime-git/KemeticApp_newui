@@ -11,6 +11,8 @@ use App\Mixins\Cashback\CashbackRules;
 use App\Models\Favorite;
 use App\Models\CourseLearning;
 use App\Models\Ticket;
+use App\Models\Region;
+use App\Models\Country;
 use App\Models\Category;
 use App\Models\Api\Book;
 use App\Models\Livestream;
@@ -394,6 +396,15 @@ class WebinarController extends Controller
 
     // }
 
+    public function country(Request $request)
+    {
+        $countries = Region::select(DB::raw('*, ST_AsText(geo_center) as geo_center'))
+            ->where('type', Region::$country)
+            ->get();
+
+        return apiResponse2(1, 'retrieved', trans('api.public.retrieved'), $countries);
+    }
+
     public function home(Request $request)
     {
         $userId = $this->getUserIdFromToken($request);
@@ -513,8 +524,44 @@ class WebinarController extends Controller
 
         if($userId){
             $data['livestream'] = Livestream::where('creator_id', $userId)
-            ->orderBy('created_at', 'desc')
-            ->get();
+                ->orderBy('created_at', 'desc')
+                ->with(['creator' => function($query) {  // Changed from 'user' to 'creator'
+                    $query->select('id', 'full_name', 'avatar', 'country_id');
+                }])
+                ->get()
+                ->map(function ($livestream) {
+                if ($livestream->creator) {  // Changed from 'user' to 'creator'
+                    // Initialize country name variable
+                    $countryName = null;
+                    
+                    // Get country name from Region table
+                    if ($livestream->creator->country_id) {
+                        $country = Region::select('title')
+                                        ->where('id', $livestream->creator->country_id)
+                                        ->where('type', Region::$country)
+                                        ->first();
+                        
+                        if ($country) {
+                            $countryName = $country->title;
+                        }
+                    }
+                    
+                    // Get country code from Country table
+                    $countryCode = null;
+                    if ($countryName) {
+                        $countryCode = Country::where('country_name', $countryName)->value('country_code');
+                    }
+                    
+                    // Add the data to livestream object
+                    $livestream->user_name = $livestream->creator->full_name ?? null;
+                    $livestream->avatar = !empty($livestream->creator->avatar) ? url($livestream->creator->avatar) : "";
+                    $livestream->user_country_code = $countryCode;
+                    
+                    // Remove the creator object if you don't need it anymore
+                    unset($livestream->creator);
+                }
+                return $livestream;
+            });
         }else{
             $data['livestream'] = [];
         }

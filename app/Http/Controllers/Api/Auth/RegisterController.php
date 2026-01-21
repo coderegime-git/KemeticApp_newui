@@ -240,169 +240,170 @@ class RegisterController extends Controller
     //     return apiResponse2(1, 'login', trans('api.auth.login'), $data);
 
     // }
-        public function stepRegister(Request $request, $step)
-        {
-            if ($step == 1) {
-                return $this->stepOne($request);
-            } elseif ($step == 3) {
-                return $this->stepThree($request);
-            }
-        
-            abort(404);
+    public function stepRegister(Request $request, $step)
+    {
+        if ($step == 1) {
+            return $this->stepOne($request);
+        } elseif ($step == 3) {
+            return $this->stepThree($request);
         }
-        
-        private function stepOne(Request $request)
-        {
-            $registerMethod = getGeneralSettings('register_method') ?? 'mobile';
-            $data = $request->all();
-            $username = $this->username();
-        
-            if ($registerMethod !== $username && $username) {
-                return apiResponse2(0, 'invalid_register_method', trans('api.auth.invalid_register_method'));
-            }
-        
-            $rules = [
-                'country_code' => ($username == 'mobile') ? 'required' : 'nullable',
-                $username => ($username == 'mobile') ? 'required|numeric' : 'required|string|email|max:255',
-                'full_name' => 'required|string|min:3',
-                'password' => 'required|string|min:6|confirmed',
-                'password_confirmation' => 'required|same:password',
-            ];
-        
-            validateParam($data, $rules);
-        
-            if ($username == 'mobile') {
-                $data[$username] = ltrim($data['country_code'], '+') . ltrim($data[$username], '0');
-            }
-        
-            $userCase = User::where($username, $data[$username])->first();
-            if ($userCase) {
-                if ($userCase->full_name) {
-                    return apiResponse2(0, 'already_registered', trans('api.auth.already_registered'));
-                } else {
-                    $userCase->update(['password' => Hash::make($data['password'])]);
-                    return apiResponse2(1, 'go_step_3', trans('api.auth.go_step_3'), [
-                        'user_id' => $userCase->id
-                    ]);
-                }
-            }
-        
-            $referralSettings = getReferralSettings();
-            $usersAffiliateStatus = (!empty($referralSettings) && !empty($referralSettings['users_affiliate_status']));
-        
-            $user = User::create([
-                'role_name' => Role::$user,
-                'role_id' => Role::getUserRoleId(),
-                $username => $data[$username],
-                'full_name' => $data['full_name'],
-                'status' => User::$pending,
-                'password' => Hash::make($data['password']),
-                'affiliate' => $usersAffiliateStatus,
-                'created_at' => time()
-            ]);
-        
-            if (!empty($data['certificate_additional'])) {
-                UserMeta::updateOrCreate([
-                    'user_id' => $user->id,
-                    'name' => 'certificate_additional'
-                ], [
-                    'value' => $data['certificate_additional']
+    
+        abort(404);
+    }
+    
+    private function stepOne(Request $request)
+    {
+        $registerMethod = getGeneralSettings('register_method') ?? 'mobile';
+        $data = $request->all();
+        $username = $this->username();
+    
+        if ($registerMethod !== $username && $username) {
+            return apiResponse2(0, 'invalid_register_method', trans('api.auth.invalid_register_method'));
+        }
+    
+        $rules = [
+            'country_code' => ($username == 'mobile') ? 'required' : 'nullable',
+            $username => ($username == 'mobile') ? 'required|numeric' : 'required|string|email|max:255',
+            'full_name' => 'required|string|min:3',
+            'password' => 'required|string|min:6|confirmed',
+            'password_confirmation' => 'required|same:password',
+        ];
+    
+        validateParam($data, $rules);
+    
+        if ($username == 'mobile') {
+            $data[$username] = ltrim($data['country_code'], '+') . ltrim($data[$username], '0');
+        }
+    
+        $userCase = User::where($username, $data[$username])->first();
+        if ($userCase) {
+            if ($userCase->full_name) {
+                return apiResponse2(0, 'already_registered', trans('api.auth.already_registered'));
+            } else {
+                $userCase->update(['password' => Hash::make($data['password'])]);
+                return apiResponse2(1, 'go_step_3', trans('api.auth.go_step_3'), [
+                    'user_id' => $userCase->id
                 ]);
             }
-        
-            $form = $this->getFormFieldsByType($request->get('account_type'));
-            $errors = [];
-        
-            if (!empty($form)) {
-                $fieldErrors = $this->checkFormRequiredFields($request, $form);
-                if (!empty($fieldErrors)) {
-                    foreach ($fieldErrors as $id => $error) {
-                        $errors[$id] = $error;
-                    }
+        }
+    
+        $referralSettings = getReferralSettings();
+        $usersAffiliateStatus = (!empty($referralSettings) && !empty($referralSettings['users_affiliate_status']));
+    
+        $user = User::create([
+            'role_name' => Role::$user,
+            'role_id' => Role::getUserRoleId(),
+            $username => $data[$username],
+            'full_name' => $data['full_name'],
+            'status' => User::$pending,
+            'password' => Hash::make($data['password']),
+            'country_id' => $data['country_id'],
+            'affiliate' => $usersAffiliateStatus,
+            'created_at' => time()
+        ]);
+    
+        if (!empty($data['certificate_additional'])) {
+            UserMeta::updateOrCreate([
+                'user_id' => $user->id,
+                'name' => 'certificate_additional'
+            ], [
+                'value' => $data['certificate_additional']
+            ]);
+        }
+    
+        $form = $this->getFormFieldsByType($request->get('account_type'));
+        $errors = [];
+    
+        if (!empty($form)) {
+            $fieldErrors = $this->checkFormRequiredFields($request, $form);
+            if (!empty($fieldErrors)) {
+                foreach ($fieldErrors as $id => $error) {
+                    $errors[$id] = $error;
                 }
             }
-        
-            if (count($errors)) {
-                return apiResponse2(0, 'login', trans('api.auth.login'), $errors);
-            }
-        
-            $this->storeFormFields($data, $user);
-
-            $enableRegistrationBonus = false;
-            $registrationBonusAmount = null;
-            $registrationBonusSettings = getRegistrationBonusSettings();
-            if (!empty($registrationBonusSettings['status']) && !empty($registrationBonusSettings['registration_bonus_amount'])) {
-                $enableRegistrationBonus = true;
-                $registrationBonusAmount = $registrationBonusSettings['registration_bonus_amount'];
-            }
-        
-            $user->update([
-                'enable_registration_bonus' => $enableRegistrationBonus,
-                'registration_bonus_amount' => $registrationBonusAmount,
-            ]);
-        
-            $registerReward = RewardAccounting::calculateScore(Reward::REGISTER);
-            RewardAccounting::makeRewardAccounting($user->id, $registerReward, Reward::REGISTER, $user->id, true);
-        
-            (new RegistrationBonusAccounting())->storeRegistrationBonusInstantly($user);
-        
-            if (!empty($data['referral_code'])) {
-                Affiliate::storeReferral($user, $data['referral_code']);
-            }
-        
-            event(new Registered($user));
-            $data['token'] = auth('api')->tokenById($user->id);
-            $data['user_id'] = $user->id;
-
-            return apiResponse2(1, 'login', trans('api.auth.login'), $data);
-        
-            // return apiResponse2(1, 'Registration Successfully', trans('api.auth.go_step_3'), [
-            //     'user_id' => $user->id
-            // ]);
         }
-        
-        private function stepThree(Request $request)
-        {
-            $data = $request->all();
-            validateParam($data, [
-                'user_id' => 'required|exists:users,id',
-                'full_name' => 'required|string|min:3',
-                'referral_code' => 'nullable|exists:affiliates_codes,code'
-            ]);
-        
-            $user = User::find($data['user_id']);
-            $user->update([
-                'full_name' => $data['full_name']
-            ]);
-        
-            $enableRegistrationBonus = false;
-            $registrationBonusAmount = null;
-            $registrationBonusSettings = getRegistrationBonusSettings();
-            if (!empty($registrationBonusSettings['status']) && !empty($registrationBonusSettings['registration_bonus_amount'])) {
-                $enableRegistrationBonus = true;
-                $registrationBonusAmount = $registrationBonusSettings['registration_bonus_amount'];
-            }
-        
-            $user->update([
-                'enable_registration_bonus' => $enableRegistrationBonus,
-                'registration_bonus_amount' => $registrationBonusAmount,
-            ]);
-        
-            $registerReward = RewardAccounting::calculateScore(Reward::REGISTER);
-            RewardAccounting::makeRewardAccounting($user->id, $registerReward, Reward::REGISTER, $user->id, true);
-        
-            (new RegistrationBonusAccounting())->storeRegistrationBonusInstantly($user);
-        
-            if (!empty($data['referral_code'])) {
-                Affiliate::storeReferral($user, $data['referral_code']);
-            }
-        
-            event(new Registered($user));
-            $data['token'] = auth('api')->tokenById($user->id);
-            $data['user_id'] = $user->id;
-        
-            return apiResponse2(1, 'login', trans('api.auth.login'), $data);
+    
+        if (count($errors)) {
+            return apiResponse2(0, 'login', trans('api.auth.login'), $errors);
         }
+    
+        $this->storeFormFields($data, $user);
+
+        $enableRegistrationBonus = false;
+        $registrationBonusAmount = null;
+        $registrationBonusSettings = getRegistrationBonusSettings();
+        if (!empty($registrationBonusSettings['status']) && !empty($registrationBonusSettings['registration_bonus_amount'])) {
+            $enableRegistrationBonus = true;
+            $registrationBonusAmount = $registrationBonusSettings['registration_bonus_amount'];
+        }
+    
+        $user->update([
+            'enable_registration_bonus' => $enableRegistrationBonus,
+            'registration_bonus_amount' => $registrationBonusAmount,
+        ]);
+    
+        $registerReward = RewardAccounting::calculateScore(Reward::REGISTER);
+        RewardAccounting::makeRewardAccounting($user->id, $registerReward, Reward::REGISTER, $user->id, true);
+    
+        (new RegistrationBonusAccounting())->storeRegistrationBonusInstantly($user);
+    
+        if (!empty($data['referral_code'])) {
+            Affiliate::storeReferral($user, $data['referral_code']);
+        }
+    
+        event(new Registered($user));
+        $data['token'] = auth('api')->tokenById($user->id);
+        $data['user_id'] = $user->id;
+
+        return apiResponse2(1, 'login', trans('api.auth.login'), $data);
+    
+        // return apiResponse2(1, 'Registration Successfully', trans('api.auth.go_step_3'), [
+        //     'user_id' => $user->id
+        // ]);
+    }
+    
+    private function stepThree(Request $request)
+    {
+        $data = $request->all();
+        validateParam($data, [
+            'user_id' => 'required|exists:users,id',
+            'full_name' => 'required|string|min:3',
+            'referral_code' => 'nullable|exists:affiliates_codes,code'
+        ]);
+    
+        $user = User::find($data['user_id']);
+        $user->update([
+            'full_name' => $data['full_name']
+        ]);
+    
+        $enableRegistrationBonus = false;
+        $registrationBonusAmount = null;
+        $registrationBonusSettings = getRegistrationBonusSettings();
+        if (!empty($registrationBonusSettings['status']) && !empty($registrationBonusSettings['registration_bonus_amount'])) {
+            $enableRegistrationBonus = true;
+            $registrationBonusAmount = $registrationBonusSettings['registration_bonus_amount'];
+        }
+    
+        $user->update([
+            'enable_registration_bonus' => $enableRegistrationBonus,
+            'registration_bonus_amount' => $registrationBonusAmount,
+        ]);
+    
+        $registerReward = RewardAccounting::calculateScore(Reward::REGISTER);
+        RewardAccounting::makeRewardAccounting($user->id, $registerReward, Reward::REGISTER, $user->id, true);
+    
+        (new RegistrationBonusAccounting())->storeRegistrationBonusInstantly($user);
+    
+        if (!empty($data['referral_code'])) {
+            Affiliate::storeReferral($user, $data['referral_code']);
+        }
+    
+        event(new Registered($user));
+        $data['token'] = auth('api')->tokenById($user->id);
+        $data['user_id'] = $user->id;
+    
+        return apiResponse2(1, 'login', trans('api.auth.login'), $data);
+    }
 
     public function username()
     {

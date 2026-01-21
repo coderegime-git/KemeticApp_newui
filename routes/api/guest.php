@@ -14,6 +14,7 @@ Route::group([], function () {
     Route::get('/filterByCategoryId/{id}', [ProductFilterController::class, 'getByCategoryId']);
     Route::get('/getCity', [CartController::class, 'getCity']);
     Route::get('/getCountry', [CartController::class, 'getCountry']);
+    Route::get('/country', ['uses' => 'WebinarController@country']);
     Route::get('/home', ['uses' => 'WebinarController@home']);
    
     Route::group(['prefix' => 'courses'], function () {
@@ -118,6 +119,7 @@ Route::group([], function () {
     Route::group(['prefix' => 'livestream'], function () {
 
         Route::get('/', ['uses' => 'LivestreamController@index', 'middleware' => 'api.auth']);
+        Route::get('/chat/{id}/start', ['uses' => 'LivestreamController@livechat', 'middleware' => 'api.auth']);
         Route::get('/{id}/end', ['uses' => 'LivestreamController@delete', 'middleware' => 'api.auth']);
     });
 
@@ -127,9 +129,6 @@ Route::group([], function () {
         Route::post('/savetoken',['uses' => 'NotificationController@saveFcmToken', 'middleware' => 'api.auth']);
     });
     
-
-    
-
     Route::get('advertising-banner', ['uses' => 'AdvertisingBannerController@list']);
 
     Route::get('/subscribe', ['uses' => 'SubscribesController@list']);

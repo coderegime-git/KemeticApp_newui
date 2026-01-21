@@ -21,6 +21,7 @@ class Reel extends Model
         'views_count'    => 'integer',
         'likes_count'    => 'integer',
         'comments_count' => 'integer',
+        'review_count'   => 'integer',
         'reports_count'  => 'integer',
         'gift_count'     => 'integer',
         'share_count'    => 'integer',
@@ -37,6 +38,7 @@ class Reel extends Model
         'views_count' => 0,
         'likes_count' => 0,
         'comments_count' => 0,
+        'review_count' => 0,
         'reports_count' => 0,
         'gift_count' => 0,
         'share_count' => 0,
@@ -66,6 +68,11 @@ class Reel extends Model
     public function comments()
     {
         return $this->hasMany(ReelComment::class);
+    }
+
+    public function review()
+    {
+        return $this->hasMany(ReelReview::class);
     }
 
     public function shares()

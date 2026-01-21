@@ -13,6 +13,7 @@
 /.zed
 /auth.json
 /node_modules
+/public/wp-content
 /public/build
 /public/hot
 /public/storage
@@ -25,3 +26,4 @@ Homestead.yaml
 Thumbs.db
 
 storage/firebase/kemetic-39b07-firebase-adminsdk-fbsvc-3237ad0aa9.json
+public/wp-content/uploads/2023/08/IMG_1785-370x265.jpeg

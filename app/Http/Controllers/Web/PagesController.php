@@ -23,7 +23,7 @@ class PagesController extends Controller
             $data = [
                 'pageTitle' => $page->title,
                 'pageDescription' => $page->seo_description,
-                'pageRobot' => $page->robot ? 'index, follow, all' : 'NOODP, nofollow, noindex',
+                'pageRobot' => $page->robot ? 'index, follow, all' : 'nofollow, noindex',
                 'page' => $page
             ];
 

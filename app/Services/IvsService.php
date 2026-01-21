@@ -2,8 +2,7 @@
 
 namespace App\Services;
 
-use Aws\Ivs\IvsClient;
-use Aws\Exception\AwsException;
+use Aws\Sdk;
 use Illuminate\Support\Facades\Log;
 
 class IvsService
@@ -15,22 +14,32 @@ class IvsService
     {
         $this->config = config('ivs');
         
-        // $this->client = new IvsClient([
-        //     'credentials' => $this->config['credentials'],
-        //     'region' => $this->config['region'],
-        //     'version' => $this->config['version']
-        // ]);
-
-          $clientConfig = [
-            'credentials' => $this->config['credentials'],
+        // Create AWS SDK instance
+        $sdk = new Sdk([
+            'version' => 'latest',
             'region' => $this->config['region'],
-            'version' => $this->config['version'],
+            'credentials' => $this->config['credentials'],
             'http' => [
-                'verify' => false  // THIS DISABLES SSL VERIFICATION
+                'verify' => false // For local development
             ]
-        ];
-
-        $this->client = new IvsClient($clientConfig);
+        ]);
+        
+        // Try to create IVS client
+        try {
+            $this->client = $sdk->createIvs();
+            Log::info('IVS client created successfully');
+        } catch (\Exception $e) {
+            Log::error('Failed to create IVS client: ' . $e->getMessage());
+            
+            // Fallback: Try IVSRealTime
+            try {
+                $this->client = $sdk->createIvsRealTime();
+                Log::info('IVSRealTime client created as fallback');
+            } catch (\Exception $e2) {
+                Log::error('Both IVS and IVSRealTime failed: ' . $e2->getMessage());
+                throw new \Exception('AWS IVS service not available. Check AWS SDK installation.');
+            }
+        }
     }
 
     /**
@@ -49,7 +58,11 @@ class IvsService
                 return !is_null($value);
             });
 
+            Log::info('Creating IVS channel with params:', $params);
+
             $result = $this->client->createChannel($params);
+
+            Log::info('IVS channel created successfully');
 
             return [
                 'success' => true,
@@ -58,13 +71,13 @@ class IvsService
                 'streamKey' => $result['streamKey']
             ];
 
-        } catch (AwsException $e) {
+        } catch (\Exception $e) {
             Log::error('IVS Channel Creation Failed: ' . $e->getMessage());
             
             return [
                 'success' => false,
                 'error' => $e->getMessage(),
-                'code' => $e->getAwsErrorCode()
+                'code' => method_exists($e, 'getAwsErrorCode') ? $e->getAwsErrorCode() : 'GENERAL_ERROR'
             ];
         }
     }
@@ -84,7 +97,9 @@ class IvsService
                 'channel' => $result->toArray()
             ];
 
-        } catch (AwsException $e) {
+        } catch (\Exception $e) {
+            Log::error('IVS Get Channel Failed: ' . $e->getMessage());
+            
             return [
                 'success' => false,
                 'error' => $e->getMessage()
@@ -107,7 +122,9 @@ class IvsService
                 'channels' => $result->toArray()
             ];
 
-        } catch (AwsException $e) {
+        } catch (\Exception $e) {
+            Log::error('IVS List Channels Failed: ' . $e->getMessage());
+            
             return [
                 'success' => false,
                 'error' => $e->getMessage()
@@ -130,7 +147,9 @@ class IvsService
                 'streamKey' => $result->toArray()
             ];
 
-        } catch (AwsException $e) {
+        } catch (\Exception $e) {
+            Log::error('IVS Create Stream Key Failed: ' . $e->getMessage());
+            
             return [
                 'success' => false,
                 'error' => $e->getMessage()
@@ -153,7 +172,9 @@ class IvsService
                 'message' => 'Channel deleted successfully'
             ];
 
-        } catch (AwsException $e) {
+        } catch (\Exception $e) {
+            Log::error('IVS Delete Channel Failed: ' . $e->getMessage());
+            
             return [
                 'success' => false,
                 'error' => $e->getMessage()

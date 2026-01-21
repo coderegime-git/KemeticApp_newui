@@ -8,12 +8,15 @@ use App\Mixins\Logs\UserLoginHistoryMixin;
 use App\Models\Reward;
 use App\Models\RewardAccounting;
 use App\Models\UserSession;
+use App\Models\Region;
 use App\User;
 use Illuminate\Foundation\Auth\AuthenticatesUsers;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Validation\ValidationException;
 use Illuminate\Support\Facades\Mail;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 
 use App\Models\Cart;
 
@@ -56,10 +59,15 @@ class LoginController extends Controller
         $pageDescription = !empty($seoSettings['description']) ? $seoSettings['description'] : trans('site.login_page_title');
         $pageRobot = getPageRobot('login');
 
+        $countries = Region::select(DB::raw('*, ST_AsText(geo_center) as geo_center'))
+            ->where('type', Region::$country)
+            ->get();
+
         $data = [
             'pageTitle' => $pageTitle,
             'pageDescription' => $pageDescription,
             'pageRobot' => $pageRobot,
+            'countries' => $countries
         ];
 
         return view(getTemplate() . '.auth.login', $data);
@@ -91,12 +99,8 @@ class LoginController extends Controller
         }
     }
 
-
-
-
     public function login(Request $request)
     {
-
         $type = $request->get('type');
 
         if ($type == 'mobile') {
@@ -137,8 +141,6 @@ class LoginController extends Controller
         if ($this->attemptLogin($request)) {
             return $this->afterLogged($request);
         }
-
-       
 
         return $this->sendFailedLoginResponse($request);
     }

@@ -970,16 +970,16 @@
             @if($authUser->isTeacher())
             <div class="nav-collapsible {{ (request()->is('panel/book') or request()->is('panel/book/*')) ? 'open' : '' }}">
                 <a class="nav-collapsible-toggle {{ (request()->is('panel/book') or request()->is('panel/book/*')) ? 'active' : '' }}">
-                    <span class="dashboard-ms">book</span>Book
+                    <span class="dashboard-ms">book</span>Scrolls
                     <span class="nav-arrow">›</span>
                 </a>
                 <div class="nav-collapsible-content">
                     <a href="/panel/book/new" class="{{ (request()->is('panel/book/new')) ? 'active' : '' }}">
-                        <span class="dashboard-ms">add_circle</span> New Book
+                        <span class="dashboard-ms">add_circle</span> New Scrolls
                     </a>
 
                     <a href="/panel/book/" class="{{ (request()->is('panel/book/')) ? 'active' : '' }}">
-                        <span class="dashboard-ms">library_books</span> My Book
+                        <span class="dashboard-ms">library_books</span> My Scrolls
                     </a>
                 </div>
             </div>
