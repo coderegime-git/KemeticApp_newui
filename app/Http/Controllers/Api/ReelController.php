@@ -59,7 +59,7 @@ class ReelController extends Controller
         // $userId = Auth::id();
         $userId = $this->getUserIdFromToken($request);
 
-        $reels = Reel::with(['likes', 'comments.user'])
+        $reels = Reel::with(['likes', 'comments.user','review.user'])
             ->where('is_hidden', false)
             ->where(function($query) {
                 $query->where('reports_count', '<', 15)
@@ -101,11 +101,26 @@ class ReelController extends Controller
                     'username' => $comment->user ? $comment->user->full_name : '',
                 ];
             }
+
+            $reviewsArr = [];
+            foreach ($reel->review as $reviews) {
+                $reviewsArr[] = [
+                    'id' => $reviews->id,
+                    'user_id' => $reviews->user_id,
+                    'reel_id' => $reviews->reel_id,
+                    'review' => $reviews->review,
+                    'rating' => $reviews->rating,
+                    'created_at' => $reviews->created_at,
+                    'username' => $reviews->user ? $reviews->user->full_name : '',
+                ];
+            }
+
             $reelData['username'] = $username;
             $reelData['is_liked'] = $isLiked;
             $reelData['is_saved'] = $isSaved;
             $reelData['likes'] = $likesArr;
             $reelData['comments'] = $commentsArr;
+            $reelData['reviews'] = $reviewsArr;
             $reelsArr[] = $reelData;
         }
         // Replace 'data' with 'reels' in pagination array
@@ -346,6 +361,41 @@ class ReelController extends Controller
                 'content' => $comment->content,
                 'created_at' => $comment->created_at, // Convert to timestamp
                 'username' => $comment->user->full_name
+            ]
+            // 'data' => $comment->load('user')
+        ], 201);
+    }
+
+    public function review(Request $request, Reel $reel)
+    {
+        // dd('here');
+        if ($reel->is_hidden) {
+            abort(404);
+        }
+
+        $now = time();
+        $review = $reel->review()->create([
+            'user_id' => Auth::id(),
+            'reel_id' => $reel->id,
+            'review' => $request->review,
+            'rating' => $request->rating,
+            'created_at' => $now,
+            'updated_at' => $now
+        ]);
+
+        $reel->increment('review_count');
+
+        return response()->json([
+            'status' => 'success',
+            'message' => 'Review added successfully',
+            'data' => [
+                'id' => $review->id,
+                'user_id' => $review->user_id,
+                'reel_id' => $review->reel_id,
+                'review' => $review->review,
+                'rating' => $review->rating,
+                'created_at' => $review->created_at, // Convert to timestamp
+                'username' => $review->user->full_name
             ]
             // 'data' => $comment->load('user')
         ], 201);

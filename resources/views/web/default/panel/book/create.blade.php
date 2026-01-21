@@ -83,7 +83,7 @@
 <section class="mt-25">
 
     <h2 class="section-title kemetic-title mb-20">
-        Book
+        Scrolls
     </h2>
 
     <form action="/panel/book/{{ (!empty($book) ? $book->id.'/update' : 'store') }}" method="post">
@@ -94,7 +94,6 @@
             <div class="row">
                 <div class="col-12 col-md-6">
 
-                    {{-- LANGUAGE --}}
                     {{-- LANGUAGE --}}
                     @if(!empty(getGeneralSettings('content_translate')) && !empty($userLanguages))
                         <div class="form-group">
@@ -177,7 +176,7 @@
                                 </button>
                             </div>
                             <input type="text" name="image_path" id="image_path"
-                                   value="{{ !empty($book) ? $book->image_path : old('image_path') }}"
+                                   value="{{ !empty($book) ? $book->url : old('image_path') }}"
                                    class="form-control @error('image_path') is-invalid @enderror"
                                    placeholder="{{ trans('update.blog_cover_image_placeholder') }}" required>
                         </div>
@@ -187,6 +186,17 @@
                     </div>
 
                 </div>
+            </div>
+
+            <div class="form-group">
+                <label class="input-label">Pages</label>
+                <input type="text" id="page_count" name="page_count"
+                        class="form-control @error('page_count') is-invalid @enderror"
+                        value="{{ !empty($book) ? $book->page_count : old('page_count') }}"
+                        placeholder="0" required onchange="calculateLuluPrice()">
+                @error('page_count')
+                <div class="invalid-feedback">{{ $message }}</div>
+                @enderror
             </div>
 
             <div class="form-group">
@@ -201,12 +211,34 @@
             </div>
 
             <div class="form-group">
-                <label class="input-label">Book Price ({{ $currency }})</label>
+                <label class="input-label">Print Price ({{ $currency }})</label>
+                <input type="text" id="print_price" name="print_price"
+                        class="form-control @error('print_price') is-invalid @enderror"
+                        value="{{ !empty($book) ? $book->print_price : old('print_price') }}"
+                        placeholder="{{ trans('public.0_for_free') }}" required readonly>
+                @error('print_price')
+                <div class="invalid-feedback">{{ $message }}</div>
+                @enderror
+            </div>
+
+            <div class="form-group">
+                <label class="input-label">Your Price ({{ $currency }})</label>
                 <input type="text" id="book_price" name="book_price"
                         class="form-control @error('book_price') is-invalid @enderror"
                         value="{{ !empty($book) ? $book->book_price : old('book_price') }}"
                         placeholder="{{ trans('public.0_for_free') }}" required>
                 @error('book_price')
+                <div class="invalid-feedback">{{ $message }}</div>
+                @enderror
+            </div>
+
+            <div class="form-group">
+                <label class="input-label">Platform Price ({{ $currency }})</label>
+                <input type="text" id="platform_price" name="platform_price"
+                        class="form-control @error('platform_price') is-invalid @enderror"
+                        value="{{ !empty($book) ? $book->platform_price : old('platform_price') }}"
+                        placeholder="0" required readonly>
+                @error('platform_price')
                 <div class="invalid-feedback">{{ $message }}</div>
                 @enderror
             </div>
@@ -273,38 +305,97 @@
 
 @push('scripts_bottom')
 <script src="/assets/vendors/summernote/summernote-bs4.min.js"></script>
-
 <script>
-document.addEventListener('DOMContentLoaded', function() {
     
-    // alert('Note: Shipping price is fixed at 14.85 and cannot be changed.');
+    document.addEventListener('DOMContentLoaded', function() {
+        calculateTotalPrice();
+    });
 
-    // Get price elements
-    const shippingInput = document.getElementById('shipping_price');
-    const bookInput = document.getElementById('book_price');
-    const totalInput = document.getElementById('total_price');
+    async function calculateLuluPrice() {
+        const pagesInput = document.getElementById('page_count');
+        const printPriceInput = document.getElementById('print_price');
+        const bookPriceInput = document.getElementById('book_price');
+        
+        const pages = pagesInput.value;
+        
+        if (!pages || pages < 1) {
+            alert('Please enter a valid number of pages (minimum 1)');
+            pagesInput.focus();
+            return;
+        }
+        
+        try {
+            // Make AJAX call to get Lulu price
+            const response = await fetch('/panel/book/luluprice', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
+                },
+                body: JSON.stringify({
+                    pages: pages
+                })
+            });
+            
+            const data = await response.json();
+            
+            if (data.success) {
+                const printPrice = data.print_price;
+                
+                // Update print price field
+                printPriceInput.value = printPrice.toFixed(2);
+                
+                // Auto-calculate platform fee and total
+                //calculatePlatformFee();
+                
+                // Auto-fill book price suggestion
+                if (!bookPriceInput.value || bookPriceInput.value == '0') {
+                    //const suggestedPrice = (printPrice * 1.5).toFixed(2); // 50% markup suggestion
+                    //bookPriceInput.value = suggestedPrice;
+                    //bookPriceInput.placeholder = 'Suggested: ' + suggestedPrice;
+                    //calculatePlatformFee();
+                }
+            } else {
+                alert('Error calculating print price: ' + (data.message || 'Unknown error'));
+            }
+        } catch (error) {
+            console.error('Error:', error);
+            alert('Network error. Please check your connection and try again.');
+        } finally {
+            // Hide loading spinner
+            printPriceLoading.style.display = 'none';
+        }
+    }
+
+    // Function to calculate platform fee (10% of book price)
+    function calculatePlatformFee() {
+        const shippingPrice = parseFloat(document.getElementById('shipping_price').value) || 0;
+        const printPrice = parseFloat(document.getElementById('print_price').value) || 0;
+        const bookPriceInput = parseFloat(document.getElementById('book_price').value) || 0;
+        const platformFeeInput = document.getElementById('platform_price');
+        
+        const totalPrice = shippingPrice + printPrice + bookPriceInput;
+        const platformFee = totalPrice * 0.10; // 10% platform fee
+        
+        platformFeeInput.value = platformFee.toFixed(2);
+        
+        // Recalculate total price
+        calculateTotalPrice();
+    }
 
     // Function to calculate total price
     function calculateTotalPrice() {
-        // alert('Calculating total price...');
-        const shippingPrice = parseFloat(shippingInput.value) || 0;
-        const bookPrice = parseFloat(bookInput.value) || 0;
-        const totalPrice = shippingPrice + bookPrice;
+        const shippingPrice = parseFloat(document.getElementById('shipping_price').value) || 0;
+        const printPrice = parseFloat(document.getElementById('print_price').value) || 0;
+        const platformFee = parseFloat(document.getElementById('platform_price').value) || 0;
+        const bookPriceInput = parseFloat(document.getElementById('book_price').value) || 0;
+        const totalPriceInput = document.getElementById('total_price');
         
-        // Update total price input
-        totalInput.value = totalPrice.toFixed(2);
+        const totalPrice = shippingPrice + printPrice + bookPriceInput + platformFee;
+        totalPriceInput.value = totalPrice.toFixed(2);
     }
 
-    // Add event listeners to price inputs
-    shippingInput.addEventListener('input', calculateTotalPrice);
-    bookInput.addEventListener('input', calculateTotalPrice);
-    
-    // Also update when shipping input loses focus (for manual editing)
-    shippingInput.addEventListener('change', calculateTotalPrice);
-    bookInput.addEventListener('change', calculateTotalPrice);
-
-    // Initialize calculation on page load
-    calculateTotalPrice();
-});
+    // Add event listeners for manual triggers
+    document.getElementById('book_price').addEventListener('input', calculatePlatformFee)
 </script>
 @endpush

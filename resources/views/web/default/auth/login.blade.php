@@ -141,6 +141,23 @@
           @enderror
       </div>
 
+      <div>
+        <label class="login-label">Country</label>
+        <div class="login-inp">
+          <select name="country_id" required>
+            <option value="">{{ trans('update.select_country') }}</option>
+            @foreach($countries as $country)
+             <option value="{{ $country->id }}" >{{ $country->title }}</option>
+            @endforeach
+          </select>
+        </div>
+        @error('timezone')
+        <div class="invalid-feedback">
+            {{ $message }}
+        </div>
+        @enderror
+      </div>
+
       @if(getFeaturesSettings('timezone_in_register'))
         @php
             $selectedTimezone = getGeneralSettings('default_time_zone');
@@ -160,9 +177,9 @@
             {{ $message }}
         </div>
         @enderror
-                            
+      </div>                     
       @endif
-      <div class="login-action">
+      <div class="login-action" >
         <label class="login-remember"><input type="checkbox" name="term" required> I agree to the Terms & Privacy</label>
       </div>
 

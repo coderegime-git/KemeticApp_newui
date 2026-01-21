@@ -32,6 +32,8 @@ class Book extends Model
         'url',
         'price',
         'shipping_price',
+        'print_price',
+        'platform_price',
         'book_price',
         'cover_pdf',
         'page_count',

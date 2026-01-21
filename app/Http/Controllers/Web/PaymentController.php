@@ -19,6 +19,7 @@ use App\Models\Sale;
 use App\Models\TicketUser;
 use App\Models\Subscribe;
 use App\Models\Country;
+use App\Models\Region;
 use App\PaymentChannels\ChannelManager;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Redirect;
@@ -1010,7 +1011,7 @@ class PaymentController extends Controller
         }
 
         if ($user->country_id) {
-            $country = Region::select('title', 'code')
+            $country = Region::select('title')
                             ->where('id', $user->country_id)
                             ->where('type', Region::$country)
                             ->first();

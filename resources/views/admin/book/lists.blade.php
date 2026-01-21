@@ -3,10 +3,10 @@
 @section('content')
     <section class="section">
         <div class="section-header">
-            <h1>Books</h1>
+            <h1>Scrolls</h1>
             <div class="section-header-breadcrumb">
                 <div class="breadcrumb-item active"><a href="{{ getAdminPanelUrl() }}">Dashboard</a></div>
-                <div class="breadcrumb-item">Books</div>
+                <div class="breadcrumb-item">Scrolls</div>
             </div>
         </div>
 
@@ -17,7 +17,7 @@
                         <div class="card-header">
                            
                                 <a href="{{ getAdminPanelUrl() }}/book/create" class="btn btn-primary">
-                                    <i class="fa fa-plus"></i> Create New Book
+                                    <i class="fa fa-plus"></i> Create New Scrolls
                                 </a>
                                  <!-- @can('admin_book_create') -->
                             <!-- @endcan -->
@@ -136,7 +136,7 @@
                                     @if($books->count() == 0)
                                         <tr>
                                             <td colspan="7" class="text-center">
-                                                <div class="text-muted">No books found.</div>
+                                                <div class="text-muted">No Scrolls found.</div>
                                             </td>
                                         </tr>
                                     @endif

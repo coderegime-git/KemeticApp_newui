@@ -1954,12 +1954,12 @@ function getPageRobot($page)
 {
     $seoSettings = getSeoMetas($page);
 
-    return (empty($seoSettings['robot']) or $seoSettings['robot'] != 'noindex') ? 'index, follow, all' : 'NOODP, nofollow, noindex';
+    return (empty($seoSettings['robot']) or $seoSettings['robot'] != 'noindex') ? 'index, follow, all' : 'nofollow, noindex';
 }
 
 function getPageRobotNoIndex()
 {
-    return 'NOODP, nofollow, noindex';
+    return 'nofollow, noindex';
 }
 
 function getDefaultLocale()

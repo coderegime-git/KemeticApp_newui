@@ -23,6 +23,7 @@ Route::middleware(['auth:api'])->group(function () {
         Route::post('/{reel}/save', [ReelController::class, 'savereel']);
         Route::post('/{reel}/gift', [ReelController::class, 'giftreel']);
         Route::post('/{reel}/comment', [ReelController::class, 'comment']);
+        Route::post('/{reel}/review', [ReelController::class, 'review']);
         Route::post('/{reel}/report', [ReelController::class, 'report']);
         Route::post('/{reel}/view', [ReelController::class, 'view']);
     });

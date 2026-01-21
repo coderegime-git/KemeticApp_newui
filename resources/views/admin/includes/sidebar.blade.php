@@ -957,7 +957,7 @@
                 <li class="nav-item dropdown {{ (request()->is(getAdminPanelUrl('/book*', false))) ? 'active' : '' }}">
                     <a href="#" class="nav-link has-dropdown" data-toggle="dropdown">
                         <i class="fas fa-pager"></i>
-                        <span>Book</span>
+                        <span>Scrolls</span>
                     </a>
 
                     <ul class="dropdown-menu">
@@ -969,9 +969,13 @@
 
                         @can('admin_book_create')
                             <li class="{{ (request()->is(getAdminPanelUrl('/book/create', false))) ? 'active' : '' }}">
-                                <a class="nav-link" href="{{ getAdminPanelUrl() }}/book/create">{{ trans('admin/main.new_page') }}</a>
+                                <a class="nav-link" href="{{ getAdminPanelUrl() }}/book/create">New Scrolls</a>
                             </li>
                         @endcan()
+
+                            <li class="{{ (request()->is(getAdminPanelUrl('/book/categories', false))) ? 'active' : '' }}">
+                                <a class="nav-link" href="{{ getAdminPanelUrl() }}/book/categories">Scrolls Categories</a>
+                            </li>
                     </ul>
                 </li>
             @endcan

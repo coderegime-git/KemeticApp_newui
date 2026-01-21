@@ -515,6 +515,7 @@ Route::group(['namespace' => 'Panel', 'prefix' => 'panel', 'middleware' => ['imp
         Route::get('/{id}/edit', 'BookController@edit');
         Route::post('/{id}/update', 'BookController@update');
         Route::get('/{id}/delete', 'BookController@delete');
+        Route::post('/luluprice', 'BookController@getLuluPriceUsingCurl');
     });
 
     Route::group(['prefix' => 'livestream'], function () {

@@ -508,6 +508,7 @@ Route::group(['prefix' => $prefix, 'namespace' => 'Admin', 'middleware' => ['web
             Route::get('/{id}/edit', 'BookController@edit');
             Route::post('/{id}/update', 'BookController@update');
             Route::get('/{id}/delete', 'BookController@delete');
+            Route::post('/luluprice', 'BookController@getLuluPriceUsingCurl');
 
             Route::group(['prefix' => 'categories'], function () {
                 Route::get('/', 'BookCategoriesController@index');

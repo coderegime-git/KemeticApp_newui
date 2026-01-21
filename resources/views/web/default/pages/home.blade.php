@@ -788,7 +788,7 @@
 <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 <script>
 document.addEventListener('DOMContentLoaded', function() {
-    const FIRST_DELAY_MS = 1 * 60 * 1000;     // 5 minutes - first show
+    const FIRST_DELAY_MS = 5 * 60 * 1000;     // 5 minutes - first show
     const REPEAT_MS = 60 * 60 * 1000;         // 1 hour - repeat interval
 
     const overlay = document.getElementById('kemeticOverlay');

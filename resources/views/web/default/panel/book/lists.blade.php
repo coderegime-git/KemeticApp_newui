@@ -403,7 +403,7 @@
                             <input name="title" type="text"
                                 class="form-control kemetic-input"
                                 value="{{ request()->get('title') }}"
-                                placeholder="Search book title...">
+                                placeholder="Search Scrolls title...">
                         </div>
                     </div>
 
@@ -482,7 +482,7 @@
     <section class="mt-35 kemetic-section">
         <div class="d-flex align-items-start align-items-md-center justify-content-between flex-column flex-md-row">
             <h2 class="section-title kemetic-title">
-                Book
+                Scrolls
             </h2>
         </div>
 
@@ -554,8 +554,8 @@
         @else
             @include(getTemplate() . '.includes.no-result',[
                 'file_name' => 'quiz.png',
-                'title' => trans('No Book Found'),
-                'hint' => nl2br(trans('No Book Found'))
+                'title' => trans('No Scrolls Found'),
+                'hint' => nl2br(trans('No Scrolls Found'))
             ])
         @endif
     </section>

@@ -17,7 +17,7 @@ class BookCategoriesController extends Controller
         $bookCategories = BookCategory::withCount('books')->get();
 
         $data = [
-            'pageTitle' => trans('admin/main.book_categories'),
+            'pageTitle' => 'Scrolls Categories',
             'bookCategories' => $bookCategories
         ];
 
@@ -58,7 +58,7 @@ class BookCategoriesController extends Controller
         storeContentLocale($locale, $editCategory->getTable(), $editCategory->id);
 
         $data = [
-            'pageTitle' => trans('admin/main.book_categories'),
+            'pageTitle' => 'Scrolls Categories',
             'editCategory' => $editCategory
         ];
 
