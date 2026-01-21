@@ -274,25 +274,25 @@ class LivestreamController extends Controller
         // $roomArn   = 'arn:aws:ivschat:us-east-1:585130011235:room/ygddYITgmm7N';
         // $roomTitle = 'portalschat';
 
-        $room = $this->ivsChatService->createRoom($livestream->id);
-
-        // Reuse valid token
-        $existing = IvsChatToken::where('user_id', $userId)
-            ->where('livestream_id', $livestream->id)
-            ->where('expires_at', '>', time())
+        $existing = IvsChatToken::where('livestream_id', $livestream->id)
             ->latest()
             ->first();
 
         if ($existing) {
-            return response()->json([
-                'success' => true,
-                'data' => $existing
-            ]);
+            $arn = $existing->chat_room_arn;
+            $title = $existing->chat_room_title;
         }
+        else
+        {
+            $room = $this->ivsChatService->createRoom($livestream->id);
+            $arn = $room['arn'];
+            $title = $room['title'];
+        }
+        
 
         // Create token (180 mins, full permissions)
         $tokenData = $this->ivsChatService->createChatToken(
-            $room['arn'],
+            $arn,
             $userId
         );
 
@@ -301,8 +301,8 @@ class LivestreamController extends Controller
         $chatToken = IvsChatToken::create([
             'user_id' => $userId,
             'livestream_id' => $id,
-            'chat_room_arn' => $room['arn'],
-            'chat_room_title' => $room['title'],
+            'chat_room_arn' => $arn,
+            'chat_room_title' => $title,
             'chat_token' => $tokenData['token'],
             'capabilities' => $tokenData['capabilities'],
             'expires_at' => $expiresAtTimestamp,
@@ -315,8 +315,8 @@ class LivestreamController extends Controller
             'data' => [
                 'livestream_id' => $id,
                 'chat_token' => $chatToken->chat_token,
-                'room_arn' => $room['arn'],
-                'room_title' => $room['title'],
+                'room_arn' => $arn,
+                'room_title' => $title,
                 'capabilities' => $chatToken->capabilities,
                 'expires_at' => $chatToken->expires_at,
             ]
