@@ -636,7 +636,7 @@ class CartController extends Controller
            
             // Try Lulu API first
             try {
-                //$shippingCost = $this->calculateLuluShipping($carts, $addressData);
+                $shippingCost = $this->calculateLuluShipping($carts, $addressData);
                 dd($shippingCost);
                 $shippingMethod = 'lulu_api';
                 $shippingCalculated = true;
@@ -803,7 +803,7 @@ class CartController extends Controller
         if ($hasAddress && !empty($addressData)) {
             // Calculate shipping using Lulu API
             try {
-                //$shippingCost = $this->calculateLuluShipping($carts, $addressData);
+                $shippingCost = $this->calculateLuluShipping($carts, $addressData);
                 return [
                     'shipping_cost' => $shippingCost,
                     'shipping_calculated' => true,
@@ -828,26 +828,26 @@ class CartController extends Controller
     private function calculateLuluShipping($carts, $addressData)
     {
         
-        // $accessToken = Cache::get('cj_access_token');
+        $accessToken = Cache::get('cj_access_token');
 
-        // if (!$accessToken) {
-        //     $accessToken = $this->getCJAccessToken();
-        //     if (!$accessToken) {
-        //         throw new \Exception('Failed to get access token');
-        //     }
-        // }
+        if (!$accessToken) {
+            $accessToken = $this->getCJAccessToken();
+            if (!$accessToken) {
+                throw new \Exception('Failed to get access token');
+            }
+        }
 
-        // // dd($accessToken);
-        // // dd($accessToken);
+        // dd($accessToken);
+        // dd($accessToken);
 
-        // //$response = $this->createCJOrder();
-        // if($accessToken)
-        // {
-        //     // dd('hi');
-        //     $response = $this->submitToCJDropshipping();
-        // }
+        //$response = $this->createCJOrder();
+        if($accessToken)
+        {
+            // dd('hi');
+            $response = $this->submitToCJDropshipping();
+        }
 
-        // dd($response);
+        dd($response);
         
         $token = $this->getLuluAccessTokenUsingCurl();
         
@@ -2243,12 +2243,14 @@ class CartController extends Controller
             if (json_last_error() !== JSON_ERROR_NONE) {
                 throw new Exception('JSON encode error: ' . json_last_error_msg());
             }
+
+            // dd($jsonData);
             
             $curl = curl_init();
             
             
             curl_setopt_array($curl, [
-                CURLOPT_URL => 'https://developers.cjdropshipping.com/api2.0/v1/shopping/order/createOrderV2',
+                CURLOPT_URL => 'https://developers.cjdropshipping.com/api2.0/v1/shopping/order/createOrderV3',
                 CURLOPT_RETURNTRANSFER => true,
                 CURLOPT_ENCODING => '',
                 CURLOPT_MAXREDIRS => 10,
@@ -2265,6 +2267,8 @@ class CartController extends Controller
                     'Content-Length: ' . strlen($jsonData)
                 ],
             ]);
+
+            
             
             // SSL certificate handling
             if ($this->laragonCertPath && file_exists($this->laragonCertPath)) {
@@ -2276,7 +2280,7 @@ class CartController extends Controller
                 curl_setopt($curl, CURLOPT_SSL_VERIFYPEER, false);
                 curl_setopt($curl, CURLOPT_SSL_VERIFYHOST, false);
             }
-
+        
             $response = curl_exec($curl);
             $httpCode = curl_getinfo($curl, CURLINFO_HTTP_CODE);
             $error = curl_error($curl);
@@ -2377,9 +2381,9 @@ class CartController extends Controller
                 'fromCountryCode' => 'CN',
                 'houseNumber' => '123',
                 'iossType' => '',
-                'platform' => 'shopify',
+                // 'platform' => 'shopify',
                 'iossNumber' => '',
-                'storageId' => '',
+                // 'storageId' => '',
                 'products' => [
                     [
                         'vid' => '92511400-C758-4474-93CA-66D442F5F787',
