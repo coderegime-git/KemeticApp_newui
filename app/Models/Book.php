@@ -86,6 +86,11 @@ class Book extends Model
         return $this->hasMany(BookLike::class, 'book_id');
     }
 
+    public function reports()
+    {
+        return $this->hasMany(BookReport::class, 'book_id');
+    }
+
     public function comments()
     {
         return $this->hasMany(BookComment::class, 'book_id');

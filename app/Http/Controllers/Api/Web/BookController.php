@@ -399,6 +399,33 @@ class BookController extends Controller
         ], 201);
     }
 
+    public function bookreport(Request $request, $id)
+    {
+        $user = auth('api')->user();
+        $userid = $user->id;
+
+        $book = Book::where('id', $id)->first();
+
+        $now = time();
+
+        $report = $book->reports()->create([
+            'user_id' => $userid,
+            'book_id' => $book->id,
+            'reason' => $request->reason,
+            'description' => $request->description,
+            'created_at' => $now,
+            'updated_at' => $now
+        ]);
+
+        Book::where('id', $id)->increment('report_count');
+
+        return response()->json([
+            'status' => 'success',
+            'message' => 'Book reported successfully',
+            'data' => $report
+        ], 201);
+    }
+
     public function booksave(Request $request,$id)
     {
         $user = auth('api')->user();

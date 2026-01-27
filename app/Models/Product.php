@@ -179,6 +179,11 @@ class Product extends Model implements TranslatableContract
         return $this->hasMany('App\Models\ProductLike', 'product_id', 'id');
     }
 
+    public function reports()
+    {
+        return $this->hasMany('App\Models\ProductReport', 'product_id', 'id');
+    }
+
     public function gifts()
     {
         return $this->hasMany('App\Models\ProductGift', 'product_id', 'id');
