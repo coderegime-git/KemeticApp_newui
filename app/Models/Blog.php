@@ -53,6 +53,11 @@ class Blog extends Model implements TranslatableContract
         return $this->belongsTo('App\User', 'author_id', 'id');
     }
 
+    public function reports()
+    {
+        return $this->hasMany('App\Models\ArticleReport', 'article_id', 'id');
+    }
+
     public function comments()
     {
         return $this->hasMany('App\Models\Comment', 'blog_id', 'id');

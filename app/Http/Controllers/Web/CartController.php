@@ -2321,6 +2321,275 @@ class CartController extends Controller
         }
     }
 
+    private function getAvailableShippingMethods($orderData)
+    {
+        $accessToken = Cache::get('cj_access_token');
+
+        if (!$accessToken) {
+            $accessToken = $this->getCJAccessToken();
+            if (!$accessToken) {
+                throw new \Exception('Failed to get access token');
+            }
+        }
+
+        // Build freight calculation request
+        $freightData = [
+            'reqDTOS' => [
+                [
+                    'srcAreaCode' => $orderData['fromCountryCode'] ?? 'CN',
+                    'destAreaCode' => $orderData['shippingCountryCode'] ?? 'US',
+                    'length' => 0.3, // Default dimensions, adjust as needed
+                    'width' => 0.4,
+                    'height' => 0.5,
+                    'volume' => 0.06,
+                    'totalGoodsAmount' => $orderData['shopAmount'] ?? 29.99,
+                    'productProp' => ['COMMON'],
+                    'freightTrialSkuList' => array_map(function($product) {
+                        return [
+                            'skuQuantity' => $product['quantity'] ?? 1,
+                            'sku' => $product['vid'] ?? ''
+                        ];
+                    }, $orderData['products'] ?? []),
+                    'skuList' => array_column($orderData['products'] ?? [], 'vid'),
+                    'platforms' => ['Shopify']
+                ]
+            ]
+        ];
+
+        $jsonData = json_encode($freightData);
+        
+        $curl = curl_init();
+        
+        curl_setopt_array($curl, [
+            CURLOPT_URL => 'https://developers.cjdropshipping.com/api2.0/v1/logistic/freightCalculateTip',
+            CURLOPT_RETURNTRANSFER => true,
+            CURLOPT_ENCODING => '',
+            CURLOPT_MAXREDIRS => 10,
+            CURLOPT_TIMEOUT => 30,
+            CURLOPT_FOLLOWLOCATION => true,
+            CURLOPT_HTTP_VERSION => CURL_HTTP_VERSION_1_1,
+            CURLOPT_CUSTOMREQUEST => 'POST',
+            CURLOPT_POSTFIELDS => $jsonData,
+            CURLOPT_HTTPHEADER => [
+                'CJ-Access-Token: ' . $accessToken,
+                'Content-Type: application/json',
+                'Accept: application/json',
+                'Content-Length: ' . strlen($jsonData)
+            ],
+        ]);
+        
+        // SSL certificate handling
+        $laragonCertPath = storage_path('certs/cacert.pem');
+        if ($laragonCertPath && file_exists($laragonCertPath)) {
+            curl_setopt($curl, CURLOPT_CAINFO, $laragonCertPath);
+            curl_setopt($curl, CURLOPT_CAPATH, dirname($laragonCertPath));
+            curl_setopt($curl, CURLOPT_SSL_VERIFYPEER, true);
+            curl_setopt($curl, CURLOPT_SSL_VERIFYHOST, 2);
+        } else {
+            curl_setopt($curl, CURLOPT_SSL_VERIFYPEER, false);
+            curl_setopt($curl, CURLOPT_SSL_VERIFYHOST, false);
+        }
+        
+        $response = curl_exec($curl);
+        $httpCode = curl_getinfo($curl, CURLINFO_HTTP_CODE);
+        $error = curl_error($curl);
+        curl_close($curl);
+        
+        if ($error) {
+            return [
+                'success' => false,
+                'message' => 'CURL Error: ' . $error
+            ];
+        }
+        
+        $result = json_decode($response, true);
+        
+        if ($httpCode !== 200 || !isset($result['success']) || !$result['success']) {
+            return [
+                'success' => false,
+                'message' => $result['message'] ?? 'Failed to get shipping methods',
+                'http_code' => $httpCode
+            ];
+        }
+        
+        // Filter available shipping methods
+        $availableMethods = [];
+        if (isset($result['data']['businessLineList'])) {
+            foreach ($result['data']['businessLineList'] as $businessLine) {
+                if (isset($businessLine['businessModeList'])) {
+                    foreach ($businessLine['businessModeList'] as $mode) {
+                        if (isset($mode['companyList'])) {
+                            foreach ($mode['companyList'] as $company) {
+                                if ($company['isAvailable'] ?? false) {
+                                    $availableMethods[] = [
+                                        'logisticsName' => $company['logisticsName'] ?? '',
+                                        'logisticsCode' => $company['logisticsCode'] ?? '',
+                                        'estimateDeliveryTime' => $company['estimateDeliveryTime'] ?? '',
+                                        'totalFreight' => $company['totalFreight'] ?? 0,
+                                        'companyName' => $company['companyName'] ?? '',
+                                        'companyCode' => $company['companyCode'] ?? ''
+                                    ];
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        
+        return [
+            'success' => true,
+            'data' => $result ?? []
+        ];
+        // return [
+        //     'success' => true,
+        //     'data' => $availableMethods,
+        //     'raw_data' => $result
+        // ];
+    }
+
+    private function calculateFreight($orderData)
+    {
+        $accessToken = Cache::get('cj_access_token');
+
+        if (!$accessToken) {
+            $accessToken = $this->getCJAccessToken();
+            if (!$accessToken) {
+                throw new \Exception('Failed to get access token');
+            }
+        }
+
+        // Build freight calculation request
+        $freightData = [
+            'startCountryCode' => $orderData['fromCountryCode'] ?? 'CN',
+            'endCountryCode' => $orderData['shippingCountryCode'] ?? 'US',
+            'products' => array_map(function($product) {
+                return [
+                    'quantity' => $product['quantity'] ?? 1,
+                    'vid' => $product['vid'] ?? ''
+                ];
+            }, $orderData['products'] ?? [])
+        ];
+
+        // Add optional parameters if available
+        if (isset($orderData['shippingZip'])) {
+            $freightData['zipCode'] = $orderData['shippingZip'];
+        }
+        
+        if (isset($orderData['shippingProvince'])) {
+            $freightData['province'] = $orderData['shippingProvince'];
+        }
+        
+        if (isset($orderData['shippingCity'])) {
+            $freightData['city'] = $orderData['shippingCity'];
+        }
+
+        $jsonData = json_encode($freightData);
+        
+        $curl = curl_init();
+        
+        curl_setopt_array($curl, [
+            CURLOPT_URL => 'https://developers.cjdropshipping.com/api2.0/v1/logistic/freightCalculate',
+            CURLOPT_RETURNTRANSFER => true,
+            CURLOPT_ENCODING => '',
+            CURLOPT_MAXREDIRS => 10,
+            CURLOPT_TIMEOUT => 30,
+            CURLOPT_FOLLOWLOCATION => true,
+            CURLOPT_HTTP_VERSION => CURL_HTTP_VERSION_1_1,
+            CURLOPT_CUSTOMREQUEST => 'POST',
+            CURLOPT_POSTFIELDS => $jsonData,
+            CURLOPT_HTTPHEADER => [
+                'CJ-Access-Token: ' . $accessToken,
+                'Content-Type: application/json',
+                'Accept: application/json',
+                'Content-Length: ' . strlen($jsonData)
+            ],
+        ]);
+        
+        // SSL certificate handling
+        $laragonCertPath = storage_path('certs/cacert.pem');
+        if ($laragonCertPath && file_exists($laragonCertPath)) {
+            curl_setopt($curl, CURLOPT_CAINFO, $laragonCertPath);
+            curl_setopt($curl, CURLOPT_CAPATH, dirname($laragonCertPath));
+            curl_setopt($curl, CURLOPT_SSL_VERIFYPEER, true);
+            curl_setopt($curl, CURLOPT_SSL_VERIFYHOST, 2);
+        } else {
+            curl_setopt($curl, CURLOPT_SSL_VERIFYPEER, false);
+            curl_setopt($curl, CURLOPT_SSL_VERIFYHOST, false);
+        }
+        
+        $response = curl_exec($curl);
+        $httpCode = curl_getinfo($curl, CURLINFO_HTTP_CODE);
+        $error = curl_error($curl);
+        curl_close($curl);
+        
+        if ($error) {
+            return [
+                'success' => false,
+                'message' => 'CURL Error: ' . $error
+            ];
+        }
+        
+        $result = json_decode($response, true);
+        
+        if ($httpCode !== 200 || !isset($result['success']) || !$result['success']) {
+            return [
+                'success' => false,
+                'message' => $result['message'] ?? 'Failed to calculate freight',
+                'http_code' => $httpCode,
+                'data' => $result['data'] ?? null
+            ];
+        }
+        
+        // Parse and return available shipping methods
+        $availableMethods = $this->parseFreightResponse($result['data'] ?? []);
+        
+        return [
+            'success' => true,
+            'data' => $result ?? []
+        ];
+        //return $result;
+    }
+
+    private function parseFreightResponse($responseData)
+    {
+        $availableMethods = [];
+        
+        // Check if there's any logistics data
+        if (empty($responseData) || !is_array($responseData)) {
+            return $availableMethods;
+        }
+        
+        foreach ($responseData as $logistic) {
+            if (isset($logistic['logisticsName']) && isset($logistic['total'])) {
+                $availableMethods[] = [
+                    'logisticsName' => $logistic['logisticsName'] ?? '',
+                    'logisticsCode' => $logistic['logisticsCode'] ?? '',
+                    'totalFreight' => $logistic['total'] ?? 0,
+                    'estimatedDeliveryTime' => $logistic['time'] ?? '',
+                    'companyName' => $logistic['companyName'] ?? '',
+                    'companyCode' => $logistic['companyCode'] ?? '',
+                    'logisticsType' => $logistic['logisticsType'] ?? '',
+                    'shippingChannel' => $logistic['shippingChannel'] ?? '',
+                    'volumeWeight' => $logistic['volumeWeight'] ?? 0,
+                    'actualWeight' => $logistic['actualWeight'] ?? 0,
+                    'isIOSS' => $logistic['isIOSS'] ?? false,
+                    'totalGoodsAmount' => $logistic['totalGoodsAmount'] ?? 0,
+                    'taxRate' => $logistic['taxRate'] ?? 0,
+                    'taxAmount' => $logistic['taxAmount'] ?? 0,
+                    'fuelFee' => $logistic['fuelFee'] ?? 0,
+                    'operationFee' => $logistic['operationFee'] ?? 0,
+                    'processingFee' => $logistic['processingFee'] ?? 0,
+                    'registerFee' => $logistic['registerFee'] ?? 0,
+                    'otherFee' => $logistic['otherFee'] ?? 0,
+                    'shippingFee' => $logistic['shippingFee'] ?? 0
+                ];
+            }
+        }
+        
+        return $availableMethods;
+    }
+
     // public function submitToCJDropshipping($order, $user, $carts)
     public function submitToCJDropshipping()
     {
@@ -2392,6 +2661,49 @@ class CartController extends Controller
                     ]
                 ]
             ];
+
+            $freightResult = $this->calculateFreight($sampleOrderData);
+            // dd($freightResult);
+            if (!$freightResult['success']) {
+                return [
+                    'success' => false,
+                    'message' => 'Failed to calculate freight: ' . $freightResult['message']
+                ];
+            }
+            
+            $availableMethods = $freightResult['data'] ?? [];
+            
+            if (empty($availableMethods)) {
+                return [
+                    'success' => false,
+                    'message' => 'No shipping methods available for this destination/product combination.'
+                ];
+            }
+
+            $shippingMethods = $this->getAvailableShippingMethods($sampleOrderData);
+
+            dd($shippingMethods);
+            // if (!$shippingMethods['success'] || empty($shippingMethods['data'])) {
+            //     return [
+            //         'success' => false,
+            //         'message' => 'No shipping methods available. Please check your CJ account settings.'
+            //     ];
+            // }
+
+            // if (!empty($shippingMethods['data'])) {
+            //     // Example: Select the first available method
+            //     $selectedMethod = $shippingMethods['data'][0];
+            //     $sampleOrderData['logisticName'] = $selectedMethod['logisticsName'];
+                
+            //     // Or you can add a method to choose:
+            //     // $selectedMethod = $this->selectShippingMethod($shippingMethods['data']);
+            //     // $sampleOrderData['logisticName'] = $selectedMethod['logisticsName'];
+            // } else {
+            //     return [
+            //         'success' => false,
+            //         'message' => 'No valid shipping methods found for this destination.'
+            //     ];
+            // }
             
             // Submit to CJ
             // $result = $this->getTrackingInfo('SD2601030613480657800');
@@ -2487,9 +2799,7 @@ class CartController extends Controller
                     'order_id' => $order->id,
                     'cj_order_id' => $result['orderId'] ?? 'N/A'
                 ]);
-
                 
-
                 dd('hi');
 
                 $order->update([

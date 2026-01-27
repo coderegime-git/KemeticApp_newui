@@ -96,6 +96,11 @@ class Book extends Model
         return $this->hasMany(BookShare::class, 'book_id');
     }
 
+    public function reports()
+    {
+        return $this->hasMany(BookReport::class, 'book_id');
+    }
+
     public function gift()
     {
         return $this->hasMany(BookGift::class, 'book_id');

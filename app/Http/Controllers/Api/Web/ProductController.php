@@ -493,6 +493,34 @@ class ProductController extends Controller
         ], 201);
     }
 
+    public function productreport(Request $request, $id)
+    {
+        $user = auth('api')->user();
+        $userid = $user->id;
+
+        $product = Product::where('id', $id)->first();
+
+        $now = time();
+
+        $report = $product->reports()->create([
+            'user_id' => $userid,
+            'product_id' => $product->id,
+            'reason' => $request->reason,
+            'description' => $request->description,
+            'created_at' => $now,
+            'updated_at' => $now
+        ]);
+
+        Product::where('id', $id)->increment('report_count');
+
+        return response()->json([
+            'status' => 'success',
+            'message' => 'Product reported successfully',
+            'data' => $report
+        ], 201);
+    }
+
+
     public function productsave(Request $request,$id)
     {
         $user = auth('api')->user();

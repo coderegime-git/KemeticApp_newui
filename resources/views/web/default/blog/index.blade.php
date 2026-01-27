@@ -95,7 +95,29 @@
     </div>
 
     <div class="article-sp"></div>
-
+    <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-1112899163288149"
+     crossorigin="anonymous"></script>
+    <ins class="adsbygoogle"
+        style="display:block;"
+        data-ad-layout="in-article"
+        data-ad-format="fluid"
+        data-ad-client="ca-pub-1112899163288149"
+        data-ad-slot="8812357100"></ins>
+    <script>
+        (adsbygoogle = window.adsbygoogle || []).push({});
+    </script>
+    <!-- <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-1112899163288149"
+     crossorigin="anonymous"></script>
+    <ins class="adsbygoogle"
+     style="display:block"
+     data-ad-client="ca-pub-1112899163288149"
+     data-ad-slot="1527272767"
+     data-ad-format="auto"
+     data-adtest="on"
+     data-full-width-responsive="true"></ins>
+      <script>
+          (adsbygoogle = window.adsbygoogle || []).push({});
+      </script> -->
     <h2>Global Articles</h2>
     <!-- <div class="article-tabs">
       <div class="article-tab active">All</div>

@@ -28,6 +28,10 @@ class BlogController extends Controller
         $userid = $this->getUserIdFromToken($request);
        
         $searchQuery = $request->query('title');
+        $page = (int)$request->query('offset', 0); // offset is actually page number
+        $perPage = (int)$request->query('limit', 10);
+
+        $actualOffset = $page * $perPage;
 
         $popularPosts = $this->getPopularPosts();
 
@@ -35,7 +39,7 @@ class BlogController extends Controller
             return $blog->details;
         });
 
-        $blog = Blog::when(!empty($searchQuery), function ($query) use ($searchQuery) {
+        $blogQuery = Blog::when(!empty($searchQuery), function ($query) use ($searchQuery) {
             $query->whereHas('translations', function ($subQuery) use ($searchQuery) {
                 $subQuery->where('title', 'like', '%' . $searchQuery . '%')
                     ->where('locale', 'en'); // Replace 'en' with your desired locale
@@ -44,35 +48,57 @@ class BlogController extends Controller
             // Apply handleFilters when searchQuery is empty
             $query->handleFilters();
         })
-            ->with([
-                "badges" => function ($query) {
-                    $query->where('targetable_type', 'App\Models\Blog')
-                        ->with([
-                            'badge' => function ($query) {
-                                $time = time();
-                                $query->where('enable', true)
-                                    ->where(function ($query) use ($time) {
-                                        $query->whereNull('start_at')
-                                            ->orWhere('start_at', '<', $time);
-                                    })
-                                    ->where(function ($query) use ($time) {
-                                        $query->whereNull('end_at')
-                                            ->orWhere('end_at', '>', $time);
-                                    });
-                            }
-                        ]);
-                },
-            ])
-            ->where('status', 'publish')
-            ->orderBy('updated_at', 'desc')
-            ->orderBy('created_at', 'desc')
-            ->get()
-            ->map(function ($blog) {
-                return $blog->details;
-            });
+        ->with([
+            "badges" => function ($query) {
+                $query->where('targetable_type', 'App\Models\Blog')
+                    ->with([
+                        'badge' => function ($query) {
+                            $time = time();
+                            $query->where('enable', true)
+                                ->where(function ($query) use ($time) {
+                                    $query->whereNull('start_at')
+                                        ->orWhere('start_at', '<', $time);
+                                })
+                                ->where(function ($query) use ($time) {
+                                    $query->whereNull('end_at')
+                                        ->orWhere('end_at', '>', $time);
+                                });
+                        }
+                    ]);
+            },
+        ])
+        ->where('status', 'publish')
+        ->orderBy('updated_at', 'desc')
+        ->orderBy('created_at', 'desc');
+
+        $total = $blogQuery->count();
+
+        $paginatedBlogs = $blogQuery->skip($actualOffset)->take($perPage)->get();
+
+        $transformedBlogs = $paginatedBlogs->map(function ($blog) {
+            return $blog->details;
+        });
+
+        $nextPage = null;
+        if (($actualOffset + $paginatedBlogs->count()) < $total) {
+            $nextPage = $page + 1;
+        }
+
+        // ->get()
+        // ->map(function ($blog) {
+        //     return $blog->details;
+        // });
+        
         $data = [];
-        $data['blog'] = $blog;
+        $data['blog'] = $transformedBlogs;
         $data['popular_posts'] = $popularPosts;
+        $data['pagination'] = [
+            'current_page' => $page,
+            'per_page' => $perPage,
+            'total' => $total,
+            'has_more' => ($actualOffset + $paginatedBlogs->count()) < $total,
+            'next_page' => $nextPage
+        ];
 
 
         return apiResponse2(1, 'retrieved', trans('api.public.retrieved'), $data);
@@ -299,6 +325,33 @@ class BlogController extends Controller
             'status' => 'success',
             'message' => 'Gift Send successfully',
             'data' => $gift
+        ], 201);
+    }
+
+    public function blogreport(Request $request, $id)
+    {
+        $user = auth('api')->user();
+        $userid = $user->id;
+
+        $blog = Blog::where('id', $id)->first();
+
+        $now = time();
+
+        $report = $blog->reports()->create([
+            'user_id' => $userid,
+            'article_id' => $blog->id,
+            'reason' => $request->reason,
+            'description' => $request->description,
+            'created_at' => $now,
+            'updated_at' => $now
+        ]);
+
+        Blog::where('id', $id)->increment('report_count');
+
+        return response()->json([
+            'status' => 'success',
+            'message' => 'Article reported successfully',
+            'data' => $report
         ], 201);
     }
 
