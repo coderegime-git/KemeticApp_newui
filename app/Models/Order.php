@@ -21,6 +21,7 @@ class Order extends Model
     public static $promotion = 'promotion';
     public static $registrationPackage = 'registration_package';
     public static $product = 'product';
+    public static $book = 'book';
     public static $bundle = 'bundle';
     public static $installmentPayment = 'installment_payment';
     public static $gift = 'gift';

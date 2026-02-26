@@ -21,7 +21,7 @@ class RewardAccounting extends Model
     public static function makeRewardAccounting($userId, $score, $type, $itemId = null, $checkDuplicate = false, $status = self::ADDICTION)
     {
         $rewardsSettings = getRewardsSettings();
-
+        // dd($score, $rewardsSettings);
         if ($score and $score > 0 and !empty($rewardsSettings) and !empty($rewardsSettings['status'])) {
             $create = true;
 
@@ -35,11 +35,13 @@ class RewardAccounting extends Model
                 $create = empty($check);
             }
 
+            // dd($create, $userId, $itemId, $type, $score, $status);
+
             if ($create) {
                 self::createAccounting($userId, $itemId, $type, $score, $status);
             }
         }
-
+        // dd('after makeRewardAccounting');
         return true;
     }
 
@@ -53,14 +55,15 @@ class RewardAccounting extends Model
             'status' => $status,
             'created_at' => time()
         ]);
-
+        
         $notifyOptions = [
             '[points]' => $score,
             '[item_title]' => trans('update.reward_type_' . $type),
             '[time.date]' => dateTimeFormat(time(), 'j M Y H:i')
         ];
+        // dd($notifyOptions, $userId);
         sendNotification("user_get_new_point", $notifyOptions, $userId);
-
+        // dd('after sendNotification');
         return true;
     }
 

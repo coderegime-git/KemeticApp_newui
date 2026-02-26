@@ -1,210 +1,95 @@
 @extends('web.default.layouts.newapp')
+
 <style>
- 
-.kemetic-section {
-    margin-top: 30px;
+  /* KEMETIC STATS */
+.kemetic-stat-section {
+    margin-top: 25px;
 }
 
-.kemetic-section-title {
-    font-size: 20px;
+.kemetic-title {
+    font-size: 22px;
     font-weight: 700;
     color: #F2C94C;
-    margin-bottom: 20px;
-}
-
-/* Container */
-.kemetic-stats-container {
-    background: #141414;
-    border: 1px solid rgba(242,201,76,0.25);
-    border-radius: 16px;
-    padding: 30px;
-}
-
-/* Card */
-.kemetic-stat-card {
-    background: #0F0F0F;
-    border: 1px solid rgba(242,201,76,0.2);
-    border-radius: 14px;
-    padding: 25px 15px;
-    text-align: center;
-    transition: all .3s ease;
-}
-
-.kemetic-stat-card:hover {
-    border-color: #F2C94C;
-    transform: translateY(-4px);
-}
-
-/* Icon */
-.kemetic-stat-icon {
-    width: 64px;
-    height: 64px;
-    margin: 0 auto 10px;
-    background: rgba(242,201,76,0.12);
-    border-radius: 14px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-}
-
-.kemetic-stat-icon img {
-    width: 36px;
-    height: 36px;
-}
-
-/* Value */
-.kemetic-stat-value {
-    font-size: 32px;
-    font-weight: 800;
-    color: #ffffff;
-    margin-top: 8px;
-}
-
-/* Label */
-.kemetic-stat-label {
-    font-size: 14px;
-    color: #b5b5b5;
-    margin-top: 4px;
-}
-.kemetic-filter-card {
-    border-radius: 14px;
-    background: #ffffff;
-    box-shadow: 0 6px 20px rgba(0,0,0,0.04);
-}
-
-.kemetic-input .input-with-icon {
-    position: relative;
-}
-
-.kemetic-input .input-with-icon i {
-    position: absolute;
-    left: 12px;
-    top: 50%;
-    transform: translateY(-50%);
-    width: 18px;
-    height: 18px;
-    color: #6c757d;
-}
-
-.kemetic-input .input-with-icon input {
-    padding-left: 42px;
-}
-
-.filter-group-title {
-    font-size: 13px;
-    font-weight: 600;
-    color: #6c757d;
-    text-transform: uppercase;
-}
-
-.kemetic-btn {
-    border-radius: 10px;
-    font-weight: 600;
-}
-
-/* Kemetic Filter Card */
-.kemetic-filter-card {
-    background: #ffffff;
-    border-radius: 14px;
-    padding: 24px;
-    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.06);
-}
-
-/* Labels */
-.kemetic-label {
-    font-size: 13px;
-    font-weight: 600;
-    color: #1f2937;
-    margin-bottom: 6px;
-}
-
-/* Input Group */
-.kemetic-input-group {
-    position: relative;
-}
-
-.kemetic-input-group i {
-    position: absolute;
-    top: 50%;
-    left: 12px;
-    transform: translateY(-50%);
-    color: #6b7280;
-    width: 16px;
-    height: 16px;
-}
-
-.kemetic-input-group input {
-    padding-left: 38px;
-    height: 44px;
-    border-radius: 10px;
-}
-
-/* Inputs */
-.form-control {
-    height: 44px;
-    border-radius: 10px;
-    font-size: 14px;
-}
-
-/* Button */
-.kemetic-btn-primary {
-    height: 44px;
-    border-radius: 10px;
-    background: linear-gradient(135deg, #6366f1, #4f46e5);
-    border: none;
-    color: #fff;
-    font-weight: 600;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-}
-
-.kemetic-btn-primary i {
-    width: 18px;
-    height: 18px;
-}
-
-:root {
-    --k-bg: #0f0f0f;
-    --k-card: #141414;
-    --k-gold: #f2c94c;
-    --k-border: rgba(242,201,76,.35);
-    --k-text: #e0e0e0;
-    --k-shadow: 0 0 20px rgba(242,201,76,.15);
-    --k-radius: 14px;
-}
-
-/* SECTION */
-.kemetic-section {
-    padding: 10px;
-}
-
-/* TITLE */
-.kemetic-title {
-    font-size: 20px;
-    color: var(--k-gold);
-    border-left: 4px solid var(--k-gold);
-    padding-left: 12px;
-    font-weight: 600;
+    margin-bottom: 18px;
 }
 
 /* CARD */
-.kemetic-card {
-    background: var(--k-card);
-    border: 1px solid var(--k-border);
-    border-radius: var(--k-radius);
-    padding: 20px 25px;
-    box-shadow: var(--k-shadow);
+.kemetic-stat-card {
+    background: linear-gradient(180deg, #121212, #0b0b0b);
+    border: 1px solid #262626;
+    border-radius: 18px;
+    padding: 26px 18px;
 }
 
-/* FORM */
-.kemetic-form-group {
-    margin-bottom: 15px;
+/* ITEM */
+.kemetic-stat-item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 6px;
 }
 
+/* ICON */
+.kemetic-stat-icon {
+    width: 56px;
+    height: 56px;
+    border-radius: 50%;
+    background: rgba(242, 201, 76, 0.15);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+.kemetic-stat-icon img {
+    width: 28px;
+    filter: invert(0.9);
+}
+
+/* VALUE */
+.kemetic-stat-value {
+    font-size: 30px;
+    font-weight: 700;
+    color: #F2C94C;
+}
+
+/* LABEL */
+.kemetic-stat-label {
+    font-size: 14px;
+    color: #9a9a9a;
+}
+
+/* MOBILE */
+@media (max-width: 768px) {
+    .kemetic-stat-card {
+        padding: 20px 12px;
+    }
+    .kemetic-stat-value {
+        font-size: 24px;
+    }
+}
+
+/* KEMETIC FILTER */
+.kemetic-filter-section {
+    color: #eaeaea;
+}
+
+.kemetic-title {
+    font-size: 22px;
+    font-weight: 700;
+    color: #F2C94C;
+}
+
+/* CARD */
+.kemetic-filter-card {
+    background: linear-gradient(180deg, #121212, #0a0a0a);
+    border: 1px solid #262626;
+    border-radius: 18px;
+    padding: 26px 22px;
+}
+
+/* LABEL */
 .kemetic-label {
     font-size: 13px;
-    color: var(--k-gold);
+    color: #b5b5b5;
     margin-bottom: 6px;
     display: block;
 }
@@ -213,553 +98,593 @@
 .kemetic-input-group {
     display: flex;
     align-items: center;
-    background: #0d0d0d;
-    border: 1px solid var(--k-border);
-    border-radius: var(--k-radius);
-    transition: .3s;
+    gap: 10px;
+    background: #0f0f0f;
+    border: 1px solid #2a2a2a;
+    border-radius: 12px;
+    padding: 10px 12px;
 }
 
-.kemetic-input-group:hover {
-    box-shadow: 0 0 15px rgba(242,201,76,.2);
+.kemetic-input-group i {
+    color: #F2C94C;
 }
 
-.kemetic-icon {
-    padding: 0 12px;
-    color: var(--k-gold);
-}
-
+/* INPUT */
 .kemetic-input {
+    width: 100%;
     background: transparent;
     border: none;
-    color: var(--k-text);
-    padding: 10px;
-    width: 100%;
+    color: #fff;
+    outline: none;
+    font-size: 14px;
 }
 
-.kemetic-input:focus {
-    outline: none;
+.kemetic-input::placeholder {
+    color: #666;
 }
 
 /* SELECT */
 .kemetic-select {
+    background: #0f0f0f;
+    border: 1px solid #2a2a2a;
+    border-radius: 12px;
+    color: #fff;
+    padding: 10px 12px;
     width: 100%;
-    background: #0d0d0d;
-    border: 1px solid var(--k-border);
-    border-radius: var(--k-radius);
-    color: var(--k-text);
-    padding: 10px;
+    outline: none;
+}
+.kemetic-select option {
+    background: #0f0f0f;
+    color: #fff;
+}
+.kemetic-select:focus {
+    border-color: #F2C94C;
 }
 
 /* BUTTON */
 .kemetic-btn {
-    background: linear-gradient(135deg, #f2c94c, #d4a62f);
-    color: #000;
+    background: linear-gradient(135deg, #F2C94C, #d4af37);
     border: none;
-    padding: 11px;
-    border-radius: var(--k-radius);
-    font-weight: 600;
-    transition: .3s;
-}
-
-.kemetic-btn:hover {
-    box-shadow: 0 0 25px rgba(242,201,76,.5);
-    transform: translateY(-1px);
-}
-
-.kemetic-section {
-    padding: 10px 0;
-}
-
-.kemetic-title {
-    font-size: 20px;
-    color: #f2c94c;
-    border-left: 4px solid #f2c94c;
-    padding-left: 12px;
-    font-weight: 600;
-}
-
-/* CARD */
-.kemetic-card {
-    background: #0f0f0f;
-    border: 1px solid rgba(242,201,76,.35);
     border-radius: 14px;
-    padding: 20px 25px;
-    box-shadow: 0 0 20px rgba(242,201,76,.15);
+    padding: 12px;
+    font-weight: 700;
+    color: #000;
+    transition: 0.3s ease;
+}
+.kemetic-btn:hover {
+    background: linear-gradient(135deg, #d4af37, #F2C94C);
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(242,201,76,0.4);
+}
+
+/* TABLE CARD */
+.kemetic-table-card {
+    background: linear-gradient(180deg,#121212,#0a0a0a);
+    border:1px solid #262626;
+    border-radius:18px;
+    padding:20px;
 }
 
 /* TABLE */
 .kemetic-table {
-    width: 100%;
-    color: #e0e0e0;
-    border-collapse: separate;
-    border-spacing: 0;
+    width:100%;
+    border-collapse:separate;
+    border-spacing:0 10px;
 }
-
 .kemetic-table thead th {
-    border-bottom: 1px solid rgba(242,201,76,.25);
-    color: #f2c94c;
-    font-weight: 600;
+    color:#aaa; 
+    font-size:13px;
+    font-weight:600; 
+    text-align:center;
+    padding-bottom: 10px;
 }
-
+.kemetic-table thead th.text-left {
+    text-align: left;
+}
+.kemetic-table tbody tr {
+    background:#0f0f0f;
+    border:1px solid #262626;
+    transition: 0.3s ease;
+}
 .kemetic-table tbody tr:hover {
-    background: rgba(242,201,76,.05);
+    background: #1a1a1a;
+    border-color: rgba(242,201,76,0.3);
+}
+.kemetic-table td {
+    padding:14px;
+    text-align:center;
+    vertical-align:middle;
+}
+.kemetic-table td.text-left { 
+    text-align:left; 
+}
+.kemetic-table td.text-right {
+    text-align: right;
 }
 
-.kemetic-text {
-    color: #f2c94c;
+/* USER AVATAR */
+.user-avatar-cell {
+    display: flex;
+    align-items: center;
+    gap: 12px;
 }
-
-.kemetic-status.passed {
-    color: #4cd137;
+.user-avatar {
+    width: 44px;
+    height: 44px;
+    border-radius: 50%;
+    overflow: hidden;
+    border: 2px solid rgba(242,201,76,0.3);
+    background: #1a1a1a;
+}
+.user-avatar img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+.user-info {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+}
+.user-name {
+    color: #fff;
     font-weight: 600;
+    font-size: 14px;
+}
+.user-email {
+    color: #888;
+    font-size: 11px;
 }
 
-.kemetic-status.failed {
-    color: #e84118;
+/* QUIZ INFO */
+.quiz-title {
+    color: #F2C94C;
     font-weight: 600;
+    font-size: 15px;
+    margin-bottom: 4px;
+}
+.quiz-course {
+    color: #888;
+    font-size: 12px;
 }
 
-.kemetic-status.waiting {
+/* GRADE */
+.quiz-grade {
+    color: #F2C94C;
+    font-weight: 600;
+    font-size: 16px;
+}
+.user-grade {
+    color: #fff;
+    font-weight: 600;
+    font-size: 16px;
+}
+
+/* STATUS BADGES */
+.status-badge {
+    padding:4px 10px;
+    border-radius:12px;
+    font-size:12px;
+    font-weight: 500;
+    display: inline-block;
+}
+.status-badge.passed {
+    background: #1f3d2b;
+    color: #2ecc71;
+}
+.status-badge.failed {
+    background: #3d1f1f;
+    color: #e74c3c;
+}
+.status-badge.waiting {
+    background: #3d2e1f;
     color: #f39c12;
-    font-weight: 600;
+}
+.chance-remained {
+    color: #888;
+    font-size: 11px;
+    margin-top: 2px;
 }
 
-.kemetic-switch-label {
-    color: #f2c94c;
+/* DATE */
+.quiz-date {
+    color: #b5b5b5;
+    font-size: 14px;
     font-weight: 500;
 }
 
-.custom-control {
-  position: relative;
-  z-index: 1;
-  display: block;
-  min-height: 1.3rem;
-  padding-left: 2rem;
-  -webkit-print-color-adjust: exact;
-          print-color-adjust: exact;
+/* DROPDOWN */
+.kemetic-actions {
+    position: relative;
+}
+.kemetic-actions button {
+    background: transparent;
+    border: none;
+    color: #F2C94C;
+    padding: 5px 10px;
+}
+.kemetic-actions .dropdown-menu {
+    background: #121212;
+    border: 1px solid #262626;
+    border-radius: 12px;
+    padding: 8px 0;
+    min-width: 180px;
+}
+.kemetic-actions .dropdown-item {
+    color: #F2C94C;
+    padding: 8px 16px;
+    font-size: 13px;
+    transition: 0.2s ease;
+    background: transparent;
+    border: none;
+    width: 100%;
+    text-align: left;
+}
+.kemetic-actions .dropdown-item:hover {
+    background: rgba(242,201,76,0.1);
+    color: #fff;
 }
 
-.custom-control-inline {
-  display: inline-flex;
-  margin-right: 1rem;
+/* SWITCH */
+.kemetic-switch-wrapper {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+.kemetic-switch-label {
+    color: #b5b5b5;
+    font-size: 14px;
+}
+.kemetic-switch {
+    position: relative;
+    width: 46px;
+    height: 24px;
+}
+.kemetic-switch input {
+    display: none;
+}
+.kemetic-slider {
+    position: absolute;
+    inset: 0;
+    background: #2a2a2a;
+    border-radius: 30px;
+    cursor: pointer;
+}
+.kemetic-slider:before {
+    content: "";
+    position: absolute;
+    width: 18px;
+    height: 18px;
+    background: #F2C94C;
+    border-radius: 50%;
+    top: 3px;
+    left: 4px;
+    transition: .3s;
+}
+.kemetic-switch input:checked + .kemetic-slider:before {
+    transform: translateX(20px);
 }
 
-.custom-control-input {
-  position: absolute;
-  left: 0;
-  z-index: -1;
-  width: 1.5rem;
-  height: 1.4rem;
-  opacity: 0;
+/* NO RESULT */
+.no-result-card {
+    background: linear-gradient(180deg,#121212,#0a0a0a);
+    border:1px solid #262626;
+    border-radius:18px;
+    padding:60px 40px;
+    text-align: center;
 }
-.custom-control-input:checked ~ .custom-control-label::before {
-  color: #ffffff;
-  border-color: #f2c94c;
-  background-color: #f2c94c;
-    box-shadow: 0 0 10px rgba(242, 201, 76, 0.45);
+.no-result-card img {
+    opacity: 0.7;
+    margin-bottom: 20px;
+    width: 120px;
 }
-.custom-control-input:focus ~ .custom-control-label::before {
-  box-shadow: none, 1.5rem;
+.no-result-card h3 {
+    color: #F2C94C;
+    font-size: 20px;
+    margin-bottom: 10px;
 }
-.custom-control-input:focus:not(:checked) ~ .custom-control-label::before {
-  border-color: #43d477;
-}
-.custom-control-input:not(:disabled):active ~ .custom-control-label::before {
-  color: #ffffff;
-  background-color: #43d477;
-  border-color: #43d477;
-}
-.custom-control-input[disabled] ~ .custom-control-label, .custom-control-input:disabled ~ .custom-control-label {
-  color: #6c757d;
-}
-.custom-control-input[disabled] ~ .custom-control-label::before, .custom-control-input:disabled ~ .custom-control-label::before {
-  background-color: #f1f1f1;
+.no-result-card p {
+    color: #888;
+    font-size: 14px;
+    max-width: 400px;
+    margin: 0 auto;
 }
 
-.custom-control-label {
-  position: relative;
-  margin-bottom: 0;
-  vertical-align: top;
-}
-.custom-control-label::before {
-  position: absolute;
-  top: -0.1rem;
-  left: -2rem;
-  display: block;
-  width: 1.5rem;
-  height: 1.5rem;
-  pointer-events: none;
-  content: "";
-  background-color: #ffffff;
-  border: 2px solid #adb5bd;
-  box-shadow: none;
-}
-.custom-control-label::after {
-  position: absolute;
-  top: -0.1rem;
-  left: -2rem;
-  display: block;
-  width: 1.5rem;
-  height: 1.5rem;
-  content: "";
-  background: 50%/50% 50% no-repeat;
-}
-
-.custom-checkbox .custom-control-label::before {
-  border-radius: 0.25rem;
-}
-.custom-checkbox .custom-control-input:checked ~ .custom-control-label::after {
-  background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' width='8' height='8' viewBox='0 0 8 8'%3e%3cpath fill='%23ffffff' d='M6.564.75l-3.59 3.612-1.538-1.55L0 4.26l2.974 2.99L8 2.193z'/%3e%3c/svg%3e");
-}
-.custom-checkbox .custom-control-input:indeterminate ~ .custom-control-label::before {
-  border-color: #F2C94C;
-  background-color: #F2C94C;
-}#
-.custom-checkbox .custom-control-input:indeterminate ~ .custom-control-label::after {
-  background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' width='4' height='4' viewBox='0 0 4 4'%3e%3cpath stroke='%23ffffff' d='M0 2h4'/%3e%3c/svg%3e");
-}
-.custom-checkbox .custom-control-input:disabled:checked ~ .custom-control-label::before {
-  background-color: #F2C94C;
-}
-.custom-checkbox .custom-control-input:disabled:indeterminate ~ .custom-control-label::before {
-  background-color: #F2C94C;
-}
-
-.custom-radio .custom-control-label::before {
-  border-radius: 50%;
-}
-.custom-radio .custom-control-input:checked ~ .custom-control-label::after {
-  background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='-4 -4 8 8'%3e%3ccircle r='3' fill='%23ffffff'/%3e%3c/svg%3e");
-}
-.custom-radio .custom-control-input:disabled:checked ~ .custom-control-label::before {
-  background-color: rgba(67, 212, 119, 0.5);
-}
-
-.custom-switch {
-  padding-left: 4.125rem;
-}
-.custom-switch .custom-control-label::before {
-  left: -3.125rem;
-  width: 2.625rem;
-  pointer-events: all;
-  border-radius: 0.75rem;
-}
-.custom-switch .custom-control-label::after {
-  top: calc(-0.1rem + 4px);
-  left: calc(-3.125rem + 4px);
-  width: calc(1.5rem - 8px);
-  height: calc(1.5rem - 8px);
-  background-color: #adb5bd;
-  border-radius: 0.75rem;
-  transition: transform 0.15s ease-in-out, background-color 0.15s ease-in-out, border-color 0.15s ease-in-out, box-shadow 0.15s ease-in-out;
-}
-@media (prefers-reduced-motion: reduce) {
-  .custom-switch .custom-control-label::after {
-    transition: none;
-  }
-}
-.custom-switch .custom-control-input:checked ~ .custom-control-label::after {
-  background-color: #ffffff;
-  transform: translateX(1.125rem);
-}
-.custom-switch .custom-control-input:disabled:checked ~ .custom-control-label::before {
-  background-color: rgba(67, 212, 119, 0.5);
+/* TEXT COLORS */
+.text-gray {
+    color: #888 !important;
 }
 </style>
+
 @push('styles_top')
     <link rel="stylesheet" href="/assets/default/vendors/daterangepicker/daterangepicker.min.css">
-    <link rel="stylesheet" href="/assets/default/css/panel/kemetic-quiz-results.css">
+    <link rel="stylesheet" href="/assets/default/vendors/select2/select2.min.css">
 @endpush
 
 @section('content')
 
-<section class="kemetic-section">
-    <h2 class="kemetic-section-title">
-        {{ trans('quiz.results_statistics') }}
-    </h2>
+    {{-- Statistics --}}
+    <section class="kemetic-stat-section">
+        <h2 class="kemetic-title">{{ trans('quiz.results_statistics') }}</h2>
 
-    <div class="kemetic-stats-container">
-        <div class="row">
-
-            <!-- Need Review -->
-            <div class="col-6 col-md-3">
-                <div class="kemetic-stat-card">
-                    <div class="kemetic-stat-icon">
-                        <img src="/assets/default/img/activity/42.svg" alt="">
+        <div class="kemetic-stat-card">
+            <div class="row text-center">
+                <div class="col-6 col-md-3">
+                    <div class="kemetic-stat-item">
+                        <div class="kemetic-stat-icon">
+                            <img src="/assets/default/img/activity/42.svg" alt="">
+                        </div>
+                        <div class="kemetic-stat-value">{{ $quizzesResultsCount }}</div>
+                        <div class="kemetic-stat-label">{{ trans('quiz.quizzes') }}</div>
                     </div>
+                </div>
 
-                    <div class="kemetic-stat-value">
-                        {{ $quizzesResultsCount }}
+                <div class="col-6 col-md-3">
+                    <div class="kemetic-stat-item">
+                        <div class="kemetic-stat-icon">
+                            <img src="/assets/default/img/activity/45.svg" alt="">
+                        </div>
+                        <div class="kemetic-stat-value">{{ $passedCount }}</div>
+                        <div class="kemetic-stat-label">{{ trans('public.passed') }}</div>
                     </div>
+                </div>
 
-                    <div class="kemetic-stat-label">
-                        {{ trans('quiz.quizzes') }}
+                <div class="col-6 col-md-3">
+                    <div class="kemetic-stat-item">
+                        <div class="kemetic-stat-icon">
+                            <img src="/assets/default/img/activity/44.svg" alt="">
+                        </div>
+                        <div class="kemetic-stat-value">{{ $failedCount }}</div>
+                        <div class="kemetic-stat-label">{{ trans('quiz.failed') }}</div>
+                    </div>
+                </div>
+
+                <div class="col-6 col-md-3">
+                    <div class="kemetic-stat-item">
+                        <div class="kemetic-stat-icon">
+                            <img src="/assets/default/img/activity/43.svg" alt="">
+                        </div>
+                        <div class="kemetic-stat-value">{{ $waitingCount }}</div>
+                        <div class="kemetic-stat-label">{{ trans('quiz.open_results') }}</div>
                     </div>
                 </div>
             </div>
-
-            <!-- Results -->
-            <div class="col-6 col-md-3">
-                <div class="kemetic-stat-card">
-                    <div class="kemetic-stat-icon">
-                        <img src="/assets/default/img/activity/45.svg" alt="">
-                    </div>
-
-                    <div class="kemetic-stat-value">
-                        {{ $passedCount }}
-                    </div>
-
-                    <div class="kemetic-stat-label">
-                        {{ trans('public.passed') }}
-                    </div>
-                </div>
-            </div>
-
-            <!-- Average Grade -->
-            <div class="col-6 col-md-3 mt-4 mt-md-0">
-                <div class="kemetic-stat-card">
-                    <div class="kemetic-stat-icon">
-                        <img src="/assets/default/img/activity/44.svg" alt="">
-                    </div>
-
-                    <div class="kemetic-stat-value">
-                        {{ $failedCount }}
-                    </div>
-
-                    <div class="kemetic-stat-label">
-                        {{ trans('quiz.failed') }}
-                    </div>
-                </div>
-            </div>
-
-            <!-- Success Rate -->
-            <div class="col-6 col-md-3 mt-4 mt-md-0">
-                <div class="kemetic-stat-card">
-                    <div class="kemetic-stat-icon">
-                        <img src="/assets/default/img/activity/43.svg" alt="">
-                    </div>
-
-                    <div class="kemetic-stat-value">
-                        {{ $waitingCount }}
-                    </div>
-
-                    <div class="kemetic-stat-label">
-                        {{ trans('quiz.open_results') }}
-                    </div>
-                </div>
-            </div>
-
         </div>
-    </div>
-</section>
+    </section>
 
-<section class="kemetic-section mt-25">
-    <h2 class="kemetic-title">
-        {{ trans('quiz.filter_results') }}
-    </h2>
+    {{-- Filters --}}
+    <section class="kemetic-filter-section mt-30">
+        <h2 class="kemetic-title">{{ trans('quiz.filter_results') }}</h2>
 
-    <div class="kemetic-card mt-20">
-        <form action="/panel/quizzes/my-results" method="get" class="row">
+        <div class="kemetic-filter-card mt-20">
+            <form action="/panel/quizzes/my-results" method="get">
+                <div class="row g-3">
 
-            {{-- DATE FILTER --}}
-            <div class="col-12 col-lg-4">
-                <div class="row">
-
-                    <div class="col-12 col-md-6">
-                        <div class="kemetic-form-group">
-                            <label class="kemetic-label">{{ trans('public.from') }}</label>
-                            <div class="kemetic-input-group">
-                                <span class="kemetic-icon">
-                                    <i data-feather="calendar"></i>
-                                </span>
-                                <input type="text"
-                                       name="from"
-                                       autocomplete="off"
-                                       class="kemetic-input @if(!empty(request()->get('from'))) datepicker @else datefilter @endif"
-                                       value="{{ request()->get('from','') }}">
+                    {{-- Date range --}}
+                    <div class="col-12 col-lg-4">
+                        <div class="row g-2">
+                            <div class="col-6">
+                                <label class="kemetic-label">{{ trans('public.from') }}</label>
+                                <div class="kemetic-input-group">
+                                    <!-- <i data-feather="calendar" width="18" height="18"></i> -->
+                                    <input type="date" name="from"
+                                        class="kemetic-input"
+                                        value="{{ request()->get('from') }}">
+                                </div>
+                            </div>
+                            <div class="col-6">
+                                <label class="kemetic-label">{{ trans('public.to') }}</label>
+                                <div class="kemetic-input-group">
+                                    <!-- <i data-feather="calendar" width="18" height="18"></i> -->
+                                    <input type="date" name="to"
+                                        class="kemetic-input"
+                                        value="{{ request()->get('to') }}">
+                                </div>
                             </div>
                         </div>
                     </div>
 
-                    <div class="col-12 col-md-6">
-                        <div class="kemetic-form-group">
-                            <label class="kemetic-label">{{ trans('public.to') }}</label>
-                            <div class="kemetic-input-group">
-                                <span class="kemetic-icon">
-                                    <i data-feather="calendar"></i>
-                                </span>
-                                <input type="text"
-                                       name="to"
-                                       autocomplete="off"
-                                       class="kemetic-input @if(!empty(request()->get('to'))) datepicker @else datefilter @endif"
-                                       value="{{ request()->get('to','') }}">
+                    {{-- Quiz & Instructor filters --}}
+                    <div class="col-12 col-lg-6">
+                        <div class="row g-2">
+                            <div class="col-12 col-lg-5">
+                                <label class="kemetic-label">{{ trans('quiz.quiz_or_webinar') }}</label>
+                                <div class="kemetic-input-group">
+                                    <i data-feather="book-open" width="18" height="18"></i>
+                                    <input type="text" name="quiz_or_webinar" 
+                                        class="kemetic-input"
+                                        value="{{ request()->get('quiz_or_webinar','') }}"
+                                        placeholder="{{ trans('public.search') }}">
+                                </div>
                             </div>
-                        </div>
-                    </div>
-
-                </div>
-            </div>
-
-            {{-- QUIZ + STUDENT --}}
-            <div class="col-12 col-lg-6">
-                <div class="row">
-
-                    <div class="col-12 col-lg-5">
-                        <div class="kemetic-form-group">
-                            <label class="kemetic-label">{{ trans('quiz.quiz_or_webinar') }}</label>
-                            <!-- <div class="kemetic-input-group"> -->
-                                
-                                <input type="text" name="quiz_or_webinar" class="form-control" value="{{ request()->get('quiz_or_webinar','') }}">
-                            <!-- </div> -->
-                        </div>
-                    </div>
-
-                    <div class="col-12 col-lg-7">
-                        <div class="row">
 
                             <div class="col-12 col-lg-7">
-                                <div class="kemetic-form-group">
-                                    <label class="kemetic-label">{{ trans('public.instructor') }}</label>
-                                    <!-- <div class="kemetic-input-group"> -->
-                                        <input type="text" name="instructor" class="form-control" value="{{ request()->get('instructor','') }}">
-                                    <!-- </div> -->
+                                <div class="row g-2">
+                                    <div class="col-12 col-lg-7">
+                                        <label class="kemetic-label">{{ trans('public.instructor') }}</label>
+                                        <div class="kemetic-input-group">
+                                            <i data-feather="user" width="18" height="18"></i>
+                                            <input type="text" name="instructor" 
+                                                class="kemetic-input"
+                                                value="{{ request()->get('instructor','') }}"
+                                                placeholder="{{ trans('public.search') }}">
+                                        </div>
+                                    </div>
+
+                                    <div class="col-12 col-lg-5">
+                                        <label class="kemetic-label">{{ trans('public.status') }}</label>
+                                        <select name="status" class="kemetic-select">
+                                            <option value="all">{{ trans('public.all') }}</option>
+                                            <option value="passed" {{ request()->get('status') === 'passed' ? 'selected' : '' }}>{{ trans('quiz.passed') }}</option>
+                                            <option value="failed" {{ request()->get('status') === 'failed' ? 'selected' : '' }}>{{ trans('quiz.failed') }}</option>
+                                            <option value="waiting" {{ request()->get('status') === 'waiting' ? 'selected' : '' }}>{{ trans('quiz.waiting') }}</option>
+                                        </select>
+                                    </div>
                                 </div>
                             </div>
-
-                            <div class="col-12 col-lg-5">
-                                <div class="kemetic-form-group">
-                                    <label class="kemetic-label">{{ trans('public.status') }}</label>
-                                    <select name="status" class="kemetic-select">
-                                        <option value="all">{{ trans('public.all') }}</option>
-                                        <option value="passed" @selected(request()->get('status') === 'passed')>{{ trans('quiz.passed') }}</option>
-                                        <option value="failed" @selected(request()->get('status') === 'failed')>{{ trans('quiz.failed') }}</option>
-                                        <option value="waiting" @selected(request()->get('status') === 'waiting')>{{ trans('quiz.waiting') }}</option>
-                                    </select>
-                                </div>
-                            </div>
-
                         </div>
                     </div>
 
+                    {{-- Submit --}}
+                    <div class="col-12 col-lg-2 d-flex align-items-end">
+                        <button type="submit" class="kemetic-btn w-100">
+                            {{ trans('public.show_results') }}
+                        </button>
+                    </div>
+
                 </div>
-            </div>
+            </form>
+        </div>
+    </section>
 
-            {{-- BUTTON --}}
-            <div class="col-12 col-lg-2 d-flex align-items-end">
-                <button type="submit" class="kemetic-btn w-100">
-                    {{ trans('public.show_results') }}
-                </button>
-            </div>
+    {{-- Quiz Results List --}}
+    <section class="kemetic-section mt-40">
+        <div class="d-flex flex-column flex-md-row align-items-start align-items-md-center justify-content-between mb-20">
+            <h2 class="kemetic-title">{{ trans('quiz.my_quizzes') }}</h2>
 
-        </form>
-    </div>
-</section>
-
-
-<section class="kemetic-section mt-35">
-
-    {{-- HEADER + SWITCH --}}
-    <div class="d-flex align-items-start align-items-md-center justify-content-between flex-column flex-md-row">
-        <h2 class="kemetic-title">{{ trans('quiz.my_quizzes') }}</h2>
-
-        <form action="" method="get">
-            <div class="d-flex align-items-center mt-15 mt-md-0">
-                <label for="onlyOpenQuizzesSwitch" class="mb-0 mr-10 font-14 text-gray cursor-pointer">{{ trans('quiz.show_only_open_results') }}</label>
-                <div class="custom-control custom-switch">
-                    <input type="checkbox" name="open_results" @if(request()->get('open_results')=='on') checked @endif class="custom-control-input" id="onlyOpenQuizzesSwitch">
-                    <label class="custom-control-label" for="onlyOpenQuizzesSwitch"></label>
+            <form action="" method="get" class="mt-15 mt-md-0">
+                <div class="kemetic-switch-wrapper">
+                    <span class="kemetic-switch-label">{{ trans('quiz.show_only_open_results') }}</span>
+                    <label class="kemetic-switch">
+                        <input type="checkbox" name="open_results" onchange="this.form.submit()"
+                            {{ request()->get('open_results') == 'on' ? 'checked' : '' }}>
+                        <span class="kemetic-slider"></span>
+                    </label>
                 </div>
-            </div>
-        </form>
-    </div>
-
-    @if($quizzesResults->count() > 0)
-
-        <div class="kemetic-card mt-20">
-            <div class="table-responsive">
-                <table class="table kemetic-table">
-                    <thead>
-                        <tr>
-                            <th>{{ trans('public.instructor') }}</th>
-                            <th>{{ trans('quiz.quiz') }}</th>
-                            <th class="text-center">{{ trans('quiz.quiz_grade') }}</th>
-                            <th class="text-center">{{ trans('quiz.my_grade') }}</th>
-                            <th class="text-center">{{ trans('public.status') }}</th>
-                            <th class="text-center">{{ trans('public.date') }}</th>
-                            <th></th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        @foreach($quizzesResults as $result)
-                            <tr>
-                            <td>
-                                <div class="d-flex align-items-center">
-                                    <div class="avatar bg-gray200 rounded-circle">
-                                        <img src="{{ $result->quiz->creator->getAvatar() }}" class="img-cover" alt="">
-                                    </div>
-                                    <div class="ml-2">
-                                        <span>{{ $result->quiz->creator->full_name }}</span>
-                                        <small class="text-gray d-block">{{ $result->quiz->creator->email }}</small>
-                                    </div>
-                                </div>
-                            </td>
-                            <td>
-                                <span>{{ $result->quiz->title }}</span>
-                                <small class="d-block text-gray">{{ $result->quiz->webinar->title }}</small>
-                            </td>
-                            <td class="text-center">{{ $result->quiz->quizQuestions->sum('grade') }}</td>
-                            <td class="text-center">{{ $result->user_grade }}</td>
-                            <td class="text-center">
-                                <span class="text-{{ $result->status=='passed'?'primary':($result->status=='waiting'?'warning':'danger') }}">
-                                    {{ trans('quiz.'.$result->status) }}
-                                </span>
-                                @if($result->status=='failed' && $result->can_try)
-                                    <small class="d-block text-gray">{{ trans('quiz.quiz_chance_remained',['count'=>$result->count_can_try]) }}</small>
-                                @endif
-                            </td>
-                            <td class="text-center">{{ dateTimeFormat($result->created_at,'j M Y H:i') }}</td>
-                            <td class="text-right">
-                                <div class="btn-group dropdown">
-                                    <button type="button" class="btn-transparent dropdown-toggle" data-toggle="dropdown">
-                                        <i data-feather="more-vertical" height="20"></i>
-                                    </button>
-                                    <div class="dropdown-menu">
-                                        @if((!$result->can_try && $result->status!='waiting') || $result->status=='passed')
-                                            <a href="/panel/quizzes/{{ $result->id }}/result" class="d-block mt-10">{{ trans('public.view_answers') }}</a>
-                                        @endif
-                                        @if($result->status!='passed' && $result->can_try)
-                                            <a href="/panel/quizzes/{{ $result->quiz->id }}/start" class="d-block mt-10">{{ trans('public.try_again') }}</a>
-                                        @endif
-                                        <a href="{{ $result->quiz->webinar->getUrl() }}" class="d-block mt-10">{{ trans('webinars.webinar_page') }}</a>
-                                    </div>
-                                </div>
-                            </td>
-                        </tr>
-                        @endforeach
-                    </tbody>
-                </table>
-            </div>
+            </form>
         </div>
 
-    @else
-        @include(getTemplate() . '.includes.no-result',[
-            'file_name' => 'result.png',
-            'title' => trans('quiz.quiz_result_no_result'),
-            'hint' => trans('quiz.quiz_result_no_result_hint'),
-        ])
-    @endif
+        @if($quizzesResults->count() > 0)
 
-</section>
+            <div class="kemetic-table-card mt-20">
+                <div class="table-responsive">
+                    <table class="kemetic-table">
+                        <thead>
+                            <tr>
+                                <th class="text-left">{{ trans('public.instructor') }}</th>
+                                <th class="text-left">{{ trans('quiz.quiz') }}</th>
+                                <th>{{ trans('quiz.quiz_grade') }}</th>
+                                <th>{{ trans('quiz.my_grade') }}</th>
+                                <th>{{ trans('public.status') }}</th>
+                                <th>{{ trans('public.date') }}</th>
+                                <th class="text-right"></th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach($quizzesResults as $result)
+                                <tr>
+                                    <td class="text-left">
+                                        <div class="user-avatar-cell">
+                                            <div class="user-avatar">
+                                                <img src="{{ $result->quiz->creator->getAvatar() }}" alt="">
+                                            </div>
+                                            <div class="user-info">
+                                                <span class="user-name">{{ $result->quiz->creator->full_name }}</span>
+                                                <span class="user-email">{{ $result->quiz->creator->email }}</span>
+                                            </div>
+                                        </div>
+                                    </td>
 
+                                    <td class="text-left">
+                                        <div class="quiz-title">{{ $result->quiz->title }}</div>
+                                        <div class="quiz-course">{{ $result->quiz->webinar->title }}</div>
+                                    </td>
 
+                                    <td>
+                                        <span class="quiz-grade">{{ $result->quiz->quizQuestions->sum('grade') }}</span>
+                                    </td>
 
-<div class="my-30">
-    {{ $quizzesResults->appends(request()->input())->links('vendor.pagination.panel') }}
-</div>
+                                    <td>
+                                        <span class="user-grade">{{ $result->user_grade }}</span>
+                                    </td>
+
+                                    <td>
+                                        @if($result->status == 'passed')
+                                            <span class="status-badge passed">{{ trans('quiz.passed') }}</span>
+                                        @elseif($result->status == 'failed')
+                                            <span class="status-badge failed">{{ trans('quiz.failed') }}</span>
+                                        @else
+                                            <span class="status-badge waiting">{{ trans('quiz.waiting') }}</span>
+                                        @endif
+                                        @if($result->status == 'failed' && $result->can_try)
+                                            <div class="chance-remained">{{ trans('quiz.quiz_chance_remained',['count'=>$result->count_can_try]) }}</div>
+                                        @endif
+                                    </td>
+
+                                    <td>
+                                        <span class="quiz-date">{{ dateTimeFormat($result->created_at,'j M Y H:i') }}</span>
+                                    </td>
+
+                                    <td class="text-right">
+                                        <div class="dropdown kemetic-actions">
+                                            <button type="button" data-toggle="dropdown">
+                                                <i data-feather="more-vertical" height="18"></i>
+                                            </button>
+                                            <div class="dropdown-menu dropdown-menu-right">
+                                                @if((!$result->can_try && $result->status!='waiting') || $result->status=='passed')
+                                                    <a href="/panel/quizzes/{{ $result->id }}/result" class="dropdown-item">
+                                                        {{ trans('public.view_answers') }}
+                                                    </a>
+                                                @endif
+                                                @if($result->status!='passed' && $result->can_try)
+                                                    <a href="/panel/quizzes/{{ $result->quiz->id }}/start" class="dropdown-item">
+                                                        {{ trans('public.try_again') }}
+                                                    </a>
+                                                @endif
+                                                <a href="{{ $result->quiz->webinar->getUrl() }}" class="dropdown-item" target="_blank">
+                                                    {{ trans('webinars.webinar_page') }}
+                                                </a>
+                                            </div>
+                                        </div>
+                                    </td>
+                                </tr>
+                            @endforeach
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            {{-- Pagination --}}
+            <div class="my-30">
+                {{ $quizzesResults->appends(request()->input())->links('vendor.pagination.panel') }}
+            </div>
+
+        @else
+            <div class="no-result-card">
+                @include(getTemplate() . '.includes.no-result',[
+                    'file_name' => 'result.png',
+                    'title' => trans('quiz.quiz_result_no_result'),
+                    'hint' => trans('quiz.quiz_result_no_result_hint'),
+                ])
+            </div>
+        @endif
+    </section>
+
 @endsection
 
 @push('scripts_bottom')
-<script src="/assets/default/vendors/moment.min.js"></script>
-<script src="/assets/default/vendors/daterangepicker/daterangepicker.min.js"></script>
-<script src="/assets/default/js/panel/quiz_list.min.js"></script>
+    <script src="/assets/default/vendors/moment.min.js"></script>
+    <script src="/assets/default/vendors/daterangepicker/daterangepicker.min.js"></script>
+    
+    <script>
+        $(document).ready(function() {
+            // Initialize datepickers
+            if ($('.datefilter').length) {
+                $('.datefilter').daterangepicker();
+            }
+            if ($('.datepicker').length) {
+                $('.datepicker').daterangepicker({
+                    singleDatePicker: true,
+                    locale: { format: 'YYYY-MM-DD' }
+                });
+            }
+
+            // Auto-submit switch
+            $('input[name="open_results"]').on('change', function() {
+                $(this).closest('form').submit();
+            });
+        });
+    </script>
+
+    <script src="/assets/default/js/panel/quiz_list.min.js"></script>
 @endpush

@@ -649,6 +649,4 @@
         <script>
             var undefinedActiveSessionLang = '{{ trans('webinars.undefined_active_session') }}';
         </script>
-
-        <script src="/assets/default/js/panel/join_webinar.min.js"></script>
     @endpush

@@ -20,18 +20,57 @@ use App\Models\TicketUser;
 use App\Models\Subscribe;
 use App\Models\Country;
 use App\Models\Region;
-use App\PaymentChannels\ChannelManager;
-use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Redirect;
-use Illuminate\Support\Facades\Log;
-use Illuminate\Support\Facades\Mail;
-use App\Mail\SubscriptionRenewal;
 use Stripe\Stripe;
 use App\User;
+use App\Models\Book;
+use App\Models\BookOrder;
 use Stripe\Webhook;
+use Aws\S3\S3Client;
+use App\Mail\SubscriptionRenewal;
+use Aws\S3\Exception\S3Exception;
+use App\Services\PdfResizerService;
+use App\PaymentChannels\ChannelManager;
+use Illuminate\Support\Facades\Mail;
+use Illuminate\Http\Request;
+use Illuminate\Validation\Rule;
+use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Redirect;
+use Illuminate\Support\Facades\URL;
 
 class PaymentController extends Controller
 {
+    protected $laragonCertPath;
+    protected $pdfResizer;
+
+    public function __construct()
+    {
+        $pdfResizer = new PdfResizerService();
+        $this->pdfResizer = $pdfResizer;
+        // Laragon certificate path - adjust if different
+        $this->laragonCertPath = "C:/laragon/etc/ssl/cert.pem";
+        
+        // Alternative paths to check
+        $alternativePaths = [
+            "C:/laragon/etc/ssl/cert.pem",
+            "C:/laragon/etc/ssl/cacert.pem",
+            "C:/laragon/etc/ssl/certs/ca-bundle.crt",
+            base_path("cacert.pem"), // If you want to store in your project
+            storage_path("app/certs/cacert.pem"), // Custom storage path
+        ];
+        
+        // Find the first existing certificate file
+        foreach ($alternativePaths as $path) {
+            if (file_exists($path)) {
+                $this->laragonCertPath = $path;
+                break;
+            }
+        }
+    }
+
     public function handleWebhook(Request $request)
     {
         try {
@@ -801,6 +840,10 @@ class PaymentController extends Controller
                 $this->setPaymentAccounting($order);
 
                 $order->update(['status' => Order::$paid]);
+
+                if ($order->status == Order::$paid) {
+                    $this->handleLuluPrintJobAfterPayment($order);
+                }
             } else {
                 if ($order->type === Order::$meeting) {
                     $orderItem = OrderItem::where('order_id', $order->id)->first();
@@ -893,14 +936,16 @@ class PaymentController extends Controller
                     if (!empty($orderItem->product_id)) {
                         $this->updateProductOrder($sale, $orderItem);
                     }
+
+                    if(!empty($orderItem->book_id))
+                    {
+                        $this->updateBookOrder($sale, $orderItem);
+                    }
                 }
             }
 
             // Set Cashback Accounting For All Order Items
             $cashbackAccounting->setAccountingForOrderItems($order->orderItems);
-            if ($order->status == Order::$paid) {
-                $this->handleLuluPrintJobAfterPayment($order);
-            }
         }
 
         Cart::emptyCart($order->user_id);
@@ -912,7 +957,9 @@ class PaymentController extends Controller
             // Check if order contains book products
             foreach ($order->orderItems as $orderItem) {
                 if (!empty($orderItem->book_id)) {
+                    // dd('before getLuluPriceUsingCurl');
                     $this->getLuluPriceUsingCurl($orderItem->book_id, $orderItem->user_id);
+                    // dd('after getLuluPriceUsingCurl');
                 }
             }
         } catch (\Exception $e) {
@@ -923,10 +970,12 @@ class PaymentController extends Controller
 
     private function getLuluPriceUsingCurl($bookid, $userid, $token = null)
     {
+        // dd('getLuluPriceUsingCurl', $bookid, $userid, $token);
         if (!$token) {
+            // dd('toekn');
             $token = $this->getLuluAccessTokenUsingCurl();
         }
-        
+        // dd($token);
         // dd($token);
         
         // $url = env('LULU_BASE_URL', 'https://api.sandbox.lulu.com') . $endpoint;
@@ -993,21 +1042,22 @@ class PaymentController extends Controller
         // $title = "Test Print Job via Curl";
         // $pdfurl = "https://kemetic.app/store/lulu/interior/interior_1768311771.pdf";
         // $coverurl = "https://kemetic.app/store/lulu/cover/cover_1768311014.pdf";
+        // dd($bookid);
+        $book = Book::where('id', $bookid)->where('type', 'Print')->first();
 
-        $book = Book::select('id', 'title', 'url as interior_pdf_url', 'cover_pdf', 'page_count', 'slug', 'price')
-                ->find($bookid);
-    
+       
         if (!$book) {
-            throw new Exception("Book not found with ID: $bookid");
+            throw new \Exception("Book not found with ID: $bookid");
         }
+        // dd($book);
         
         // 2. FETCH USER/BUYER DATA
         $user = User::select('id', 'full_name', 'email', 'mobile', 'country_id', 'province_name', 
                             'city_name', 'address', 'zip_code')
                     ->find($userid);
-        
+        // dd($user);
         if (!$user) {
-            throw new Exception("User not found with ID: $userid");
+            throw new \Exception("User not found with ID: $userid");
         }
 
         if ($user->country_id) {
@@ -1032,6 +1082,24 @@ class PaymentController extends Controller
         
         $quantity = 1;
 
+        $address = $user->address;
+
+        // If address is longer than 30 chars, split intelligently
+        if (strlen($address) > 30) {
+            // Find the last space before position 30
+            $splitPos = strrpos(substr($address, 0, 31), ' ');
+            
+            // If no space found, force split at 30
+            $splitPos = $splitPos ?: 30;
+            
+            $street1 = substr($address, 0, $splitPos);
+            $street2 = trim(substr($address, $splitPos));
+        } else {
+            $street1 = $address;
+            $street2 = "";
+        }
+
+
         $data = [
             "contact_email" => $user->email ?: "info@kemetic.app",
             "external_id" => "Kemetic APP",
@@ -1040,10 +1108,10 @@ class PaymentController extends Controller
                     "external_id" => "item-reference-1",
                     "printable_normalization" =>[
                         "cover" => [
-                            "source_url" => $book->cover_pdf,
+                            "source_url" => url($book->cover_pdf),
                         ],
                         "interior" => [
-                            "source_url" => $book->interior_pdf_url,
+                            "source_url" => url($book->url),
                             "page_count" => $book->page_count // You need to add the correct page count
                         ],
                         "pod_package_id" => "0600X0900BWSTDPB060UW444MXX"
@@ -1060,7 +1128,8 @@ class PaymentController extends Controller
                 "phone_number" => $phone,
                 "state_code" => $user->province_name,
                 "postcode" => $user->zip_code,
-                "street1" => $user->address,
+                "street1" => $street1,
+                "street2" => $street2
 
                 // "city" => "L\u00fcbeck",
                 // "country_code" => "GB",
@@ -1073,7 +1142,7 @@ class PaymentController extends Controller
             "shipping_level" => "MAIL"
         ];
 
-        // // dd($data);
+        // dd($data);
         
         $printcurl = curl_init();
         curl_setopt_array($printcurl, [
@@ -1120,7 +1189,7 @@ class PaymentController extends Controller
         }
 
         // dd($data);
-        //dd($response);
+        // dd($response);
 
         $responseData = json_decode($response, true);
        
@@ -1129,7 +1198,7 @@ class PaymentController extends Controller
 
     private function getLuluAccessTokenUsingCurl()
     {
-        
+        // dd('getLuluAccessTokenUsingCurl');
         $url = "https://api.lulu.com/auth/realms/glasstree/protocol/openid-connect/token";
         //$url = "https://api.sandbox.lulu.com/auth/realms/glasstree/protocol/openid-connect/token";
         $authorization = "OWY2MDViMTUtNmMzYy00OWU1LTkxOWItODRmNzM0MWEyMjgzOk50cVpOa2N2aE1nNlJpb25FaEVSbWpyZW5EQTJYU3dW";
@@ -1339,6 +1408,36 @@ class PaymentController extends Controller
         $meetingReserveReward = RewardAccounting::calculateScore($type);
 
         RewardAccounting::makeRewardAccounting($user->id, $meetingReserveReward, $type);
+    }
+
+    private function updateBookOrder($sale, $orderItem)
+    {
+        $book = $orderItem->book;
+
+        $status = BookOrder::$waitingDelivery;
+
+        if ($book and ($book->type == 'E-book' or $book->type == 'Audio Book')) {
+            $status = BookOrder::$success;
+        }
+
+        BookOrder::where('book_id', $orderItem->book_id)
+            ->where(function ($query) use ($orderItem) {
+                $query->where(function ($query) use ($orderItem) {
+                    $query->whereNotNull('buyer_id');
+                    $query->where('buyer_id', $orderItem->user_id);
+                });
+
+                if ($orderItem->gift_id) {
+                    $query->orWhere(function ($query) use ($orderItem) {
+                        $query->whereNotNull('gift_id');
+                        $query->where('gift_id', $orderItem->gift_id);
+                    });
+                }
+            })
+        ->update([
+            'sale_id' => $sale->id,
+            'status' => $status,
+        ]);
     }
 
     private function updateProductOrder($sale, $orderItem)

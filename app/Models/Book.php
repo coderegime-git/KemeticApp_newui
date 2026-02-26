@@ -11,6 +11,7 @@ use Cviebrock\EloquentSluggable\Sluggable;
 use Astrotomic\Translatable\Contracts\Translatable as TranslatableContract;
 use Astrotomic\Translatable\Translatable;
 use Jorenvh\Share\ShareFacade;
+use App\Models\BookOrder;
 
 class Book extends Model
 {
@@ -94,6 +95,11 @@ class Book extends Model
     public function comments()
     {
         return $this->hasMany(BookComment::class, 'book_id');
+    }
+
+    public function reviews()
+    {
+        return $this->hasMany(BookReview::class, 'book_id');
     }
 
     public function share()
@@ -208,5 +214,80 @@ class Book extends Model
         }
         
         return 0;
+    }
+
+     public function getRate()
+    {
+        $rate = 0;
+
+        $reviews = $this->reviews()
+            ->get();
+
+        if (!empty($reviews) and $reviews->count() > 0) {
+            $rate = number_format($reviews->avg('rates'), 2);
+        }
+
+        if ($rate > 5) {
+            $rate = 5;
+        }
+
+        return $rate > 0 ? number_format($rate, 2) : 0;
+    }
+
+    public function checkBookForSale($user)
+    {
+        // if ($this->getAvailability() < 1) {
+        //     return apiResponse2(0, 'not_availability', trans('Scrolls are not available for sale'));
+        // }
+
+        if ($this->creator_id == $user->id) {
+
+            return apiResponse2(0, 'same_user', trans('Cant purchase your own Scrolls'));
+        }
+
+        return 'ok';
+    }
+
+    public function checkUserHasBought($user = null): bool
+    {
+        $hasBought = false;
+
+        if (empty($user)) {
+            $user = auth()->user();
+        }
+        elseif (is_numeric($user)) {
+            // If $user is an ID (integer or numeric string)
+            $user = User::find($user);
+        } 
+
+        // dd($user);
+
+        if (!empty($user)) {
+            $giftsIds = Gift::query()->where('email', $user->email)
+                ->where('status', 'active')
+                ->whereNotNull('book_id')
+                ->where(function ($query) {
+                    $query->whereNull('date');
+                    $query->orWhere('date', '<', time());
+                })
+                ->whereHas('sale')
+                ->pluck('id')
+                ->toArray();
+
+            $order = BookOrder::query()->where('book_id', $this->id)
+                ->where(function ($query) use ($user, $giftsIds) {
+                    $query->where('buyer_id', $user->id);
+                    $query->orWhereIn('gift_id', $giftsIds);
+                })
+                ->whereHas('sale', function ($query) use ($user) {
+                    $query->whereIn('type', ['book', 'gift'])
+                        ->where('access_to_purchased_item', true)
+                        ->whereNull('refund_at');
+                })->first();
+
+            $hasBought = !empty($order);
+        }
+
+        return $hasBought;
     }
 }

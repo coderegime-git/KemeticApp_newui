@@ -353,7 +353,7 @@ input[type="file"]::file-selector-button:hover {
   <!-- HERO: last month global #1 -->
   <section class="reels-hero">
     <div class="reels-hero-card">
-      <video class="img" controls preload="metadata" poster="{{ $heroreels->thumbnail_url }}">
+      <video class="reel-video" controls preload="metadata" poster="{{ $heroreels->thumbnail_url }}">
                                     <source src="{{ $heroreels->video_url }}" type="video/mp4">
                                     {{ trans('public.browser_not_support_video') }}
                                 </video>
@@ -401,26 +401,27 @@ input[type="file"]::file-selector-button:hover {
        @foreach($reels as $reel)
       <article class="reels-card">
         <span class="reels-rank">{{ $reel->title }}</span>
-        <div class="reels-thumb"> <video class="img" controls preload="metadata" poster="{{ $reel->thumbnail_url }}">
+        <div class="reels-thumb"> <video class="reel-video" controls preload="metadata" poster="{{ $reel->thumbnail_url }}">
                                     <source src="{{ $reel->video_url }}" type="video/mp4">
                                     {{ trans('public.browser_not_support_video') }}
                                 </video></div>
         <div class="reels-rail-vert">
-            <form action="{{ route('reels.like', $reel->id) }}" method="POST" class="d-inline like-form">
+            <!-- <form action="{{ route('reels.like', $reel->id) }}" method="POST" class="d-inline like-form">
             @csrf
                 <button type="submit" class="action-btn d-flex align-items-center {{ $reel->likes->count() > 0 ? 'liked' : '' }}">
                 <i data-feather="heart" width="20" height="20"></i>
                 <span class="reels-circle reels-bg-red">{{ $reel->likes_count }}</span> </button>
-            </form>
+            </form> -->
 
-          <span class="reels-circle reels-bg-yellow">{{ $reel->comments_count }}</span>
-          <span class="reels-circle reels-bg-green">↗</span>
-          <span class="reels-circle reels-bg-blue">🎁</span>
+          <span class="reels-circle reels-bg-red">❤ {{ $reel->likes_count }}</span>
+          <span class="reels-circle reels-bg-yellow">💬 {{ $reel->comments_count }}</span>
+          <span class="reels-circle reels-bg-green">↗ {{ $reel->share_count }}</span>
+          <span class="reels-circle reels-bg-blue">🎁 {{ $reel->gift_count }}</span>
         </div>
         <div class="reels-meta">
           <div class="reels-dot reels-bg-red"></div><div class="reels-dot reels-bg-orange"></div><div class="reels-dot reels-bg-yellow"></div>
           <div class="reels-dot reels-bg-green"></div><div class="reels-dot reels-bg-blue"></div>
-          <span class="reels-count">5,340+</span>
+          <span class="reels-count">{{ $reel->review_count }}</span>
         </div>
         <div class="reels-cta">
           <button class="reels-btn-sm play-video-btn" 
@@ -435,13 +436,13 @@ input[type="file"]::file-selector-button:hover {
 
       
     </div>
-    <div class="mt-50 pt-30">
+    <div style="padding: 10px;">
       {{ $reels->appends(request()->input())->links('vendor.pagination.panel') }}
     </div>
   </section>
 
   <!-- TRENDING -->
-  <section>
+  <!-- <section>
     <h2>🔥 Trending Portals</h2>
     <div class="reels-scroller">
      @foreach($reels as $reel)
@@ -456,17 +457,19 @@ input[type="file"]::file-selector-button:hover {
             @csrf
                 <button type="submit" class="action-btn d-flex align-items-center {{ $reel->likes->count() > 0 ? 'liked' : '' }}">
                 <i data-feather="heart" width="20" height="20"></i>
-                <span class="reels-circle reels-bg-red">{{ $reel->likes_count }}</span> </button>
+                <span class="reels-circle reels-bg-red">{{ $reel->likes_count }}</span> 
+                </button>
             </form>
 
-          <span class="reels-circle reels-bg-yellow">{{ $reel->comments_count }}</span>
-          <span class="reels-circle reels-bg-green">↗</span>
-          <span class="reels-circle reels-bg-blue">🎁</span>
+          <span class="reels-circle reels-bg-red">❤ {{ $reel->likes_count }}</span>
+          <span class="reels-circle reels-bg-yellow">💬 {{ $reel->comments_count }}</span>
+          <span class="reels-circle reels-bg-green">↗ {{ $reel->share_count }}</span>
+          <span class="reels-circle reels-bg-blue">🎁 {{ $reel->gift_count }}</span>
         </div>
         <div class="reels-meta">
           <div class="reels-dot reels-bg-red"></div><div class="reels-dot reels-bg-orange"></div><div class="reels-dot reels-bg-yellow"></div>
           <div class="reels-dot reels-bg-green"></div><div class="reels-dot reels-bg-blue"></div>
-          <span class="reels-count">5,340+</span>
+          <span class="reels-count">{{ $reel->review_count }}</span>
         </div>
         <div class="reels-cta">
           <button class="reels-btn-sm play-video-btn" 
@@ -479,7 +482,7 @@ input[type="file"]::file-selector-button:hover {
       </article>
       @endforeach
     </div>
-  </section>
+  </section> -->
 
   <!-- LIVE NOW -->
   <!-- <section>
@@ -624,6 +627,15 @@ input[type="file"]::file-selector-button:hover {
                         <input type="text" class="form-control" id="title" name="title" required maxlength="255" placeholder="Enter a title for your portals">
                     </div>
                     <div class="mb-3">
+                        <label class="form-label">Category</label>
+                        <select class="form-select" id="category_id" name="category_id" required>
+                            <option value="">Select a category</option>
+                            @foreach($categories as $category)
+                                <option value="{{ $category['id'] }}">{{ $category['title'] }}</option>
+                            @endforeach
+                        </select>
+                    </div>
+                    <div class="mb-3">
                         <label class="form-label">Caption</label>
                         <textarea class="form-control" id="caption" name="caption" required maxlength="1000" rows="3" placeholder="Write a caption..."></textarea>
                     </div>
@@ -654,16 +666,35 @@ input[type="file"]::file-selector-button:hover {
   });
 </script>
 <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/jquery-toast-plugin/1.3.2/jquery.toast.min.css">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jquery-toast-plugin/1.3.2/jquery.toast.min.js"></script>
 <script>
 // Video playback functionality
 document.addEventListener('DOMContentLoaded', function() {
   // Get modal elements
+  let currentReelVideo = null;
+  
+  document.querySelectorAll('.reel-video').forEach(function (video) {
+    video.addEventListener('play', function () {
+      // Pause any other reel video that's playing
+      if (currentReelVideo && currentReelVideo !== video) {
+        currentReelVideo.pause();
+      }
+      currentReelVideo = video;
+    });
+  });
+  
+
   const videoPlayerModal = document.getElementById('videoPlayerModal');
   const videoPlayer = document.getElementById('videoPlayer');
   const videoPlayerModalLabel = document.getElementById('videoPlayerModalLabel');
   
   // Function to play video
   function playVideo(videoUrl, title) {
+    if (currentReelVideo) {
+      currentReelVideo.pause();
+      currentReelVideo = null;
+    }
     // Set video source and title
     videoPlayer.src = videoUrl;
     videoPlayerModalLabel.textContent = title;
@@ -751,7 +782,19 @@ document.addEventListener('DOMContentLoaded', function() {
       const videoFile = document.getElementById('videoFile').files[0];
 
       if (videoFile && videoFile.size > 250 * 1024 * 1024) {
-        alert('File size exceeds 250MB limit. Please choose a smaller video.');
+        (function() {
+        
+                $.toast({
+                    heading: 'Failed',
+                    text: 'File size exceeds 250MB limit. Please choose a smaller video.',
+                    bgColor: '#f63c3c',
+                    textColor: 'white',
+                    hideAfter: 10000,
+                    position: 'bottom-right',
+                    icon: 'Failed'
+                });
+            })();
+        // alert('File size exceeds 250MB limit. Please choose a smaller video.');
         return;
       }
       
@@ -774,7 +817,19 @@ document.addEventListener('DOMContentLoaded', function() {
             uploadProgress.textContent = '100%';
             
             // Show success message
-            alert('Video uploaded successfully!');
+             (function() {
+        
+                $.toast({
+                    heading: 'Success',
+                    text: 'Video uploaded successfully!',
+                    bgColor: '#43d477',
+                    textColor: 'white',
+                    hideAfter: 10000,
+                    position: 'bottom-right',
+                    icon: 'success'
+                });
+            })();
+            
             
             // Close modal and reload page
             const modal = bootstrap.Modal.getInstance(document.getElementById('uploadModal'));
@@ -787,12 +842,36 @@ document.addEventListener('DOMContentLoaded', function() {
           //}
           
         } else {
-          alert('Error uploading video. Please try again.');
+          // alert('Error uploading video. Please try again.');
+          (function() {
+        
+                $.toast({
+                    heading: 'Failed',
+                    text: 'Error uploading video. Please try again.',
+                    bgColor: '#f63c3c',
+                    textColor: 'white',
+                    hideAfter: 10000,
+                    position: 'bottom-right',
+                    icon: 'Failed'
+                });
+            })();
         }
       });
       
       xhr.addEventListener('error', function() {
-        alert('Error uploading video. Please check your connection.');
+        (function() {
+        
+                $.toast({
+                    heading: 'Failed',
+                    text: 'Error uploading video. Please check your connection.',
+                    bgColor: '#f63c3c',
+                    textColor: 'white',
+                    hideAfter: 10000,
+                    position: 'bottom-right',
+                    icon: 'Failed'
+                });
+            })();
+        // alert('Error uploading video. Please check your connection.');
       });
       
       xhr.open('POST', this.action);

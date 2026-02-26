@@ -441,7 +441,7 @@
                                         class="img-cover rounded-circle leaderboard-others-avatar"
                                         alt="{{ $mostPoint->user->full_name }}" width="50">
 
-                                    <div class="ml-15 flex-grow-1">
+                                    <div class="ml-15 flex-grow-1" style="padding: 10px;">
                                         <span class="leaderboard-name-sm">
                                             {{ $mostPoint->user->full_name }}
                                         </span>
@@ -470,7 +470,7 @@
 
             <div class="kemetic-table-card mt-25 p-25 p-lg-35">
                 <div class="table-responsive">
-                    <table class="table kemetic-table align-middle">
+                    <table class="kemetic-table align-middle">
                         <thead>
                             <tr class="kemetic-row">
                                 <th class="text-left">
@@ -521,7 +521,7 @@
                 </div>
             </div>
 
-            <div class="my-30 kemetic-pagination">
+            <div class="my-30 kemetic-pagination" style="padding: 10px;">
                 {{ $rewards->links('vendor.pagination.panel') }}
             </div>
 

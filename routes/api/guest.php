@@ -22,12 +22,20 @@ Route::group([], function () {
         Route::get('/', ['uses' => 'WebinarController@index']);
         Route::get('/home', ['uses' => 'WebinarController@home']);
         Route::get('/new', ['uses' => 'WebinarController@getWebinarsCombined']);
+        Route::get('/{id}/details', ['uses' => 'WebinarController@courseDetails']);
         Route::get('/categoriesnew', ['uses' => 'WebinarController@categoriesnew']);
         Route::get('/{id}', ['uses' => 'WebinarController@show']);
         Route::get('/{id}/content', ['uses' => 'WebinarController@content']);
         Route::get('/{id}/quizzes', ['uses' => 'WebinarContentController@quizzes']);
         Route::get('/{id}/certificates', ['uses' => 'WebinarContentController@certificates']);
 
+        Route::post('/{course}/like', ['uses' => 'WebinarController@courselike','middleware' => 'api.auth']);
+        Route::post('/{course}/share', ['uses' => 'WebinarController@courseshare','middleware' => 'api.auth']);
+        Route::post('/{course}/gift', ['uses' => 'WebinarController@coursegift','middleware' => 'api.auth']);
+        Route::post('/{course}/save', ['uses' => 'WebinarController@coursesave','middleware' => 'api.auth']);
+        Route::post('/{course}/comment', ['uses' => 'WebinarController@coursecomment','middleware' => 'api.auth']);
+        Route::post('/{course}/review', ['uses' => 'WebinarController@coursereview','middleware' => 'api.auth']);
+        // Route::post('/{course}/report', ['uses' => 'WebinarController@coursereport','middleware' => 'api.auth']);
 
         Route::get('reports/reasons', ['uses' => 'ReportsController@index']);
 
@@ -84,6 +92,11 @@ Route::group([], function () {
         Route::delete('/comment/{commentId}', ['uses' => 'AdReelController@deleteComment','middleware' => 'api.auth']);
     });
 
+    Route::prefix('asset')->group(function () {
+        Route::get('/', 'AssetController@index');
+        Route::get('/{id}', 'AssetController@show');
+    });
+
     Route::group(['prefix' => 'blogs'], function () {
 
         Route::get('/', ['uses' => 'BlogController@index']);
@@ -91,11 +104,16 @@ Route::group([], function () {
         Route::get('/categories', ['uses' => 'BlogCategoryController@index']);
         Route::get('/{id}', ['uses' => 'BlogController@show']);
 
+        Route::post('/store', ['uses' => 'BlogController@store']);
+        Route::post('/category', ['uses' => 'BlogController@blogcategory']);
+
         Route::post('/{blog}/like', ['uses' => 'BlogController@bloglike','middleware' => 'api.auth']);
         Route::post('/{blog}/share', ['uses' => 'BlogController@blogshare','middleware' => 'api.auth']);
         Route::post('/{blog}/gift', ['uses' => 'BlogController@bloggift','middleware' => 'api.auth']);
         Route::post('/{blog}/comment', ['uses' => 'BlogController@blogcomment','middleware' => 'api.auth']);
         Route::post('/{blog}/report', ['uses' => 'BlogController@blogreport','middleware' => 'api.auth']);
+        Route::post('/{blog}/save', ['uses' => 'BlogController@blogsave','middleware' => 'api.auth']);
+        Route::post('/{blog}/review', ['uses' => 'BlogController@blogreview','middleware' => 'api.auth']);
 
         //Route::post('/{blog}/like', ['uses' => 'BlogController@bloglike']);
         // Route::post('/{blog}/share', ['uses' => 'BlogController@blogshare']);
@@ -110,12 +128,18 @@ Route::group([], function () {
         Route::get('/categories', ['uses' => 'BookCategoryController@index']);
         Route::get('/{id}', ['uses' => 'BookController@show','middleware' => 'api.auth']);
 
+        Route::post('/store', ['uses' => 'BookController@store']);
+        Route::post('/category', ['uses' => 'BookController@bookcategory']);
+        Route::post('/luluprice', 'BookController@getLuluPriceUsingCurl');
+
         Route::post('/{book}/like', ['uses' => 'BookController@booklike','middleware' => 'api.auth']);
         Route::post('/{book}/share', ['uses' => 'BookController@bookshare','middleware' => 'api.auth']);
         Route::post('/{book}/gift', ['uses' => 'BookController@bookgift','middleware' => 'api.auth']);
         Route::post('/{book}/comment', ['uses' => 'BookController@bookcomment','middleware' => 'api.auth']);
         Route::post('/{book}/save', ['uses' => 'BookController@booksave','middleware' => 'api.auth']);
         Route::post('/{book}/report', ['uses' => 'BookController@bookreport','middleware' => 'api.auth']);
+        Route::post('/{book}/review', ['uses' => 'BookController@bookreview','middleware' => 'api.auth']);
+        
     });
 
     Route::group(['prefix' => 'livestream'], function () {
@@ -123,6 +147,16 @@ Route::group([], function () {
         Route::get('/', ['uses' => 'LivestreamController@index', 'middleware' => 'api.auth']);
         Route::get('/chat/{id}/start', ['uses' => 'LivestreamController@livechat', 'middleware' => 'api.auth']);
         Route::get('/{id}/end', ['uses' => 'LivestreamController@delete', 'middleware' => 'api.auth']);
+        Route::get('/{id}/details', ['uses' => 'LivestreamController@details', 'middleware' => 'api.auth']);
+        Route::get('/{id}/livestreamendcheck', ['uses' => 'LivestreamController@livestreamendcheck', 'middleware' => 'api.auth']);
+
+        Route::post('/{livestream}/like', ['uses' => 'LivestreamController@livestreamlike','middleware' => 'api.auth']);
+        Route::post('/{livestream}/comment', ['uses' => 'LivestreamController@livestreamcomment','middleware' => 'api.auth']);
+        Route::post('/{livestream}/share', ['uses' => 'LivestreamController@livestreamshare','middleware' => 'api.auth']);
+        Route::post('/{livestream}/save', ['uses' => 'LivestreamController@livestreamsave','middleware' => 'api.auth']);
+        Route::post('/{livestream}/gift', ['uses' => 'LivestreamController@livestreamgift','middleware' => 'api.auth']);
+        Route::post('/{livestream}/report', ['uses' => 'LivestreamController@livestreamreport','middleware' => 'api.auth']);
+        Route::post('/{livestream}/review', ['uses' => 'LivestreamController@livestreamreview','middleware' => 'api.auth']);
     });
 
     Route::group(['prefix' => 'notification'], function () {
@@ -170,6 +204,7 @@ Route::group([], function () {
         Route::post('/{product}/comment', ['uses' => 'ProductController@productcomment','middleware' => 'api.auth']);
         Route::post('/{product}/save', ['uses' => 'ProductController@productsave','middleware' => 'api.auth']);
         Route::post('/{product}/report', ['uses' => 'ProductController@productreport','middleware' => 'api.auth']);
+        Route::post('/{product}/review', ['uses' => 'ProductController@productreview','middleware' => 'api.auth']);
 
         // Route::post('/{product}/like', ['uses' => 'ProductController@productlike']);
         // Route::post('/{product}/share', ['uses' => 'ProductController@productshare']);

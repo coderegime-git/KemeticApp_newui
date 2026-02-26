@@ -167,6 +167,36 @@ class Webinar extends Model implements TranslatableContract
         return $this->hasMany('App\Models\WebinarReview', 'webinar_id', 'id');
     }
 
+    public function reports()
+    {
+        return $this->hasMany('App\Models\WebinarReport', 'webinar_id', 'id');
+    }
+
+    public function likes()
+    {
+        return $this->hasMany('App\Models\WebinarLike', 'webinar_id', 'id');
+    }
+
+    public function share()
+    {
+        return $this->hasMany('App\Models\WebinarShare', 'webinar_id', 'id');
+    }
+
+    public function savedcourse()
+    {
+        return $this->hasMany('App\Models\WebinarSaved', 'webinar_id', 'id');
+    }
+
+    public function gift()
+    {
+        return $this->hasMany('App\Models\WebinarGift', 'webinar_id', 'id');
+    }
+
+    public function webinarcomments()
+    {
+        return $this->hasMany('App\Models\WebinarComment', 'webinar_id', 'id');
+    }
+
     public function sales()
     {
         return $this->hasMany('App\Models\Sale', 'webinar_id', 'id')
@@ -230,8 +260,8 @@ class Webinar extends Model implements TranslatableContract
         if ($rate > 5) {
             $rate = 5;
         }
-
-        return $rate > 0 ? number_format($rate, 2) : 0;
+        return $rate > 0 ? (int) round($rate) : 0;
+        //return $rate > 0 ? number_format($rate, 2) : 0;
     }
 
     /**

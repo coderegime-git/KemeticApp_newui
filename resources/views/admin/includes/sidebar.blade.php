@@ -979,7 +979,31 @@
                     </ul>
                 </li>
             @endcan
+            
+            <li class="nav-item dropdown {{ (request()->is(getAdminPanelUrl('/reel*', false))) ? 'active' : '' }}">
+                <a href="#" class="nav-link has-dropdown" data-toggle="dropdown">
+                    <i class="fas fa-pager"></i>
+                    <span>Portals</span>
+                </a>
 
+                <ul class="dropdown-menu">
+                    <!-- @can('admin_reel_list')
+                        <li class="{{ (request()->is(getAdminPanelUrl('/reel', false))) ? 'active' : '' }}">
+                            <a class="nav-link" href="{{ getAdminPanelUrl() }}/reel">{{ trans('admin/main.lists') }}</a>
+                        </li>
+                    @endcan()
+
+                    @can('admin_reel_create')
+                        <li class="{{ (request()->is(getAdminPanelUrl('/reel/create', false))) ? 'active' : '' }}">
+                            <a class="nav-link" href="{{ getAdminPanelUrl() }}/reel/create">New Portals</a>
+                        </li>
+                    @endcan() -->
+
+                        <li class="{{ (request()->is(getAdminPanelUrl('/reel/categories', false))) ? 'active' : '' }}">
+                            <a class="nav-link" href="{{ getAdminPanelUrl() }}/reel/categories">Portal Categories</a>
+                        </li>
+                </ul>
+            </li>
 
             @can('admin_additional_pages')
                 <li class="nav-item dropdown {{ (request()->is(getAdminPanelUrl('/additional_page*', false))) ? 'active' : '' }}">

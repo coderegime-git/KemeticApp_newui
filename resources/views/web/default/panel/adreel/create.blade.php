@@ -241,7 +241,67 @@
         border-color: var(--kemetic-gold) !important;
         box-shadow: 0 0 12px rgba(242, 201, 76, 0.35);
     }
+
+    /* ===============================
+    SELECT2 – KEMETIC DARK THEME
+    ================================ */
+
+    /* main box */
+    .select2-container--default .select2-selection--single {
+        background: #0d0d0d !important;
+        border: 1px solid rgba(242,201,76,.35) !important;
+        border-radius: 14px !important;
+        height: 45px !important;
+        display: flex;
+        align-items: center;
+        color: #e0e0e0 !important;
+    }
+
+    /* text */
+    .select2-container--default .select2-selection--single .select2-selection__rendered {
+        color: #e0e0e0 !important;
+        line-height: 45px !important;
+    }
+
+    /* arrow */
+    .select2-container--default .select2-selection--single .select2-selection__arrow b {
+        border-color: #f2c94c transparent transparent transparent !important;
+    }
+
+    /* dropdown */
+    .select2-dropdown {
+        background: #0f0f0f !important;
+        border: 1px solid rgba(242,201,76,.35) !important;
+        border-radius: 12px !important;
+    }
+
+    /* options */
+    .select2-results__option {
+        color: #e0e0e0 !important;
+        padding: 10px 14px !important;
+    }
+
+    /* hover */
+    .select2-results__option--highlighted {
+        background: rgba(242,201,76,.15) !important;
+        color: #fff !important;
+    }
+
+    /* selected */
+    .select2-results__option[aria-selected=true] {
+        background: rgba(242,201,76,.25) !important;
+    }
+
+    /* search box */
+    .select2-search--dropdown .select2-search__field {
+        background: #0d0d0d !important;
+        border: 1px solid rgba(242,201,76,.35) !important;
+        color: #fff !important;
+        border-radius: 8px !important;
+    }
 </style>
+
+<link rel="stylesheet" href="/assets/default/vendors/select2/select2.min.css">
 @endpush
 
 @section('content')
@@ -306,7 +366,7 @@
                 <label class="kemetic-label" for="product_id">Associated Product</label>
                 <select id="product_id"
                         name="product_id" 
-                        class="kemetic-select @error('product_id') is-invalid @enderror">
+                        class="kemetic-select select2 @error('product_id') is-invalid @enderror">
                     <option value="">-- Select a Product --</option>
                     @foreach($products as $product)
                         <option value="{{ $product->id }}" 
@@ -457,6 +517,7 @@
 
 @push('scripts_bottom')
 <script src="/assets/default/vendors/daterangepicker/daterangepicker.min.js"></script>
+<script src="/assets/default/vendors/select2/select2.min.js"></script>
 <script src="https://cdn.plyr.io/3.7.8/plyr.polyfilled.js"></script>
 <script>
     // Initialize video player for edit mode

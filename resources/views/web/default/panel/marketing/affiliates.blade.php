@@ -199,7 +199,7 @@
 
     <div class="k-card">
         <div class="table-responsive">
-            <table class="table k-table text-center">
+            <table class="k-table text-center">
                 <thead>
                 <tr>
                     <th class="text-left">{{ trans('panel.user') }}</th>
@@ -231,7 +231,7 @@
             </table>
         </div>
 
-        <div class="mt-30">
+        <div class="mt-30" style="padding: 10px;">
             {{ $affiliates->appends(request()->input())->links('vendor.pagination.panel') }}
         </div>
     </div>

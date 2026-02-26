@@ -122,7 +122,7 @@
 
                 <a href="academyapp://payment-failed" class="btn btn-sm btn-primary mt-20 d-flex d-sm-none">{{ trans('public.redirect_to_app') }}</a>
 
-                <a href="/panel" class="btn btn-sm btn-primary mt-20 d-none d-sm-flex">{{ trans('public.my_panel') }}</a>
+                <a href="/panel" class="btn btn-sm btn-primary mt-20 d-none d-sm-flex" style="margin-bottom: 10px;">{{ trans('public.my_panel') }}</a>
             </div>
         </div>
     @endif

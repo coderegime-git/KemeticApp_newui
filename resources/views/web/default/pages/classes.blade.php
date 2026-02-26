@@ -64,7 +64,9 @@
         <div class="course-sub">Featured Course</div>
         <h1 class="course-title">{{ clean($bestRateWebinar->title,'title') }}</h1>
         <p class="course-sub">{{ convertMinutesToHourAndMinute($bestRateWebinar->duration) }} {{ trans('home.hours') }} · <a href="{{ $bestRateWebinar->teacher->getProfileUrl() }}" target="_blank" class="user-name ml-5 font-14">{{ $bestRateWebinar->teacher->full_name }}</p>
-        <div class="course-stars">★★★★★ <b>{{ $totalStats->total_likes ?? 0 }}</b> · 12.8k students</div>
+        <div class="course-stars">★★★★★ <b>{{ $bestRateWebinar->getSalesCount() }} students</b>
+          <!-- <b>{{ $totalStats->total_likes ?? 0 }}</b> · 12.8k students -->
+        </div>
         <a href="{{ $bestRateWebinar->getUrl() }}"><div style="margin-top:14px"><button class="course-cta">Enroll Now</button></div></a>
       </div>
     </div>
@@ -81,6 +83,9 @@
   </section>
   <div class="shop-sp"></div>
   <form action="/classes" method="get">
+     @if(!empty($selectedCategory))
+          <input type="hidden" name="category_id" value="{{ $selectedCategory->id }}">
+      @endif
     <div class="shop-search">
       <span style="color:var(--gold);font-weight:900">🔎</span>
       <input type="text" name="search" class="form-control border-0" value="{{ request()->get('search') }}" placeholder="What are you looking for?"/>
@@ -92,14 +97,19 @@
     <form action="/classes" method="get">
 
     @if(!empty($categories))
+    <input type="hidden" name="search" value="{{ request()->get('search') }}">
         @if(!empty($selectedCategory))
             <input type="hidden" name="category_id" value="{{ $selectedCategory->id }}">
         @endif
         <div class="shop-chips">
+          <a href="{{ url('/classes') }}@if(request()->get('search'))?search={{ request()->get('search') }}@endif" 
+          class="d-flex align-items-center font-14 font-weight-bold mt-20 ">
+          <div class="shop-pill @if(empty($selectedCategory)) active @endif">All</div></a>
           @foreach($categories as $categorie)
-            <a href="/classes?category_id={{$categorie->id}}" class="d-flex align-items-center font-14 font-weight-bold mt-20 {{ (!empty($selectedCategory) and $selectedCategory->id == $categorie->id) ? 'text-primary' : '' }}">
+            <a href="/classes?category_id={{$categorie->id}}@if(request()->get('search'))&search={{ request()->get('search') }}@endif" 
+            class="d-flex align-items-center font-14 font-weight-bold mt-20 {{ (!empty($selectedCategory) and $selectedCategory->id == $categorie->id) ? 'text-primary' : '' }}">
               <div class="shop-pill @if(!empty($selectedCategory) and $selectedCategory->id == $categorie->id) active @endif">
-                {{ $categorie->title }}
+                {{ ucfirst($categorie->title) }}
               </div>
             </a>
           @endforeach
@@ -115,7 +125,7 @@
     <form action="/classes" method="get" id="filtersForm">
     <div class="course-row">
       <!-- card  -->
-       
+      @if(!empty($webinars) and !$webinars->isEmpty())
        @foreach($webinars as $webinar)
        <!-- {{ clean($webinar->title,'title') }} -->
         <article class="course-item">
@@ -148,12 +158,29 @@
                   @for($i = 0; $i < 5; $i++)
                       ☆
                   @endfor
-              @endif</div>
-            <button class="course-cta"><a href="{{ $webinar->getUrl() }}">Enroll Now</a></button>
+              @endif
+            </div>
+            <div class="shop-row-end">
+              <div class="shop-price-row">
+                  @if(!empty($webinar->price) and $webinar->price > 0)
+                    <span class="real">{{ handlePrice($webinar->price, true, true, false, null, true, 'store') }}</span>
+                  @else
+                      <span class="real">{{ trans('public.free') }}</span>
+                  @endif
+              </div>
+              <button class="course-cta"><a href="{{ $webinar->getUrl() }}">Enroll Now</a></button>
+            </div>
+           
           </div>
         </article>
       @endforeach
-      
+      @else
+        @include(getTemplate() . '.includes.no-result',[
+            'file_name' => 'webinar.png',
+            'title' => trans('No Course Found'),
+            'hint' => '',
+        ])
+      @endif
     </div>
     </form>
     <div class="mt-50 pt-30">
@@ -162,7 +189,7 @@
   </section>
 
   <!-- Live Classes -->
-  <section>
+  <!-- <section>
     <div class="course-row-top">
       <h2 style="margin:0">🔴 Live Classes</h2>
        <span class="course-subfilter active"  onclick="filterLiveClasses('newest')"  data-filter="newest">Newest</span>
@@ -223,7 +250,7 @@
             </article>
         @endforeach
     </div>
-  </section>
+  </section> -->
 
 </main>
 @endsection

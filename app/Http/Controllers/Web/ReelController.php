@@ -7,6 +7,7 @@ use App\Models\Reel;
 use App\Models\ReelLike;
 use App\Models\ReelComment;
 use App\Models\ReelReport;
+use App\Models\ReelCategory;
 use App\Jobs\ProcessReelVideo;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -69,7 +70,11 @@ class ReelController extends Controller
         ->orderByRaw('(likes_count * 0.4) + (comments_count * 0.3) + (views_count * 0.3) DESC')
         ->first();
 
-        return view('web.reels.index', compact('reels','heroreels'));
+        $categories=ReelCategory::all()->map(function($category){
+            return $category->details ;
+        });
+
+        return view('web.reels.index', compact('reels','heroreels','categories'));
     }
 
     public function store(Request $request)
@@ -81,6 +86,7 @@ class ReelController extends Controller
         
         $request->validate([
             'video' => 'required|mimes:mp4,mov,ogg,webm|max:256000',
+            'category_id' => 'required|integer|exists:reel_categories,id',
             'title' => 'required|string|max:255',
             'caption' => 'required|string|max:1000',
         ]);
@@ -99,6 +105,7 @@ class ReelController extends Controller
         $now = time();
         $reel = Reel::create([
             'user_id' => Auth::id(),
+            'category_id' => $request->category_id,
             'title' => $request->title,
             'caption' => $request->caption,
             'video_path' => $filename,

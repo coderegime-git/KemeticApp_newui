@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\Gift;
 use App\Models\ProductOrder;
 use App\Models\Sale;
+use App\Models\Order;
 use App\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -223,6 +224,89 @@ class MyPurchaseController extends Controller
             ];
 
             return view('web.default.panel.store.invoice', $data);
+        }
+
+        abort(404);
+    }
+
+    public function memberinvoice($orderId)
+    {
+        $user = auth()->user();
+
+        // Get membership order with relationships
+        $membershipOrder = Order::query()
+        ->where('user_id', $user->id)
+        ->where('id', $orderId)
+        ->whereHas('orderItems', function($query) {
+            $query->whereNotNull('subscribe_id'); // Only membership orders
+        })
+        ->with([
+            'orderItems' => function($query) {
+                $query->whereNotNull('subscribe_id')
+                      ->with('subscribe');
+            }
+        ])
+        ->first();
+
+        if (!empty($membershipOrder)) {
+        
+        // Get the order item with subscription details
+            $orderItem = $membershipOrder->orderItems->first();
+            $subscribe = $orderItem->subscribe ?? null;
+            
+            
+            // Get the sale record for this order
+            // Assuming you have a sales table with order_id foreign key
+            $sale = Sale::query()
+                ->where('order_id', $membershipOrder->id)
+                ->where('subscribe_id', $subscribe->id)
+                ->first();
+
+                // dd($subscribe);
+            
+            // Alternative: if sales table has buyer_id and product_id structure
+            // $sale = Sale::query()
+            //     ->where('buyer_id', $user->id)
+            //     ->where('product_id', $subscribe->id ?? null)
+            //     ->where('product_type', 'subscribe')
+            //     ->first();
+            
+            // Check if subscription is active
+            $isActive = false;
+            if ($subscribe && $sale) {
+                $currentTime = time();
+                // Calculate expiration time based on subscription days
+                $expirationTime = $orderItem->created_at + ($subscribe->days * 86400);
+                
+                $isActive = ($sale->payment_method !== 'offline' && 
+                            $currentTime >= $orderItem->created_at && 
+                            $currentTime < $expirationTime);
+            }
+            
+            // Get membership features/prices from subscribe table
+            $membershipFeatures = [
+                'title' => $subscribe->title ?? 'Membership',
+                'description' => $subscribe->description ?? '',
+                'price' => $subscribe->price ?? 0,
+                'days' => $subscribe->days ?? 0,
+                'icon' => $subscribe->icon ?? '',
+                'is_active' => $isActive,
+                'usable_time' => $subscribe->days * 86400, // Convert days to seconds
+            ];
+            
+            $data = [
+                'pageTitle' => 'Membership Invoice',
+                'order' => $membershipOrder,
+                'orderItem' => $orderItem,
+                'subscribe' => $subscribe,
+                'sale' => $sale,
+                'seller' => null, // You may need to get seller info if applicable
+                'buyer' => $user,
+                'membershipFeatures' => $membershipFeatures,
+                'isActive' => $isActive,
+            ];
+            
+            return view('web.default.panel.financial.invoice', $data);
         }
 
         abort(404);

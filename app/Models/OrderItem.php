@@ -105,7 +105,9 @@ class OrderItem extends Model
             $seller = $orderItem->reserveMeeting->meeting->creator_id;
         } elseif (!empty($orderItem->product_id)) {
             $seller = $orderItem->product->creator_id;
-        } elseif (!empty($orderItem->bundle_id)) {
+        } elseif (!empty($orderItem->book_id)) {
+            $seller = $orderItem->book->creator_id;
+        }elseif (!empty($orderItem->bundle_id)) {
             $seller = $orderItem->bundle->creator_id;
         }
 

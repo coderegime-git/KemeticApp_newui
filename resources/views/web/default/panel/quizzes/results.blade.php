@@ -1,211 +1,95 @@
 @extends('web.default.layouts.newapp')
+
 <style>
   /* KEMETIC STATS */
-
-.kemetic-section {
-    margin-top: 30px;
+.kemetic-stat-section {
+    margin-top: 25px;
 }
 
-.kemetic-section-title {
-    font-size: 20px;
+.kemetic-title {
+    font-size: 22px;
     font-weight: 700;
     color: #F2C94C;
-    margin-bottom: 20px;
-}
-
-/* Container */
-.kemetic-stats-container {
-    background: #141414;
-    border: 1px solid rgba(242,201,76,0.25);
-    border-radius: 16px;
-    padding: 30px;
-}
-
-/* Card */
-.kemetic-stat-card {
-    background: #0F0F0F;
-    border: 1px solid rgba(242,201,76,0.2);
-    border-radius: 14px;
-    padding: 25px 15px;
-    text-align: center;
-    transition: all .3s ease;
-}
-
-.kemetic-stat-card:hover {
-    border-color: #F2C94C;
-    transform: translateY(-4px);
-}
-
-/* Icon */
-.kemetic-stat-icon {
-    width: 64px;
-    height: 64px;
-    margin: 0 auto 10px;
-    background: rgba(242,201,76,0.12);
-    border-radius: 14px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-}
-
-.kemetic-stat-icon img {
-    width: 36px;
-    height: 36px;
-}
-
-/* Value */
-.kemetic-stat-value {
-    font-size: 32px;
-    font-weight: 800;
-    color: #ffffff;
-    margin-top: 8px;
-}
-
-/* Label */
-.kemetic-stat-label {
-    font-size: 14px;
-    color: #b5b5b5;
-    margin-top: 4px;
-}
-.kemetic-filter-card {
-    border-radius: 14px;
-    background: #ffffff;
-    box-shadow: 0 6px 20px rgba(0,0,0,0.04);
-}
-
-.kemetic-input .input-with-icon {
-    position: relative;
-}
-
-.kemetic-input .input-with-icon i {
-    position: absolute;
-    left: 12px;
-    top: 50%;
-    transform: translateY(-50%);
-    width: 18px;
-    height: 18px;
-    color: #6c757d;
-}
-
-.kemetic-input .input-with-icon input {
-    padding-left: 42px;
-}
-
-.filter-group-title {
-    font-size: 13px;
-    font-weight: 600;
-    color: #6c757d;
-    text-transform: uppercase;
-}
-
-.kemetic-btn {
-    border-radius: 10px;
-    font-weight: 600;
-}
-
-/* Kemetic Filter Card */
-.kemetic-filter-card {
-    background: #ffffff;
-    border-radius: 14px;
-    padding: 24px;
-    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.06);
-}
-
-/* Labels */
-.kemetic-label {
-    font-size: 13px;
-    font-weight: 600;
-    color: #1f2937;
-    margin-bottom: 6px;
-}
-
-/* Input Group */
-.kemetic-input-group {
-    position: relative;
-}
-
-.kemetic-input-group i {
-    position: absolute;
-    top: 50%;
-    left: 12px;
-    transform: translateY(-50%);
-    color: #6b7280;
-    width: 16px;
-    height: 16px;
-}
-
-.kemetic-input-group input {
-    padding-left: 38px;
-    height: 44px;
-    border-radius: 10px;
-}
-
-/* Inputs */
-.form-control {
-    height: 44px;
-    border-radius: 10px;
-    font-size: 14px;
-}
-
-/* Button */
-.kemetic-btn-primary {
-    height: 44px;
-    border-radius: 10px;
-    background: linear-gradient(135deg, #6366f1, #4f46e5);
-    border: none;
-    color: #fff;
-    font-weight: 600;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-}
-
-.kemetic-btn-primary i {
-    width: 18px;
-    height: 18px;
-}
-
-:root {
-    --k-bg: #0f0f0f;
-    --k-card: #141414;
-    --k-gold: #f2c94c;
-    --k-border: rgba(242,201,76,.35);
-    --k-text: #e0e0e0;
-    --k-shadow: 0 0 20px rgba(242,201,76,.15);
-    --k-radius: 14px;
-}
-
-/* SECTION */
-.kemetic-section {
-    padding: 10px;
-}
-
-/* TITLE */
-.kemetic-title {
-    font-size: 20px;
-    color: var(--k-gold);
-    border-left: 4px solid var(--k-gold);
-    padding-left: 12px;
-    font-weight: 600;
+    margin-bottom: 18px;
 }
 
 /* CARD */
-.kemetic-card {
-    background: var(--k-card);
-    border: 1px solid var(--k-border);
-    border-radius: var(--k-radius);
-    padding: 20px 25px;
-    box-shadow: var(--k-shadow);
+.kemetic-stat-card {
+    background: linear-gradient(180deg, #121212, #0b0b0b);
+    border: 1px solid #262626;
+    border-radius: 18px;
+    padding: 26px 18px;
 }
 
-/* FORM */
-.kemetic-form-group {
-    margin-bottom: 15px;
+/* ITEM */
+.kemetic-stat-item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 6px;
 }
 
+/* ICON */
+.kemetic-stat-icon {
+    width: 56px;
+    height: 56px;
+    border-radius: 50%;
+    background: rgba(242, 201, 76, 0.15);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+.kemetic-stat-icon img {
+    width: 28px;
+    filter: invert(0.9);
+}
+
+/* VALUE */
+.kemetic-stat-value {
+    font-size: 30px;
+    font-weight: 700;
+    color: #F2C94C;
+}
+
+/* LABEL */
+.kemetic-stat-label {
+    font-size: 14px;
+    color: #9a9a9a;
+}
+
+/* MOBILE */
+@media (max-width: 768px) {
+    .kemetic-stat-card {
+        padding: 20px 12px;
+    }
+    .kemetic-stat-value {
+        font-size: 24px;
+    }
+}
+
+/* KEMETIC FILTER */
+.kemetic-filter-section {
+    color: #eaeaea;
+}
+
+.kemetic-title {
+    font-size: 22px;
+    font-weight: 700;
+    color: #F2C94C;
+}
+
+/* CARD */
+.kemetic-filter-card {
+    background: linear-gradient(180deg, #121212, #0a0a0a);
+    border: 1px solid #262626;
+    border-radius: 18px;
+    padding: 26px 22px;
+}
+
+/* LABEL */
 .kemetic-label {
     font-size: 13px;
-    color: var(--k-gold);
+    color: #b5b5b5;
     margin-bottom: 6px;
     display: block;
 }
@@ -214,122 +98,286 @@
 .kemetic-input-group {
     display: flex;
     align-items: center;
-    background: #0d0d0d;
-    border: 1px solid var(--k-border);
-    border-radius: var(--k-radius);
-    transition: .3s;
+    gap: 10px;
+    background: #0f0f0f;
+    border: 1px solid #2a2a2a;
+    border-radius: 12px;
+    padding: 10px 12px;
 }
 
-.kemetic-input-group:hover {
-    box-shadow: 0 0 15px rgba(242,201,76,.2);
+.kemetic-input-group i {
+    color: #F2C94C;
 }
 
-.kemetic-icon {
-    padding: 0 12px;
-    color: var(--k-gold);
-}
-
+/* INPUT */
 .kemetic-input {
+    width: 100%;
     background: transparent;
     border: none;
-    color: var(--k-text);
-    padding: 10px;
-    width: 100%;
+    color: #fff;
+    outline: none;
+    font-size: 14px;
 }
 
-.kemetic-input:focus {
-    outline: none;
+.kemetic-input::placeholder {
+    color: #666;
 }
 
 /* SELECT */
 .kemetic-select {
+    background: #0f0f0f;
+    border: 1px solid #2a2a2a;
+    border-radius: 12px;
+    color: #fff;
+    padding: 10px 12px;
     width: 100%;
-    background: #0d0d0d;
-    border: 1px solid var(--k-border);
-    border-radius: var(--k-radius);
-    color: var(--k-text);
-    padding: 10px;
+    outline: none;
+}
+.kemetic-select option {
+    background: #0f0f0f;
+    color: #fff;
+}
+.kemetic-select:focus {
+    border-color: #F2C94C;
+}
+
+/* SELECT2 - KEMETIC DARK THEME */
+.select2-container--default .select2-selection--single {
+    background: #0d0d0d !important;
+    border: 1px solid #2a2a2a !important;
+    border-radius: 12px !important;
+    height: 44px !important;
+    display: flex;
+    align-items: center;
+}
+.select2-container--default .select2-selection--single .select2-selection__rendered {
+    color: #fff !important;
+    line-height: 44px !important;
+}
+.select2-container--default .select2-selection--single .select2-selection__arrow {
+    height: 42px !important;
+}
+.select2-container--default .select2-selection--single .select2-selection__arrow b {
+    border-color: #F2C94C transparent transparent transparent !important;
+}
+.select2-dropdown {
+    background: #0f0f0f !important;
+    border: 1px solid #2a2a2a !important;
+    border-radius: 12px !important;
+}
+.select2-results__option {
+    color: #e0e0e0 !important;
+    padding: 10px 14px !important;
+}
+.select2-results__option--highlighted {
+    background: rgba(242,201,76,.15) !important;
+    color: #fff !important;
+}
+.select2-results__option[aria-selected=true] {
+    background: rgba(242,201,76,.25) !important;
+}
+.select2-search--dropdown .select2-search__field {
+    background: #0d0d0d !important;
+    border: 1px solid #2a2a2a !important;
+    color: #fff !important;
+    border-radius: 8px !important;
 }
 
 /* BUTTON */
 .kemetic-btn {
-    background: linear-gradient(135deg, #f2c94c, #d4a62f);
-    color: #000;
+    background: linear-gradient(135deg, #F2C94C, #d4af37);
     border: none;
-    padding: 11px;
-    border-radius: var(--k-radius);
-    font-weight: 600;
-    transition: .3s;
-}
-
-.kemetic-btn:hover {
-    box-shadow: 0 0 25px rgba(242,201,76,.5);
-    transform: translateY(-1px);
-}
-
-.kemetic-section {
-    padding: 10px 0;
-}
-
-.kemetic-title {
-    font-size: 20px;
-    color: #f2c94c;
-    border-left: 4px solid #f2c94c;
-    padding-left: 12px;
-    font-weight: 600;
-}
-
-/* CARD */
-.kemetic-card {
-    background: #0f0f0f;
-    border: 1px solid rgba(242,201,76,.35);
     border-radius: 14px;
-    padding: 20px 25px;
-    box-shadow: 0 0 20px rgba(242,201,76,.15);
+    padding: 12px;
+    font-weight: 700;
+    color: #000;
+    transition: 0.3s ease;
+}
+.kemetic-btn:hover {
+    background: linear-gradient(135deg, #d4af37, #F2C94C);
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(242,201,76,0.4);
+}
+
+/* TABLE CARD */
+.kemetic-table-card {
+    background: linear-gradient(180deg,#121212,#0a0a0a);
+    border:1px solid #262626;
+    border-radius:18px;
+    padding:20px;
 }
 
 /* TABLE */
 .kemetic-table {
-    width: 100%;
-    color: #e0e0e0;
-    border-collapse: separate;
-    border-spacing: 0;
+    width:100%;
+    border-collapse:separate;
+    border-spacing:0 10px;
 }
-
 .kemetic-table thead th {
-    border-bottom: 1px solid rgba(242,201,76,.25);
-    color: #f2c94c;
-    font-weight: 600;
+    color:#aaa; 
+    font-size:13px;
+    font-weight:600; 
+    text-align:center;
+    padding-bottom: 10px;
 }
-
+.kemetic-table thead th.text-left {
+    text-align: left;
+}
+.kemetic-table tbody tr {
+    background:#0f0f0f;
+    border:1px solid #262626;
+    transition: 0.3s ease;
+}
 .kemetic-table tbody tr:hover {
-    background: rgba(242,201,76,.05);
+    background: #1a1a1a;
+    border-color: rgba(242,201,76,0.3);
+}
+.kemetic-table td {
+    padding:14px;
+    text-align:center;
+    vertical-align:middle;
+}
+.kemetic-table td.text-left { 
+    text-align:left; 
+}
+.kemetic-table td.text-right {
+    text-align: right;
 }
 
-.kemetic-text {
-    color: #f2c94c;
+/* USER AVATAR */
+.user-avatar-cell {
+    display: flex;
+    align-items: center;
+    gap: 12px;
 }
-
-.kemetic-status.passed {
-    color: #4cd137;
+.user-avatar {
+    width: 44px;
+    height: 44px;
+    border-radius: 50%;
+    overflow: hidden;
+    border: 2px solid rgba(242,201,76,0.3);
+    background: #1a1a1a;
+}
+.user-avatar img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+.user-info {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+}
+.user-name {
+    color: #fff;
     font-weight: 600;
+    font-size: 14px;
+}
+.user-email {
+    color: #888;
+    font-size: 11px;
 }
 
-.kemetic-status.failed {
-    color: #e84118;
+/* QUIZ INFO */
+.quiz-title {
+    color: #F2C94C;
     font-weight: 600;
+    font-size: 15px;
+    margin-bottom: 4px;
+}
+.quiz-course {
+    color: #888;
+    font-size: 12px;
 }
 
-.kemetic-status.waiting {
+/* GRADE */
+.quiz-grade {
+    color: #F2C94C;
+    font-weight: 600;
+    font-size: 16px;
+}
+.user-grade {
+    color: #fff;
+    font-weight: 600;
+    font-size: 16px;
+}
+
+/* STATUS BADGES */
+.status-badge {
+    padding:4px 10px;
+    border-radius:12px;
+    font-size:12px;
+    font-weight: 500;
+    display: inline-block;
+}
+.status-badge.passed {
+    background: #1f3d2b;
+    color: #2ecc71;
+}
+.status-badge.failed {
+    background: #3d1f1f;
+    color: #e74c3c;
+}
+.status-badge.waiting {
+    background: #3d2e1f;
     color: #f39c12;
-    font-weight: 600;
 }
 
-.kemetic-switch-label {
-    color: #f2c94c;
+/* DATE */
+.quiz-date {
+    color: #b5b5b5;
+    font-size: 14px;
     font-weight: 500;
 }
 
+/* DROPDOWN */
+.kemetic-actions {
+    position: relative;
+}
+.kemetic-actions button {
+    background: transparent;
+    border: none;
+    color: #F2C94C;
+    padding: 5px 10px;
+}
+.kemetic-actions .dropdown-menu {
+    background: #121212;
+    border: 1px solid #262626;
+    border-radius: 12px;
+    padding: 8px 0;
+    min-width: 180px;
+}
+.kemetic-actions .dropdown-item {
+    color: #F2C94C;
+    padding: 8px 16px;
+    font-size: 13px;
+    transition: 0.2s ease;
+    background: transparent;
+    border: none;
+    width: 100%;
+    text-align: left;
+}
+.kemetic-actions .dropdown-item:hover {
+    background: rgba(242,201,76,0.1);
+    color: #fff;
+}
+.kemetic-actions .dropdown-item.delete-action {
+    color: #e74c3c !important;
+}
+.kemetic-actions .dropdown-item.delete-action:hover {
+    background: rgba(231,76,60,0.1);
+}
+
+/* SWITCH */
+.kemetic-switch-wrapper {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+.kemetic-switch-label {
+    color: #b5b5b5;
+    font-size: 14px;
+}
 .custom-control {
   position: relative;
   z-index: 1;
@@ -466,322 +514,336 @@
 .custom-switch .custom-control-input:disabled:checked ~ .custom-control-label::before {
   background-color: rgba(67, 212, 119, 0.5);
 }
+
+
+/* NO RESULT */
+.no-result-card {
+    background: linear-gradient(180deg,#121212,#0a0a0a);
+    border:1px solid #262626;
+    border-radius:18px;
+    padding:60px 40px;
+    text-align: center;
+}
+.no-result-card img {
+    opacity: 0.7;
+    margin-bottom: 20px;
+    width: 120px;
+}
+.no-result-card h3 {
+    color: #F2C94C;
+    font-size: 20px;
+    margin-bottom: 10px;
+}
+.no-result-card p {
+    color: #888;
+    font-size: 14px;
+    max-width: 400px;
+    margin: 0 auto;
+}
+
+/* TEXT COLORS */
+.text-gray {
+    color: #888 !important;
+}
 </style>
+
 @push('styles_top')
-<link rel="stylesheet" href="/assets/default/vendors/daterangepicker/daterangepicker.min.css">
-<link rel="stylesheet" href="/assets/default/vendors/select2/select2.min.css">
-<link rel="stylesheet" href="/assets/default/css/kemetic-quiz-results.css">
+    <link rel="stylesheet" href="/assets/default/vendors/daterangepicker/daterangepicker.min.css">
+    <link rel="stylesheet" href="/assets/default/vendors/select2/select2.min.css">
 @endpush
 
 @section('content')
-<section class="kemetic-section">
-    <h2 class="kemetic-section-title">
-        {{ trans('quiz.results_statistics') }}
-    </h2>
 
-    <div class="kemetic-stats-container">
-        <div class="row">
+    {{-- Statistics --}}
+    <section class="kemetic-stat-section">
+        <h2 class="kemetic-title">{{ trans('quiz.results_statistics') }}</h2>
 
-            <!-- Need Review -->
-            <div class="col-6 col-md-3">
-                <div class="kemetic-stat-card">
-                    <div class="kemetic-stat-icon">
-                        <img src="/assets/default/img/activity/43.svg" alt="">
+        <div class="kemetic-stat-card">
+            <div class="row text-center">
+                <div class="col-6 col-md-3">
+                    <div class="kemetic-stat-item">
+                        <div class="kemetic-stat-icon">
+                            <img src="/assets/default/img/activity/43.svg" alt="">
+                        </div>
+                        <div class="kemetic-stat-value">{{ $waitingCount }}</div>
+                        <div class="kemetic-stat-label">{{ trans('quiz.need_to_review') }}</div>
                     </div>
+                </div>
 
-                    <div class="kemetic-stat-value">
-                        {{ $waitingCount }}
+                <div class="col-6 col-md-3">
+                    <div class="kemetic-stat-item">
+                        <div class="kemetic-stat-icon">
+                            <img src="/assets/default/img/activity/42.svg" alt="">
+                        </div>
+                        <div class="kemetic-stat-value">{{ $quizResultsCount }}</div>
+                        <div class="kemetic-stat-label">{{ trans('public.results') }}</div>
                     </div>
+                </div>
 
-                    <div class="kemetic-stat-label">
-                        {{ trans('quiz.need_to_review') }}
+                <div class="col-6 col-md-3">
+                    <div class="kemetic-stat-item">
+                        <div class="kemetic-stat-icon">
+                            <img src="/assets/default/img/activity/58.svg" alt="">
+                        </div>
+                        <div class="kemetic-stat-value">{{ $quizAvgGrad }}</div>
+                        <div class="kemetic-stat-label">{{ trans('quiz.average_grade') }}</div>
+                    </div>
+                </div>
+
+                <div class="col-6 col-md-3">
+                    <div class="kemetic-stat-item">
+                        <div class="kemetic-stat-icon">
+                            <img src="/assets/default/img/activity/45.svg" alt="">
+                        </div>
+                        <div class="kemetic-stat-value">{{ $successRate }}%</div>
+                        <div class="kemetic-stat-label">{{ trans('quiz.success_rate') }}</div>
                     </div>
                 </div>
             </div>
-
-            <!-- Results -->
-            <div class="col-6 col-md-3">
-                <div class="kemetic-stat-card">
-                    <div class="kemetic-stat-icon">
-                        <img src="/assets/default/img/activity/42.svg" alt="">
-                    </div>
-
-                    <div class="kemetic-stat-value">
-                        {{ $quizResultsCount }}
-                    </div>
-
-                    <div class="kemetic-stat-label">
-                        {{ trans('public.results') }}
-                    </div>
-                </div>
-            </div>
-
-            <!-- Average Grade -->
-            <div class="col-6 col-md-3 mt-4 mt-md-0">
-                <div class="kemetic-stat-card">
-                    <div class="kemetic-stat-icon">
-                        <img src="/assets/default/img/activity/58.svg" alt="">
-                    </div>
-
-                    <div class="kemetic-stat-value">
-                        {{ $quizAvgGrad }}
-                    </div>
-
-                    <div class="kemetic-stat-label">
-                        {{ trans('quiz.average_grade') }}
-                    </div>
-                </div>
-            </div>
-
-            <!-- Success Rate -->
-            <div class="col-6 col-md-3 mt-4 mt-md-0">
-                <div class="kemetic-stat-card">
-                    <div class="kemetic-stat-icon">
-                        <img src="/assets/default/img/activity/45.svg" alt="">
-                    </div>
-
-                    <div class="kemetic-stat-value">
-                        {{ $successRate }}%
-                    </div>
-
-                    <div class="kemetic-stat-label">
-                        {{ trans('quiz.success_rate') }}
-                    </div>
-                </div>
-            </div>
-
         </div>
-    </div>
-</section>
+    </section>
 
-<section class="kemetic-section mt-25">
-    <h2 class="kemetic-title">
-        {{ trans('quiz.filter_results') }}
-    </h2>
+    {{-- Filters --}}
+    <section class="kemetic-filter-section mt-30">
+        <h2 class="kemetic-title">{{ trans('quiz.filter_results') }}</h2>
 
-    <div class="kemetic-card mt-20">
-        <form action="/panel/quizzes/results" method="get" class="row">
+        <div class="kemetic-filter-card mt-20">
+            <form action="/panel/quizzes/results" method="get">
+                <div class="row g-3">
 
-            {{-- DATE FILTER --}}
-            <div class="col-12 col-lg-4">
-                <div class="row">
-
-                    <div class="col-12 col-md-6">
-                        <div class="kemetic-form-group">
-                            <label class="kemetic-label">{{ trans('public.from') }}</label>
-                            <div class="kemetic-input-group">
-                                <span class="kemetic-icon">
-                                    <i data-feather="calendar"></i>
-                                </span>
-                                <input type="text"
-                                       name="from"
-                                       autocomplete="off"
-                                       class="kemetic-input @if(!empty(request()->get('from'))) datepicker @else datefilter @endif"
-                                       value="{{ request()->get('from','') }}">
+                    {{-- Date range --}}
+                    <div class="col-12 col-lg-4">
+                        <div class="row g-2">
+                            <div class="col-6">
+                                <label class="kemetic-label">{{ trans('public.from') }}</label>
+                                <div class="kemetic-input-group">
+                                    <!-- <i data-feather="calendar" width="18" height="18"></i> -->
+                                    <input type="date" name="from"
+                                        class="kemetic-input"
+                                        value="{{ request()->get('from') }}">
+                                </div>
+                            </div>
+                            <div class="col-6">
+                                <label class="kemetic-label">{{ trans('public.to') }}</label>
+                                <div class="kemetic-input-group">
+                                    <!-- <i data-feather="calendar" width="18" height="18"></i> -->
+                                    <input type="date" name="to"
+                                        class="kemetic-input"
+                                        value="{{ request()->get('to') }}">
+                                </div>
                             </div>
                         </div>
                     </div>
 
-                    <div class="col-12 col-md-6">
-                        <div class="kemetic-form-group">
-                            <label class="kemetic-label">{{ trans('public.to') }}</label>
-                            <div class="kemetic-input-group">
-                                <span class="kemetic-icon">
-                                    <i data-feather="calendar"></i>
-                                </span>
-                                <input type="text"
-                                       name="to"
-                                       autocomplete="off"
-                                       class="kemetic-input @if(!empty(request()->get('to'))) datepicker @else datefilter @endif"
-                                       value="{{ request()->get('to','') }}">
-                            </div>
-                        </div>
-                    </div>
-
-                </div>
-            </div>
-
-            {{-- QUIZ + STUDENT --}}
-            <div class="col-12 col-lg-6">
-                <div class="row">
-
-                    <div class="col-12 col-lg-5">
-                        <div class="kemetic-form-group">
-                            <label class="kemetic-label">{{ trans('quiz.quiz_or_webinar') }}</label>
-                                <select name="quiz_id" class="kemetic-select select2">
+                    {{-- Quiz & Student filters --}}
+                    <div class="col-12 col-lg-6">
+                        <div class="row g-2">
+                            <div class="col-12 col-lg-5">
+                                <label class="kemetic-label">{{ trans('quiz.quiz_or_webinar') }}</label>
+                                <select name="quiz_id" class="kemetic-select select2" style="width: 100%;">
                                     <option value="all">{{ trans('public.all') }}</option>
                                     @foreach($quizzes as $quiz)
-                                        <option value="{{ $quiz->id }}" @selected(request()->get('quiz_id') == $quiz->id)>
+                                        <option value="{{ $quiz->id }}" {{ request()->get('quiz_id') == $quiz->id ? 'selected' : '' }}>
                                             {{ $quiz->title }} - {{ $quiz->webinar?->title ?? '-' }}
                                         </option>
                                     @endforeach
                                 </select>
-                        </div>
-                    </div>
-
-                    <div class="col-12 col-lg-7">
-                        <div class="row">
+                            </div>
 
                             <div class="col-12 col-lg-7">
-                                <div class="kemetic-form-group">
-                                    <label class="kemetic-label">{{ trans('quiz.student') }}</label>
-                                    <select name="user_id" class="kemetic-select select2">
-                                        <option value="all">{{ trans('public.all') }}</option>
-                                        @foreach($allStudents as $student)
-                                            <option value="{{ $student->id }}" @selected(request()->get('user_id') == $student->id)>
-                                                {{ $student->full_name }}
-                                            </option>
-                                        @endforeach
-                                    </select>
+                                <div class="row g-2">
+                                    <div class="col-12 col-lg-7">
+                                        <label class="kemetic-label">{{ trans('quiz.student') }}</label>
+                                        <select name="user_id" class="kemetic-select select2" style="width: 100%;">
+                                            <option value="all">{{ trans('public.all') }}</option>
+                                            @foreach($allStudents as $student)
+                                                <option value="{{ $student->id }}" {{ request()->get('user_id') == $student->id ? 'selected' : '' }}>
+                                                    {{ $student->full_name }}
+                                                </option>
+                                            @endforeach
+                                        </select>
+                                    </div>
+
+                                    <div class="col-12 col-lg-5">
+                                        <label class="kemetic-label">{{ trans('public.status') }}</label>
+                                        <select name="status" class="kemetic-select">
+                                            <option value="all">{{ trans('public.all') }}</option>
+                                            <option value="passed" {{ request()->get('status') === 'passed' ? 'selected' : '' }}>{{ trans('quiz.passed') }}</option>
+                                            <option value="failed" {{ request()->get('status') === 'failed' ? 'selected' : '' }}>{{ trans('quiz.failed') }}</option>
+                                            <option value="waiting" {{ request()->get('status') === 'waiting' ? 'selected' : '' }}>{{ trans('quiz.waiting') }}</option>
+                                        </select>
+                                    </div>
                                 </div>
                             </div>
-
-                            <div class="col-12 col-lg-5">
-                                <div class="kemetic-form-group">
-                                    <label class="kemetic-label">{{ trans('public.status') }}</label>
-                                    <select name="status" class="kemetic-select">
-                                        <option value="all">{{ trans('public.all') }}</option>
-                                        <option value="passed" @selected(request()->get('status') === 'passed')>{{ trans('quiz.passed') }}</option>
-                                        <option value="failed" @selected(request()->get('status') === 'failed')>{{ trans('quiz.failed') }}</option>
-                                        <option value="waiting" @selected(request()->get('status') === 'waiting')>{{ trans('quiz.waiting') }}</option>
-                                    </select>
-                                </div>
-                            </div>
-
                         </div>
                     </div>
 
+                    {{-- Submit --}}
+                    <div class="col-12 col-lg-2 d-flex align-items-end">
+                        <button type="submit" class="kemetic-btn w-100">
+                            {{ trans('public.show_results') }}
+                        </button>
+                    </div>
+
                 </div>
-            </div>
+            </form>
+        </div>
+    </section>
 
-            {{-- BUTTON --}}
-            <div class="col-12 col-lg-2 d-flex align-items-end">
-                <button type="submit" class="kemetic-btn w-100">
-                    {{ trans('public.show_results') }}
-                </button>
-            </div>
+    {{-- Student Results List --}}
+    <section class="kemetic-section mt-40">
+        <div class="d-flex flex-column flex-md-row align-items-start align-items-md-center justify-content-between mb-20">
+            <h2 class="kemetic-title">{{ trans('quiz.student_results') }}</h2>
 
-        </form>
-    </div>
-</section>
-
-
-
-<section class="kemetic-section mt-35">
-
-    {{-- HEADER + SWITCH --}}
-    <div class="d-flex align-items-start align-items-md-center justify-content-between flex-column flex-md-row">
-        <h2 class="kemetic-title">{{ trans('quiz.student_results') }}</h2>
-
-        <form action="/panel/quizzes/results" method="get" class="">
-            <div class="d-flex align-items-center flex-row-reverse flex-md-row justify-content-start justify-content-md-center mt-20 mt-md-0">
-                <label class="mb-0 mr-10 kemetic-switch-label" for="onlyOpenQuizzesSwitch">
-                    {{ trans('quiz.show_only_open_results') }}
-                </label>
-                <div class="custom-control custom-switch">
-                    <input type="checkbox" name="open_results" class="custom-control-input" id="onlyOpenQuizzesSwitch" @if(request()->get('open_results',null) == 'on') checked @endif>
-                    <label class="custom-control-label" for="onlyOpenQuizzesSwitch"></label>
+            <form action="/panel/quizzes/results" method="get" class="mt-15 mt-md-0">
+                <div class="kemetic-switch-wrapper">
+                    <span class="kemetic-switch-label">{{ trans('quiz.show_only_open_results') }}</span>
+                    <div class="custom-control custom-switch">
+                        <input type="checkbox" name="open_results" 
+                               class="custom-control-input" 
+                               id="onlyOpenQuizzesSwitch"
+                               onchange="this.form.submit()"
+                               {{ request()->get('open_results') == 'on' ? 'checked' : '' }}>
+                        <label class="custom-control-label" for="onlyOpenQuizzesSwitch"></label>
+                    </div>
                 </div>
-            </div>
-        </form>
-    </div>
-
-    @if($quizzesResults->count() > 0)
-
-        <div class="kemetic-card mt-20">
-            <div class="table-responsive">
-                <table class="table kemetic-table">
-                    <thead>
-                        <tr>
-                            <th>{{ trans('quiz.student') }}</th>
-                            <th>{{ trans('quiz.quiz') }}</th>
-                            <th class="text-center">{{ trans('quiz.quiz_grade') }}</th>
-                            <th class="text-center">{{ trans('quiz.student_grade') }}</th>
-                            <th class="text-center">{{ trans('public.status') }}</th>
-                            <th class="text-center">{{ trans('public.date') }}</th>
-                            <th></th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        @foreach($quizzesResults as $result)
-                            <tr>
-                                <td>
-                                    <div class="user-inline-avatar">
-                                        <div class="avatar bg-gray200">
-                                            <img src="{{ $result->user->getAvatar() }}" class="img-cover" alt="">
-                                        </div>
-                                        <div class="ml-5">
-                                            <span class="d-block kemetic-text">{{ $result->user->full_name }}</span>
-                                            <span class="font-12 text-gray d-block">{{ $result->user->email }}</span>
-                                        </div>
-                                    </div>
-                                </td>
-
-                                <td>
-                                    <span class="d-block kemetic-text">{{ $result->quiz->title }}</span>
-                                    <span class="font-12 text-gray d-block">{{ $result->quiz->webinar->title }}</span>
-                                </td>
-
-                                <td class="text-center">{{ $result->getQuestions()->sum('grade') }}</td>
-                                <td class="text-center">{{ $result->user_grade }}</td>
-                                <td class="text-center">
-                                    @switch($result->status)
-                                        @case(\App\Models\QuizzesResult::$passed)
-                                            <span class="kemetic-status passed">{{ trans('quiz.passed') }}</span>
-                                        @break
-                                        @case(\App\Models\QuizzesResult::$failed)
-                                            <span class="kemetic-status failed">{{ trans('quiz.failed') }}</span>
-                                        @break
-                                        @case(\App\Models\QuizzesResult::$waiting)
-                                            <span class="kemetic-status waiting">{{ trans('quiz.waiting') }}</span>
-                                        @break
-                                    @endswitch
-                                </td>
-                                <td class="text-center">{{ dateTimeFormat($result->created_at, 'j M Y H:i') }}</td>
-                                <td class="text-right">
-                                    <div class="btn-group dropdown table-actions">
-                                        <button type="button" class="btn-transparent dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
-                                            <i data-feather="more-vertical" height="20"></i>
-                                        </button>
-                                        <div class="dropdown-menu font-weight-normal">
-                                            @if($result->status != 'waiting')
-                                                <a href="/panel/quizzes/{{ $result->id }}/result" class="webinar-actions d-block mt-10">{{ trans('public.view') }}</a>
-                                            @endif
-                                            @if($result->status == 'waiting')
-                                                <a href="/panel/quizzes/{{ $result->id }}/edit-result" class="webinar-actions d-block mt-10">{{ trans('public.review') }}</a>
-                                            @endif
-                                            <a href="/panel/quizzes/results/{{ $result->id }}/delete" class="webinar-actions d-block mt-10 delete-action">{{ trans('public.delete') }}</a>
-                                        </div>
-                                    </div>
-                                </td>
-                            </tr>
-                        @endforeach
-                    </tbody>
-                </table>
-            </div>
+            </form>
         </div>
 
-    @else
-        @include(getTemplate() . '.includes.no-result',[
-            'file_name' => 'result.png',
-            'title' => trans('quiz.quiz_result_no_result'),
-            'hint' => trans('quiz.quiz_result_no_result_hint'),
-        ])
-    @endif
+        @if($quizzesResults->count() > 0)
 
-</section>
+            <div class="kemetic-table-card mt-20">
+                <div class="table-responsive">
+                    <table class="kemetic-table">
+                        <thead>
+                            <tr>
+                                <th class="text-left">{{ trans('quiz.student') }}</th>
+                                <th class="text-left">{{ trans('quiz.quiz') }}</th>
+                                <th>{{ trans('quiz.quiz_grade') }}</th>
+                                <th>{{ trans('quiz.student_grade') }}</th>
+                                <th>{{ trans('public.status') }}</th>
+                                <th>{{ trans('public.date') }}</th>
+                                <th class="text-right"></th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach($quizzesResults as $result)
+                                <tr>
+                                    <td class="text-left">
+                                        <div class="user-avatar-cell">
+                                            <div class="user-avatar">
+                                                <img src="{{ $result->user->getAvatar() }}" alt="">
+                                            </div>
+                                            <div class="user-info">
+                                                <span class="user-name">{{ $result->user->full_name }}</span>
+                                                <span class="user-email">{{ $result->user->email }}</span>
+                                            </div>
+                                        </div>
+                                    </td>
 
+                                    <td class="text-left">
+                                        <div class="quiz-title">{{ $result->quiz->title }}</div>
+                                        <div class="quiz-course">{{ $result->quiz->webinar->title }}</div>
+                                    </td>
 
+                                    <td>
+                                        <span class="quiz-grade">{{ $result->getQuestions()->sum('grade') }}</span>
+                                    </td>
 
-    <div class="my-30">
-        {{ $quizzesResults->appends(request()->input())->links('vendor.pagination.panel') }}
-    </div>
+                                    <td>
+                                        <span class="user-grade">{{ $result->user_grade }}</span>
+                                    </td>
+
+                                    <td>
+                                        @switch($result->status)
+                                            @case(\App\Models\QuizzesResult::$passed)
+                                                <span class="status-badge passed">{{ trans('quiz.passed') }}</span>
+                                                @break
+                                            @case(\App\Models\QuizzesResult::$failed)
+                                                <span class="status-badge failed">{{ trans('quiz.failed') }}</span>
+                                                @break
+                                            @case(\App\Models\QuizzesResult::$waiting)
+                                                <span class="status-badge waiting">{{ trans('quiz.waiting') }}</span>
+                                                @break
+                                        @endswitch
+                                    </td>
+
+                                    <td>
+                                        <span class="quiz-date">{{ dateTimeFormat($result->created_at, 'j M Y H:i') }}</span>
+                                    </td>
+
+                                    <td class="text-right">
+                                        <div class="dropdown kemetic-actions">
+                                            <button type="button" data-toggle="dropdown">
+                                                <i data-feather="more-vertical" height="18"></i>
+                                            </button>
+                                            <div class="dropdown-menu dropdown-menu-right">
+                                                @if($result->status != 'waiting')
+                                                    <a href="/panel/quizzes/{{ $result->id }}/result" class="dropdown-item">
+                                                        {{ trans('public.view') }}
+                                                    </a>
+                                                @endif
+                                                @if($result->status == 'waiting')
+                                                    <a href="/panel/quizzes/{{ $result->id }}/edit-result" class="dropdown-item">
+                                                        {{ trans('public.review') }}
+                                                    </a>
+                                                @endif
+                                                <a href="/panel/quizzes/results/{{ $result->id }}/delete" class="dropdown-item delete-action">
+                                                    {{ trans('public.delete') }}
+                                                </a>
+                                            </div>
+                                        </div>
+                                    </td>
+                                </tr>
+                            @endforeach
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            {{-- Pagination --}}
+            <div class="my-30">
+                {{ $quizzesResults->appends(request()->input())->links('vendor.pagination.panel') }}
+            </div>
+
+        @else
+            <div class="no-result-card">
+                @include(getTemplate() . '.includes.no-result',[
+                    'file_name' => 'result.png',
+                    'title' => trans('quiz.quiz_result_no_result'),
+                    'hint' => trans('quiz.quiz_result_no_result_hint'),
+                ])
+            </div>
+        @endif
+    </section>
+
 @endsection
 
 @push('scripts_bottom')
     <script src="/assets/default/vendors/moment.min.js"></script>
     <script src="/assets/default/vendors/daterangepicker/daterangepicker.min.js"></script>
     <script src="/assets/default/vendors/select2/select2.min.js"></script>
+    
+    <script>
+        $(document).ready(function() {
+            // Initialize Select2
+            $('.select2').select2({
+                width: '100%',
+                theme: 'default'
+            });
+
+            // Initialize datepickers
+            if ($('.datefilter').length) {
+                $('.datefilter').daterangepicker();
+            }
+            if ($('.datepicker').length) {
+                $('.datepicker').daterangepicker({
+                    singleDatePicker: true,
+                    locale: { format: 'YYYY-MM-DD' }
+                });
+            }
+        });
+    </script>
 
     <script src="/assets/default/js/panel/quiz_list.min.js"></script>
 @endpush

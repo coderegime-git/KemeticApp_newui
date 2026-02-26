@@ -12,7 +12,7 @@
                     text: `<a href="{{ $purchaseNotification->content->getUrl() }}" target="_blank">
                         <div class="purchase-notification d-flex w-100 h-100">
                             <div class="purchase-notification-image">
-                                <img src="{{ $purchaseNotification->content->getImage() }}" alt="{{ $purchaseNotification->content->title }}" class="img-cover">
+                                <img src="{{ $purchaseNotification->content->getImage() }}" alt="{{ $purchaseNotification->content->title }}" class="img-cover" style="width: 100px;height: 100px;">
                             </div>
                             <div class="ml-10">
                                 <h4 class="font-14 font-weight-bold text-dark">{{ $purchaseNotification->notif_title }}</h4>

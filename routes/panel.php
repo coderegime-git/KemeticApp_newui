@@ -438,6 +438,7 @@ Route::group(['namespace' => 'Panel', 'prefix' => 'panel', 'middleware' => ['imp
             Route::get('/{id}/getProductOrder/{order_id}', 'MyPurchaseController@getProductOrder');
             Route::get('/{id}/productOrder/{order_id}/setGotTheParcel', 'MyPurchaseController@setGotTheParcel');
             Route::get('/{id}/productOrder/{order_id}/invoice', 'MyPurchaseController@invoice');
+            Route::get('/{order_id}/invoice', 'MyPurchaseController@memberinvoice');
         });
 
 

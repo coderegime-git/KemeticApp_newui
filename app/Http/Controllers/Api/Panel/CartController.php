@@ -764,6 +764,8 @@ class CartController extends Controller
             $user = $cart->reserveMeeting->meeting->creator;
         } elseif (!empty($cart->product_order_id)) {
             $user = $cart->productOrder->seller;
+        } elseif (!empty($cart->book_order_id) and !empty($cart->bookOrder->book)) {
+            return $cart->bookOrder->book->creator;
         }
 
         return $user;
@@ -779,7 +781,7 @@ class CartController extends Controller
         $tax = (!empty($financialSettings['tax']) and $financialSettings['tax'] > 0) ? $financialSettings['tax'] : 0;
         $taxPrice = 0;
         $commissionPrice = 0;
-        $commission = $seller->getCommission();
+        $commission = $seller ? $seller->getCommission() : 0;
 
         if (!empty($cart->webinar_id) or !empty($cart->bundle_id)) {
             $item = !empty($cart->webinar_id) ? $cart->webinar : $cart->bundle;
@@ -844,29 +846,29 @@ class CartController extends Controller
             $book = $cart->bookOrder->book;
 
             if (!empty($book)) {
-                $bookQuantity = $cart->bookOrder->quantity;
-                $price = ($book->price * $bookQuantity);
-                $discount = 0; // Books might have discounts in future, you can add getDiscountPrice() method to Book model
+                $price = ($book->price * $cart->bookOrder->quantity);
+                $discount = $book->getDiscountPrice();
+
+                $bookCommission = $book->getCommission();
+                $bookTax = $book->getTax();
 
                 $priceWithoutDiscount = $price - $discount;
-                
-                if (method_exists($book, 'getTax')) {
-                    $bookTax = $book->getTax();
-                    $taxIsDifferent = ($taxIsDifferent and $tax != $bookTax);
-                    $tax = $bookTax;
+
+                $taxIsDifferent = ($taxIsDifferent and $tax != $bookTax);
+
+                $tax = $bookTax;
+                if ($bookTax > 0 and $priceWithoutDiscount > 0) {
+                    $taxPrice += $priceWithoutDiscount * $bookTax / 100;
                 }
 
-                if ($tax > 0 and $priceWithoutDiscount > 0) {
-                    $taxPrice += $priceWithoutDiscount * $tax / 100;
+                if ($bookCommission > 0) {
+                    $commissionPrice += $priceWithoutDiscount > 0 ? $priceWithoutDiscount * $bookCommission / 100 : 0;
                 }
-                
-                $source = 'books'; // You'll need to add 'books' to your commission settings
-                $commissionPrice += $this->getCommissionPrice($source, $priceWithoutDiscount, $seller);
 
                 $totalDiscount += $discount;
                 $subTotal += $price;
             }
-        } 
+        }
 
         if ($totalDiscount > $subTotal) {
             $totalDiscount = $subTotal;

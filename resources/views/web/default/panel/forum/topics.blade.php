@@ -306,16 +306,17 @@
                         <div class="form-group">
                             <label class="kemetic-label">{{ trans('public.from') }}</label>
                             <div class="input-group kemetic-input-group">
-                                <div class="input-group-prepend">
-                                    <span class="input-group-text">
-                                        <i data-feather="calendar"></i>
-                                    </span>
-                                </div>
-                                <input type="text"
-                                       name="from"
-                                       autocomplete="off"
-                                       class="form-control kemetic-input @if(!empty(request()->get('from'))) datepicker @else datefilter @endif"
-                                       value="{{ request()->get('from','') }}"/>
+                                <input type="date"
+                                    class="form-control kemetic-input text-center"
+                                    name="from"
+                                    value="{{ request()->get('from') }}">
+                                    <!-- <span class="input-group-text kemetic-icon bg-gold text-black">
+                                        <i data-feather="calendar" width="18" height="18"></i>
+                                    </span> -->
+
+                                    <!-- <input type="text" name="from" autocomplete="off"
+                                        class="form-control kemetic-input @if(request()->get('from')) datepicker @else datefilter @endif"
+                                        value="{{ request()->get('from','') }}"> -->
                             </div>
                         </div>
                     </div>
@@ -324,16 +325,18 @@
                         <div class="form-group">
                             <label class="kemetic-label">{{ trans('public.to') }}</label>
                             <div class="input-group kemetic-input-group">
-                                <div class="input-group-prepend">
-                                    <span class="input-group-text">
-                                        <i data-feather="calendar"></i>
-                                    </span>
-                                </div>
-                                <input type="text"
-                                       name="to"
-                                       autocomplete="off"
-                                       class="form-control kemetic-input @if(!empty(request()->get('to'))) datepicker @else datefilter @endif"
-                                       value="{{ request()->get('to','') }}"/>
+                                <input type="date"
+                                    class="form-control kemetic-input text-center"
+                                    name="to"
+                                    value="{{ request()->get('to') }}">
+
+                                <!-- <span class="input-group-text kemetic-icon bg-gold text-black">
+                                    <i data-feather="calendar" width="18" height="18"></i>
+                                </span> -->
+                                
+                                <!-- <input type="text" name="to" autocomplete="off"
+                                    class="form-control kemetic-input @if(request()->get('to')) datepicker @else datefilter @endif"
+                                    value="{{ request()->get('to','') }}"> -->
                             </div>
                         </div>
                     </div>
@@ -404,10 +407,10 @@
     @if($topics->count() > 0)
         <div class="panel-section-card kemetic-card-dark py-25 px-30 mt-20">
             <div class="table-responsive">
-                <table class="table kemetic-table-dark">
+                <table class="kemetic-table-dark">
                     <thead>
                         <tr>
-                            <th class="text-left">{{ trans('public.title') }}</th>
+                            <th class="text-center">{{ trans('public.title') }}</th>
                             <th>{{ trans('update.forum') }}</th>
                             <th>{{ trans('site.posts') }}</th>
                             <th>{{ trans('public.status') }}</th>

@@ -258,7 +258,7 @@
     outline: none;
     border-color: #F2C94C;
     box-shadow: 0 0 0 2px rgba(242,201,76,.15);
-    background: #0f0f0f;
+    background: #fff;
 }
 
 /* Spacing */
@@ -289,6 +289,60 @@
     background-size: 6px 6px;
     background-repeat: no-repeat;
 }
+
+.select2-container--default .select2-selection--single {
+    background: #0d0d0d !important;
+    border: 1px solid rgba(242,201,76,.35) !important;
+    border-radius: 14px !important;
+    height: 45px !important;
+    display: flex;
+    align-items: center;
+    color: #e0e0e0 !important;
+}
+
+/* text */
+.select2-container--default .select2-selection--single .select2-selection__rendered {
+    color: #e0e0e0 !important;
+    line-height: 45px !important;
+}
+
+/* arrow */
+.select2-container--default .select2-selection--single .select2-selection__arrow b {
+    border-color: #f2c94c transparent transparent transparent !important;
+}
+
+/* dropdown */
+.select2-dropdown {
+    background: #0f0f0f !important;
+    border: 1px solid rgba(242,201,76,.35) !important;
+    border-radius: 12px !important;
+}
+
+/* options */
+.select2-results__option {
+    color: #e0e0e0 !important;
+    padding: 10px 14px !important;
+}
+
+/* hover */
+.select2-results__option--highlighted {
+    background: rgba(242,201,76,.15) !important;
+    color: #fff !important;
+}
+
+/* selected */
+.select2-results__option[aria-selected=true] {
+    background: rgba(242,201,76,.25) !important;
+}
+
+/* search box */
+.select2-search--dropdown .select2-search__field {
+    background: #0d0d0d !important;
+    border: 1px solid rgba(242,201,76,.35) !important;
+    color: #fff !important;
+    border-radius: 8px !important;
+}
+
 </style>
 @endpush
 
@@ -361,6 +415,30 @@
         <div class="form-group kemetic-form-group">
             <label class="kemetic-label">{{ trans('public.category') }}</label>
 
+            <select id="categories" class="kemetic-select select2 @error('category_id')  is-invalid @enderror" name="category_id" required>
+                <option {{ (!empty($product) and !empty($product->category_id)) ? '' : 'selected' }} disabled>{{ trans('public.choose_category') }}</option>
+                @foreach($productCategories as $productCategory)
+                    @if(!empty($productCategory->subCategories) and $productCategory->subCategories->count() > 0)
+                        <optgroup label="{{  $productCategory->title }}">
+                            @foreach($productCategory->subCategories as $subCategory)
+                                <option value="{{ $subCategory->id }}" {{ ((!empty($product) and $product->category_id == $subCategory->id) or old('category_id') == $subCategory->id) ? 'selected' : '' }}>{{ $subCategory->title }}</option>
+                            @endforeach
+                        </optgroup>
+                    @else
+                        <option value="{{ $productCategory->id }}" {{ ((!empty($product) and $product->category_id == $productCategory->id) or old('category_id') == $productCategory->id) ? 'selected' : '' }}>{{ $productCategory->title }}</option>
+                    @endif
+                @endforeach
+            </select>
+            @error('category_id')
+            <div class="invalid-feedback">
+                {{ $message }}
+            </div>
+            @enderror
+        </div>
+
+        <!-- <div class="form-group kemetic-form-group">
+            <label class="kemetic-label">{{ trans('public.category') }}</label>
+
             <select name="type" class="kemetic-select @error('type') is-invalid @enderror" id="categories" name="category_id">
                 <option disabled selected>{{ trans('public.choose_category') }}</option>
                 @foreach($productCategories as $cat)
@@ -375,7 +453,7 @@
             @error('type')
             <div class="invalid-feedback d-block">{{ $message }}</div>
             @enderror
-        </div>
+        </div> -->
 
         
     </div>
@@ -388,27 +466,34 @@
                 <span class="input-label">{{ trans('public.category_filters') }}</span>
 
                 <div class="row">
-                    @foreach($productCategoryFilters ?? [] as $filter)
-                        <div class="col-12 col-md-3 mt-15">
-                            <div class="k-filter-box">
-                                <strong class="text-white">{{ $filter->title }}</strong>
+                    @if(!empty($productCategoryFilters) and count($productCategoryFilters))
+                        @foreach($productCategoryFilters as $filter)
+                            <div class="col-12 col-md-3 mt-20">
+                                <div class="webinar-category-filters">
+                                    <strong class="category-filter-title d-block">{{ $filter->title }}</strong>
+                                    <div class="py-10"></div>
 
-                                @foreach($filter->options as $option)
-                                    <div class="d-flex align-items-center justify-content-between mt-10">
-                                        <label class="text-gray">{{ $option->title }}</label>
-                                        <div class="custom-control custom-checkbox">
-                                            <input type="checkbox"
-                                                   class="custom-control-input"
-                                                   id="filterOptions{{ $option->id }}"
-                                                   name="filters[]"
-                                                   value="{{ $option->id }}">
-                                            <label class="custom-control-label" for="filterOptions{{ $option->id }}"></label>
+                                    @php
+                                        $productFilterOptions = $product->selectedFilterOptions->pluck('filter_option_id')->toArray();
+
+                                        if (!empty(old('filters'))) {
+                                            $productFilterOptions = array_merge($productFilterOptions, old('filters'));
+                                        }
+                                    @endphp
+
+                                    @foreach($filter->options as $option)
+                                        <div class="form-group mt-10 d-flex align-items-center justify-content-between">
+                                            <label class="cursor-pointer font-14 text-gray" for="filterOptions{{ $option->id }}">{{ $option->title }}</label>
+                                            <div class="custom-control custom-checkbox">
+                                                <input type="checkbox" name="filters[]" value="{{ $option->id }}" {{ ((!empty($productFilterOptions) && in_array($option->id, $productFilterOptions)) ? 'checked' : '') }} class="custom-control-input" id="filterOptions{{ $option->id }}">
+                                                <label class="custom-control-label" for="filterOptions{{ $option->id }}"></label>
+                                            </div>
                                         </div>
-                                    </div>
-                                @endforeach
+                                    @endforeach
+                                </div>
                             </div>
-                        </div>
-                    @endforeach
+                        @endforeach
+                    @endif
                 </div>
 
             </div>
@@ -431,16 +516,17 @@
 
     <div class="k-card mt-20">
         <div id="relatedCoursesAccordion">
-            @if(!empty($product->relatedCourses))
+            @if(!empty($product->relatedCourses) and count($product->relatedCourses))
                 <ul class="draggable-lists" data-order-table="relatedCourses">
                     @foreach($product->relatedCourses as $relatedCourseInfo)
-                        @include('web.default.panel.store.products.create_includes.accordions.related_courses')
+                        @include('web.default.panel.store.products.create_includes.accordions.related_courses',['product' => $product,'relatedCourse' => $relatedCourseInfo])
                     @endforeach
                 </ul>
             @else
-                @include(getTemplate().'.includes.no-result',[
-                    'file_name'=>'comment.png',
-                    'title'=>trans('update.related_courses_no_result')
+                @include(getTemplate() . '.includes.no-result',[
+                    'file_name' => 'comment.png',
+                    'title' => trans('update.related_courses_no_result'),
+                    'hint' => trans('update.related_courses_no_result_hint'),
                 ])
             @endif
         </div>
@@ -457,5 +543,5 @@
     <script src="/assets/default/vendors/select2/select2.min.js"></script>
     <script src="/assets/default/vendors/sortable/jquery-ui.min.js"></script>
 
-    <script src="/assets/default/js/panel/webinar.min.js"></script>
+    
 @endpush

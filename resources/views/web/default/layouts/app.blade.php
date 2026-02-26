@@ -398,7 +398,6 @@
 
         @stack('styles_bottom')
         @stack('scripts_bottom')
-
         <script src="/assets/default/js/parts/main.min.js"></script>
         <script>
             @if(session()->has('registration_package_limited'))

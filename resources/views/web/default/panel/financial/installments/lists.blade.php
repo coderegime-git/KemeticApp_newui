@@ -1,232 +1,393 @@
 @extends('web.default.layouts.newapp')
 
-@push('styles_top')
 <style>
-/* =========================
-   KEMETIC APP DESIGN
-========================= */
-:root {
-    --k-bg: #0b0b0b;
-    --k-card: #141414;
-    --k-gold: #d4af37;
-    --k-gold-soft: rgba(212,175,55,.2);
-    --k-border: rgba(212,175,55,.15);
-    --k-text: #f5f5f5;
-    --k-muted: #9a9a9a;
-    --k-radius: 18px;
-    --k-shadow: 0 12px 40px rgba(0,0,0,.65);
+  /* KEMETIC STATS */
+.kemetic-stat-section {
+    margin-top: 25px;
 }
 
-.kemetic-page {
-    background: radial-gradient(circle at top, #1a1a1a, #000);
-    min-height: 100vh;
-    padding: 25px;
-    color: var(--k-text);
-}
-
-/* Section Title */
-.section-title {
-    color: var(--k-gold);
+.kemetic-title {
+    font-size: 22px;
     font-weight: 700;
-    margin-bottom: 20px;
-    letter-spacing: 0.6px;
+    color: #F2C94C;
+    margin-bottom: 18px;
+}
+
+/* CARD */
+.kemetic-stat-card {
+    background: linear-gradient(180deg, #121212, #0b0b0b);
+    border: 1px solid #262626;
+    border-radius: 18px;
+    padding: 26px 18px;
+}
+
+/* ITEM */
+.kemetic-stat-item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 6px;
+}
+
+/* ICON */
+.kemetic-stat-icon {
+    width: 56px;
+    height: 56px;
+    border-radius: 50%;
+    background: rgba(242, 201, 76, 0.15);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+.kemetic-stat-icon img {
+    width: 28px;
+    filter: invert(0.9);
+}
+
+/* VALUE */
+.kemetic-stat-value {
+    font-size: 30px;
+    font-weight: 700;
+    color: #F2C94C;
+}
+
+/* LABEL */
+.kemetic-stat-label {
+    font-size: 14px;
+    color: #9a9a9a;
+}
+
+/* MOBILE */
+@media (max-width: 768px) {
+    .kemetic-stat-card {
+        padding: 20px 12px;
+    }
+    .kemetic-stat-value {
+        font-size: 24px;
+    }
 }
 
 /* ALERT */
-.danger-transparent-alert {
-    background: var(--k-gold-soft);
-    color: var(--k-text);
-    border-radius: var(--k-radius);
-    padding: 15px;
+.kemetic-alert {
+    background: rgba(242, 201, 76, 0.1);
+    border: 1px solid rgba(242, 201, 76, 0.3);
+    border-radius: 16px;
+    padding: 15px 20px;
     display: flex;
     align-items: center;
+    gap: 15px;
     margin-bottom: 25px;
 }
-.danger-transparent-alert__icon {
-    background: var(--k-gold);
-    color: #0b0b0b;
+.kemetic-alert-icon {
+    background: #F2C94C;
+    color: #000;
     border-radius: 50%;
     width: 40px;
     height: 40px;
     display: flex;
     align-items: center;
     justify-content: center;
+    flex-shrink: 0;
+}
+.kemetic-alert-content {
+    flex: 1;
+}
+.kemetic-alert-title {
+    color: #F2C94C;
+    font-weight: 700;
+    font-size: 14px;
+    margin-bottom: 4px;
+}
+.kemetic-alert-text {
+    color: #b5b5b5;
+    font-size: 12px;
 }
 
-/* Activities Cards */
-.activities-container .col-6 {
-    margin-bottom: 25px;
-}
-.activities-container .col-6 .d-flex {
-    background: var(--k-card);
-    padding: 20px;
-    border-radius: var(--k-radius);
-    box-shadow: var(--k-shadow);
-    transition: transform 0.3s;
-}
-.activities-container .col-6 .d-flex:hover {
-    transform: translateY(-5px);
-}
-
-/* Installment Card */
-.panel-installment-card {
-    background: var(--k-card);
-    border-radius: var(--k-radius);
-    box-shadow: var(--k-shadow);
+/* INSTALLMENT CARD */
+.kemetic-installment-card {
+    background: linear-gradient(180deg, #121212, #0a0a0a);
+    border: 1px solid #262626;
+    border-radius: 18px;
     margin-bottom: 25px;
     overflow: hidden;
     display: flex;
-    transition: transform 0.3s;
+    transition: 0.3s ease;
 }
-.panel-installment-card:hover {
+.kemetic-installment-card:hover {
     transform: translateY(-5px);
+    border-color: rgba(242,201,76,0.3);
+    box-shadow: 0 12px 30px rgba(242,201,76,0.15);
 }
 
-.panel-installment-card .image-box {
-    width: 200px;
-    height: 200px;
+/* IMAGE BOX */
+.kemetic-image-box {
+    width: 240px;
     position: relative;
     overflow: hidden;
     flex-shrink: 0;
-    border-right: 1px solid var(--k-border);
+    border-right: 1px solid #262626;
 }
-.panel-installment-card .image-box img,
-.panel-installment-card .image-box .d-flex img {
+.kemetic-image-box img {
     width: 100%;
     height: 100%;
     object-fit: cover;
 }
-.badges-lists {
+.kemetic-image-placeholder {
+    width: 100%;
+    height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: #1a1a1a;
+}
+.kemetic-image-placeholder img {
+    width: 80px;
+    height: 80px;
+    object-fit: contain;
+    opacity: 0.7;
+}
+
+/* BADGES */
+.kemetic-badges {
     position: absolute;
     top: 10px;
     left: 10px;
     display: flex;
     flex-direction: column;
+    gap: 5px;
 }
-.badge {
-    background: var(--k-gold);
-    color: #0b0b0b;
-    border-radius: var(--k-radius);
-    padding: 4px 10px;
-    font-size: 12px;
-    margin-bottom: 5px;
-    font-weight: bold;
+.kemetic-badge {
+    padding: 4px 12px;
+    border-radius: 20px;
+    font-size: 11px;
+    font-weight: 600;
+    display: inline-block;
 }
-.badge-outlined-danger {
-    border: 1px solid #ff4d4d;
-    background: transparent;
-    color: #ff4d4d;
+.kemetic-badge.completed {
+    background: #1f3d2b;
+    color: #2ecc71;
+}
+.kemetic-badge.open {
+    background: rgba(242,201,76,0.15);
+    color: #F2C94C;
+}
+.kemetic-badge.rejected, .kemetic-badge.canceled {
+    background: #3d1f1f;
+    color: #e74c3c;
+}
+.kemetic-badge.pending {
+    background: #3d2e1f;
+    color: #f39c12;
+}
+.kemetic-badge.refunded {
+    background: #2c3e50;
+    color: #3498db;
+}
+.kemetic-badge.overdue {
+    background: #3d1f1f;
+    color: #e74c3c;
+    border: 1px solid #e74c3c;
 }
 
-/* Card Body */
-.webinar-card-body {
+/* CARD BODY */
+.kemetic-card-body {
     padding: 20px;
+    flex: 1;
+}
+.kemetic-card-title {
+    color: #F2C94C;
+    font-size: 18px;
+    font-weight: 700;
+    margin-bottom: 5px;
+}
+.kemetic-card-subtitle {
+    color: #888;
+    font-size: 12px;
+    margin-bottom: 15px;
+}
+
+/* STATS GRID */
+.kemetic-stats-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+    gap: 15px;
+    margin-top: 15px;
+}
+.kemetic-stat-row {
     display: flex;
     flex-direction: column;
-    flex: 1;
-    justify-content: space-between;
+    gap: 4px;
 }
-
-.webinar-card-body h3 {
-    color: var(--k-gold);
+.kemetic-stat-label {
+    color: #888;
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
 }
-
-.stat-title {
-    font-size: 12px;
-    color: var(--k-muted);
-}
-.stat-value {
+.kemetic-stat-value {
+    color: #fff;
     font-size: 14px;
-    color: var(--k-text);
     font-weight: 600;
 }
-
-/* Dropdown Menu */
-.dropdown-menu {
-    background: var(--k-card);
-    border-radius: var(--k-radius);
-    box-shadow: var(--k-shadow);
-    border: none;
+.kemetic-stat-value.price {
+    color: #F2C94C;
+}
+.kemetic-stat-value.date {
+    color: #b5b5b5;
 }
 
-/* Buttons / Links */
-.webinar-actions {
-    color: var(--k-gold);
-    font-weight: 500;
-}
-.webinar-actions:hover {
-    color: #b8952c;
-}
-.delete-action {
-    color: #ff4d4d !important;
+/* OVERDUE TAG */
+.kemetic-overdue-tag {
+    background: #3d1f1f;
+    color: #e74c3c;
+    padding: 2px 8px;
+    border-radius: 12px;
+    font-size: 11px;
+    font-weight: 600;
+    margin-left: 10px;
 }
 
-/* Responsive */
+/* ACTIONS DROPDOWN */
+.kemetic-actions {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+}
+.kemetic-actions button {
+    background: rgba(0,0,0,0.5);
+    border: 1px solid #262626;
+    border-radius: 8px;
+    padding: 5px 10px;
+    color: #F2C94C;
+}
+.kemetic-actions .dropdown-menu {
+    background: #121212;
+    border: 1px solid #262626;
+    border-radius: 12px;
+    padding: 8px 0;
+    min-width: 180px;
+}
+.kemetic-actions .dropdown-item {
+    color: #F2C94C;
+    padding: 8px 16px;
+    font-size: 13px;
+    transition: 0.2s ease;
+}
+.kemetic-actions .dropdown-item:hover {
+    background: rgba(242,201,76,0.1);
+    color: #fff;
+}
+.kemetic-actions .dropdown-item.text-danger {
+    color: #e74c3c !important;
+}
+.kemetic-actions .dropdown-item.text-danger:hover {
+    background: rgba(231,76,60,0.1);
+}
+
+/* NO RESULT */
+.no-result-card {
+    background: linear-gradient(180deg,#121212,#0a0a0a);
+    border:1px solid #262626;
+    border-radius:18px;
+    padding:60px 40px;
+    text-align: center;
+}
+.no-result-card img {
+    opacity: 0.7;
+    margin-bottom: 20px;
+    width: 120px;
+}
+.no-result-card h3 {
+    color: #F2C94C;
+    font-size: 20px;
+    margin-bottom: 10px;
+}
+.no-result-card p {
+    color: #888;
+    font-size: 14px;
+    max-width: 400px;
+    margin: 0 auto;
+}
+
+/* RESPONSIVE */
 @media (max-width: 768px) {
-    .panel-installment-card {
+    .kemetic-installment-card {
         flex-direction: column;
     }
-    .panel-installment-card .image-box {
+    .kemetic-image-box {
         width: 100%;
-        height: 180px;
+        height: 200px;
         border-right: none;
-        border-bottom: 1px solid var(--k-border);
+        border-bottom: 1px solid #262626;
+    }
+    .kemetic-stats-grid {
+        grid-template-columns: 1fr 1fr;
     }
 }
 </style>
+
+@push('styles_top')
+    <link rel="stylesheet" href="/assets/default/vendors/select2/select2.min.css">
 @endpush
 
 @section('content')
-<div class="kemetic-page">
 
     {{-- Overdue Alert --}}
     @if(!empty($overdueInstallmentsCount) and $overdueInstallmentsCount > 0)
-        <div class="d-flex align-items-center mb-20 p-15 danger-transparent-alert">
-            <div class="danger-transparent-alert__icon d-flex align-items-center justify-content-center">
+        <div class="kemetic-alert">
+            <div class="kemetic-alert-icon">
                 <i data-feather="credit-card" width="18" height="18"></i>
             </div>
-            <div class="ml-10">
-                <div class="font-14 font-weight-bold ">{{ trans('update.overdue_installments') }}</div>
-                <div class="font-12 ">{{ trans('update.you_have_count_overdue_installments_please_pay_them_to_avoid_restrictions_and_negative_effects_on_your_account',['count' => $overdueInstallmentsCount]) }}</div>
+            <div class="kemetic-alert-content">
+                <div class="kemetic-alert-title">{{ trans('update.overdue_installments') }}</div>
+                <div class="kemetic-alert-text">{{ trans('update.you_have_count_overdue_installments_please_pay_them_to_avoid_restrictions_and_negative_effects_on_your_account',['count' => $overdueInstallmentsCount]) }}</div>
             </div>
         </div>
     @endif
 
     {{-- Installments Overview --}}
-    <section>
-        <h2 class="section-title">{{ trans('update.installments_overview') }}</h2>
+    <section class="kemetic-stat-section">
+        <h2 class="kemetic-title">{{ trans('update.installments_overview') }}</h2>
 
-        <div class="activities-container mt-25 p-20 p-lg-35">
-            <div class="row">
-                <div class="col-6 col-md-3 d-flex align-items-center justify-content-center">
-                    <div class="d-flex flex-column align-items-center text-center">
-                        <img src="/assets/default/img/activity/129.png" width="64" height="64" alt="">
-                        <strong class="font-30 font-weight-bold mt-5">{{ $openInstallmentsCount }}</strong>
-                        <span class="font-16 font-weight-500">{{ trans('update.open_installments') }}</span>
+        <div class="kemetic-stat-card">
+            <div class="row text-center">
+                <div class="col-6 col-md-3">
+                    <div class="kemetic-stat-item">
+                        <div class="kemetic-stat-icon">
+                            <img src="/assets/default/img/activity/129.png" alt="">
+                        </div>
+                        <div class="kemetic-stat-value">{{ $openInstallmentsCount }}</div>
+                        <div class="kemetic-stat-label">{{ trans('update.open_installments') }}</div>
                     </div>
                 </div>
 
-                <div class="col-6 col-md-3 d-flex align-items-center justify-content-center">
-                    <div class="d-flex flex-column align-items-center text-center">
-                        <img src="/assets/default/img/activity/130.png" width="64" height="64" alt="">
-                        <strong class="font-30 font-weight-bold mt-5">{{ $pendingVerificationCount }}</strong>
-                        <span class="font-16 font-weight-500">{{ trans('update.pending_verification') }}</span>
+                <div class="col-6 col-md-3">
+                    <div class="kemetic-stat-item">
+                        <div class="kemetic-stat-icon">
+                            <img src="/assets/default/img/activity/130.png" alt="">
+                        </div>
+                        <div class="kemetic-stat-value">{{ $pendingVerificationCount }}</div>
+                        <div class="kemetic-stat-label">{{ trans('update.pending_verification') }}</div>
                     </div>
                 </div>
 
-                <div class="col-6 col-md-3 d-flex align-items-center justify-content-center">
-                    <div class="d-flex flex-column align-items-center text-center">
-                        <img src="/assets/default/img/activity/127.png" width="64" height="64" alt="">
-                        <strong class="font-30 font-weight-bold mt-5">{{ $finishedInstallmentsCount }}</strong>
-                        <span class="font-16 font-weight-500">{{ trans('update.finished_installments') }}</span>
+                <div class="col-6 col-md-3">
+                    <div class="kemetic-stat-item">
+                        <div class="kemetic-stat-icon">
+                            <img src="/assets/default/img/activity/127.png" alt="">
+                        </div>
+                        <div class="kemetic-stat-value">{{ $finishedInstallmentsCount }}</div>
+                        <div class="kemetic-stat-label">{{ trans('update.finished_installments') }}</div>
                     </div>
                 </div>
 
-                <div class="col-6 col-md-3 d-flex align-items-center justify-content-center">
-                    <div class="d-flex flex-column align-items-center text-center">
-                        <img src="/assets/default/img/activity/128.png" width="64" height="64" alt="">
-                        <strong class="font-30 font-weight-bold mt-5">{{ $overdueInstallmentsCount }}</strong>
-                        <span class="font-16 font-weight-500">{{ trans('update.overdue_installments') }}</span>
+                <div class="col-6 col-md-3">
+                    <div class="kemetic-stat-item">
+                        <div class="kemetic-stat-icon">
+                            <img src="/assets/default/img/activity/128.png" alt="">
+                        </div>
+                        <div class="kemetic-stat-value">{{ $overdueInstallmentsCount }}</div>
+                        <div class="kemetic-stat-label">{{ trans('update.overdue_installments') }}</div>
                     </div>
                 </div>
             </div>
@@ -234,8 +395,8 @@
     </section>
 
     {{-- Installments List --}}
-    <section class="mt-25">
-        <h2 class="section-title">{{ trans('update.my_installments') }}</h2>
+    <section class="mt-40">
+        <h2 class="kemetic-title">{{ trans('update.my_installments') }}</h2>
 
         @if(!empty($orders) and count($orders))
             @foreach($orders as $order)
@@ -246,111 +407,118 @@
                 @endphp
 
                 @if(!empty($orderItem))
-                    <div class="panel-installment-card">
-                        <div class="image-box">
+                    <div class="kemetic-installment-card">
+                        <div class="kemetic-image-box">
                             @if(in_array($itemType, ['course', 'bundle']))
                                 <img src="{{ $orderItem->getImage() }}" class="img-cover" alt="">
                             @elseif($itemType == 'product')
                                 <img src="{{ $orderItem->thumbnail }}" class="img-cover" alt="">
                             @elseif($itemType == "subscribe")
-                                <div class="d-flex align-items-center justify-content-center w-100 h-100">
+                                <div class="kemetic-image-placeholder">
                                     <img src="/assets/default/img/icons/installment/subscribe_default.svg" alt="">
                                 </div>
                             @elseif($itemType == "registrationPackage")
-                                <div class="d-flex align-items-center justify-content-center w-100 h-100">
+                                <div class="kemetic-image-placeholder">
                                     <img src="/assets/default/img/icons/installment/reg_package_default.svg" alt="">
                                 </div>
                             @endif
 
-                            <div class="badges-lists">
+                            <div class="kemetic-badges">
                                 @if($order->isCompleted())
-                                    <span class="badge">{{ trans('update.completed') }}</span>
+                                    <span class="kemetic-badge completed">{{ trans('update.completed') }}</span>
                                 @elseif($order->status == "open")
-                                    <span class="badge">{{  trans('public.open') }}</span>
+                                    <span class="kemetic-badge open">{{ trans('public.open') }}</span>
                                 @elseif($order->status == "rejected")
-                                    <span class="badge badge-outlined-danger">{{  trans('public.rejected') }}</span>
+                                    <span class="kemetic-badge rejected">{{ trans('public.rejected') }}</span>
                                 @elseif($order->status == "canceled")
-                                    <span class="badge badge-outlined-danger">{{  trans('public.canceled') }}</span>
+                                    <span class="kemetic-badge canceled">{{ trans('public.canceled') }}</span>
                                 @elseif($order->status == "pending_verification")
-                                    <span class="badge" style="background:#ffb74d;color:#0b0b0b;">{{  trans('update.pending_verification') }}</span>
+                                    <span class="kemetic-badge pending">{{ trans('update.pending_verification') }}</span>
                                 @elseif($order->status == "refunded")
-                                    <span class="badge">{{  trans('update.refunded') }}</span>
+                                    <span class="kemetic-badge refunded">{{ trans('update.refunded') }}</span>
                                 @endif
                             </div>
 
                             @if(!in_array($order->status, ['refunded', 'canceled']) or $order->isCompleted())
-                                <div class="btn-group dropdown table-actions">
-                                    <button type="button" class="btn-transparent dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
-                                        <i data-feather="more-vertical" height="20"></i>
+                                <div class="dropdown kemetic-actions">
+                                    <button type="button" data-toggle="dropdown">
+                                        <i data-feather="more-vertical" height="18"></i>
                                     </button>
-                                    <div class="dropdown-menu ">
-
+                                    <div class="dropdown-menu dropdown-menu-right">
                                         @if($order->status == "open")
-                                            <a href="/panel/financial/installments/{{ $order->id }}/pay_upcoming_part" target="_blank" class="webinar-actions d-block mt-10">{{ trans('update.pay_upcoming_part') }}</a>
+                                            <a href="/panel/financial/installments/{{ $order->id }}/pay_upcoming_part" target="_blank" class="dropdown-item">
+                                                {{ trans('update.pay_upcoming_part') }}
+                                            </a>
                                         @endif
 
                                         @if(!in_array($order->status, ['refunded', 'canceled']))
-                                            <a href="/panel/financial/installments/{{ $order->id }}/details" target="_blank" class="webinar-actions d-block mt-10">{{ trans('update.view_details') }}</a>
+                                            <a href="/panel/financial/installments/{{ $order->id }}/details" target="_blank" class="dropdown-item">
+                                                {{ trans('update.view_details') }}
+                                            </a>
                                         @endif
 
                                         @if($itemType == "course" and ($order->isCompleted() or $order->status == "open"))
-                                            <a href="{{ $orderItem->getLearningPageUrl() }}" target="_blank" class="webinar-actions d-block mt-10">{{ trans('update.learning_page') }}</a>
+                                            <a href="{{ $orderItem->getLearningPageUrl() }}" target="_blank" class="dropdown-item">
+                                                {{ trans('update.learning_page') }}
+                                            </a>
                                         @endif
 
-                                        {{--@if($order->isCompleted() or $order->status == "open")
-                                            <a href="/panel/financial/installments/{{ $order->id }}/refund" class="webinar-actions d-block mt-10 delete-action">{{ trans('update.refund') }}</a>
-                                        @endif--}}
-
                                         @if($order->status == "pending_verification" and getInstallmentsSettings("allow_cancel_verification"))
-                                            <a href="/panel/financial/installments/{{ $order->id }}/cancel" class="webinar-actions d-block mt-10 text-danger delete-action" data-title="{{ trans('public.deleteAlertHint') }}" data-confirm="{{ trans('update.yes_cancel') }}">{{ trans('public.cancel') }}</a>
+                                            <a href="/panel/financial/installments/{{ $order->id }}/cancel" class="dropdown-item text-danger delete-action">
+                                                {{ trans('public.cancel') }}
+                                            </a>
                                         @endif
                                     </div>
                                 </div>
                             @endif
                         </div>
 
-                        <div class="webinar-card-body">
-                            <div class="d-flex align-items-center justify-content-between">
-                                <h3>{{ $orderItem->title }}</h3>
+                        <div class="kemetic-card-body">
+                            <div class="d-flex align-items-center justify-content-between flex-wrap">
+                                <div>
+                                    <h3 class="kemetic-card-title">{{ $orderItem->title }}</h3>
+                                    <div class="kemetic-card-subtitle">{{ trans('update.item_type_'.$itemType) }}</div>
+                                </div>
                                 @if($order->has_overdue)
-                                    <span class="badge badge-outlined-danger">{{ trans('update.overdue') }}</span>
+                                    <span class="kemetic-badge overdue">{{ trans('update.overdue') }}</span>
                                 @endif
                             </div>
 
-                            <div class="d-flex align-items-center justify-content-between flex-wrap mt-20">
-                                <div class="d-flex flex-column">
-                                    <span class="stat-title">{{ trans('update.item_type') }}:</span>
-                                    <span class="stat-value">{{ trans('update.item_type_'.$itemType) }}</span>
+                            <div class="kemetic-stats-grid">
+                                <div class="kemetic-stat-row">
+                                    <span class="kemetic-stat-label">{{ trans('panel.purchase_date') }}</span>
+                                    <span class="kemetic-stat-value date">{{ dateTimeFormat($order->created_at, 'j M Y H:i') }}</span>
                                 </div>
-                                <div class="d-flex flex-column">
-                                    <span class="stat-title">{{ trans('panel.purchase_date') }}:</span>
-                                    <span class="stat-value">{{ dateTimeFormat($order->created_at, 'j M Y H:i') }}</span>
+
+                                <div class="kemetic-stat-row">
+                                    <span class="kemetic-stat-label">{{ trans('update.upfront') }}</span>
+                                    <span class="kemetic-stat-value price">{{ !empty($order->selectedInstallment->upfront) ? handlePrice($order->selectedInstallment->getUpfront($itemPrice)) : '-' }}</span>
                                 </div>
-                                <div class="d-flex flex-column">
-                                    <span class="stat-title">{{ trans('update.upfront') }}:</span>
-                                    <span class="stat-value">{{ !empty($order->selectedInstallment->upfront) ? handlePrice($order->selectedInstallment->getUpfront($itemPrice)) : '-' }}</span>
+
+                                <div class="kemetic-stat-row">
+                                    <span class="kemetic-stat-label">{{ trans('update.total_installments') }}</span>
+                                    <span class="kemetic-stat-value price">{{ trans('update.total_parts_count', ['count' => $order->selectedInstallment->steps_count]) }} ({{ handlePrice($order->selectedInstallment->totalPayments($itemPrice, false)) }})</span>
                                 </div>
-                                <div class="d-flex flex-column">
-                                    <span class="stat-title">{{ trans('update.total_installments') }}:</span>
-                                    <span class="stat-value">{{ trans('update.total_parts_count', ['count' => $order->selectedInstallment->steps_count]) }} ({{ handlePrice($order->selectedInstallment->totalPayments($itemPrice, false)) }})</span>
-                                </div>
+
                                 @if($order->status == "open" or $order->status == "pending_verification")
-                                    <div class="d-flex flex-column">
-                                        <span class="stat-title">{{ trans('update.remained_installments') }}:</span>
-                                        <span class="stat-value">{{ trans('update.total_parts_count', ['count' => $order->remained_installments_count]) }} ({{ handlePrice($order->remained_installments_amount) }})</span>
+                                    <div class="kemetic-stat-row">
+                                        <span class="kemetic-stat-label">{{ trans('update.remained_installments') }}</span>
+                                        <span class="kemetic-stat-value price">{{ trans('update.total_parts_count', ['count' => $order->remained_installments_count]) }} ({{ handlePrice($order->remained_installments_amount) }})</span>
                                     </div>
 
                                     @if(!empty($order->upcoming_installment))
-                                        <div class="d-flex align-items-start flex-column mt-20 mr-15">
-                                            <span class="stat-title">{{ trans('update.upcoming_installment') }}:</span>
-                                            <span class="stat-value">{{ dateTimeFormat((($order->upcoming_installment->deadline * 86400) + $order->created_at), 'j M Y') }} ({{ handlePrice($order->upcoming_installment->getPrice($itemPrice)) }})</span>
+                                        <div class="kemetic-stat-row">
+                                            <span class="kemetic-stat-label">{{ trans('update.upcoming_installment') }}</span>
+                                            <span class="kemetic-stat-value date">{{ dateTimeFormat((($order->upcoming_installment->deadline * 86400) + $order->created_at), 'j M Y') }}</span>
+                                            <span class="kemetic-stat-value price">{{ handlePrice($order->upcoming_installment->getPrice($itemPrice)) }}</span>
                                         </div>
                                     @endif
 
                                     @if($order->has_overdue)
-                                        <div class="d-flex align-items-start flex-column mt-20 mr-15">
-                                            <span class="stat-title">{{ trans('update.overdue_installments') }}:</span>
-                                            <span class="stat-value">{{ $order->overdue_count }} ({{ handlePrice($order->overdue_amount) }})</span>
+                                        <div class="kemetic-stat-row">
+                                            <span class="kemetic-stat-label">{{ trans('update.overdue_installments') }}</span>
+                                            <span class="kemetic-stat-value">{{ $order->overdue_count }}</span>
+                                            <span class="kemetic-stat-value price">{{ handlePrice($order->overdue_amount) }}</span>
                                         </div>
                                     @endif
                                 @endif
@@ -360,20 +528,41 @@
                 @endif
             @endforeach
 
-            <div class="my-30">
+            {{-- Pagination --}}
+            <div class="my-30" style="padding: 10px;">
                 {{ $orders->appends(request()->input())->links('vendor.pagination.panel') }}
             </div>
         @else
-            @include('web.default.includes.no-result',[
-                'file_name' => 'webinar.png',
-                'title' => trans('update.you_not_have_any_installment'),
-                'hint' => trans('update.you_not_have_any_installment_hint'),
-            ])
+            <div class="no-result-card">
+                @include('web.default.includes.no-result',[
+                    'file_name' => 'webinar.png',
+                    'title' => trans('update.you_not_have_any_installment'),
+                    'hint' => trans('update.you_not_have_any_installment_hint'),
+                ])
+            </div>
         @endif
     </section>
 
-</div>
 @endsection
 
 @push('scripts_bottom')
+    <script src="/assets/default/vendors/select2/select2.min.js"></script>
+    <script>
+        $(document).ready(function() {
+            // Initialize dropdowns
+            $('.dropdown-toggle').dropdown();
+            
+            // Handle delete confirmation
+            $('.delete-action').on('click', function(e) {
+                e.preventDefault();
+                var url = $(this).attr('href');
+                var title = $(this).data('title') || '{{ trans('public.deleteAlertHint') }}';
+                var confirmText = $(this).data('confirm') || '{{ trans('public.delete') }}';
+                
+                if (confirm(title)) {
+                    window.location.href = url;
+                }
+            });
+        });
+    </script>
 @endpush

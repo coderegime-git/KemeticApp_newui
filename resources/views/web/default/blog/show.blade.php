@@ -36,7 +36,9 @@
 <div class="articledetail-progress" id="articledetail-progress"></div>
 
 <header class="articledetail-hero">
-  <div class="articledetail-bg"></div>
+  <div class="articledetail-bg" style="background: 
+        linear-gradient(180deg, rgba(0,0,0,0.5) 0%, rgba(0,0,0,0) 30%, rgba(0,0,0,0.7) 100%),
+        url('{{ $post->image }}') center / cover no-repeat;"></div>
   <div class="articledetail-inner">
     <div>
       <h1 class="articledetail-title">{{$post->title}}</h1>

@@ -83,6 +83,8 @@ class CoursePersonalNote extends Model
             case 'assignment' :
                 $query = WebinarAssignment::query();
                 break;
+            default:
+                return null;
         }
 
         return $query->where('id', $this->targetable_id)->first();

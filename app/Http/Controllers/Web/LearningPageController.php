@@ -35,8 +35,10 @@ class LearningPageController extends Controller
         $course = $data['course'];
         $user = $data['user'];
 
+        // dd($course->price);
+
         /* Check Not Active */
-        if ($course->status != "active" and (empty($user) or (!$user->isAdmin() and !$course->canAccess($user)))) {
+        if ($course->status != "active"  and $course->price = 0.0 and (empty($user) or (!$user->isAdmin() and !$course->canAccess($user)))) {
             $data = [
                 'pageTitle' => trans('update.access_denied'),
                 'pageRobot' => getPageRobotNoIndex(),
@@ -50,7 +52,7 @@ class LearningPageController extends Controller
         }
 
 
-        if (!$data or (!$data['hasBought'] and empty($course->getInstallmentOrder()))) {
+        if (!$data or (!$data['hasBought'] and $course->price != 0.0 and empty($course->getInstallmentOrder()))) {
             abort(403);
         }
 

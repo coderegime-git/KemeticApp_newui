@@ -27,6 +27,12 @@ use App\Models\ReelSaved;
 use App\Models\Order;
 use App\Models\Affiliate;
 use App\Models\Product;
+use App\Models\Follow;
+use App\Models\Payout;
+use App\Models\Livestream;
+use App\Models\Subscribe;
+use App\Models\Book;
+use App\Models\Blog;
 use App\User;
 use Carbon\Carbon;
 use App\Models\Api\Setting;
@@ -66,6 +72,9 @@ class UserController extends Controller
                 'reels' => function ($query) {
                     $query->where('is_hidden', '0');
                 },
+                // 'livestream' => function ($query) {
+                //     $query->where('livestream_end', 'Yes');
+                // },
                 'stories' => function ($query) {
                     $query->active()
                             ->withCount('views')
@@ -135,31 +144,350 @@ class UserController extends Controller
             'reviews' => 0
         ];
 
-        foreach ($user->blog as $article) {
-            $totalCounts['likes'] += $article->like()->count();
-            $totalCounts['comments'] += $article->comments()->where('status', 'active')->count();
-            $totalCounts['reviews'] += $article->reviews()->where('status', 'active')->count();
-        }
+        $isWisdomKeeper = $user->role->caption === 'Wisdom Keeper'
+                   || $user->role->caption === 'wisdom_keeper' || $user->role->caption == 'admin';
+        $seekerLikedWebinars        = collect();
+        $seekerLikedProducts        = collect();
+        $seekerLikedLivestreams     = collect();
+        $seekerLikedArticles        = collect();
+        $seekerReviews              = collect();
+        $wisdomKeeperReceivedReviews = collect();
 
-        // 2. Products counts
-        foreach ($user->products as $product) {
-            $totalCounts['likes'] += $product->likes()->count();
-            $totalCounts['comments'] += $product->comments()->count();
-            $totalCounts['reviews'] += $product->reviews()->where('status', 'active')->count();
-        }
+        if ($isWisdomKeeper) {
 
-        // 3. Reels counts (reels don't have reviews)
-        foreach ($user->reels as $reel) {
-            $totalCounts['likes'] += $reel->likes()->count();
-            $totalCounts['comments'] += $reel->comments()->count();
-            // Reels don't have reviews
-        }
+             foreach ($user->blog as $article) {
+                $totalCounts['likes'] += $article->like()->count();
+                $totalCounts['comments'] += $article->comments()->count();
+                $totalCounts['reviews'] += $article->reviews()->count();
+            }
 
-        // 4. Webinars counts
-        foreach ($user->webinars as $webinar) {
-            // $totalCounts['likes'] += $webinar->likes()->count(); // If webinar has likes relation
-            $totalCounts['comments'] += $webinar->comments()->count();
-            $totalCounts['reviews'] += $webinar->reviews()->where('status', 'active')->count();
+            // 2. Products counts
+            foreach ($user->products as $product) {
+                $totalCounts['likes'] += $product->likes()->count();
+                $totalCounts['comments'] += $product->comments()->count();
+                $totalCounts['reviews'] += $product->reviews()->count();
+            }
+
+            // 3. Reels counts (reels don't have reviews)
+            foreach ($user->reels as $reel) {
+                $totalCounts['likes'] += $reel->likes()->count();
+                $totalCounts['comments'] += $reel->comments()->count();
+                 $totalCounts['reviews'] += $reel->review()->count();
+                // Reels don't have reviews
+            }
+
+            // 4. Webinars counts
+            foreach ($user->webinars as $webinar) {
+                // $totalCounts['likes'] += $webinar->likes()->count(); // If webinar has likes relation
+                $totalCounts['comments'] += $webinar->comments()->count();
+                $totalCounts['reviews'] += $webinar->reviews()->count();
+                $totalCounts['reviews'] += $webinar->reviews()->count();
+            }
+
+            $wisdomKeeperReceivedReviews = collect([
+                'webinars' => DB::table('webinar_reviews')
+                    ->join('webinars', 'webinar_reviews.webinar_id', '=', 'webinars.id')
+                    ->join('webinar_translations', 'webinars.id', '=', 'webinar_translations.webinar_id')
+                    ->join('users', 'webinar_reviews.creator_id', '=', 'users.id')
+                    ->where('webinars.creator_id', $user->id)
+                    ->orWhere('webinars.teacher_id', $user->id)
+                    ->where('webinar_reviews.status', 'active')
+                    ->select(
+                        'webinar_reviews.*',
+                        'webinar_translations.title as content_title',
+                        'webinars.*',
+                        'webinars.id as content_id',
+                        'users.full_name as reviewer_name',
+                        'users.avatar as reviewer_avatar'
+                    )
+                    ->get()
+                    ->map(function ($item) {
+                        // Add URLs for webinar media
+                        $item->thumbnail = !empty($item->thumbnail) ? url($item->thumbnail) : null;
+                        $item->image_cover = !empty($item->image_cover) ? url($item->image_cover) : null;
+                        $item->reviewer_avatar = !empty($item->reviewer_avatar) ? url($item->reviewer_avatar) : null;
+                        return $item;
+                    }),
+
+                'products' => DB::table('product_reviews')
+                    ->join('products', 'product_reviews.product_id', '=', 'products.id')
+                    ->join('product_translations', 'products.id', '=', 'product_translations.product_id')
+                    ->join('users', 'product_reviews.creator_id', '=', 'users.id')
+                    ->where('products.creator_id', $user->id)
+                    ->select(
+                        'product_reviews.*',
+                        'product_translations.title as content_title',
+                        'products.*',
+                        'products.id as content_id',
+                        'users.full_name as reviewer_name',
+                        'users.avatar as reviewer_avatar'
+                    )
+                    ->get()
+                    ->map(function ($item) {
+                        // Add URLs for product media
+                        $item->thumbnail = !empty($item->thumbnail) ? url($item->thumbnail) : null;
+                        
+                        // Get product media
+                        $productMedia = DB::table('product_media')
+                            ->where('product_id', $item->content_id)
+                            ->get()
+                            ->map(function ($media) {
+                                $media->path = url($media->path);
+                                return $media;
+                            });
+                        $item->media = $productMedia;
+                        
+                        $item->reviewer_avatar = !empty($item->reviewer_avatar) ? url($item->reviewer_avatar) : null;
+                        return $item;
+                    }),
+
+                'articles' => DB::table('article_reviews')
+                    ->join('blog', 'article_reviews.article_id', '=', 'blog.id')
+                    ->join('blog_translations', 'blog.id', '=', 'blog_translations.blog_id')
+                    ->join('users', 'article_reviews.creator_id', '=', 'users.id')
+                    ->where('blog.author_id', $user->id)
+                    ->select(
+                        'article_reviews.*',
+                        'blog_translations.title as content_title',
+                        'blog.*',
+                        'blog.id as content_id',
+                        'users.full_name as reviewer_name',
+                        'users.avatar as reviewer_avatar'
+                    )
+                    ->get()
+                    ->map(function ($item) {
+                        // Add URLs for article media
+                        $item->image = !empty($item->image) ? url($item->image) : null;
+                        $item->reviewer_avatar = !empty($item->reviewer_avatar) ? url($item->reviewer_avatar) : null;
+                        return $item;
+                    }),
+
+                'reels' => DB::table('reel_review')
+                    ->join('reels', 'reel_review.reel_id', '=', 'reels.id')
+                    ->join('users', 'reel_review.user_id', '=', 'users.id')
+                    ->where('reels.user_id', $user->id)
+                    ->select(
+                        'reel_review.*',
+                        'reels.title as content_title',
+                        'reels.*',
+                        'reels.id as content_id',
+                        'users.full_name as reviewer_name',
+                        'users.avatar as reviewer_avatar'
+                    )
+                    ->get()
+                    ->map(function ($item) {
+                        // Add URLs for reel media
+                        $item->video_path = !empty($item->video_path) ? url($item->video_path) : null;
+                        $item->reviewer_avatar = !empty($item->reviewer_avatar) ? url($item->reviewer_avatar) : null;
+                        return $item;
+                    }),
+            ]);
+        }
+        else {
+            // ── Seeker (non-Wisdom-Keeper) ────────────────────────────────────────
+
+            // Likes
+            $totalCounts['likes'] += DB::table('article_like')->where('user_id', $user->id)->count();
+            $totalCounts['likes'] += DB::table('product_like')->where('user_id', $user->id)->count();
+            $totalCounts['likes'] += DB::table('webinar_like')->where('user_id', $user->id)->count();
+            $totalCounts['likes'] += DB::table('reel_likes')->where('user_id', $user->id)->count();
+            // $totalCounts['likes'] += DB::table('livestream_like')->where('user_id', $user->id)->count();
+
+            // Reviews
+            $totalCounts['reviews'] += DB::table('article_reviews')->where('creator_id', $user->id)->count();
+            $totalCounts['reviews'] += DB::table('product_reviews')->where('creator_id', $user->id)->count();
+            $totalCounts['reviews'] += DB::table('webinar_reviews')->where('creator_id', $user->id)->count();
+            $totalCounts['reviews'] += DB::table('reel_review')->where('user_id', $user->id)->count();
+            // $totalCounts['reviews'] += DB::table('livestream_review')->where('user_id', $user->id)->count();
+
+            // Comments
+            $totalCounts['comments'] += DB::table('comments')->where('user_id', $user->id)->count();
+            $totalCounts['comments'] += DB::table('reel_comments')->where('user_id', $user->id)->count();
+
+            // ── Liked content collections ─────────────────────────────────────────
+            // $seekerLikedProducts = Product::whereHas('likes', function ($q) use ($user) {
+            //         $q->where('user_id', $user->id);
+            //     })
+            //     ->where('status', Product::$active)
+            //     ->get();
+
+            // $seekerLikedArticles = Blog::whereHas('like', function ($q) use ($user) {
+            //         $q->where('user_id', $user->id);
+            //     })
+            //     ->where('status', 'publish')
+            //     ->get();
+
+            // $seekerLikedWebinars = Webinar::whereHas('likes', function ($q) use ($user) {
+            //         $q->where('user_id', $user->id);
+            //     })
+            //     ->where('status', Webinar::$active)
+            //     ->with(['teacher', 'reviews', 'tickets', 'feature'])
+            //     ->get();
+
+            // // $seekerLikedLivestreams = Livestream::whereHas('likes', function ($q) use ($user) {
+            // //     $q->where('user_id', $user->id);
+            // // })->get();
+
+            // // ── Reviews written by this seeker ────────────────────────────────────
+            // $seekerWebinarReviews = DB::table('webinar_reviews')
+            //     ->join('webinars', 'webinar_reviews.webinar_id', '=', 'webinars.id')
+            //     ->where('webinar_reviews.creator_id', $user->id)
+            //     ->select('webinars.*', 'webinar_reviews.rates', 'webinar_reviews.description as review')
+            //     ->get();
+
+            // $seekerProductReviews = DB::table('product_reviews')
+            //     ->join('products', 'product_reviews.product_id', '=', 'products.id')
+            //     ->join('product_media', 'product_media.product_id', '=', 'products.id')
+            //     ->where('product_reviews.creator_id', $user->id)
+            //     ->where('product_media.type', 'thumbnail')
+            //     ->select('products.*', 'product_media.path as thumbnail', 'product_reviews.rates', 'product_reviews.description as review')
+            //     ->get();
+
+            // $seekerArticleReviews = DB::table('article_reviews')
+            //     ->join('blog', 'article_reviews.article_id', '=', 'blog.id')
+            //     ->where('article_reviews.creator_id', $user->id)
+            //     ->select('blog.*', 'article_reviews.rates', 'article_reviews.description as review')
+            //     ->get();
+
+            // $seekerReelReviews = DB::table('reel_review')
+            //     ->join('reels', 'reel_review.reel_id', '=', 'reels.id')
+            //     ->where('reel_review.user_id', $user->id)
+            //     ->select('reels.*', 'reel_review.rating', 'reel_review.review')
+            //     ->get();
+
+            
+
+            // // $seekerLivestreamReviews = DB::table('livestream_review')
+            // //     ->join('livestreams', 'livestream_review.livestream_id', '=', 'livestreams.id')
+            // //     ->where('livestream_review.user_id', $user->id)
+            // //     ->select('livestreams.*', 'livestream_review.rating', 'livestream_review.review')
+            // //     ->get();
+
+            // $seekerReviews = collect([
+            //     'webinars' => $seekerWebinarReviews,
+            //     'products' => $seekerProductReviews,
+            //     'articles' => $seekerArticleReviews,
+            //     'reels'    => $seekerReelReviews,
+            //     // 'livestreams' => $seekerLivestreamReviews,
+            // ]);
+
+            $seekerLikedProducts = Product::whereHas('savedItems', function ($q) use ($user) {
+                $q->where('user_id', $user->id);
+            })
+            ->with('media')
+            ->get()
+            ->map(function ($product) {
+                // Convert thumbnail to full URL
+                if (!empty($product->thumbnail)) {
+                    $product->thumbnail = url($product->thumbnail);
+                }
+                
+                // Convert media paths to full URLs
+                if ($product->media && $product->media->count() > 0) {
+                    foreach ($product->media as $media) {
+                        if (!empty($media->path)) {
+                            $media->path = url($media->path);
+                        }
+                    }
+                }
+                
+                return $product;
+            });
+
+            foreach ($seekerLikedProducts as $product) {
+                if ($product->thumbnail) {
+                    $product->thumbnail = url($product->thumbnail);
+                }
+                $product->thumbnail = url($product->thumbnail);
+            }
+
+            //dd($seekerLikedProducts);
+            
+
+            $seekerLikedArticles = Blog::whereHas('saveditems', function ($q) use ($user) {
+                    $q->where('user_id', $user->id);
+                })
+                ->get()
+                ->map(function ($article) {
+                    $article->image = !empty($article->image) ? url($article->image) : null;
+                    return $article;
+                });
+
+            $seekerLikedWebinars = Webinar::whereHas('savedcourse', function ($q) use ($user) {
+                    $q->where('user_id', $user->id);
+                })
+                ->with(['teacher', 'reviews', 'tickets', 'feature'])
+                ->get()
+                ->map(function ($webinar) {
+                    $webinar->thumbnail = !empty($webinar->thumbnail) ? url($webinar->thumbnail) : null;
+                    $webinar->image_cover = !empty($webinar->image_cover) ? url($webinar->image_cover) : null;
+                    if ($webinar->teacher && $webinar->teacher->avatar) {
+                        $webinar->teacher->avatar = url($webinar->teacher->avatar);
+                    }
+                    return $webinar;
+                });
+
+            // ── Reviews written by this seeker with URLs ───────────────────────────
+            $seekerWebinarReviews = DB::table('webinar_reviews')
+                ->join('webinars', 'webinar_reviews.webinar_id', '=', 'webinars.id')
+                ->where('webinar_reviews.creator_id', $user->id)
+                ->select('webinars.*', 'webinar_reviews.rates', 'webinar_reviews.description as review')
+                ->get()
+                ->map(function ($item) {
+                    $item->thumbnail = !empty($item->thumbnail) ? url($item->thumbnail) : null;
+                    $item->image_cover = !empty($item->image_cover) ? url($item->image_cover) : null;
+                    return $item;
+                });
+
+            $seekerProductReviews = DB::table('product_reviews')
+                ->join('products', 'product_reviews.product_id', '=', 'products.id')
+                ->join('product_media', 'product_media.product_id', '=', 'products.id')
+                ->where('product_reviews.creator_id', $user->id)
+                ->where('product_media.type', 'thumbnail')
+                ->select('products.*', 'product_media.path as thumbnail', 'product_reviews.rates', 'product_reviews.description as review')
+                ->get()
+                ->map(function ($item) {
+                    $item->thumbnail = !empty($item->thumbnail) ? url($item->thumbnail) : null;
+                    
+                    // Get all product media
+                    $productMedia = DB::table('product_media')
+                        ->where('product_id', $item->id)
+                        ->get()
+                        ->map(function ($media) {
+                            $media->path = url($media->path);
+                            return $media;
+                        });
+                    $item->media = $productMedia;
+                    
+                    return $item;
+                });
+
+            $seekerArticleReviews = DB::table('article_reviews')
+                ->join('blog', 'article_reviews.article_id', '=', 'blog.id')
+                ->where('article_reviews.creator_id', $user->id)
+                ->select('blog.*', 'article_reviews.rates', 'article_reviews.description as review')
+                ->get()
+                ->map(function ($item) {
+                    $item->image = !empty($item->image) ? url($item->image) : null;
+                    return $item;
+                });
+
+            $seekerReelReviews = DB::table('reel_review')
+                ->join('reels', 'reel_review.reel_id', '=', 'reels.id')
+                ->where('reel_review.user_id', $user->id)
+                ->select('reels.*', 'reel_review.rating', 'reel_review.review')
+                ->get()
+                ->map(function ($item) {
+                    $item->video_path = !empty($item->video_path) ? url($item->video_path) : null;
+                    return $item;
+                });
+
+            $seekerReviews = collect([
+                'webinars' => $seekerWebinarReviews,
+                'products' => $seekerProductReviews,
+                'articles' => $seekerArticleReviews,
+                'reels'    => $seekerReelReviews,
+            ]);
         }
 
         $userMetas = $user->userMetas;
@@ -223,18 +551,33 @@ class UserController extends Controller
                 'category'
             ])->get();
 
+        if ($isWisdomKeeper) {
+            $webinars = Webinar::where('status', Webinar::$active)
+                ->where('private', false)
+                ->where(function ($query) use ($user) {
+                    $query->where('creator_id', $user->id)
+                        ->orWhere('teacher_id', $user->id);
+                })
+                ->orderBy('updated_at', 'desc')
+                ->with(['teacher' => function ($qu) {
+                    $qu->select('id', 'full_name', 'avatar');
+                }, 'reviews', 'tickets', 'feature'])
+                ->get();
+        } else {
+            $likedWebinarIds = DB::table('webinar_like')
+                ->where('user_id', $user->id)
+                ->pluck('webinar_id')
+                ->toArray();
 
-        $webinars = Webinar::where('status', Webinar::$active)
-            ->where('private', false)
-            ->where(function ($query) use ($user) {
-                $query->where('creator_id', $user->id)
-                    ->orWhere('teacher_id', $user->id);
-            })
-            ->orderBy('updated_at', 'desc')
-            ->with(['teacher' => function ($qu) {
-                $qu->select('id', 'full_name', 'avatar');
-            }, 'reviews', 'tickets', 'feature'])
-            ->get();
+            $webinars = Webinar::whereIn('id', $likedWebinarIds)
+                ->where('status', Webinar::$active)
+                ->where('private', false)
+                ->orderBy('updated_at', 'desc')
+                ->with(['teacher' => function ($qu) {
+                    $qu->select('id', 'full_name', 'avatar');
+                }, 'reviews', 'tickets', 'feature'])
+                ->get();
+        }
 
         $webinars = $webinars->map(function ($webinar) {
           
@@ -319,6 +662,13 @@ class UserController extends Controller
             'totalComments' => $totalCounts['comments'],
             'totalReviews' => $totalCounts['reviews'],
             // 'stories' => $userStories
+            'isWisdomKeeper'              => $isWisdomKeeper,
+            'seekerLikedWebinars'         => $seekerLikedWebinars,
+            'seekerLikedProducts'         => $seekerLikedProducts,
+            'seekerLikedLivestreams'      => $seekerLikedLivestreams,
+            'seekerLikedArticles'         => $seekerLikedArticles,
+            'seekerReviews'               => $seekerReviews,
+            'wisdomKeeperReceivedReviews' => $wisdomKeeperReceivedReviews,
         ]);
 
     }
@@ -869,13 +1219,19 @@ class UserController extends Controller
         // ];
 
         $userRole = $user->role->caption;
-    
-        // For all users
+        
+        $data = [];
         $data['user_role'] = $userRole;
         $data['username'] = $user->full_name ?: $user->username;
-       
+        $data['next_badge'] = $nextBadge;
+        
+        // Add payout summary for all users with earnings
+        $data['payout_summary'] = $this->getPayoutSummary($user);
+        $data['live_streams'] = $this->getActiveLiveStreams();
 
-        if ($user->isUser()) {
+         if ($user->isUser()) {
+            
+            $membershipData = $this->getMembershipDetailedData($user);
             
             $data['seeker_data'] = [
                 'continue_learning' => $this->getContinueLearningCount($user),
@@ -883,8 +1239,10 @@ class UserController extends Controller
                 'saved_reels' => $this->getSavedReelsCount($user),
                 'orders' => $this->getOrdersCount($user),
                 'membership' => [
-                    'status' => $this->getMembershipStatus($user),
-                    'price' => $this->getMembershipPrice($user)
+                    'status' => $membershipData[0]['status'] ?? 'Inactive',
+                    'price' => $membershipData[0]['is_lifetime'] ? 'Lifetime' : $membershipData[0]['price'],
+                    'plan' => $membershipData[0]['plan'] ?? 'No Plan',
+                    'membership_type' => $membershipData[0]['membership_type'] ?? '',
                 ],
                 'messages' => $this->getMessagesCount($user),
                 // Store detailed data for drawer
@@ -893,14 +1251,18 @@ class UserController extends Controller
                     'myCourses' => $this->getMyCoursesData($user),
                     'savedReels' => $this->getSavedReelsData($user),
                     'orders' => $this->getOrdersData($user),
-                    'membership' => $this->getMembershipDetailedData($user),
+                    'membership' => $membershipData,
                     'messages' => $this->getMessagesData($user),
                 ]
             ];
         } elseif ($user->isTeacher() || $user->isOrganization()) {
+
+            $liveStudioStatus = $this->getLiveStudioStatus($user);
+            $membershipData = $this->getMembershipDetailedData($user);
+
             $data['creator_data'] = [
                 'reel_studio' => $this->getReelStudioCount($user),
-                'live_studio' => $this->getLiveStudioStatus($user),
+                'live_studio' => $liveStudioStatus,
                 'creator_analytics' => $this->getCreatorAnalytics($user),
                 'payouts' => $this->getPayoutsTotal($user),
                 'detailed_data' => [
@@ -915,13 +1277,19 @@ class UserController extends Controller
                 'courses' => $this->getInstructorCoursesCount($user),
                 'students' => $this->getInstructorStudentsCount($user),
                 'reel_studio' => $this->getReelStudioCount($user),
-                'live_studio' => $this->getLiveStudioStatus($user),
+                'live_studio' => $liveStudioStatus,
                 'products' => $this->getProductsCount($user),
                 'vendor_orders' => $this->getVendorOrdersCount($user),
                 'books' => $this->getBooksCount($user),
                 'royalties' => $this->getRoyaltiesTotal($user),
                 'analytics' => $this->getAnalyticsGrowth($user),
                 'payouts' => $this->getTotalPayouts($user),
+                'membership' => [
+                    'status' => $membershipData[0]['status'] ?? 'Inactive',
+                    'price' => $membershipData[0]['is_lifetime'] ? 'Lifetime' : $membershipData[0]['price'],
+                    'plan' => $membershipData[0]['plan'] ?? 'No Plan',
+                    'membership_type' => $membershipData[0]['membership_type'] ?? '',
+                ],
                 'detailed_data' => [
                     'courses' => $this->getInstructorCoursesData($user),
                     'students' => $this->getInstructorStudentsData($user),
@@ -933,15 +1301,813 @@ class UserController extends Controller
                     'royalties' => $this->getRoyaltiesData($user),
                     'keeperAnalytics' => $this->getAnalyticsDetailedData($user),
                     'payouts' => $this->getTotalPayoutsData($user),
+                    'membership' => $membershipData,
                 ]
             ];
         }
 
         $data['giftModal'] = $this->showGiftModal($user);
         
-        return apiResponse2(1, 'retrieved', trans('api.public.retrieved'), [
-            'data' => $data
-        ]);
+        return apiResponse2(1, 'retrieved', trans('api.public.retrieved'), $data);
+    }
+
+     private function getActiveLiveStreams()
+    {
+        $streams = Livestream::where('livestream_end', 'No')
+            ->orderBy('created_at', 'desc')
+            ->with(['creator' => function($query) {
+                $query->select('id', 'full_name', 'avatar', 'country_id');
+            }])
+            ->get()
+            ->map(function ($stream) {
+                $creator = $stream->creator;
+                
+                return [
+                    'id' => $stream->id,
+                    'title' => $stream->title ?? 'Untitled Stream',
+                    'description' => $stream->description,
+                    'status' => 'Live Now',
+                    'status_badge' => 'danger',
+                    'viewers' => $stream->viewers_count ?? 0,
+                    'duration' => $stream->duration ?? '0:00',
+                    'thumbnail' => $stream->thumbnail ? url($stream->thumbnail) : null,
+                    'url' => '/live/' . $stream->id,
+                    'creator' => $creator ? [
+                        'id' => $creator->id,
+                        'full_name' => $creator->full_name,
+                        'avatar' => $creator->avatar ? url($creator->avatar) : null,
+                    ] : null,
+                    'created_at' => $stream->created_at,
+                ];
+            })
+            ->toArray();
+        
+        return $streams;
+    }
+
+    /**
+     * Get live studio status for a user
+     */
+    private function getLiveStudioStatus($user)
+    {
+        // Check if user has any active live streams
+        $hasActiveStream = Livestream::where('creator_id', $user->id)
+            ->where('livestream_end', 'No')
+            ->exists();
+        
+        if ($hasActiveStream) {
+            return 'Live Now';
+        }
+        
+        // Check if user has scheduled streams
+        $hasScheduledStream = Livestream::where('creator_id', $user->id)
+            ->where('livestream_end', 'No')
+            ->exists();
+        
+        if ($hasScheduledStream) {
+            return 'Scheduled';
+        }
+        
+        return 'Ready';
+    }
+
+    /**
+     * Get live studio data for a user
+     */
+    private function getLiveStudioData($user)
+    {
+        $streams = Livestream::where('creator_id', $user->id)
+            ->orderBy('created_at', 'desc')
+            ->limit(20)
+            ->get()
+            ->map(function ($stream) {
+                $status = 'Offline';
+                if ($stream->livestream_end == 'No') {
+                    $status = 'Live Now';
+                }
+                
+                return [
+                    'id' => $stream->id,
+                    'title' => $stream->title ?? 'Untitled Stream',
+                    'description' => $stream->description,
+                    'status' => $status,
+                    'status_badge' => $this->getLiveStreamStatusBadge($status),
+                    'viewers' => $stream->viewers_count ?? 0,
+                    'duration' => $stream->duration ?? '0:00',
+                    'thumbnail' => $stream->thumbnail ? url($stream->thumbnail) : null,
+                    'url' => '/live/' . $stream->id,
+                    'created_at' => $stream->created_at,
+                    'formatted_date' => $stream->created_at ? dateTimeFormat($stream->created_at, 'j M Y H:i') : null,
+                ];
+            })
+            ->toArray();
+        
+        return $streams;
+    }
+
+    /**
+     * Get badge class for live stream status
+     */
+    private function getLiveStreamStatusBadge($status)
+    {
+        $badges = [
+            'Live Now' => 'danger',
+            'Scheduled' => 'primary',
+            'Offline' => 'secondary',
+            'Ready' => 'success',
+        ];
+        
+        return $badges[$status] ?? 'secondary';
+    }
+
+    /**
+     * Get detailed membership data for a user
+     */
+    private function getMembershipDetailedData($user)
+    {
+        $activeSubscribe = Subscribe::getActiveSubscribe($user->id);
+    
+        $membershipData = [];
+        
+        if ($activeSubscribe) {
+            $membershipType = '';
+            $cycle = '';
+            $priceSuffix = '/mo';
+            
+            if ($activeSubscribe->days == 31) {
+                $membershipType = 'Monthly Membership';
+                $cycle = 'Monthly';
+                $priceSuffix = '/mo';
+            } elseif ($activeSubscribe->days == 365) {
+                $membershipType = 'Yearly Membership';
+                $cycle = 'Yearly';
+                $priceSuffix = '/yr';
+            } elseif ($activeSubscribe->days == 100000) {
+                $membershipType = 'Lifetime access to the full platform';
+                $cycle = 'Lifetime';
+                $priceSuffix = '';
+            } else {
+                $membershipType = $activeSubscribe->days . ' days';
+                $cycle = $activeSubscribe->days . ' days';
+                $priceSuffix = '/' . $activeSubscribe->days . 'd';
+            }
+            
+            // Calculate days remaining if subscription has an end date
+            $daysRemaining = 0;
+            $expiresAt = null;
+            
+            $membershipData[] = [
+                'status' => 'Active',
+                'plan' => $activeSubscribe->title ?? 'Subscription',
+                'plan_description' => $membershipType,
+                'cycle' => $cycle,
+                'price' => $this->formatPrice($activeSubscribe->price) . $priceSuffix,
+                'raw_price' => (float) $activeSubscribe->price,
+                'is_lifetime' => ($activeSubscribe->days == 100000),
+                'membership_type' => $membershipType,
+                'days' => (int) $activeSubscribe->days,
+                'days_remaining' => $daysRemaining,
+                'usable_count' => $activeSubscribe->usable_count ?? null,
+                'is_popular' => (bool) ($activeSubscribe->is_popular ?? false),
+                'subscribed_at' => $activeSubscribe->created_at ? dateTimeFormat($activeSubscribe->created_at, 'j M Y') : null,
+            ];
+        } else {
+            $membershipData[] = [
+                'status' => 'Inactive',
+                'plan' => 'No Active Plan',
+                'plan_description' => 'No active membership',
+                'cycle' => 'N/A',
+                'price' => $this->formatPrice(0),
+                'raw_price' => 0,
+                'is_lifetime' => false,
+                'membership_type' => 'No Membership',
+                'days' => 0,
+                'days_remaining' => 0,
+                'expires_at' => null,
+                'usable_count' => 0,
+                'is_popular' => false,
+                'subscribed_at' => null,
+            ];
+        }
+        
+        return $membershipData;
+    }
+
+    /**
+     * Get cycle short label
+     */
+    private function getCycleShort($days)
+    {
+        if ($days == 31) {
+            return 'mo';
+        } elseif ($days == 365) {
+            return 'yr';
+        } elseif ($days == 100000) {
+            return 'lifetime';
+        }
+        return $days . 'd';
+    }
+
+    /**
+     * Get membership status
+     */
+    private function getMembershipStatus($user)
+    {
+        $membership = $this->getMembershipDetailedData($user);
+        return $membership[0]['status'] ?? 'Inactive';
+    }
+
+    /**
+     * Get membership price
+     */
+    private function getMembershipPrice($user)
+    {
+        $membership = $this->getMembershipDetailedData($user);
+        return $membership[0]['price'] ?? $this->formatPrice(0);
+    }
+
+    private function getPayoutSummary($user)
+    {
+        $totalEarnings = 0;
+        $availableBalance = 0;
+        $totalPayouts = 0;
+        $pendingPayouts = 0;
+        
+        if ($user->isTeacher() || $user->isOrganization() || $user->isUser()) {
+            // Calculate total earnings from sales where user is seller
+            $totalEarnings = Sale::where('seller_id', $user->id)
+                ->whereNull('refund_at')
+                ->sum('total_amount');
+            
+            // Calculate payouts already made
+            $payouts = Payout::where('user_id', $user->id)
+                ->get();
+            
+            $totalPayouts = $payouts->where('status', 'paid')->sum('amount');
+            $pendingPayouts = $payouts->where('status', 'pending')->sum('amount');
+            
+            // Available balance = total earnings - (paid payouts + pending payouts)
+            $availableBalance = $totalEarnings - ($totalPayouts + $pendingPayouts);
+            $availableBalance = max(0, $availableBalance); // Ensure non-negative
+        }
+        
+        return [
+            'total_earnings' => $this->formatPrice($totalEarnings),
+            'available_balance' => $this->formatPrice($availableBalance),
+            'total_payouts' => $this->formatPrice($totalPayouts),
+            'pending_payouts' => $this->formatPrice($pendingPayouts),
+            'raw' => [
+                'total_earnings' => (float) $totalEarnings,
+                'available_balance' => (float) $availableBalance,
+                'total_payouts' => (float) $totalPayouts,
+                'pending_payouts' => (float) $pendingPayouts,
+            ]
+        ];
+    }
+
+    /**
+     * Get total payouts
+     */
+    private function getPayoutsTotal($user)
+    {
+        $summary = $this->getPayoutSummary($user);
+        return $summary['total_earnings'];
+    }
+
+    /**
+     * Get total payouts (available balance)
+     */
+    private function getTotalPayouts($user)
+    {
+        $summary = $this->getPayoutSummary($user);
+        return $summary['available_balance'];
+    }
+
+    /**
+     * Get payouts data
+     */
+    private function getPayoutsData($user)
+    {
+        $payouts = Payout::where('user_id', $user->id)
+            ->orderBy('created_at', 'desc')
+            ->limit(20)
+            ->get()
+            ->map(function ($payout) {
+                return [
+                    'id' => $payout->id,
+                    'amount' => $this->formatPrice($payout->amount),
+                    'raw_amount' => (float) $payout->amount,
+                    'method' => $payout->payout_method ?? 'Bank Transfer',
+                    'status' => $payout->status,
+                    'status_badge' => $this->getPayoutStatusBadge($payout->status),
+                    'date' => $payout->created_at,
+                    'formatted_date' => $payout->created_at ? dateTimeFormat($payout->created_at, 'j M Y H:i') : null,
+                    'processed_at' => $payout->paid_at ? $payout->paid_at : null,
+                    'formatted_processed_at' => $payout->paid_at ? dateTimeFormat($payout->paid_at, 'j M Y H:i') : null,
+                    'description' => $payout->description ?? null,
+                ];
+            })
+            ->toArray();
+        
+        return $payouts;
+    }
+
+    /**
+     * Get total payouts data with recent transactions
+     */
+    private function getTotalPayoutsData($user)
+    {
+        $summary = $this->getPayoutSummary($user);
+        $recentTransactions = Sale::where('seller_id', $user->id)
+            ->whereNull('refund_at')
+            ->orderBy('created_at', 'desc')
+            ->limit(10)
+            ->get()
+            ->map(function ($sale) {
+                return [
+                    'type' => 'Earning',
+                    'description' => $sale->webinar->title ?? 'Product Sale',
+                    'amount' => $this->formatPrice($sale->total_amount),
+                    'date' => $sale->created_at,
+                    'status' => 'Completed',
+                ];
+            })
+            ->toArray();
+        
+        return [
+            'summary' => $summary,
+            'recent_transactions' => $recentTransactions,
+        ];
+    }
+
+    /**
+     * Get payout status badge
+     */
+    private function getPayoutStatusBadge($status)
+    {
+        $badges = [
+            'pending' => 'warning',
+            'paid' => 'success',
+            'rejected' => 'danger',
+            'cancelled' => 'secondary',
+        ];
+        
+        return $badges[$status] ?? 'secondary';
+    }
+
+    /**
+     * Get books count for a user
+     */
+    private function getBooksCount($user)
+    {
+        return Book::where('creator_id', $user->id)->count();
+    }
+
+    /**
+     * Get royalties total for a user
+     */
+    private function getRoyaltiesTotal($user)
+    {
+        $totalRoyalties = Sale::where('seller_id', $user->id)
+            ->where('type', Sale::$book)  // Only book sales
+            ->whereNull('refund_at')       // Exclude refunded sales
+            ->sum('total_amount');
+        
+        return $this->formatPrice($totalRoyalties);
+    }
+
+    /**
+     * Get royalties data for a user
+     */
+    private function getRoyaltiesData($user)
+    {
+        $books = Book::where('creator_id', $user->id)
+            ->orderBy('created_at', 'desc')
+            ->get();
+        
+        $royaltyData = [];
+        
+        foreach ($books as $book) {
+            // Get total sales for this book (paid orders, not refunded)
+            $totalSales = Sale::where('seller_id', $user->id)
+                ->where('type', Sale::$book)
+                ->whereNull('refund_at')
+                ->whereHas('bookOrder', function ($query) use ($book) {
+                    $query->where('book_id', $book->id);
+                })
+                ->count();
+            
+            // Calculate total earnings from this book (net after commission)
+            $totalEarnings = Sale::where('seller_id', $user->id)
+                ->where('type', Sale::$book)
+                ->whereNull('refund_at')
+                ->whereHas('bookOrder', function ($query) use ($book) {
+                    $query->where('book_id', $book->id);
+                })
+                ->get()
+                ->sum(function ($sale) {
+                    return $sale->getIncomeItem(); // Net earnings after commission
+                });
+            
+            // Get this month's earnings
+            $startOfMonth = Carbon::now()->startOfMonth()->timestamp;
+            $monthEarnings = Sale::where('seller_id', $user->id)
+                ->where('type', Sale::$book)
+                ->whereNull('refund_at')
+                ->whereHas('bookOrder', function ($query) use ($book) {
+                    $query->where('book_id', $book->id);
+                })
+                ->where('created_at', '>=', $startOfMonth)
+                ->get()
+                ->sum(function ($sale) {
+                    return $sale->getIncomeItem();
+                });
+            
+            // Get last sale date for this book
+            $lastSale = Sale::where('seller_id', $user->id)
+                ->where('type', Sale::$book)
+                ->whereNull('refund_at')
+                ->whereHas('bookOrder', function ($query) use ($book) {
+                    $query->where('book_id', $book->id);
+                })
+                ->orderBy('created_at', 'desc')
+                ->first();
+            
+            // ONLY ADD BOOKS THAT HAVE SALES/EARNINGS
+            if ($totalSales > 0 || $totalEarnings > 0) {
+                $royaltyData[] = [
+                    'book_id' => $book->id,
+                    'book_title' => $book->title,
+                    'price' => $this->formatPrice($book->price),
+                    'raw_price' => (float) $book->price,
+                    'royalty_rate' => ($book->royalty_rate ?? config('app.default_royalty_rate', 30)) . '%',
+                    'earnings' => $this->formatPrice($totalEarnings),
+                    'raw_earnings' => (float) $totalEarnings,
+                    'month_earnings' => $this->formatPrice($monthEarnings),
+                    'raw_month_earnings' => (float) $monthEarnings,
+                    'last_payout' => $book->last_payout_date ? dateTimeFormat($book->last_payout_date, 'j M Y') : 'No payout yet',
+                    'last_sale_date' => $lastSale ? dateTimeFormat($lastSale->created_at, 'j M Y') : 'No sales yet',
+                    'total_sales' => (int) $totalSales,
+                ];
+            }
+        }
+        
+        // Sort by earnings (highest first)
+        usort($royaltyData, function($a, $b) {
+            return $b['raw_earnings'] <=> $a['raw_earnings'];
+        });
+        
+        return $royaltyData;
+    }
+
+    /**
+     * Get books data for a user
+     */
+    private function getBooksData($user)
+    {
+        $books = Book::where('creator_id', $user->id)
+            ->with(['categories', 'creator' => function ($query) {
+                $query->select('id', 'full_name');
+            }])
+            ->withCount('comments')
+            ->orderBy('created_at', 'desc')
+            ->limit(10)
+            ->get()
+            ->map(function ($book) {
+                // Check if categories is a collection or a single model
+                $categories = [];
+                
+                if ($book->categories) {
+                    if ($book->categories instanceof \Illuminate\Support\Collection) {
+                        // It's a collection, map normally
+                        $categories = $book->categories->map(function($category) {
+                            return [
+                                'id' => $category->id,
+                                'title' => $category->title,
+                                'slug' => $category->slug,
+                            ];
+                        })->toArray();
+                    } elseif (is_object($book->categories)) {
+                        // It's a single model, handle as array with one item
+                        $categories = [[
+                            'id' => $book->categories->id,
+                            'title' => $book->categories->title,
+                            'slug' => $book->categories->slug,
+                        ]];
+                    }
+                }
+                
+                // Safely get category names
+                $categoryNames = '';
+                if ($book->categories) {
+                    if ($book->categories instanceof \Illuminate\Support\Collection) {
+                        $categoryNames = $book->categories->pluck('slug')->implode(', ');
+                    } elseif (is_object($book->categories)) {
+                        $categoryNames = $book->categories->slug;
+                    }
+                }
+                
+                return [
+                    'id' => $book->id,
+                    'title' => $book->title,
+                    'slug' => $book->slug,
+                    'author' => $book->creator->full_name ?? 'Unknown',
+                    'author_id' => $book->creator_id,
+                    'categories' => $categories,
+                    'category_names' => $categoryNames,
+                    'price' => $this->formatPrice($book->price),
+                    'raw_price' => (float) $book->price,
+                    'royalties' => $this->formatPrice($book->royalty_earnings ?? 0),
+                    'raw_royalties' => (float) ($book->royalty_earnings ?? 0),
+                    'sales' => (int) ($book->sales_count ?? 0),
+                    // 'rating' => $book->getRate(),
+                    'status' => $book->status,
+                    'created_at' => $book->created_at,
+                    'formatted_date' => $book->created_at ? dateTimeFormat($book->created_at, 'j M Y') : null,
+                    'url' => '/books/' . $book->slug,
+                    'cover' => $book->cover ? url($book->cover) : null,
+                ];
+            })
+            ->toArray();
+        
+        return $books;
+    }
+
+    /**
+     * Get products count for a user
+     */
+    private function getProductsCount($user)
+    {
+        return Product::where('creator_id', $user->id)
+            ->where('status', 'active')
+            ->count();
+    }
+
+    /**
+     * Get products data for a user
+     */
+    private function getProductsData($user)
+    {
+        $products = Product::where('creator_id', $user->id)
+            ->where('status', 'active')
+            ->with(['creator' => function ($query) {
+                $query->select('id', 'full_name');
+            }])
+            ->orderBy('created_at', 'desc')
+            ->limit(10)
+            ->get()
+            ->map(function ($product) {
+                return [
+                    'id' => $product->id,
+                    'title' => $product->title,
+                    'slug' => $product->slug,
+                    'type' => $product->type ?? 'Physical',
+                    'price' => $this->formatPrice($product->price),
+                    'raw_price' => (float) $product->price,
+                    'inventory' => $product->inventory ?? 'N/A',
+                    'inventory_value' => (int) ($product->inventory ?? 0),
+                    'sales' => (int) ($product->sales_count ?? 0),
+                    'status' => $product->status,
+                    'created_at' => $product->created_at,
+                    'formatted_date' => $product->created_at ? dateTimeFormat($product->created_at, 'j M Y') : null,
+                    'url' => '/products/' . $product->slug,
+                    'thumbnail' => $product->thumbnail ? url($product->thumbnail) : null,
+                ];
+            })
+            ->toArray();
+        
+        return $products;
+    }
+
+    /**
+     * Get vendor orders count for a user
+     */
+    private function getVendorOrdersCount($user)
+    {
+        return Order::whereHas('orderItems', function ($query) use ($user) {
+                $query->where('user_id', $user->id);
+            })
+            ->where('status', Order::$paid)
+            ->count();
+    }
+
+    /**
+     * Get vendor orders data for a user
+     */
+    private function getVendorOrdersData($user)
+    {
+        $orders = Order::whereHas('orderItems', function ($query) use ($user) {
+                $query->where('user_id', $user->id);
+            })
+            ->where('status', Order::$paid)
+            ->with(['user', 'orderItems' => function ($query) use ($user) {
+                $query->where('user_id', $user->id);
+            }])
+            ->orderBy('created_at', 'desc')
+            ->limit(10)
+            ->get()
+            ->map(function ($order) use ($user) {
+                // Filter orderItems to get only items created by this vendor
+                $vendorItems = $order->orderItems->filter(function ($item) use ($user) {
+                    return $item->user_id == $user->id;
+                });
+                
+                // Get the first item to extract product/webinar info
+                $firstItem = $vendorItems->first();
+                $itemType = '';
+                $itemTitle = '';
+                
+                if ($firstItem) {
+                    if ($firstItem->webinar_id) {
+                        $itemType = 'Course';
+                        $itemTitle = $firstItem->webinar->title ?? 'Deleted Course';
+                    } elseif ($firstItem->product_id) {
+                        $itemType = 'Product';
+                        $itemTitle = $firstItem->product->title ?? 'Deleted Product';
+                    } elseif ($firstItem->bundle_id) {
+                        $itemType = 'Bundle';
+                        $itemTitle = $firstItem->bundle->title ?? 'Deleted Bundle';
+                    }elseif ($firstItem->book_id) {
+                        $itemType = 'Book';
+                        $itemTitle = $firstItem->book->title ?? 'Deleted Product';
+                    }
+                }
+                
+                $itemsList = $vendorItems->map(function ($item) {
+                    if ($item->webinar_id) {
+                        return $item->webinar->title ?? 'Course';
+                    } elseif ($item->product_id) {
+                        return $item->product->title ?? 'Product';
+                    } elseif ($item->bundle_id) {
+                        return $item->bundle->title ?? 'Bundle';
+                    }
+                    elseif ($item->book_id) {
+                        return $item->book->title ?? 'Book';
+                    }
+                    return 'Item';
+                })->implode(', ');
+                
+                $totalAmount = $vendorItems->sum('total_amount');
+                $totalQuantity = $vendorItems->sum('quantity');
+                
+                return [
+                    'order_id' => $order->id,
+                    'order_number' => $order->order_number ?? 'N/A',
+                    'customer' => $order->user->full_name ?? $order->user->username ?? 'Unknown',
+                    'customer_email' => $order->user->email ?? '',
+                    'items' => $itemsList,
+                    'item_type' => $itemType,
+                    'item_title' => $itemTitle,
+                    'quantity' => $totalQuantity,
+                    'total' => $this->formatPrice($totalAmount),
+                    'date' => $order->created_at,
+                    'status' => $order->status,
+                    'payment_method' => $order->payment_method ?? 'N/A',
+                ];
+            })
+            ->toArray();
+        
+        return $orders;
+    }
+
+    /**
+     * Get analytics growth percentage
+     */
+    private function getAnalyticsGrowth($user)
+    {
+        // Calculate growth percentage based on previous month's earnings
+        $currentMonth = Carbon::now()->startOfMonth();
+        $previousMonth = Carbon::now()->subMonth()->startOfMonth();
+        
+        $currentMonthEarnings = Sale::where('seller_id', $user->id)
+            ->whereNull('refund_at')
+            ->whereBetween('created_at', [
+                $currentMonth->timestamp,
+                $currentMonth->copy()->endOfMonth()->timestamp
+            ])
+            ->sum('total_amount');
+        
+        $previousMonthEarnings = Sale::where('seller_id', $user->id)
+            ->whereNull('refund_at')
+            ->whereBetween('created_at', [
+                $previousMonth->timestamp,
+                $previousMonth->copy()->endOfMonth()->timestamp
+            ])
+            ->sum('total_amount');
+        
+        if ($previousMonthEarnings > 0) {
+            $growth = (($currentMonthEarnings - $previousMonthEarnings) / $previousMonthEarnings) * 100;
+            // $growthFormatted = number_format($growth, 1);
+            $direction = $growth >= 0 ? 'up' : 'down';
+            return [
+                'percentage' => abs($growth) . '%',
+                'direction' => $direction,
+                'value' => (float) $growth,
+                'display' => ($growth >= 0 ? '↑ ' : '↓ ') . abs($growth) . '%',
+            ];
+        }
+        
+        if ($currentMonthEarnings > 0) {
+            return [
+                'percentage' => '100%',
+                'direction' => 'up',
+                'value' => 100,
+                'display' => '↑ 100%',
+            ];
+        }
+        
+        return [
+            'percentage' => '0%',
+            'direction' => 'flat',
+            'value' => 0,
+            'display' => '→ 0%',
+        ];
+    }
+
+    /**
+     * Get analytics detailed data
+     */
+    private function getAnalyticsDetailedData($user)
+    {
+        $currentMonth = Carbon::now()->startOfMonth();
+        $sixMonthsAgo = Carbon::now()->subMonths(5)->startOfMonth();
+        
+        $monthlyData = [];
+        $currentDate = $sixMonthsAgo->copy();
+        
+        while ($currentDate <= Carbon::now()) {
+            $monthStart = $currentDate->copy()->startOfMonth();
+            $monthEnd = $currentDate->copy()->endOfMonth();
+            
+            $monthEarnings = Sale::where('seller_id', $user->id)
+                ->whereNull('refund_at')
+                ->whereBetween('created_at', [$monthStart->timestamp, $monthEnd->timestamp])
+                ->sum('total_amount');
+            
+            $monthlyData[] = [
+                'month' => $currentDate->format('M Y'),
+                'earnings' => $this->formatPrice($monthEarnings),
+                'raw_earnings' => $monthEarnings,
+                'sales_count' => Sale::where('seller_id', $user->id)
+                    ->whereNull('refund_at')
+                    ->whereBetween('created_at', [$monthStart->timestamp, $monthEnd->timestamp])
+                    ->count(),
+            ];
+            
+            $currentDate->addMonth();
+        }
+        
+        // Top selling products/courses
+        $topItems = Sale::where('seller_id', $user->id)
+            ->whereNull('refund_at')
+            ->select('webinar_id', 'product_order_id', \DB::raw('SUM(total_amount) as total_earnings'), \DB::raw('COUNT(*) as sales_count'))
+            ->groupBy('webinar_id', 'product_order_id')
+            ->orderBy('total_earnings', 'desc')
+            ->limit(5)
+            ->get()
+            ->map(function ($item) {
+                $title = 'Unknown Item';
+                if ($item->webinar_id) {
+                    $webinar = Webinar::find($item->webinar_id);
+                    $title = $webinar->title ?? 'Deleted Course';
+                } elseif ($item->product_order_id) {
+                    $product = Product::find($item->product_order_id);
+                    $title = $product->title ?? 'Deleted Product';
+                }
+                
+                return [
+                    'title' => $title,
+                    'total_earnings' => $this->formatPrice($item->total_earnings),
+                    'sales_count' => $item->sales_count,
+                ];
+            })
+            ->toArray();
+        
+        return [
+            'monthly_earnings' => $monthlyData,
+            'top_items' => $topItems,
+            'summary' => $this->getPayoutSummary($user)['raw'],
+        ];
+    }
+
+    /**
+     * Format price with currency
+     */
+    private function formatPrice($amount, $currency = null, $decimals = 2)
+    {
+        if (!$currency) {
+            $currency = config('app.currency', '€');
+        }
+        
+        $formatted = number_format((float) $amount, $decimals);
+        
+        if (strpos($currency, '€') !== false || 
+            strpos($currency, '$') !== false || 
+            strpos($currency, '£') !== false) {
+            return $currency . $formatted;
+        } else {
+            return $formatted . ' ' . $currency;
+        }
     }
 
     private function getContinueLearningCount($user)
@@ -977,20 +2143,6 @@ class UserController extends Controller
         return Order::where('user_id', $user->id)
             ->where('status', Order::$paid)
             ->count();
-    }
-
-    private function getMembershipStatus($user)
-    {
-        // Check if user has active subscription
-        // This is a placeholder - implement based on your membership system
-        return 'Active';
-    }
-
-    private function getMembershipPrice($user)
-    {
-        // Get user's membership price
-        // This is a placeholder - implement based on your membership system
-        return '€1/mo';
     }
 
     private function getMessagesCount($user)
@@ -1037,15 +2189,7 @@ class UserController extends Controller
 
     // Placeholder methods for other counts (implement based on your system)
     private function getReelStudioCount($user) { return '+ New'; }
-    private function getLiveStudioStatus($user) { return 'Ready'; }
     private function getCreatorAnalytics($user) { return '0 views'; }
-    private function getPayoutsTotal($user) { return '€0'; }
-    private function getProductsCount($user) { return 0; }
-    private function getVendorOrdersCount($user) { return 0; }
-    private function getBooksCount($user) { return 0; }
-    private function getRoyaltiesTotal($user) { return '€0'; }
-    private function getAnalyticsGrowth($user) { return '↑ 0%'; }
-    private function getTotalPayouts($user) { return '€0'; }
 
     // Detailed data methods (for drawer)
     private function getContinueLearningData($user)
@@ -1170,17 +2314,6 @@ class UserController extends Controller
         return $orders;
     }
 
-    private function getMembershipDetailedData($user)
-    {
-        return [[
-            'plan' => 'Basic',
-            'cycle' => 'Monthly',
-            'status' => 'Active',
-            'renewal' => date('Y-m-d', strtotime('+1 month')),
-            'price' => '€1/mo',
-        ]];
-    }
-
     private function getMessagesData($user)
     {
         // This is placeholder - implement with your messaging system
@@ -1262,15 +2395,7 @@ class UserController extends Controller
 
     // Placeholder detailed data methods for other sections
     private function getReelStudioData($user) { return []; }
-    private function getLiveStudioData($user) { return []; }
     private function getCreatorAnalyticsData($user) { return []; }
-    private function getPayoutsData($user) { return []; }
-    private function getProductsData($user) { return []; }
-    private function getVendorOrdersData($user) { return []; }
-    private function getBooksData($user) { return []; }
-    private function getRoyaltiesData($user) { return []; }
-    private function getAnalyticsDetailedData($user) { return []; }
-    private function getTotalPayoutsData($user) { return []; }
 
     private function getSeekerData($user)
     {

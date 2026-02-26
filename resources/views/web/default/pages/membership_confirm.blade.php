@@ -177,7 +177,7 @@
         <div>
           <a href="/" class="cta" id="exploreBtn">Start Exploring</a>
           @if($isActive)
-          <a href="/panel/subscribes" class="cta secondary">Manage Subscription</a>
+          <a href="/panel/financial/subscribes" class="cta secondary">Manage Subscription</a>
           @endif
         </div>
         
@@ -241,12 +241,13 @@
         <div class="cell"><div class="label">Subscription ID</div><div>{{ $subscribe->id }}</div></div>
         <div class="cell"><div class="label">Payment Status</div><div style="color: var(--success);">{{ ucfirst($order->status) }}</div></div>
       </div>
-
+      @if(ucfirst($order->status) == 'Paid')
       <div class="footer-actions">
-        <a class="link-btn" href="/panel/subscribes" id="manageLink">Manage Subscription</a>
-        <a class="ghost" href="/orders/{{ $order->id }}/invoice" id="invoiceLink">Download Invoice</a>
+        <a class="link-btn" href="/panel/financial/subscribes" id="manageLink">Manage Subscription</a>
+        <a class="ghost" href="/panel/store/purchases/{{ $order->id }}/invoice" id="invoiceLink">Download Invoice</a>
         <a class="ghost" href="#" id="shareLink">Share with Friends</a>
       </div>
+      @endif
     </section>
   </div>
 
@@ -281,7 +282,7 @@
   };
   document.getElementById('invoiceLink').onclick = (e) => {
     e.preventDefault();
-    location.href = `/orders/{{ $order->id }}/invoice`;
+    location.href = `/panel/store/purchases/{{ $order->id }}/invoice`;
   };
   document.getElementById('shareLink').onclick = (e) => {
     e.preventDefault();

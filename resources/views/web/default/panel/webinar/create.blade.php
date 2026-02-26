@@ -224,7 +224,4 @@
     var hasZoomApiToken = '{{ (!empty($authUser->zoomApi) && !empty($authUser->zoomApi->api_key) && !empty($authUser->zoomApi->api_secret)) ? 'true' : 'false' }}';
     var editChapterLang = '{{ trans('public.edit_chapter') }}';
 </script>
-
-<script src="/assets/default/js/panel/webinar.min.js"></script>
-<script src="/assets/default/js/panel/webinar_content_locale.min.js"></script>
 @endpush

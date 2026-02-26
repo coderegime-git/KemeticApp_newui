@@ -393,14 +393,14 @@
                                 <div class="form-group kemetic-form-group">
                                     <label class="kemetic-label">{{ $label }}</label>
                                     <div class="input-group kemetic-input-group">
-                                        <div class="input-group-prepend">
+                                        <!-- <div class="input-group-prepend">
                                             <span class="input-group-text kemetic-calendar">
                                                 <i data-feather="calendar" width="16" height="16"></i>
                                             </span>
-                                        </div>
-                                        <input type="text"
+                                        </div> -->
+                                        <input type="date"
                                                name="ajax[{{ !empty($ticket) ? $ticket->id : 'new' }}][{{ $field }}]"
-                                               class="js-ajax-{{ $field }} form-control kemetic-input datepicker"
+                                               class="js-ajax-{{ $field }} form-control kemetic-input"
                                                value="{{ !empty($ticket) ? dateTimeFormat($ticket->{$field}, 'Y-m-d', false) :'' }}">
                                         <div class="invalid-feedback"></div>
                                     </div>

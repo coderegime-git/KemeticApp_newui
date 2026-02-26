@@ -5,6 +5,7 @@ namespace App\Models;
 use App\Mixins\RegistrationBonus\RegistrationBonusAccounting;
 use App\Models\Observers\SaleNumberObserver;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Facades\DB;
 
 class Sale extends Model
 {
@@ -14,6 +15,7 @@ class Sale extends Model
     public static $promotion = 'promotion';
     public static $registrationPackage = 'registration_package';
     public static $product = 'product';
+    public static $book = 'book';
     public static $bundle = 'bundle';
     public static $gift = 'gift';
     public static $installmentPayment = 'installment_payment';
@@ -93,6 +95,11 @@ class Sale extends Model
         return $this->belongsTo('App\Models\ProductOrder', 'product_order_id', 'id');
     }
 
+    public function bookOrder()
+    {
+        return $this->belongsTo('App\Models\BookOrder', 'book_order_id', 'id');
+    }
+
     public function gift()
     {
         return $this->belongsTo('App\Models\Gift', 'gift_id', 'id');
@@ -116,7 +123,10 @@ class Sale extends Model
             $orderType = Order::$registrationPackage;
         } elseif (!empty($orderItem->product_id)) {
             $orderType = Order::$product;
-        } elseif (!empty($orderItem->bundle_id)) {
+        } elseif (!empty($orderItem->book_id)) {
+            $orderType = Order::$book;
+        } 
+        elseif (!empty($orderItem->bundle_id)) {
             $orderType = Order::$bundle;
         } elseif (!empty($orderItem->installment_payment_id)) {
             $orderType = Order::$installmentPayment;
@@ -140,6 +150,7 @@ class Sale extends Model
             'promotion_id' => $orderItem->promotion_id,
             'registration_package_id' => $orderItem->registration_package_id,
             'product_order_id' => (!empty($orderItem->product_order_id)) ? $orderItem->product_order_id : null,
+            'book_order_id' => (!empty($orderItem->book_order_id)) ? $orderItem->book_order_id : null,
             'installment_payment_id' => $orderItem->installment_payment_id ?? null,
             'gift_id' => $orderItem->gift_id ?? null,
             'type' => $orderType,
@@ -153,6 +164,7 @@ class Sale extends Model
             'created_at' => time(),
         ]);
 
+        // dd($sale);
         self::handleSaleNotifications($orderItem, $seller_id);
 
         if (!empty($orderItem->product_id)) {
@@ -161,11 +173,15 @@ class Sale extends Model
         }
 
         $buyReward = RewardAccounting::calculateScore(Reward::BUY, $orderItem->total_amount);
+        // dd($buyReward);
         RewardAccounting::makeRewardAccounting($orderItem->user_id, $buyReward, Reward::BUY);
+        //  dd('after makeRewardAccounting');
 
         /* Registration Bonus Accounting */
         $registrationBonusAccounting = new RegistrationBonusAccounting();
         $registrationBonusAccounting->checkBonusAfterSale($orderItem->user_id);
+
+        // dd('after handleSaleNotifications');
 
         return $sale;
     }
@@ -188,7 +204,10 @@ class Sale extends Model
             $title = $orderItem->registrationPackage->title . ' ' . trans('update.registration_package');
         } else if (!empty($orderItem->product_id)) {
             $title = $orderItem->product->title;
-        } else if (!empty($orderItem->installment_payment_id)) {
+        } else if (!empty($orderItem->book_id)) {
+            $title = $orderItem->book->title;
+        }  
+        else if (!empty($orderItem->installment_payment_id)) {
             $title = ($orderItem->installmentPayment->type == 'upfront') ? trans('update.installment_upfront') : trans('update.installment');
         }
        
@@ -223,7 +242,21 @@ class Sale extends Model
             sendNotification('product_new_sale', $notifyOptions, $seller_id);
             sendNotification('product_new_purchase', $notifyOptions, $orderItem->user_id);
             sendNotification('new_store_order', $notifyOptions, 1);
-        } elseif (!empty($orderItem->installment_payment_id)) {
+        } elseif (!empty($orderItem->book_id)) {
+           
+            $notifyOptions = [
+                '[b.title]' => $title,
+                '[amount]' => handlePrice($orderItem->total_amount),
+                '[u.name]' => $fullname,
+            ];
+
+            // dd($notifyOptions, $seller_id, $orderItem->user_id);
+
+            sendNotification('book_new_sale', $notifyOptions, $seller_id);
+            sendNotification('book_new_purchase', $notifyOptions, $orderItem->user_id);
+            sendNotification('new_book_order', $notifyOptions, 1);
+            // dd('after book notifications');
+        }elseif (!empty($orderItem->installment_payment_id)) {
             // TODO:: installment notification
         } else {
             $notifyOptions = [

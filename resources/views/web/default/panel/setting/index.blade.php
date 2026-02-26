@@ -373,9 +373,9 @@
                         @endif
 
                     <!-- Payment & Membership -->
-                    <h3 class="settings-section-title">Payment & Membership</h3>
+                    <!-- <h3 class="settings-section-title">Payment & Membership</h3> -->
                     <div class="settings-section">
-                        <div class="settings-card">
+                        <!-- <div class="settings-card">
                             <div class="settings-card-head">
                                 <span>Membership</span>
                                 <button type="button" class="settings-btn-outline" style="padding:6px 14px;font-size:11px;">Manage</button>
@@ -399,7 +399,7 @@
                             <div class="settings-card-sub">
                                 Used for memberships, course bundles & shop orders.
                             </div>
-                        </div>
+                        </div> -->
                     </div>
 
                     <!-- Notifications & Security -->
@@ -422,7 +422,7 @@
                             </div>
                         </div>
 
-                        <div class="settings-card">
+                        <!-- <div class="settings-card">
                             <div class="settings-card-head">
                                 <span>Change Password</span>
                                 <button type="button" class="settings-btn-outline" style="padding:6px 14px;font-size:11px;">Change</button>
@@ -433,7 +433,7 @@
                             <div class="settings-card-sub">
                                 We recommend updating your password every 3–6 months.
                             </div>
-                        </div>
+                        </div> -->
 
                         <div class="settings-card">
                             <div class="settings-card-head">

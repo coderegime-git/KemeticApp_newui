@@ -19,7 +19,8 @@ use Illuminate\Validation\Rule;
 use Illuminate\Support\Facades\URL;
 use App\Models\Api\Cart;
 use App\Models\ProductOrder;
-
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 
 class SubscribesController extends Controller
 {
@@ -293,6 +294,213 @@ class SubscribesController extends Controller
 
         return apiResponse2(1, 'success', "Payment Done Successfully");
         // return apiResponse2(1, 'retrieved', trans('api.public.retrieved'), $data);
+    }
+
+    public function recurringPay(Request $request)
+    {
+        try {
+            $paymentChannels = PaymentChannel::where('status', 'active')->get();
+
+            $subscribe = Subscribe::where('id', $request->input('subscription_id'))->first();
+
+            if (empty($subscribe)) {
+                return response()->json([
+                    'status' => 'error',
+                    'message' => trans('site.subscribe_not_valid'),
+                    'data' => null
+                ], 404);
+            }
+
+            $user = apiAuth();
+            $activeSubscribe = Subscribe::getActiveSubscribe($user->id);
+
+            if ($activeSubscribe) {
+                return response()->json([
+                    'status' => 'error',
+                    'message' => trans('site.you_have_active_subscribe'),
+                    'data' => null
+                ], 400);
+            }
+
+            $financialSettings = getFinancialSettings();
+            $tax = $financialSettings['tax'] ?? 0;
+
+            $amount = $subscribe->getPrice();
+            $amount = $amount > 0 ? $amount : 0;
+
+            $taxPrice = $tax ? $amount * $tax / 100 : 0;
+
+            $order = Order::create([
+                "user_id" => $user->id,
+                "status" => Order::$pending,
+                'tax' => $taxPrice,
+                'commission' => 0,
+                "amount" => $amount,
+                "total_amount" => $amount + $taxPrice,
+                "created_at" => time(),
+            ]);
+
+            $orderItem = OrderItem::updateOrCreate([
+                'user_id' => $user->id,
+                'order_id' => $order->id,
+                'subscribe_id' => $subscribe->id,
+            ], [
+                'amount' => $order->amount,
+                'total_amount' => $amount + $taxPrice,
+                'tax' => $tax,
+                'tax_price' => $taxPrice,
+                'commission' => 0,
+                'commission_price' => 0,
+                'created_at' => time(),
+            ]);
+
+            if ($amount > 0) {
+                $razorpay = false;
+                foreach ($paymentChannels as $paymentChannel) {
+                    if ($paymentChannel->class_name == 'Razorpay') {
+                        $razorpay = true;
+                    }
+                }
+
+                return response()->json([
+                    'status' => 'success',
+                    'message' => 'Order created successfully',
+                    'data' => [
+                        'paymentChannels' => $paymentChannels,
+                        'total' => $order->total_amount,
+                        'order' => $order,
+                        'count' => 1,
+                        'userCharge' => $user->getAccountingCharge(),
+                        'razorpay' => $razorpay
+                    ]
+                ], 200);
+            }
+
+            // Handle Free subscription
+            $sale = Sale::createSales($orderItem, Sale::$credit);
+
+            return response()->json([
+                'status' => 'success',
+                'message' => trans('update.success_pay_msg_for_free_subscribe'),
+                'data' => [
+                    'paymentChannels' => $paymentChannels,
+                    'total' => $order->total_amount,
+                    'order' => $order,
+                    'count' => 1,
+                    'userCharge' => $user->getAccountingCharge(),
+                    'razorpay' => $razorpay
+                ]
+            ], 200);
+
+        } catch (\Exception $e) {
+            return response()->json([
+                'status' => 'error',
+                'message' => 'An error occurred while processing your request',
+                'error' => config('app.debug') ? $e->getMessage() : null
+            ], 500);
+        }
+    }
+
+    public function cancelSubscription(Request $request)
+    {
+        $user = apiAuth();
+        if (!$user) {
+            return response()->json([
+                'success' => false,
+                'message' => 'No active subscription found'
+            ], 404);
+        }
+
+        $subscriptionId = $request->input('subscription_id');
+        // dd($subscriptionId);
+        DB::beginTransaction();
+
+        try {
+            $activeSubscribe = Subscribe::getActiveSubscribe($user->id);
+
+            if (!$activeSubscribe) {
+                return apiResponse2(0, 'no_active_subscription', trans('site.no_active_subscription'));
+            }
+
+            try {
+
+                \Stripe\Stripe::setApiKey(env('STRIPE_SECRET'));
+        
+                $customer = \Stripe\Customer::retrieve($user->stripe_customer_id);
+                
+                if ($customer) {
+                    // Cancel any active subscriptions
+                    $subscriptions = \Stripe\Subscription::all([
+                        'customer' => $user->stripe_customer_id,
+                        'status' => 'active'
+                    ]);
+                    
+                    foreach ($subscriptions->data as $subscription) {
+                        $subscription->cancel();
+                    }
+                }
+            } catch (\Exception $e) {
+                \Log::error('Stripe cancellation error: ' . $e->getMessage());
+            }
+            // dd('hi1');
+            /** 3️⃣ Disable subscription usage */
+           SubscribeUse::where('user_id', $user->id)
+            ->where('subscribe_id', $subscriptionId)
+            ->delete();
+
+            /** 4️⃣ Update sales table */
+            Sale::where('buyer_id',  (string) $user->id)
+                ->where('type','subscribe')
+                ->whereNull('refund_at')
+                // ->delete();
+                ->update([
+                    'refund_at' => time(),
+                    // 'status' => 'canceled'
+                ]);
+
+            /** 5️⃣ Accounting cleanup */
+            // Accounting::where('user_id', $user->id)
+            //     ->where('type', 'subscribe')
+            //     ->delete();
+
+            /** 6️⃣ Update related orders */
+            $orderIds = OrderItem::where('user_id', $user->id)
+                ->whereNotNull('subscribe_id')
+                ->pluck('order_id');
+
+            Order::whereIn('id', $orderIds)
+                ->update([
+                    'status' => 'fail'
+                ]);
+
+            /** 7️⃣ Update user table */
+            $user->update([
+                'subscription_status' => 'canceled',
+                'subscription_id' => null,
+                'stripe_customer_id' => null
+            ]);
+
+            DB::commit();
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Subscription cancelled successfully'
+            ]);
+
+        } catch (\Exception $e) {
+            DB::rollBack();
+
+            \Log::error('Subscription Cancel Error', [
+                'user_id' => $user->id,
+                'error' => $e->getMessage()
+            ]);
+
+            return response()->json([
+                'success' => false,
+                'message' => 'Failed to cancel subscription',
+                'error' => $e->getMessage()
+            ], 500);
+        }
     }
 
     public function apply(Request $request)

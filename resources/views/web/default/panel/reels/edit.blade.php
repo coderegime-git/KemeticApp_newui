@@ -176,8 +176,7 @@
             @method('PUT')
 
             <input type="hidden" name="id" value="{{ $reel->id }}">
-
-            {{-- Title --}}
+        
             <div class="form-group">
                 <label class="kemetic-label">Title</label>
                 <input type="text"
@@ -192,7 +191,16 @@
                 @enderror
             </div>
 
-            {{-- Caption --}}
+            <div class="form-group">
+                <label class="kemetic-label">Category</label>
+                <select name="category_id" class="form-control kemetic-input @error('category_id') is-invalid @enderror" required>
+                    <option value="">Select a category</option>
+                    @foreach($categories as $category)
+                        <option value="{{ $category['id'] }}" {{ old('category_id', $reel->category_id) == $category['id'] ? 'selected' : '' }}>{{ $category['title'] }}</option>
+                    @endforeach
+                </select>
+            </div>
+            
             <div class="form-group">
                 <label class="kemetic-label">Caption</label>
                 <textarea name="caption"

@@ -4,13 +4,13 @@
 
   <div class="article-wrap">
     <!-- Membership banner -->
-    <div class="article-banner">
+    <div class="shop-banner">
       <div class="article-chip">💎 Unlock Unlimited Articles, Reels & Live</div>
       <div class="article-chip">€1/mo • €10/yr • €33 lifetime</div>
        @if(auth()->check())
-          <button class="article-cta"><a href="/membership">Upgrade</a></button>
+          <button class="shop-cta"><a href="/membership">Upgrade</a></button>
         @else
-          <button class="article-cta"><a href="/login">Upgrade</a></button>
+          <button class="shop-cta"><a href="/login">Upgrade</a></button>
         @endif
     </div>
     
@@ -75,6 +75,9 @@
     <!-- Search + Categories -->
     <div class="article-row">
       <form action="/blog" method="get">
+        @if(!empty($selectedCategory))
+          <input type="hidden" name="category_id" value="{{ $selectedCategory->id }}">
+        @endif
         <div class="article-search">
           <span style="color:var(--gold);font-weight:900">🔎</span>
           <input  type="text" name="search"  value="{{ request()->get('search') }}" placeholder="{{ trans('home.blog_search_placeholder') }}">
@@ -85,9 +88,12 @@
     </div>
 
     <div class="shop-chips">
+      <a href="{{ url('/blog') }}@if(request()->get('search'))?search={{ request()->get('search') }}@endif" 
+          class="font-14 text-dark-blue d-block mt-15">
+          <div class="article-pill @if(empty($selectedCategory)) active @endif">All</div></a>
       @foreach($blogCategories as $blogCategory)
-      <a href="{{ $blogCategory->getUrl() }}" class="font-14 text-dark-blue d-block mt-15">
-          <div class="article-pill @if(!empty($selectedCategory) and $selectedCategory == $blogCategory->slug) active @endif">
+      <a href="{{ $blogCategory->getUrl() }}@if(request()->get('search'))&search={{ request()->get('search') }}@endif" class="font-14 text-dark-blue d-block mt-15">
+          <div class="article-pill @if(!empty($selectedCategory) and $selectedCategory->id == $blogCategory->id) active @endif">
               {{ $blogCategory->title }}
           </div>
       </a>
@@ -95,7 +101,7 @@
     </div>
 
     <div class="article-sp"></div>
-    <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-1112899163288149"
+    <!-- <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-1112899163288149"
      crossorigin="anonymous"></script>
     <ins class="adsbygoogle"
         style="display:block;"
@@ -105,7 +111,7 @@
         data-ad-slot="8812357100"></ins>
     <script>
         (adsbygoogle = window.adsbygoogle || []).push({});
-    </script>
+    </script> -->
     <!-- <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-1112899163288149"
      crossorigin="anonymous"></script>
     <ins class="adsbygoogle"
@@ -129,6 +135,7 @@
     </div> -->
 
     <section class="article-grid">
+      @if(!empty($blog) and !$blog->isEmpty())
         @foreach($blog as $post)
         <!-- {{ $post->title }} -->
             <article class="article-card">
@@ -161,10 +168,17 @@
                 </div>
             </article>
         @endforeach
+      @else
+          @include(getTemplate() . '.includes.no-result',[
+              'file_name' => 'webinar.png',
+              'title' => trans('No Articles Found'),
+              'hint' => '',
+          ])
+      @endif
 
          
     </section>
-    <div class="mt-50 pt-30">
+    <div style="padding: 10px;">
       {{ $blog->appends(request()->input())->links('vendor.pagination.panel') }}
     </div>
 

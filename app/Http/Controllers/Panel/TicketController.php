@@ -189,9 +189,12 @@ class TicketController extends Controller
             if ($ticket->creator_id == $user->id or (!empty($item) and $item->canAccess($user))) {
                 $ticket->delete();
 
-                return response()->json([
-                    'code' => 200
-                ], 200);
+                $url = '/panel/bundles';
+                return redirect($url);
+
+                // return response()->json([
+                //     'code' => 200
+                // ], 200);
             }
         }
 

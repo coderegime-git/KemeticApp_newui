@@ -89,7 +89,7 @@
 </style>
 @endpush
 
-<li data-id="{{ !empty($file) ? $file->id : '' }}" class="k-accordion-item">
+<li data-id="{{ !empty($file) ? $file->id : '' }}" class="accordion-row k-accordion-item">
     <div class="k-accordion-header" data-toggle="collapse" href="#collapseFile{{ !empty($file) ? $file->id : 'record' }}" aria-controls="collapseFile{{ !empty($file) ? $file->id : 'record' }}" data-parent="#filesAccordion">
         <div class="d-flex align-items-center">
             <i data-feather="file" class="mr-10"></i>

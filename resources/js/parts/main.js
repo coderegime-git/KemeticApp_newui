@@ -227,27 +227,27 @@
     }
 
 
-    $('body').on('click', '.btn-add-product-to-cart', function (e) {
-        e.preventDefault();
+    // $('body').on('click', '.btn-add-product-to-cart', function (e) {
+    //     e.preventDefault();
 
-        const item_id = $(this).attr('data-id');
+    //     const item_id = $(this).attr('data-id');
 
-        const html = `
-            <form action="/cart/store" method="post" class="" id="productAddToCartForm">
-                <input type="hidden" name="_token" value="${window.csrfToken}">
-                <input type="hidden" name="item_id" value="${item_id}">
-                <input type="hidden" name="item_name" value="product_id">
-            </form>
-        `;
+    //     const html = `
+    //         <form action="/cart/store" method="post" class="" id="productAddToCartForm">
+    //             <input type="hidden" name="_token" value="${window.csrfToken}">
+    //             <input type="hidden" name="item_id" value="${item_id}">
+    //             <input type="hidden" name="item_name" value="product_id">
+    //         </form>
+    //     `;
 
-        $('body').append(html);
+    //     $('body').append(html);
 
-        $(this).addClass('loadingbar primary').prop('disabled', true);
+    //     $(this).addClass('loadingbar primary').prop('disabled', true);
 
-        const $form = $('#productAddToCartForm');
+    //     const $form = $('#productAddToCartForm');
 
-        $form.trigger('submit');
-    });
+    //     $form.trigger('submit');
+    // });
 
     $('body').on('change', 'input[type="file"].custom-file-input', function () {
         const value = this.value;

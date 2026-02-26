@@ -519,6 +519,23 @@ Route::group(['prefix' => $prefix, 'namespace' => 'Admin', 'middleware' => ['web
             });
         });
 
+        Route::group(['prefix' => 'reel'], function () {
+            Route::get('/', 'ReelController@index');
+            Route::get('/create', 'ReelController@create');
+            Route::post('/store', 'ReelController@store');
+            Route::get('/{id}/edit', 'ReelController@edit');
+            Route::post('/{id}/update', 'ReelController@update');
+            Route::get('/{id}/delete', 'ReelController@delete');
+
+            Route::group(['prefix' => 'categories'], function () {
+                Route::get('/', 'ReelCategoriesController@index');
+                Route::post('/store', 'ReelCategoriesController@store');
+                Route::get('/{id}/edit', 'ReelCategoriesController@edit');
+                Route::post('/{id}/update', 'ReelCategoriesController@update');
+                Route::get('/{id}/delete', 'ReelCategoriesController@delete');
+            });
+        });
+
         Route::prefix('livestream')->group(function () {
             Route::get('/', 'LivestreamController@index');
             Route::get('/create', 'LivestreamController@create');
@@ -530,6 +547,13 @@ Route::group(['prefix' => $prefix, 'namespace' => 'Admin', 'middleware' => ['web
             Route::get('/{id}/sync', 'LivestreamController@sync');
         });
 
+        Route::group(['prefix' => 'asset'], function () {
+            Route::get('/', 'AssetController@index');
+            Route::post('/store', 'AssetController@store');
+            Route::get('/{id}/edit', 'AssetController@edit');
+            Route::post('/{id}/update', 'AssetController@update');
+            Route::get('/{id}/delete', 'AssetController@delete');
+        });
 
         Route::group(['prefix' => 'plan'], function () {
         

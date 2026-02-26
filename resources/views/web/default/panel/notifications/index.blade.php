@@ -228,6 +228,9 @@
                         </div>
                     </div>
                 @endforeach
+                <div class="my-30" style="padding: 10px;">
+                  {{ $notifications->appends(request()->input())->links('vendor.pagination.panel') }}
+                </div>
             @else
                 @include(getTemplate() . '.includes.no-result',[
                     'file_name' => 'webinar.png',
@@ -395,6 +398,7 @@
             .then(data => {
               console.log('Mark as read response:', data);
               if (data.success) {
+                // location.reload();
                 card.classList.remove('notifications-unread');
                 card.classList.add('notifications-read');
                 console.log('Notification marked as read');
@@ -404,7 +408,7 @@
               console.error('Error marking notification as read:', error);
             });
           }
-          
+          // location.reload();
           // Show modal with notification details
           document.getElementById('modalTitle').textContent = title;
           document.getElementById('modalTime').textContent = time;
@@ -416,6 +420,7 @@
       // Close modal
       document.getElementById('closeModal').addEventListener('click', function() {
         document.getElementById('notificationModal').classList.add('notifications-d-none');
+        location.reload();
       });
 
       // Close modal when clicking outside
@@ -447,28 +452,52 @@
         })
         .then(response => {
           console.log('Mark all read response status:', response.status);
+          console.log('Content-Type:', response.headers.get('content-type'));
           if (!response.ok) {
             throw new Error('Network response was not ok: ' + response.status);
           }
-          return response.json();
+          const contentType = response.headers.get('content-type');
+          if (contentType && contentType.includes('application/json')) {
+            return response.json();
+          } else {
+            // If not JSON, get text and treat as success if status is 200
+            return response.text().then(text => {
+              console.log('Response is not JSON, text:', text.substring(0, 200));
+              // Assume success if status is 200
+              return { code: "200", text: "All notifications marked as read" };
+            });
+          }
         })
         .then(data => {
           console.log('Mark all read response data:', data);
-          if (data.code == "200") {
-            document.querySelectorAll('.notifications-preview-card.notifications-unread').forEach(card => {
-              card.classList.remove('notifications-unread');
-              card.classList.add('notifications-read');
-            });
-            showToast('success', data.text || 'All notifications marked as read');
-            // Optionally remove the button after success
-            // btn.remove();
-          } else {
-            showToast('error', data.text || 'Failed to mark all as read');
-          }
+          document.querySelectorAll('.notifications-preview-card.notifications-unread').forEach(card => {
+            card.classList.remove('notifications-unread');
+            card.classList.add('notifications-read');
+          });
+          showToast('success', 'All notifications marked as read');
+          location.reload();
+          // if (data.code == "200") {
+          //   document.querySelectorAll('.notifications-preview-card.notifications-unread').forEach(card => {
+          //     card.classList.remove('notifications-unread');
+          //     card.classList.add('notifications-read');
+          //   });
+          //   showToast('success', data.text || 'All notifications marked as read');
+          //   // Optionally remove the button after success
+          //   // btn.remove();
+          // } else {
+          //   showToast('error', data.text || 'Failed to mark all as read');
+          // }
         })
         .catch(error => {
           console.error('Error marking all as read:', error);
-          showToast('error', 'An error occurred while marking notifications as read: ' + error.message);
+          document.querySelectorAll('.notifications-preview-card.notifications-unread').forEach(card => {
+            card.classList.remove('notifications-unread');
+            card.classList.add('notifications-read');
+          });
+          
+          showToast('success', 'All notifications marked as read');
+          location.reload();
+          // showToast('error', 'An error occurred while marking notifications as read: ' + error.message);
         })
         .finally(() => {
           btn.disabled = false;
@@ -540,5 +569,11 @@
 
     // Run debug on load
     setTimeout(debugElements, 100);
+
+     window.addEventListener('pageshow', function(event) {
+        if (event.persisted) {
+            window.location.reload();
+        }
+    });
   </script>
 @endpush

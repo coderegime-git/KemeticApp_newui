@@ -4,6 +4,8 @@ namespace App\Http\Controllers\Api\Panel;
 
 use App\Http\Controllers\Api\Controller;
 use App\Http\Resources\PurchaseResource;
+use App\Mixins\RegistrationPackage\UserPackage;
+use App\Http\Controllers\Panel\Traits\VideoDemoTrait;
 use App\Mixins\Cashback\CashbackRules;
 use App\Models\Api\Sale;
 use App\Models\Api\Webinar;
@@ -15,7 +17,17 @@ use Illuminate\Support\Facades\DB;
 use App\Models\WebinarChapter;
 use App\Models\WebinarChapterItem;
 use App\Models\WebinarExtraDescription;
+use App\Models\Translation\WebinarTranslation;
+use App\Models\WebinarFilterOption;
 use App\Models\Ticket;
+use App\Models\Tag;
+use App\Models\Faq;
+use App\User;
+use App\Models\Prerequisite;
+use App\Models\RelatedCourse;
+use App\Models\TextLesson;
+use App\Models\Translation\WebinarChapterTranslation;
+use App\Models\Translation\FaqTranslation;
 use App\Models\Translation\TicketTranslation;
 use App\Models\Translation\WebinarExtraDescriptionTranslation;
 use App\Models\Quiz;
@@ -405,8 +417,11 @@ class WebinarsController extends Controller
 
         $user = apiAuth();
 
+        // dd($user);
+
         if (!$user->isTeacher() and !$user->isOrganization()) {
-            abort(403);
+            // abort(403);
+            return apiResponse2(0, 'Unauthorized. You do not have permission to create a course.', [], 403);
         }
 
         $userPackage = new UserPackage();
@@ -446,8 +461,9 @@ class WebinarsController extends Controller
             'private' => (!empty($data['private']) and $data['private'] == 'on') ? true : false,
             'thumbnail' => $data['thumbnail'],
             'image_cover' => $data['image_cover'],
-            'video_demo' => $data['video_demo'],
-            'video_demo_source' => $data['video_demo'] ? $data['video_demo_source'] : null,
+            'video_demo' => $data['video_demo'] ?? null,
+            'video_demo_source'  => !empty($data['video_demo']) ? ($data['video_demo_source'] ?? null) : null,
+            // 'video_demo_source' => $data['video_demo'] ? $data['video_demo_source'] : null,
             'status' => ((!empty($data['draft']) and $data['draft'] == 1) or (!empty($data['get_next']) and $data['get_next'] == 1)) ? Webinar::$isDraft : Webinar::$pending,
             'created_at' => time(),
             'message_for_reviewer' => $data['message_for_reviewer']??null,
@@ -494,13 +510,24 @@ class WebinarsController extends Controller
 
             $filters = $request->get('filters', null);
 
-            Webinar::where('id', $webinar->id)->update($data);
+            // Webinar::where('id', $webinar->id)->update($data);
+
+            // if (!empty($filters) and is_array($filters)) {
+            //     WebinarFilterOption::where('webinar_id', $webinar->id)->delete();
+            //     foreach ($filters as $filter) {
+            //         WebinarFilterOption::create([
+            //             'webinar_id' => $webinar->id,
+            //             'filter_option_id' => $filter
+            //         ]);
+            //     }
+            // }
 
             if (!empty($filters) and is_array($filters)) {
+
                 WebinarFilterOption::where('webinar_id', $webinar->id)->delete();
                 foreach ($filters as $filter) {
                     WebinarFilterOption::create([
-                        'webinar_id' => $webinar->id,
+                        'webinar_id'       => $webinar->id,
                         'filter_option_id' => $filter
                     ]);
                 }
@@ -530,158 +557,312 @@ class WebinarsController extends Controller
             }
 
             //add webinar chapters
+            $locale = $data['locale'] ?? getDefaultLocale();
             if (!empty($webinar) and $webinar->canAccess($user)) {
                 $status = (!empty($data['status']) and $data['status'] == true) ? WebinarChapter::$chapterActive : WebinarChapter::$chapterInactive;
 
-                $chapter = WebinarChapter::create([
-                    'user_id' => $user->id,
-                    'webinar_id' => $webinar->id,
-                    //'type' => $data['type'],
-                    'status' => $status,
-                    'check_all_contents_pass' => (!empty($data['check_all_contents_pass']) and $data['check_all_contents_pass'] == true),
-                    'created_at' => time(),
-                ]);
+                // $chapter = WebinarChapter::create([
+                //     'user_id' => $user->id,
+                //     'webinar_id' => $webinar->id,
+                //     //'type' => $data['type'],
+                //     'status' => $status,
+                //     'check_all_contents_pass' => (!empty($data['check_all_contents_pass']) and $data['check_all_contents_pass'] == true),
+                //     'created_at' => time(),
+                // ]);
 
-                if (!empty($chapter)) {
-                    WebinarChapterTranslation::updateOrCreate([
-                        'webinar_chapter_id' => $chapter->id,
-                        'locale' => mb_strtolower($data['locale']),
-                    ], [
-                        'title' => $data['title'],
-                    ]);
-                }
+                // if (!empty($chapter)) {
+                //     WebinarChapterTranslation::updateOrCreate([
+                //         'webinar_chapter_id' => $chapter->id,
+                //         'locale' => mb_strtolower($data['locale']),
+                //     ], [
+                //         'title' => $data['title'],
+                //     ]);
+                // }
 
-                //webinar quizes
-                $locale = $data['locale'] ?? getDefaultLocale();
-                
-                $quiz = Quiz::create([
-                    'webinar_id' => !empty($webinar) ? $webinar->id : null,
-                    'chapter_id' => !empty($chapter) ? $chapter->id : null,
-                    'creator_id' => $user->id,
-                    'attempt' => $data['attempt'] ?? null,
-                    'pass_mark' => $data['pass_mark'],
-                    'time' => $data['time'] ?? null,
-                    'status' => (!empty($data['status']) and $data['status'] == 'on') ? Quiz::ACTIVE : Quiz::INACTIVE,
-                    'certificate' => (!empty($data['certificate']) and $data['certificate'] == 'on'),
-                    'display_questions_randomly' => (!empty($data['display_questions_randomly']) and $data['display_questions_randomly'] == 'on'),
-                    'expiry_days' => (!empty($data['expiry_days']) and $data['expiry_days'] > 0) ? $data['expiry_days'] : null,
-                    'created_at' => time(),
-                ]);
-        
-                if (!empty($quiz)) {
-                    QuizTranslation::updateOrCreate([
-                        'quiz_id' => $quiz->id,
-                        'locale' => mb_strtolower($locale),
-                    ], [
-                        'title' => $data['title'],
-                    ]);
-        
-                    if (!empty($quiz->chapter_id)) {
-                        WebinarChapterItem::makeItem($quiz->creator_id, $quiz->chapter_id, $quiz->id, WebinarChapterItem::$chapterQuiz);
-                    }
-                }
-        
-                // Send Notification To All Students
-                if (!empty($webinar)) {
-                    $webinar->sendNotificationToAllStudentsForNewQuizPublished($quiz);
-                }
+                foreach ($request->get('chapters', []) as $chapterData) {
 
-
-                //new pricing plan (ticket store)
-                $canStore = true;
-
-                if (!empty($webinar->capacity)) {
-                    $sumTicketsCapacities = $webinar->tickets->sum('capacity');
-                    $capacity = $webinar->capacity - $sumTicketsCapacities;
-
-                    $rules['capacity'] = 'nullable|numeric|min:1|max:' . $capacity;
-                }
-
-                if ($canStore) {
-                    $ticket = Ticket::create([
-                        'creator_id' => $user->id,
-                        'webinar_id' => !empty($data['webinar_id']) ? $data['webinar_id'] : null,
-                        'bundle_id' => !empty($data['bundle_id']) ? $data['bundle_id'] : null,
-                        'start_date' => strtotime($data['start_date']),
-                        'end_date' => strtotime($data['end_date']),
-                        'discount' => $data['discount'],
-                        'capacity' => $data['capacity'] ?? null,
-                        'created_at' => time()
+                    $chapter = WebinarChapter::create([
+                        'user_id'                 => $user->id,
+                        'webinar_id'              => $webinar->id,
+                        'status'                  => (!empty($chapterData['status']) && $chapterData['status'] == 'on')
+                                                        ? WebinarChapter::$chapterActive
+                                                        : WebinarChapter::$chapterInactive,
+                        'check_all_contents_pass' => (!empty($chapterData['check_all_contents_pass']) && $chapterData['check_all_contents_pass'] == true),
+                        'created_at'              => time(),
                     ]);
 
-                    if (!empty($ticket)) {
-                        TicketTranslation::updateOrCreate([
-                            'ticket_id' => $ticket->id,
-                            'locale' => mb_strtolower($data['locale']),
+                    if ($chapter) {
+                        WebinarChapterTranslation::updateOrCreate([
+                            'webinar_chapter_id' => $chapter->id,
+                            'locale'             => mb_strtolower($locale),
                         ], [
-                            'title' => $data['title'],
+                            'title' => $chapterData['title'],
                         ]);
                     }
+                
 
+                    //webinar quizes
+                    $locale = $data['locale'] ?? getDefaultLocale();
+
+                    foreach ($chapterData['quizzes'] ?? [] as $quizData)
+                    {
+
+                        $quiz = Quiz::create([
+                            'webinar_id'                 => $webinar->id,
+                            'chapter_id'                 => $chapter->id,
+                            'creator_id'                 => $user->id,
+                            'pass_mark'                  => $quizData['pass_mark'],
+                            'attempt'                    => $quizData['attempt'] ?? null,
+                            'time'                       => $quizData['time'] ?? null,
+                            'status'                     => (!empty($quizData['status']) && $quizData['status'] == 'on')
+                                                                ? Quiz::ACTIVE
+                                                                : Quiz::INACTIVE,
+                            'certificate'                => (!empty($quizData['certificate']) && $quizData['certificate'] == 'on'),
+                            'display_questions_randomly' => (!empty($quizData['display_questions_randomly']) && $quizData['display_questions_randomly'] == 'on'),
+                            'expiry_days'                => (!empty($quizData['expiry_days']) && $quizData['expiry_days'] > 0) ? $quizData['expiry_days'] : null,
+                            'created_at'                 => time(),
+                        ]);
+
+                        if ($quiz) {
+                            QuizTranslation::updateOrCreate([
+                                'quiz_id' => $quiz->id,
+                                'locale'  => mb_strtolower($locale),
+                            ], [
+                                'title' => $quizData['title'],
+                            ]);
+
+                            if ($quiz->chapter_id) {
+                                WebinarChapterItem::makeItem(
+                                    $quiz->creator_id,
+                                    $quiz->chapter_id,
+                                    $quiz->id,
+                                    WebinarChapterItem::$chapterQuiz
+                                );
+                            }
+
+                            $webinar->sendNotificationToAllStudentsForNewQuizPublished($quiz);
+                        }
+                    }
+                    
+                    // $quiz = Quiz::create([
+                    //     'webinar_id' => !empty($webinar) ? $webinar->id : null,
+                    //     'chapter_id' => !empty($chapter) ? $chapter->id : null,
+                    //     'creator_id' => $user->id,
+                    //     'attempt' => $data['attempt'] ?? null,
+                    //     'pass_mark' => $data['pass_mark'],
+                    //     'time' => $data['time'] ?? null,
+                    //     'status' => (!empty($data['status']) and $data['status'] == 'on') ? Quiz::ACTIVE : Quiz::INACTIVE,
+                    //     'certificate' => (!empty($data['certificate']) and $data['certificate'] == 'on'),
+                    //     'display_questions_randomly' => (!empty($data['display_questions_randomly']) and $data['display_questions_randomly'] == 'on'),
+                    //     'expiry_days' => (!empty($data['expiry_days']) and $data['expiry_days'] > 0) ? $data['expiry_days'] : null,
+                    //     'created_at' => time(),
+                    // ]);
+            
+                    // if (!empty($quiz)) {
+                    //     QuizTranslation::updateOrCreate([
+                    //         'quiz_id' => $quiz->id,
+                    //         'locale' => mb_strtolower($locale),
+                    //     ], [
+                    //         'title' => $data['title'],
+                    //     ]);
+            
+                    //     if (!empty($quiz->chapter_id)) {
+                    //         WebinarChapterItem::makeItem($quiz->creator_id, $quiz->chapter_id, $quiz->id, WebinarChapterItem::$chapterQuiz);
+                    //     }
+                    // }
+            
+                    // // Send Notification To All Students
+                    // if (!empty($webinar)) {
+                    //     $webinar->sendNotificationToAllStudentsForNewQuizPublished($quiz);
+                    // }
+                }
+
+                //new pricing plan (ticket store)
+                // $canStore = true;
+
+                // if (!empty($webinar->capacity)) {
+                //     $sumTicketsCapacities = $webinar->tickets->sum('capacity');
+                //     $capacity = $webinar->capacity - $sumTicketsCapacities;
+
+                //     $rules['capacity'] = 'nullable|numeric|min:1|max:' . $capacity;
+                // }
+
+                // if ($canStore) {
+                //     $ticket = Ticket::create([
+                //         'creator_id' => $user->id,
+                //         'webinar_id' => !empty($data['webinar_id']) ? $data['webinar_id'] : null,
+                //         'bundle_id' => !empty($data['bundle_id']) ? $data['bundle_id'] : null,
+                //         'start_date' => strtotime($data['start_date']),
+                //         'end_date' => strtotime($data['end_date']),
+                //         'discount' => $data['discount'],
+                //         'capacity' => $data['capacity'] ?? null,
+                //         'created_at' => time()
+                //     ]);
+
+                //     if (!empty($ticket)) {
+                //         TicketTranslation::updateOrCreate([
+                //             'ticket_id' => $ticket->id,
+                //             'locale' => mb_strtolower($data['locale']),
+                //         ], [
+                //             'title' => $data['title'],
+                //         ]);
+                //     }
+
+                // }
+
+                foreach ($request->get('tickets', []) as $ticketData) {
+
+                    // Capacity guard
+                    $canStore = true;
+                    if (!empty($webinar->capacity)) {
+                        $used = $webinar->tickets()->sum('capacity');
+                        $remaining = $webinar->capacity - $used;
+                        if (!empty($ticketData['capacity']) && $ticketData['capacity'] > $remaining) {
+                            $canStore = false;
+                        }
+                    }
+
+                    if ($canStore) {
+                        $ticket = Ticket::create([
+                            'creator_id' => $user->id,
+                            'webinar_id' => $webinar->id,
+                            'bundle_id'  => !empty($ticketData['bundle_id']) ? $ticketData['bundle_id'] : null,
+                            'start_date' => strtotime($ticketData['start_date']),
+                            'end_date'   => strtotime($ticketData['end_date']),
+                            'discount'   => $ticketData['discount'],
+                            'capacity'   => $ticketData['capacity'] ?? null,
+                            'created_at' => time(),
+                        ]);
+
+                        if ($ticket) {
+                            TicketTranslation::updateOrCreate([
+                                'ticket_id' => $ticket->id,
+                                'locale'    => mb_strtolower($locale),
+                            ], [
+                                'title' => $ticketData['title'],
+                            ]);
+                        }
+                    }
                 }
 
 
                 //add faqs
-                $columnName = 'webinar_id';
-                $columnValue = $webinar->id;
+                // $columnName = 'webinar_id';
+                // $columnValue = $webinar->id;
 
-                $order = Faq::query()
-                    ->where(function ($query) use ($user, $columnName, $columnValue) {
-                        $query->where('creator_id', $user->id);
-                        $query->orWhere($columnName, $columnValue);
-                    })
-                    ->count() + 1;
+                // $order = Faq::query()
+                //     ->where(function ($query) use ($user, $columnName, $columnValue) {
+                //         $query->where('creator_id', $user->id);
+                //         $query->orWhere($columnName, $columnValue);
+                //     })
+                //     ->count() + 1;
 
-                $faq = Faq::create([
-                    'creator_id' => $user->id,
-                    'webinar_id' => !empty($webinar->id) ? $webinar->id : null,
-                    'bundle_id' => isset($data['bundle_id']) && !empty($data['bundle_id']) ? $data['bundle_id'] : null,
-                    'upcoming_course_id' => isset($data['upcoming_course_id']) && !empty($data['upcoming_course_id']) ? $data['upcoming_course_id'] : null,
-                    'order' => $order,
-                    'created_at' => time()
-                ]);
+                // $faq = Faq::create([
+                //     'creator_id' => $user->id,
+                //     'webinar_id' => !empty($webinar->id) ? $webinar->id : null,
+                //     'bundle_id' => isset($data['bundle_id']) && !empty($data['bundle_id']) ? $data['bundle_id'] : null,
+                //     'upcoming_course_id' => isset($data['upcoming_course_id']) && !empty($data['upcoming_course_id']) ? $data['upcoming_course_id'] : null,
+                //     'order' => $order,
+                //     'created_at' => time()
+                // ]);
 
-                if (!empty($faq)) {
-                    FaqTranslation::updateOrCreate([
-                        'faq_id' => $faq->id,
-                        'locale' => mb_strtolower($data['locale']),
-                    ], [
-                        'title' => $data['title'],
-                        'answer' => $data['answer'],
+                // if (!empty($faq)) {
+                //     FaqTranslation::updateOrCreate([
+                //         'faq_id' => $faq->id,
+                //         'locale' => mb_strtolower($data['locale']),
+                //     ], [
+                //         'title' => $data['title'],
+                //         'answer' => $data['answer'],
+                //     ]);
+                // }
+
+                foreach ($request->get('faqs', []) as $faqData) {
+
+                    $order = Faq::where('webinar_id', $webinar->id)->count() + 1;
+
+                    $faq = Faq::create([
+                        'creator_id'         => $user->id,
+                        'webinar_id'         => $webinar->id,
+                        'bundle_id'          => !empty($faqData['bundle_id']) ? $faqData['bundle_id'] : null,
+                        'upcoming_course_id' => !empty($faqData['upcoming_course_id']) ? $faqData['upcoming_course_id'] : null,
+                        'order'              => $order,
+                        'created_at'         => time(),
                     ]);
+
+                    if ($faq) {
+                        FaqTranslation::updateOrCreate([
+                            'faq_id' => $faq->id,
+                            'locale' => mb_strtolower($locale),
+                        ], [
+                            'title'  => $faqData['title'],
+                            'answer' => $faqData['answer'],
+                        ]);
+                    }
                 }
 
 
                 //webinar extra description
-                $columnName = 'webinar_id';
-                $columnValue = $webinar->id;
+                // $columnName = 'webinar_id';
+                // $columnValue = $webinar->id;
 
-                $order = WebinarExtraDescription::query()
-                    ->where($columnName, $columnValue)
-                    ->where('type', $data['type'])
-                    ->count() + 1;
+                // $order = WebinarExtraDescription::query()
+                //     ->where($columnName, $columnValue)
+                //     ->where('type', $data['type'])
+                //     ->count() + 1;
 
-                if($data['type'] == 'company_logos'){
-                    $imageFile = $data['value'];
-                    $companyLogo = '';
-                }
+                // if($data['type'] == 'company_logos'){
+                //     $imageFile = $data['value'];
+                //     $companyLogo = '';
+                // }
 
-                $webinarExtraDescription = WebinarExtraDescription::create([
-                    'creator_id' => $user->id,
-                    'webinar_id' => !empty($webinar->id) ? $webinar->id : null,
-                    'upcoming_course_id' => isset($data['upcoming_course_id']) && !empty($data['upcoming_course_id']) ? $data['upcoming_course_id'] : null,
-                    'type' => $data['type'],
-                    'order' => $order,
-                    'created_at' => time()
-                ]);
+                // $webinarExtraDescription = WebinarExtraDescription::create([
+                //     'creator_id' => $user->id,
+                //     'webinar_id' => !empty($webinar->id) ? $webinar->id : null,
+                //     'upcoming_course_id' => isset($data['upcoming_course_id']) && !empty($data['upcoming_course_id']) ? $data['upcoming_course_id'] : null,
+                //     'type' => $data['type'],
+                //     'order' => $order,
+                //     'created_at' => time()
+                // ]);
 
-                if (!empty($webinarExtraDescription)) {
-                    WebinarExtraDescriptionTranslation::updateOrCreate([
-                        'webinar_extra_description_id' => $webinarExtraDescription->id,
-                        'locale' => mb_strtolower($data['locale']),
-                    ], [
-                        'value' => $data['type'] == 'company_logos' ? $companyLogo : $data['value'],
+                // if (!empty($webinarExtraDescription)) {
+                //     WebinarExtraDescriptionTranslation::updateOrCreate([
+                //         'webinar_extra_description_id' => $webinarExtraDescription->id,
+                //         'locale' => mb_strtolower($data['locale']),
+                //     ], [
+                //         'value' => $data['type'] == 'company_logos' ? $companyLogo : $data['value'],
+                //     ]);
+                // }
+                
+                foreach ($request->get('extra_descriptions', []) as $extraData) {
+
+                    $order = WebinarExtraDescription::where('webinar_id', $webinar->id)
+                        ->where('type', $extraData['type'])
+                        ->count() + 1;
+
+                    // Handle company logo image upload if needed
+                    $value = $extraData['value'] ?? '';
+                    if ($extraData['type'] == 'company_logos') {
+                        // process image upload here if required, e.g. $value = uploadImage($extraData['value']);
+                        $value = '';
+                    }
+
+                    $extraDescription = WebinarExtraDescription::create([
+                        'creator_id'         => $user->id,
+                        'webinar_id'         => $webinar->id,
+                        // 'upcoming_course_id' => !empty($extraData['upcoming_course_id']) ? $extraData['upcoming_course_id'] : null,
+                        'type'               => $extraData['type'],
+                        'order'              => $order,
+                        'created_at'         => time(),
                     ]);
+
+                    if ($extraDescription) {
+                        WebinarExtraDescriptionTranslation::updateOrCreate([
+                            'webinar_extra_description_id' => $extraDescription->id,
+                            'locale'                       => mb_strtolower($locale),
+                        ], [
+                            'value' => $value,
+                        ]);
+                    }
                 }
 
                 //webinar quizes
@@ -690,31 +871,51 @@ class WebinarsController extends Controller
             }
 
             //add sections
-            if (!empty($webinar) and $webinar->canAccess()) {
+            // if (!empty($webinar) and $webinar->canAccess()) {
 
-                $required = (!empty($data['required']) and $data['required'] == 'on') ? true : false;
+            //     $required = (!empty($data['required']) and $data['required'] == 'on') ? true : false;
 
-                Prerequisite::create([
-                    'webinar_id' => $data['webinar_id'],
-                    'prerequisite_id' => $data['prerequisite_id'],
-                    'required' => $required,
-                    'created_at' => time()
-                ]);
+            //     Prerequisite::create([
+            //         'webinar_id' => $data['webinar_id'],
+            //         'prerequisite_id' => $data['prerequisite_id'],
+            //         'required' => $required,
+            //         'created_at' => time()
+            //     ]);
 
+            // }
+
+            if ($webinar->canAccess($user)) {
+                foreach ($request->get('prerequisites', []) as $prereqData) {
+                    Prerequisite::create([
+                        'webinar_id'      => $webinar->id,
+                        'prerequisite_id' => $prereqData['prerequisite_id'],
+                        'required'        => (!empty($prereqData['required']) && $prereqData['required'] == 'on'),
+                        'created_at'      => time(),
+                    ]);
+                }
             }
 
             //add related course
             $type = 'App\Models\Webinar';
 
-            RelatedCourse::query()->updateOrCreate([
-                'creator_id' => $user->id,
-                'targetable_id' => $data['item_id'],
-                'targetable_type' => $type,
-                'course_id' => $webinar->id
-            ], [
-                'order' => null,
-            ]);
-
+            // RelatedCourse::query()->updateOrCreate([
+            //     'creator_id' => $user->id,
+            //     'targetable_id' => $data['item_id'],
+            //     'targetable_type' => $type,
+            //     'course_id' => $webinar->id
+            // ], [
+            //     'order' => null,
+            // ]);
+            foreach ($request->get('related_courses', []) as $relatedData) {
+                RelatedCourse::updateOrCreate([
+                    'creator_id'     => $user->id,
+                    'targetable_id'  => $relatedData['item_id'],
+                    'targetable_type'=> 'App\Models\Webinar',
+                    'course_id'      => $webinar->id,
+                ], [
+                    'order' => null,
+                ]);
+            }
 
         }
 
@@ -724,9 +925,56 @@ class WebinarsController extends Controller
             '[item_title]' => $webinar->title,
             '[content_type]' => trans('admin/main.course'),
         ];
+        
         sendNotification("new_item_created", $notifyOptions, 1);
 
+        $data = [
+            "success" => true,
+            "message" => "Course created successfully"
+        ];
 
+        return apiResponse2(1, $data,[]);
+
+
+    }
+
+    public function userssearch(Request $request)
+    {
+        $request->validate([
+            'term' => 'required|string|min:1',
+            'option' => 'nullable|string|in:just_teachers,just_student_role'
+        ]);
+
+        $user = auth('api')->user(); // for API guard (Sanctum/Passport)
+
+        $query = User::query()
+            ->select('id', 'full_name', 'email', 'mobile', 'avatar') // return only needed fields
+            ->where('id', '!=', $user->id)
+            ->whereNotIn('role_name', ['admin'])
+            ->where(function ($q) use ($request) {
+                $term = $request->term;
+
+                $q->where('full_name', 'LIKE', "%$term%")
+                ->orWhere('email', 'LIKE', "%$term%")
+                ->orWhere('mobile', 'LIKE', "%$term%");
+            });
+
+        // 🎯 Filter by option
+        if ($request->option === 'just_teachers') {
+            $query->where('role_name', 'teacher');
+        }
+
+        if ($request->option === 'just_student_role') {
+            $query->where('role_name', Role::$user);
+        }
+
+        $users = $query->get();
+
+        return response()->json([
+            'status' => true,
+            'message' => 'User list fetched successfully',
+            'data' => $users
+        ]);
     }
 
 }

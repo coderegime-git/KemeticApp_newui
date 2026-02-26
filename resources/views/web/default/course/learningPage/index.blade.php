@@ -13,6 +13,7 @@
 .kemetic-learning-page {
     background: var(--k-dark);
     min-height: 100vh;
+    max-width: 1160px;
 }
 
 /* MAIN CONTENT */

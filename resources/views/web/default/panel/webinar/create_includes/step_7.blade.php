@@ -265,6 +265,4 @@
     var saveSuccessLang = '{{ trans('webinars.success_store') }}';
     var quizzesSectionLang = '{{ trans('quiz.quizzes_section') }}';
 </script>
-
-<script src="/assets/default/js/panel/quiz.min.js"></script>
 @endpush

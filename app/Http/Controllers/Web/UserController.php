@@ -17,6 +17,8 @@ use App\Models\Sale;
 use App\Models\UserOccupation;
 use App\Models\Webinar;
 use App\Models\Reel;
+use App\Models\Livestream;
+use App\Models\Blog;
 use App\User;
 use App\Models\UserStory;
 use App\Models\UserStoryView;
@@ -57,6 +59,9 @@ class UserController extends Controller
                 'reels' => function ($query) {
                     $query->where('is_hidden', '0');
                 },
+                // 'livestream' => function ($query) {
+                //     $query->where('livestream_end', 'Yes');
+                // },
                 'stories' => function ($query) {
                     $query->active()
                           ->withCount('views')
@@ -76,31 +81,257 @@ class UserController extends Controller
             'reviews' => 0
         ];
 
-        foreach ($user->blog as $article) {
-            $totalCounts['likes'] += $article->like()->count();
-            $totalCounts['comments'] += $article->comments()->where('status', 'active')->count();
-            $totalCounts['reviews'] += $article->reviews()->where('status', 'active')->count();
-        }
+        $seekerLikedWebinars    = collect();
+        $seekerLikedProducts    = collect();
+        $seekerLikedLivestreams = collect();
+        $seekerLikedArticles    = collect();
+        $seekerReviews          = collect(); 
 
-        // 2. Products counts
-        foreach ($user->products as $product) {
-            $totalCounts['likes'] += $product->likes()->count();
-            $totalCounts['comments'] += $product->comments()->count();
-            $totalCounts['reviews'] += $product->reviews()->where('status', 'active')->count();
-        }
+        $isWisdomKeeper = $user->role->caption === 'Wisdom Keeper' || $user->role->caption === 'wisdom_keeper';
+        if ($isWisdomKeeper) {
+            foreach ($user->blog as $article) {
+                $totalCounts['likes'] += $article->like()->count();
+                $totalCounts['comments'] += $article->comments()->count();
+                $totalCounts['reviews'] += $article->reviews()->count();
+            }
 
-        // 3. Reels counts (reels don't have reviews)
-        foreach ($user->reels as $reel) {
-            $totalCounts['likes'] += $reel->likes()->count();
-            $totalCounts['comments'] += $reel->comments()->count();
-            // Reels don't have reviews
-        }
+            // 2. Products counts
+            foreach ($user->products as $product) {
+                $totalCounts['likes'] += $product->likes()->count();
+                $totalCounts['comments'] += $product->comments()->count();
+                $totalCounts['reviews'] += $product->reviews()->count();
+            }
 
-        // 4. Webinars counts
-        foreach ($user->webinars as $webinar) {
-            // $totalCounts['likes'] += $webinar->likes()->count(); // If webinar has likes relation
-            $totalCounts['comments'] += $webinar->comments()->count();
-            $totalCounts['reviews'] += $webinar->reviews()->where('status', 'active')->count();
+            // 3. Reels counts (reels don't have reviews)
+            foreach ($user->reels as $reel) {
+                $totalCounts['likes'] += $reel->likes()->count();
+                $totalCounts['comments'] += $reel->comments()->count();
+                $totalCounts['reviews'] += $reel->review()->count();
+                // Reels don't have reviews
+            }
+
+            // 4. Webinars counts
+            foreach ($user->webinars as $webinar) {
+                $totalCounts['likes'] += $webinar->likes()->count(); // If webinar has likes relation
+                $totalCounts['comments'] += $webinar->comments()->count();
+                $totalCounts['reviews'] += $webinar->reviews()->count();
+            }
+
+            // foreach ($user->livestream as $livestream) {
+            //     $totalCounts['likes'] += $livestream->likes()->count(); // If webinar has likes relation
+            //     $totalCounts['comments'] += $livestream->comments()->count();
+            //     $totalCounts['reviews'] += $livestream->reviews()->count();
+            // }
+
+            $wisdomKeeperReceivedReviews = collect([
+
+            'webinars' => DB::table('webinar_reviews')
+                ->join('webinars', 'webinar_reviews.webinar_id', '=', 'webinars.id')
+                ->join('webinar_translations', 'webinars.id', '=', 'webinar_translations.webinar_id')
+                ->join('users', 'webinar_reviews.creator_id', '=', 'users.id')  
+                ->where('webinars.creator_id', $user->id)
+                ->orWhere('webinars.teacher_id', $user->id)
+                ->where('webinar_reviews.status', 'active')
+                ->select(
+                    'webinar_reviews.*',
+                    'webinar_translations.title as content_title',
+                    'webinars.*',
+                    'webinars.id as content_id',
+                    'users.full_name as reviewer_name',
+                    'users.avatar as reviewer_avatar'
+                )
+                ->get(),
+
+            'products' => DB::table('product_reviews')
+                ->join('products', 'product_reviews.product_id', '=', 'products.id')
+                ->join('product_translations', 'products.id', '=', 'product_translations.product_id')
+                ->join('users', 'product_reviews.creator_id', '=', 'users.id')
+                ->where('products.creator_id', $user->id)
+                ->select(
+                    'product_reviews.*',
+                    'product_translations.title as content_title',
+                    'products.*',
+                    'products.id as content_id',
+                    'users.full_name as reviewer_name',
+                    'users.avatar as reviewer_avatar'
+                )
+                ->get(),
+
+            'articles' => DB::table('article_reviews')
+                ->join('blog', 'article_reviews.article_id', '=', 'blog.id')
+                ->join('blog_translations', 'blog.id', '=', 'blog_translations.blog_id')
+                ->join('users', 'article_reviews.creator_id', '=', 'users.id')
+                ->where('blog.author_id', $user->id) // adjust column name if different
+                ->select(
+                    'article_reviews.*',
+                    'blog_translations.title as content_title',
+                    'blog.*',
+                    'blog.id as content_id',
+                    'users.full_name as reviewer_name',
+                    'users.avatar as reviewer_avatar'
+                )
+                ->get(),
+
+            'reels' => DB::table('reel_review')
+                ->join('reels', 'reel_review.reel_id', '=', 'reels.id')
+                ->join('users', 'reel_review.user_id', '=', 'users.id')
+                ->where('reels.user_id', $user->id) // adjust column name if different
+                ->select(
+                    'reel_review.*',
+                    'reels.title as content_title',
+                    'reels.*',
+                    'reels.id as content_id',
+                    'users.full_name as reviewer_name',
+                    'users.avatar as reviewer_avatar'
+                )
+                ->get(),
+            ]);
+        }
+        else
+        {
+            $articleLikes = DB::table('article_like')
+                ->where('user_id', $user->id)
+                ->count();
+            $totalCounts['likes'] += $articleLikes;
+            
+            // 2. Articles this seeker has reviewed
+            $articleReviews = DB::table('article_reviews')
+                ->where('creator_id', $user->id)
+                ->count();
+            $totalCounts['reviews'] += $articleReviews;
+            
+            // 3. Articles this seeker has commented on
+            $comments_count = DB::table('comments') // Adjust table name if different
+                ->where('user_id', $user->id)
+                ->count();
+            $totalCounts['comments'] += $comments_count;
+            
+            // 4. Products this seeker has liked
+            $productLikes = DB::table('product_like')
+                ->where('user_id', $user->id)
+                ->count();
+            $totalCounts['likes'] += $productLikes;
+            
+            // 5. Products this seeker has reviewed
+            $productReviews = DB::table('product_reviews')
+                ->where('creator_id', $user->id) // Using creator_id as per your structure
+                ->count();
+            $totalCounts['reviews'] += $productReviews;
+            
+            // 6. Products this seeker has commented on
+            // $productComments = DB::table('product_comments') // Adjust table name if different
+            //     ->where('user_id', $user->id)
+            //     ->count();
+            // $totalCounts['comments'] += $productComments;
+            
+            // 7. Webinars this seeker has liked
+            $webinarLikes = DB::table('webinar_like')
+                ->where('user_id', $user->id)
+                ->count();
+            $totalCounts['likes'] += $webinarLikes;
+            
+            // 8. Webinars this seeker has reviewed
+            $webinarReviews = DB::table('webinar_reviews')
+                ->where('creator_id', $user->id) // Using creator_id as per your structure
+                ->count();
+            $totalCounts['reviews'] += $webinarReviews;
+            
+            // 9. Webinars this seeker has commented on
+            // $webinarComments = DB::table('webinar_comments') // Adjust table name if different
+            //     ->where('user_id', $user->id)
+            //     ->count();
+            // $totalCounts['comments'] += $webinarComments;
+            
+            // 10. Livestreams this seeker has liked
+            // $livestreamLikes = DB::table('livestream_like')
+            //     ->where('user_id', $user->id)
+            //     ->count();
+            // $totalCounts['likes'] += $livestreamLikes;
+            
+            // // 11. Livestreams this seeker has reviewed
+            // $livestreamReviews = DB::table('livestream_review')
+            //     ->where('user_id', $user->id)
+            //     ->count();
+            // $totalCounts['reviews'] += $livestreamReviews;
+            
+            // 12. Reels this seeker has liked
+            $reelLikes = DB::table('reel_likes') // Adjust table name if different
+                ->where('user_id', $user->id)
+                ->count();
+            $totalCounts['likes'] += $reelLikes;
+            
+            // 13. Reels this seeker has reviewed
+            $reelReviews = DB::table('reel_review')
+                ->where('user_id', $user->id)
+                ->count();
+            $totalCounts['reviews'] += $reelReviews;
+            
+            // 14. Reels this seeker has commented on
+            $reelComments = DB::table('reel_comments') // Adjust table name if different
+                ->where('user_id', $user->id)
+                ->count();
+            $totalCounts['comments'] += $reelComments;
+
+            $seekerLikedProducts = Product::whereHas('savedItems', function ($q) use ($user) {
+                $q->where('user_id', $user->id);
+            })
+            ->get();
+
+            // $seekerLikedLivestreams = Livestream::whereHas('savedItems', function ($q) use ($user) {
+            //     $q->where('user_id', $user->id);
+            // })
+            // ->get();
+
+            $seekerLikedArticles = Blog::whereHas('saveditems', function ($q) use ($user) {
+                $q->where('user_id', $user->id);
+            })
+            ->get();
+
+            $seekerLikedWebinars = Webinar::whereHas('savedcourse', function ($q) use ($user) {
+                $q->where('user_id', $user->id);
+            })
+            ->with(['teacher', 'reviews', 'tickets', 'feature'])
+            ->get();
+
+            $seekerWebinarReviews = DB::table('webinar_reviews')
+                ->join('webinars', 'webinar_reviews.webinar_id', '=', 'webinars.id')
+                ->where('webinar_reviews.creator_id', $user->id)  // Filter by webinar creator
+                ->select('webinars.*', 'webinar_reviews.rates', 'webinar_reviews.description as review')
+                ->get();
+
+            $seekerProductReviews = DB::table('product_reviews')
+                ->join('products', 'product_reviews.product_id', '=', 'products.id')
+                ->join('product_media', 'product_media.product_id', '=', 'products.id')
+                ->where('product_reviews.creator_id', $user->id)
+                ->where('product_media.type', 'thumbnail')
+                ->select('products.*','product_media.path as thumbnail', 'product_reviews.rates', 'product_reviews.description as review')
+                ->get();
+
+            $seekerArticleReviews = DB::table('article_reviews')
+                ->join('blog', 'article_reviews.article_id', '=', 'blog.id')
+                ->where('article_reviews.creator_id', $user->id)
+                ->select('blog.*', 'article_reviews.rates', 'article_reviews.description as review')
+                ->get();
+
+            $seekerReelReviews = DB::table('reel_review')
+                ->join('reels', 'reel_review.reel_id', '=', 'reels.id')
+                ->where('reel_review.user_id', $user->id)
+                ->select('reels.*', 'reel_review.rating', 'reel_review.review')
+                ->get();
+
+            // $seekerLivestreamReviews = DB::table('livestream_review')
+            //     ->where('user_id', $user->id)
+            //     ->join('livestreams', 'livestream_review.livestream_id', '=', 'livestreams.id')
+            //     ->select('livestreams.*', 'livestream_review.rating', 'livestream_review.review')
+            //     ->get();
+
+            $seekerReviews = collect([
+                'webinars'    => $seekerWebinarReviews,
+                'products'    => $seekerProductReviews,
+                'articles'    => $seekerArticleReviews,
+                'reels'       => $seekerReelReviews,
+                // 'livestreams' => $seekerLivestreamReviews,
+            ]);
         }
 
         $userMetas = $user->userMetas;
@@ -157,18 +388,36 @@ class UserController extends Controller
                 'category'
             ])->get();
 
-
-        $webinars = Webinar::where('status', Webinar::$active)
-            ->where('private', false)
-            ->where(function ($query) use ($user) {
-                $query->where('creator_id', $user->id)
-                    ->orWhere('teacher_id', $user->id);
-            })
-            ->orderBy('updated_at', 'desc')
+        if ($isWisdomKeeper)
+        {
+            $webinars = Webinar::where('status', Webinar::$active)
+                ->where('private', false)
+                ->where(function ($query) use ($user) {
+                    $query->where('creator_id', $user->id)
+                        ->orWhere('teacher_id', $user->id);
+                })
+                ->orderBy('updated_at', 'desc')
             ->with(['teacher' => function ($qu) {
                 $qu->select('id', 'full_name', 'avatar');
             }, 'reviews', 'tickets', 'feature'])
             ->get();
+        }
+        else
+        {
+            $likedWebinarIds = DB::table('webinar_like')
+            ->where('user_id', $user->id)
+            ->pluck('webinar_id')
+            ->toArray();
+            
+            $webinars = Webinar::whereIn('id', $likedWebinarIds)
+                ->where('status', Webinar::$active)
+                ->where('private', false)
+                ->orderBy('updated_at', 'desc')
+                ->with(['teacher' => function ($qu) {
+                    $qu->select('id', 'full_name', 'avatar');
+                }, 'reviews', 'tickets', 'feature'])
+                ->get();
+        }
 
         $meetingIds = Meeting::where('creator_id', $user->id)->pluck('id');
         $appointments = ReserveMeeting::whereIn('meeting_id', $meetingIds)
@@ -239,6 +488,13 @@ class UserController extends Controller
             'totalLikes' => $totalCounts['likes'],
             'totalComments' => $totalCounts['comments'],
             'totalReviews' => $totalCounts['reviews'],
+            'isWisdomKeeper'     => $isWisdomKeeper,
+            'seekerLikedWebinars'    => $seekerLikedWebinars,
+            'seekerLikedProducts'    => $seekerLikedProducts,
+            'seekerLikedLivestreams' => $seekerLikedLivestreams,
+            'seekerLikedArticles'    => $seekerLikedArticles,
+            'seekerReviews'          => $seekerReviews,
+            'wisdomKeeperReceivedReviews' => $wisdomKeeperReceivedReviews ?? collect(),
         ];
 
         return view('web.default.user.profile', $data);
@@ -735,6 +991,14 @@ class UserController extends Controller
                 'success' => false,
                 'message' => $validator->errors()->first()
             ], 422);
+        }
+
+        $recentStory = UserStory::where('user_id', $user->id)
+            ->where('created_at', '>=', time() - 10)
+            ->exists();
+
+        if ($recentStory) {
+            return response()->json();
         }
 
         try {

@@ -1,5 +1,24 @@
 @extends('web.default.layouts.newapp')
-
+<style>
+  .dashboard-cancel-btn {
+  display: inline-block;
+  padding: 4px 14px;
+  background: transparent;
+  border: 1px solid var(--red, #E53935);
+  color: var(--red, #E53935);
+  border-radius: 20px;
+  /* font-size: 12px; */
+  font-weight: 600;
+  text-decoration: none;
+  transition: background 0.2s, color 0.2s;
+  cursor: pointer;
+  float: right;
+}
+.dashboard-cancel-btn:hover {
+  background: var(--red, #E53935);
+  color: #fff;
+}
+</style>
 @section('content')
 
   <div class="dashboard-topbar">
@@ -7,7 +26,7 @@
     <div class="dashboard-pill" style="color:var(--gold);border-color:var(--gold)">Live</div>
     <div class="dashboard-role" id="dashboard-roleTabs">
       @if(isset($seeker_data))
-      <button class="active" data-role="seeker">Seeker</button>
+      <button class="active" data-role="seeker" style="cursor: none;">Seeker</button>
       @endif
       @if(isset($creator_data))
       <button data-role="creator">Content Creator</button>
@@ -50,6 +69,8 @@
           <div class="dashboard-icon"><span class="dashboard-ms">workspace_premium</span></div>
           <div class="dashboard-title">Membership</div>
           <div class="dashboard-meta">{{ $seeker_data['membership']['price'] }}</div>
+         
+          @if($seeker_data['membership']['status'] == 'Active')<a href="/membership" class="dashboard-cancel-btn" onclick="event.stopPropagation()">Cancel</a>@endif
         </article>
         <article class="dashboard-tile" style="--tint:var(--indigo);--glow:#5E35B144" data-key="messages">
           <div class="dashboard-count">{{ $seeker_data['messages'] }}</div>
@@ -160,6 +181,14 @@
           <div class="dashboard-icon"><span class="dashboard-ms">attach_money</span></div>
           <div class="dashboard-title">Payouts</div>
           <div class="dashboard-meta">Balance & history</div>
+        </article>
+
+         <article class="dashboard-tile" style="--tint:var(--gold);--glow:#D7B45E44" data-key="membership">
+          <div class="dashboard-count">{{ $keeper_data['membership']['status'] }} </div>
+          <div class="dashboard-icon"><span class="dashboard-ms">workspace_premium</span></div>
+          <div class="dashboard-title">Membership</div>
+          <div class="dashboard-meta">{{ $keeper_data['membership']['price'] }}</div>
+          @if($keeper_data['membership']['status'] == 'Active')<a href="/membership" class="dashboard-cancel-btn" onclick="event.stopPropagation()">Cancel</a>@endif
         </article>
       </section>
     @endif
@@ -384,7 +413,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 { key: 'saved_at', label: 'Saved', width: '15%' }
             ],
             'orders': [
-                { key: 'order_number', label: 'Order #', width: '15%' },
+                { key: 'order_id', label: 'Order #', width: '15%' },
                 { key: 'items', label: 'Items', width: '35%' },
                 { key: 'total', label: 'Total', width: '15%' },
                 { key: 'date', label: 'Date', width: '20%' },
@@ -393,13 +422,13 @@ document.addEventListener('DOMContentLoaded', function() {
                 }
             ],
             'membership': [
-                { key: 'plan', label: 'Plan', width: '25%' },
+                { key: 'plan_description', label: 'Plan', width: '25%' },
                 { key: 'cycle', label: 'Cycle', width: '20%' },
+                { key: 'days', label: 'Days', width: '20%' },
+                { key: 'price', label: 'Price', width: '15%' },
                 { key: 'status', label: 'Status', width: '20%',
                   format: (val) => `<span class="status-badge status-active">${val}</span>`
-                },
-                { key: 'renewal', label: 'Renewal', width: '20%' },
-                { key: 'price', label: 'Price', width: '15%' }
+                }
             ],
             'courses': [
                 { key: 'title', label: 'Course', width: '30%' },
@@ -467,11 +496,11 @@ document.addEventListener('DOMContentLoaded', function() {
                 { key: 'status', label: 'Status', width: '15%' }
             ],
             'royalties': [
-                { key: 'month', label: 'Month', width: '25%' },
-                { key: 'amount', label: 'Amount', width: '25%' },
-                { key: 'currency', label: 'Currency', width: '20%' },
-                { key: 'status', label: 'Status', width: '20%' },
-                { key: 'paid_date', label: 'Paid Date', width: '10%' }
+                { key: 'book_title', label: 'Month', width: '25%' },
+                { key: 'earnings', label: 'Amount', width: '25%' },
+                { key: 'month_earnings', label: 'Currency', width: '20%' },
+                { key: 'total_sales', label: 'Status', width: '20%' },
+                { key: 'last_sale_date', label: 'Paid Date', width: '10%' }
             ],
             'keeperAnalytics': [
                 { key: 'metric', label: 'Metric', width: '35%' },

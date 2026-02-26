@@ -184,14 +184,14 @@
     <h2 class="section-title">{{ trans('financial.payouts_history') }}</h2>
 
     <div class="table-responsive mt-20">
-        <table class="table text-center custom-table">
+        <table class="text-center custom-table">
             <thead>
                 <tr>
-                    <th>{{ trans('financial.account') }}</th>
-                    <th>{{ trans('public.type') }}</th>
-                    <th>{{ trans('panel.amount') }} ({{ $currency }})</th>
-                    <th>{{ trans('public.status') }}</th>
-                    <th>{{ trans('admin/main.actions') }}</th>
+                    <th class="text-center">{{ trans('financial.account') }}</th>
+                    <th class="text-center">{{ trans('public.type') }}</th>
+                    <th class="text-center">{{ trans('panel.amount') }} ({{ $currency }})</th>
+                    <th class="text-center">{{ trans('public.status') }}</th>
+                    <th class="text-center">{{ trans('admin/main.actions') }}</th>
                 </tr>
             </thead>
             <tbody>

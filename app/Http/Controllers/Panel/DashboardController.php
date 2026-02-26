@@ -21,6 +21,8 @@ use App\Models\Book;
 use App\Models\BookCategory;
 use App\Models\Product;
 use App\Models\Payout;
+use App\Models\Livestream;
+use App\Models\Subscribe;
 use App\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Carbon;
@@ -30,7 +32,6 @@ class DashboardController extends Controller
 {
     public function dashboard()
     {
-
         $user = auth()->user();
 
         if (session()->has('user_just_registered') || $user->user_just_registered == '1') {
@@ -84,17 +85,23 @@ class DashboardController extends Controller
         
         // Add payout summary for all users with earnings
         $data['payout_summary'] = $this->getPayoutSummary($user);
+        $data['live_streams'] = $this->getActiveLiveStreams();
 
         if ($user->isUser()) {
-            
+            $membershipData = $this->getMembershipDetailedData($user);
+
             $data['seeker_data'] = [
                 'continue_learning' => $this->getContinueLearningCount($user),
                 'my_courses' => $this->getMyCoursesCount($user),
                 'saved_reels' => $this->getSavedReelsCount($user),
                 'orders' => $this->getOrdersCount($user),
                 'membership' => [
-                    'status' => $this->getMembershipStatus($user),
-                    'price' => $this->getMembershipPrice($user)
+                    // 'status' => $this->getMembershipStatus($user),
+                    // 'price' => $this->getMembershipPrice($user)
+                    'status' => $membershipData[0]['status'] ?? 'Inactive',
+                    'price' => $membershipData[0]['is_lifetime'] ? 'Lifetime' : $membershipData[0]['price'],
+                    'plan' => $membershipData[0]['plan'] ?? 'No Plan',
+                    'membership_type' => $membershipData[0]['membership_type'] ?? '',
                 ],
                 'messages' => $this->getMessagesCount($user),
                 // Store detailed data for drawer
@@ -103,14 +110,20 @@ class DashboardController extends Controller
                     'myCourses' => $this->getMyCoursesData($user),
                     'savedReels' => $this->getSavedReelsData($user),
                     'orders' => $this->getOrdersData($user),
-                    'membership' => $this->getMembershipDetailedData($user),
+                    'membership' => $membershipData,
+                    // 'membership' => $this->getMembershipDetailedData($user),
                     'messages' => $this->getMessagesData($user),
                 ]
             ];
         } elseif ($user->isTeacher() || $user->isOrganization()) {
+
+            $liveStudioStatus = $this->getLiveStudioStatus($user);
+            $membershipData = $this->getMembershipDetailedData($user);
+
             $data['creator_data'] = [
                 'reel_studio' => $this->getReelStudioCount($user),
-                'live_studio' => $this->getLiveStudioStatus($user),
+                // 'live_studio' => $this->getLiveStudioStatus($user),
+                'live_studio' => $liveStudioStatus,
                 'creator_analytics' => $this->getCreatorAnalytics($user),
                 'payouts' => $this->getPayoutsTotal($user),
                 'detailed_data' => [
@@ -125,13 +138,22 @@ class DashboardController extends Controller
                 'courses' => $this->getInstructorCoursesCount($user),
                 'students' => $this->getInstructorStudentsCount($user),
                 'reel_studio' => $this->getReelStudioCount($user),
-                'live_studio' => $this->getLiveStudioStatus($user),
+                // 'live_studio' => $this->getLiveStudioStatus($user),
+                'live_studio' => $liveStudioStatus,
                 'products' => $this->getProductsCount($user),
                 'vendor_orders' => $this->getVendorOrdersCount($user),
                 'books' => $this->getBooksCount($user),
                 'royalties' => $this->getRoyaltiesTotal($user),
                 'analytics' => $this->getAnalyticsGrowth($user),
                 'payouts' => $this->getTotalPayouts($user),
+                'membership' => [
+                    // 'status' => $this->getMembershipStatus($user),
+                    // 'price' => $this->getMembershipPrice($user)
+                    'status' => $membershipData[0]['status'] ?? 'Inactive',
+                    'price' => $membershipData[0]['is_lifetime'] ? 'Lifetime' : $membershipData[0]['price'],
+                    'plan' => $membershipData[0]['plan'] ?? 'No Plan',
+                    'membership_type' => $membershipData[0]['membership_type'] ?? '',
+                ],
                 'detailed_data' => [
                     'courses' => $this->getInstructorCoursesData($user),
                     'students' => $this->getInstructorStudentsData($user),
@@ -143,12 +165,188 @@ class DashboardController extends Controller
                     'royalties' => $this->getRoyaltiesData($user),
                     'keeperAnalytics' => $this->getAnalyticsDetailedData($user),
                     'payouts' => $this->getTotalPayoutsData($user),
+                    'membership' => $membershipData,
                 ]
             ];
         }
 
         $data['giftModal'] = $this->showGiftModal($user);
         return view(getTemplate() . '.panel.dashboard.index', $data);
+    }
+
+    private function getActiveLiveStreams()
+    {
+        return Livestream::where('livestream_end', 'No')
+            ->orderBy('created_at', 'desc')
+            ->with(['creator' => function($query) {
+                $query->select('id', 'full_name', 'avatar', 'country_id');
+            }])
+            ->get();
+    }
+
+    private function getLiveStudioStatus($user)
+    {
+        // Check if user has any active live streams
+        $hasActiveStream = Livestream::where('creator_id', $user->id)
+            ->where('livestream_end', 'No')
+            ->exists();
+        
+        if ($hasActiveStream) {
+            return 'Live Now';
+        }
+        
+        // Check if user has scheduled streams
+        $hasScheduledStream = Livestream::where('creator_id', $user->id)
+            ->where('livestream_end', 'No')
+            // ->where('start_at', '>', time())
+            ->exists();
+        
+        if ($hasScheduledStream) {
+            return 'Scheduled';
+        }
+        
+        return 'Ready';
+    }
+
+    private function getLiveStudioData($user)
+    {
+        $streams = Livestream::where('creator_id', $user->id)
+            ->orderBy('created_at', 'desc')
+            ->limit(20)
+            ->get()
+            ->map(function ($stream) {
+                $status = 'Offline';
+                if ($stream->livestream_end == 'No') {
+                    // if ($stream->start_at > time()) {
+                    //     $status = 'Scheduled';
+                    // } else {
+                    //     $status = 'Live Now';
+                    // }
+                    $status = 'Live Now';
+                }
+                
+                return [
+                    'id' => $stream->id,
+                    'title' => $stream->title ?? 'Untitled Stream',
+                    'description' => $stream->description,
+                    'status' => $status,
+                    'status_badge' => $this->getLiveStreamStatusBadge($status),
+                    // 'start_at' => $stream->start_at,
+                    // 'formatted_start' => $stream->start_at ? dateTimeFormat($stream->start_at, 'j M Y H:i') : null,
+                    'viewers' => $stream->viewers_count ?? 0,
+                    'duration' => $stream->duration ?? '0:00',
+                    'thumbnail' => $stream->thumbnail,
+                    'url' => '/live/' . $stream->id,
+                ];
+            })
+            ->toArray();
+        
+        return $streams;
+    }
+
+    private function getLiveStreamStatusBadge($status)
+    {
+        $badges = [
+            'Live Now' => 'danger',
+            'Scheduled' => 'primary',
+            'Offline' => 'secondary',
+            'Ready' => 'success',
+        ];
+        
+        return $badges[$status] ?? 'secondary';
+    }
+
+    private function getMembershipDetailedData($user)
+    {
+
+        $activeSubscribe = Subscribe::getActiveSubscribe($user->id);
+    
+        $membershipData = [];
+        
+        if ($activeSubscribe) {
+            $membershipType = '';
+            $cycle = '';
+            $priceSuffix = '/mo';
+            
+            if ($activeSubscribe->days == 31) {
+                $membershipType = 'Monthly Membership';
+                $cycle = 'Monthly';
+                $priceSuffix = '/mo';
+            } elseif ($activeSubscribe->days == 365) {
+                $membershipType = 'Yearly Membership';
+                $cycle = 'Yearly';
+                $priceSuffix = '/yr';
+            } elseif ($activeSubscribe->days == 100000) {
+                $membershipType = 'Lifetime access to the full platform';
+                $cycle = 'Lifetime';
+                $priceSuffix = '';
+            } else {
+                $membershipType = $activeSubscribe->days . ' days';
+                $cycle = $activeSubscribe->days . ' days';
+                $priceSuffix = '/' . $activeSubscribe->days . 'd';
+            }
+            
+            // Return as array with a single item for compatibility with dashboard script
+            $membershipData[] = [
+                'status' => 'Active',
+                'plan' => $activeSubscribe->title ?? 'Subscription',
+                'plan_description' => $membershipType,
+                'cycle' => $cycle,
+                'price' => $this->formatPrice($activeSubscribe->price) . $priceSuffix,
+                'raw_price' => $activeSubscribe->price,
+                'is_lifetime' => ($activeSubscribe->days == 100000),
+                'membership_type' => $membershipType,
+                'days' => $activeSubscribe->days,
+                'usable_count' => $activeSubscribe->usable_count ?? null,
+                'is_popular' => $activeSubscribe->is_popular ?? false,
+
+                
+            ];
+        } else {
+            // Return empty array with no active subscription
+            $membershipData[] = [
+                'status' => 'Inactive',
+                'plan' => 'No Active Plan',
+                'plan_description' => 'No active membership',
+                'cycle' => 'N/A',
+                'price' => '€0.00',
+                'raw_price' => 0,
+                'is_lifetime' => false,
+                'membership_type' => 'No Membership',
+                'days' => 0,
+                'days_remaining' => 0,
+                'usable_count' => 0,
+                'is_popular' => false,
+                'subscribed_at' => null,
+                'expires_at' => null,
+            ];
+        }
+        // dd($membershipData);
+        return $membershipData;
+    }
+
+    private function getCycleShort($days)
+    {
+        if ($days == 31) {
+            return 'mo';
+        } elseif ($days == 365) {
+            return 'yr';
+        } elseif ($days == 100000) {
+            return 'lifetime';
+        }
+        return $days . 'd';
+    }
+
+    private function getMembershipStatus($user)
+    {
+        $membership = $this->getMembershipDetailedData($user);
+        return $membership['status'];
+    }
+
+    private function getMembershipPrice($user)
+    {
+        $membership = $this->getMembershipDetailedData($user);
+        return $membership['price'];
     }
 
     // Payout Summary Method
@@ -273,11 +471,92 @@ class DashboardController extends Controller
 
     private function getRoyaltiesTotal($user)
     {
-        $totalRoyalties = Book::where('creator_id', $user->id)
-            // ->where('status', 'active')
-            ->sum('price') ?? 0;
+        $totalRoyalties = Sale::where('seller_id', $user->id)
+            ->where('type', Sale::$book)  // Only book sales
+            ->whereNull('refund_at')       // Exclude refunded sales
+            ->sum('total_amount');
         
         return $this->formatPrice($totalRoyalties);
+    }
+
+    private function getRoyaltiesData($user)
+    {
+        $books = Book::where('creator_id', $user->id)
+            ->orderBy('created_at', 'desc')
+            ->get();
+        
+        $royaltyData = [];
+        
+        foreach ($books as $book) {
+            // Get total sales for this book (paid orders, not refunded)
+            $totalSales = Sale::where('seller_id', $user->id)
+                ->where('type', Sale::$book)
+                ->whereNull('refund_at')
+                ->whereHas('bookOrder', function ($query) use ($book) {
+                    $query->where('book_id', $book->id);
+                })
+                ->count();
+            
+            // Calculate total earnings from this book (net after commission)
+            $totalEarnings = Sale::where('seller_id', $user->id)
+                ->where('type', Sale::$book)
+                ->whereNull('refund_at')
+                ->whereHas('bookOrder', function ($query) use ($book) {
+                    $query->where('book_id', $book->id);
+                })
+                ->get()
+                ->sum(function ($sale) {
+                    return $sale->getIncomeItem(); // Net earnings after commission
+                });
+            
+            // Get this month's earnings
+            $startOfMonth = Carbon::now()->startOfMonth()->timestamp;
+            $monthEarnings = Sale::where('seller_id', $user->id)
+                ->where('type', Sale::$book)
+                ->whereNull('refund_at')
+                ->whereHas('bookOrder', function ($query) use ($book) {
+                    $query->where('book_id', $book->id);
+                })
+                ->where('created_at', '>=', $startOfMonth)
+                ->get()
+                ->sum(function ($sale) {
+                    return $sale->getIncomeItem();
+                });
+            
+            // Get last sale date for this book
+            $lastSale = Sale::where('seller_id', $user->id)
+                ->where('type', Sale::$book)
+                ->whereNull('refund_at')
+                ->whereHas('bookOrder', function ($query) use ($book) {
+                    $query->where('book_id', $book->id);
+                })
+                ->orderBy('created_at', 'desc')
+                ->first();
+            
+            // ONLY ADD BOOKS THAT HAVE SALES/EARNINGS
+            if ($totalSales > 0 || $totalEarnings > 0) {
+                $royaltyData[] = [
+                    'book_id' => $book->id,
+                    'book_title' => $book->title,
+                    'price' => $this->formatPrice($book->price), // Add price
+                    'royalty_rate' => ($book->royalty_rate ?? config('app.default_royalty_rate', 30)) . '%',
+                    'earnings' => $this->formatPrice($totalEarnings),
+                    'raw_earnings' => $totalEarnings,
+                    'month_earnings' => $this->formatPrice($monthEarnings),
+                    'raw_month_earnings' => $monthEarnings,
+                    'last_payout' => $book->last_payout_date ? dateTimeFormat($book->last_payout_date, 'j M Y') : 'No payout yet',
+                    'last_sale_date' => $lastSale ? dateTimeFormat($lastSale->created_at, 'j M Y') : 'No sales yet',
+                    'total_sales' => $totalSales,
+                ];
+            }
+        }
+        
+        // Sort by earnings (highest first)
+        usort($royaltyData, function($a, $b) {
+            return $b['raw_earnings'] <=> $a['raw_earnings'];
+        });
+        
+        return $royaltyData;
     }
 
     private function getBooksData($user)
@@ -309,28 +588,6 @@ class DashboardController extends Controller
             ->toArray();
         
         return $books;
-    }
-
-    private function getRoyaltiesData($user)
-    {
-        $royaltyData = Book::where('creator_id', $user->id)
-            // ->where('status', 'active')
-            ->orderBy('created_at', 'desc')
-            ->limit(10)
-            ->get()
-            ->map(function ($book) {
-                return [
-                    'book_id' => $book->id,
-                    'book_title' => $book->title,
-                    'royalty_rate' => $book->royalty_rate . '%',
-                    'earnings' => $this->formatPrice($book->royalty_earnings ?? 0),
-                    'last_payout' => $book->last_payout_date ? $book->last_payout_date : 'No payout yet',
-                    'total_sales' => $book->sales_count ?? 0,
-                ];
-            })
-            ->toArray();
-        
-        return $royaltyData;
     }
 
     // Products Methods
@@ -413,6 +670,12 @@ class DashboardController extends Controller
                     } elseif ($firstItem->bundle_id) {
                         $itemType = 'Bundle';
                         $itemTitle = $firstItem->bundle->title ?? 'Deleted Bundle';
+                    } elseif ($firstItem->book_id) {
+                        $itemType = 'Book';
+                        $itemTitle = $firstItem->book->title ?? 'Deleted Book';
+                    } elseif ($firstItem->subscribe_id) {
+                        $itemType = 'Membership';
+                        $itemTitle = 'Membership';
                     }
                 }
                 
@@ -423,6 +686,10 @@ class DashboardController extends Controller
                         return $item->product->title ?? 'Product';
                     } elseif ($item->bundle_id) {
                         return $item->bundle->title ?? 'Bundle';
+                    } elseif ($item->book_id) {
+                        return $item->book->title ?? 'Book';
+                    }elseif ($item->subscribe_id) {
+                        return 'Membership';
                     }
                     return 'Item';
                 })->implode(', ');
@@ -475,8 +742,8 @@ class DashboardController extends Controller
         
         if ($previousMonthEarnings > 0) {
             $growth = (($currentMonthEarnings - $previousMonthEarnings) / $previousMonthEarnings) * 100;
-            $growthFormatted = number_format($growth, 1);
-            return ($growth >= 0 ? '↑ ' : '↓ ') . abs($growthFormatted) . '%';
+            // $growthFormatted = number_format($growth, 1);
+            return ($growth >= 0 ? '↑ ' : '↓ ') . abs($growth) . '%';
         }
         
         return $currentMonthEarnings > 0 ? '↑ 100%' : '→ 0%';
@@ -581,15 +848,15 @@ class DashboardController extends Controller
             ->count();
     }
 
-    private function getMembershipStatus($user)
-    {
-        return 'Active';
-    }
+    // private function getMembershipStatus($user)
+    // {
+    //     return 'Active';
+    // }
 
-    private function getMembershipPrice($user)
-    {
-        return '€1/mo';
-    }
+    // private function getMembershipPrice($user)
+    // {
+    //     return '€1/mo';
+    // }
 
     private function getMessagesCount($user)
     {
@@ -633,7 +900,7 @@ class DashboardController extends Controller
 
     // Placeholder methods for other counts
     private function getReelStudioCount($user) { return '+ New'; }
-    private function getLiveStudioStatus($user) { return 'Ready'; }
+    // private function getLiveStudioStatus($user) { return 'Ready'; }
     private function getCreatorAnalytics($user) { return '0 views'; }
 
     // Detailed data methods
@@ -733,24 +1000,77 @@ class DashboardController extends Controller
 
     private function getOrdersData($user)
     {
-        $orders = Order::where('user_id', $user->id)
+        $orders = Order::whereHas('orderItems', function ($query) use ($user) {
+                $query->where('user_id', $user->id);
+            })
             ->where('status', Order::$paid)
-            ->with(['orderItems'])
+            ->with(['user', 'orderItems' => function ($query) use ($user) {
+                $query->where('user_id', $user->id);
+            }])
             ->orderBy('created_at', 'desc')
-            ->limit(50)
+            ->limit(10)
             ->get()
-            ->map(function ($order) {
-                $items = $order->orderItems->map(function ($item) {
-                    return $item->title ?? 'Product';
+            ->map(function ($order) use ($user) {
+                // Filter orderItems to get only items created by this vendor
+                $vendorItems = $order->orderItems->filter(function ($item) use ($user) {
+                    return $item->user_id == $user->id;
+                });
+                
+                // Get the first item to extract product/webinar info
+                $firstItem = $vendorItems->first();
+                $itemType = '';
+                $itemTitle = '';
+                
+                if ($firstItem) {
+                    if ($firstItem->webinar_id) {
+                        $itemType = 'Course';
+                        $itemTitle = $firstItem->webinar->title ?? 'Deleted Course';
+                    } elseif ($firstItem->product_id) {
+                        $itemType = 'Product';
+                        $itemTitle = $firstItem->product->title ?? 'Deleted Product';
+                    } elseif ($firstItem->bundle_id) {
+                        $itemType = 'Bundle';
+                        $itemTitle = $firstItem->bundle->title ?? 'Deleted Bundle';
+                    } elseif ($firstItem->book_id) {
+                        $itemType = 'Book';
+                        $itemTitle = $firstItem->book->title ?? 'Deleted Book';
+                    } elseif ($firstItem->subscribe_id) {
+                        $itemType = 'Membership';
+                        $itemTitle = 'Membership';
+                    }
+                }
+                
+                $itemsList = $vendorItems->map(function ($item) {
+                    if ($item->webinar_id) {
+                        return $item->webinar->title ?? 'Course';
+                    } elseif ($item->product_id) {
+                        return $item->product->title ?? 'Product';
+                    } elseif ($item->bundle_id) {
+                        return $item->bundle->title ?? 'Bundle';
+                    } elseif ($item->book_id) {
+                        return $item->book->title ?? 'Book';
+                    }elseif ($item->subscribe_id) {
+                        return 'Membership';
+                    }
+                    return 'Item';
                 })->implode(', ');
                 
+                $totalAmount = $vendorItems->sum('total_amount');
+                $totalQuantity = $vendorItems->sum('quantity');
+                
                 return [
-                    'id' => $order->id,
+                    'order_id' => $order->id,
                     'order_number' => $order->order_number ?? 'N/A',
-                    'items' => $items,
-                    'total' => $this->formatPrice($order->total_amount),
+                    'customer' => $order->user->full_name ?? $order->user->username ?? 'Unknown',
+                    'customer_email' => $order->user->email ?? '',
+                    'items' => $itemsList,
+                    'item_type' => $itemType,
+                    'item_title' => $itemTitle,
+                    'quantity' => $totalQuantity,
+                    'total' => $this->formatPrice($totalAmount),
                     'date' => $order->created_at,
                     'status' => $order->status,
+                    'payment_method' => $order->payment_method ?? 'N/A',
                 ];
             })
             ->toArray();
@@ -758,16 +1078,16 @@ class DashboardController extends Controller
         return $orders;
     }
 
-    private function getMembershipDetailedData($user)
-    {
-        return [[
-            'plan' => 'Basic',
-            'cycle' => 'Monthly',
-            'status' => 'Active',
-            'renewal' => date('Y-m-d', strtotime('+1 month')),
-            'price' => '€1/mo',
-        ]];
-    }
+    // private function getMembershipDetailedData($user)
+    // {
+    //     return [[
+    //         'plan' => 'Basic',
+    //         'cycle' => 'Monthly',
+    //         'status' => 'Active',
+    //         'renewal' => date('Y-m-d', strtotime('+1 month')),
+    //         'price' => '€1/mo',
+    //     ]];
+    // }
 
     private function getMessagesData($user)
     {
@@ -848,7 +1168,7 @@ class DashboardController extends Controller
 
     // Placeholder detailed data methods
     private function getReelStudioData($user) { return []; }
-    private function getLiveStudioData($user) { return []; }
+    // private function getLiveStudioData($user) { return []; }
     private function getCreatorAnalyticsData($user) { return []; }
 
     private function showGiftModal($user)

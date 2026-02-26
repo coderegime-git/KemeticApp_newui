@@ -67,7 +67,7 @@ class AdReelController extends Controller
     {
         $user = auth()->user();
         $products = Product::where('status', 'active')
-                          ->where('creator_id', $user->id)
+                        //   ->where('creator_id', $user->id)
                           ->get();
         
         $plans = Plan::all();
@@ -146,7 +146,7 @@ class AdReelController extends Controller
         }
 
         $products = Product::where('status', 'active')
-                          ->where('creator_id', $user->id)
+                        //   ->where('creator_id', $user->id)
                           ->get();
         
         $plans = Plan::all();

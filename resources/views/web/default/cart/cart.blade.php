@@ -30,6 +30,7 @@
             @foreach($carts as $cart)
                 @php
                     $cartItemInfo = $cart->getItemInfo();
+                    if(empty($cartItemInfo)) continue;
                     $cartTaxType = !empty($cartItemInfo['isProduct']) ? 'store' : 'general';
                 @endphp
             <tr class="cart-cart-row">

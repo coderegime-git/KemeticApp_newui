@@ -33,7 +33,7 @@ return [
         'port' => env('MAIL_PORT', 465),
         'encryption' => env('MAIL_ENCRYPTION', 'ssl'),
         'username' => env('MAIL_USERNAME', 'info@kemetic.app'),
-        'password' => env('MAIL_PASSWORD', '@BlackBeacon1984!'),
+        'password' => env('MAIL_PASSWORD', '@KemeticAdmin1984!'),
         'timeout' => null,
         'local_domain' => null,
 

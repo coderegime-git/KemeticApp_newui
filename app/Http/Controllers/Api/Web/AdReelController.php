@@ -51,19 +51,19 @@ class AdReelController extends Controller
 
         if ($tab === 'sponsored') {
             $query->where('plan_code', $plan)
-                  ->orderBy('created_at', 'desc');
+                  ->orderBy('id', 'desc');
         } else {
             
             if ($tab === 'trending') {
                 $query->orderBy('trending_score', 'desc');
             } elseif ($tab === 'newest') {
-                $query->orderBy('created_at', 'desc');
+                $query->orderBy('id', 'desc');
             }elseif ($tab === 'foryou') {
                 $query->orderBy('stars', 'desc')
                 ->orderBy('trending_score', 'desc');
             }
             else {
-                $query->orderBy('created_at', 'desc');
+                $query->orderBy('id', 'desc');
             }
         }
 

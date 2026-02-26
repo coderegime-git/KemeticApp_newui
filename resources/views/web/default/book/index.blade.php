@@ -4,7 +4,7 @@
  <div class="book-page">
 
     <!-- Membership Banner -->
-    <div class="book-membership-banner">
+    <!-- <div class="book-membership-banner">
       <div class="book-membership-badge">∞</div>
       <div>
         <div class="book-membership-text-main">
@@ -23,6 +23,16 @@
           <button class="book-btn-pill book-btn-pill--gold"><a href="/login">Become a Member</a></button>
         @endif  
       </div>
+    </div> -->
+
+    <div class="shop-banner">
+      <div class="article-chip">💎 Unlock Unlimited Articles, Reels & Live</div>
+      <div class="article-chip">€1/mo • €10/yr • €33 lifetime</div>
+       @if(auth()->check())
+          <button class="shop-cta"><a href="/membership">Upgrade</a></button>
+        @else
+          <button class="shop-cta"><a href="/login">Upgrade</a></button>
+        @endif
     </div>
 
     <!-- Hero: Global #1 Book -->
@@ -59,17 +69,17 @@
           <a href="{{ $popularBook->getUrl() }}">
             <button class="book-btn-hero-main">View Scrolls</button>
           </a>
-          <span class="book-hero-secondary-pill">
+          <!-- <span class="book-hero-secondary-pill">
             or <strong>Add to Cart</strong> and read instantly on Kemetic App.
-          </span>
+          </span> -->
         </div>
 
-        <div style="margin-top: 10px;">
+        <!-- <div style="margin-top: 10px;">
           <span class="book-hero-badge">
             <span class="book-hero-badge-dot"></span>
             Included free with Kemetic Membership
           </span>
-        </div>
+        </div> -->
       </div>
 
       <aside class="book-hero-side">
@@ -93,24 +103,39 @@
     </section>
     @endif
 
+    <div class="article-row">
+      <form action="/book" method="get">
+        @if(!empty($selectedCategory))
+          <input type="hidden" name="category_id" value="{{ $selectedCategory->id }}">
+        @endif
+        <div class="article-search">
+          <span style="color:var(--gold);font-weight:900">🔎</span>
+          <input  type="text" name="search"  value="{{ request()->get('search') }}" placeholder="Serach for Scrolls">
+          <button type="submit" class="article-pill">{{ trans('home.find') }}</button>
+          <!-- ⚙️ Filters  onclick="alert('Open filters')" -->
+        </div>
+      </form>
+    </div>
+
     <!-- Categories -->
     <div class="book-categories">
-      <a href="{{ url('/books') }}" class="book-chip @if(empty($selectedCategory)) book-chip--active @endif">All</a>
+      <a href="{{ url('/book') }}@if(request()->get('search'))?search={{ request()->get('search') }}@endif" class="book-chip @if(empty($selectedCategory)) book-chip--active @endif">All</a>
       @foreach($bookCategories as $bookCategory)
-        <a href="{{ url('/books/category/' . $bookCategory->slug) }}" class="book-chip @if(!empty($selectedCategory) && $selectedCategory->id == $bookCategory->id) book-chip--active @endif">
+        <a href="/book?category_id={{$bookCategory->id}}@if(request()->get('search'))&search={{ request()->get('search') }}@endif" class="book-chip @if(!empty($selectedCategory) && $selectedCategory->id == $bookCategory->id) book-chip--active @endif">
           {{ $bookCategory->title }}
         </a>
       @endforeach
     </div>
 
     <!-- Global Books Row -->
-    <section>
+    <section style="padding-left: 13px;">
       <div class="book-section-header">
         <div class="book-section-title">Global Scrolls</div>
         <div class="book-section-caption">Rated & ranked by the global Kemetic community.</div>
       </div>
 
       <div class="book-horizontal-scroll">
+        @if(!empty($books) and !$books->isEmpty())
         @foreach($books as $book)
         <article class="book-book-card">
           <div class="book-book-cover">
@@ -151,18 +176,21 @@
           </div>
         </article>
         @endforeach
+        @else
+          @include(getTemplate() . '.includes.no-result',[
+              'file_name' => 'webinar.png',
+              'title' => trans('No Scrolls Found'),
+              'hint' => '',
+          ])
+        @endif
       </div>
 
-      <!-- Pagination -->
-      <!-- @if($books->hasPages())
-      <div style="margin-top: 20px; display: flex; justify-content: center;">
-        {{ $books->links() }}
+
+      <div class="mt-50 pt-30" style="padding:10px;">
+        {{ $books->appends(request()->input())->links('vendor.pagination.panel') }}
       </div>
-      @endif -->
     </section>
-    <div class="mt-50 pt-30">
-      {{ $books->appends(request()->input())->links('vendor.pagination.panel') }}
-    </div>
+    
 
     <!-- Trending Strip -->
     <section class="book-trending-strip">

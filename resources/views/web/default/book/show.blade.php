@@ -23,38 +23,27 @@
         </div>
 
         <div class="bookdetail-media-actions">
-          @if($book->type === 'Audio Book')
-            <!-- Audio Book Actions -->
-            <button type="button" class="bookdetail-btn bookdetail-btn-gold" onclick="playAudioSample('{{ url($book->url) ?? '#' }}')">
-                ▶ Listen Sample (5 min)
+          @if($hasBought && $book->type === 'Audio Book')
+            <button type="button" class="bookdetail-btn bookdetail-btn-gold" onclick="previewPdf('{{ url($book->url) ?? '#' }}')">
+                ▶ Preview
             </button>
-            <button type="button" class="bookdetail-btn bookdetail-btn-ghost" onclick="showAudioDetails()">
+            <button type="button" class="bookdetail-btn bookdetail-btn-ghost" onclick="readOnline('{{ url($book->url) }}')">
                 📖 Read Description
                 </button>
-            @elseif($book->type === 'E-book' || $book->type === 'digital')
-                <!-- E-book/Digital Book Actions -->
+            @elseif($hasBought && $book->type === 'E-book' || $book->type === 'digital')
                 <button type="button" class="bookdetail-btn bookdetail-btn-gold" onclick="previewPdf('{{ url($book->url) ?? '#' }}')">
                     📖 Preview PDF
                 </button>
                 <button type="button" class="bookdetail-btn bookdetail-btn-ghost" onclick="readOnline('{{ url($book->url) }}')">
                     🌐 Read Online
                 </button>
-            @elseif($book->type === 'Print' || $book->type === 'physical')
-                <!-- Print Book Actions -->
+            @elseif($hasBought && $book->type === 'Print' || $book->type === 'physical')
                 <button type="button" class="bookdetail-btn bookdetail-btn-gold" onclick="previewPdf('{{ url($book->url) ?? '#' }}')">
                     📖 Preview PDF
                 </button>
-                <!-- <button class="bookdetail-btn bookdetail-btn-ghost" onclick="showPrintDetails()">
+                <button class="bookdetail-btn bookdetail-btn-ghost" onclick="showPrintDetails()">
                     📦 Shipping Info
-                </button> -->
-            @else
-              <!-- Default Actions -->
-              <button type="button" class="bookdetail-btn bookdetail-btn-gold" onclick="previewPdf('{{ url($book->url) ?? '#' }}')">
-                  ▶ Preview Book
-              </button>
-              <button type="button" class="bookdetail-btn bookdetail-btn-ghost" onclick="readOnline('{{ url($book->url) }}')">
-                  🔊 Listen Sample
-              </button>
+                </button>
           @endif
         </div>
 
@@ -206,14 +195,22 @@
               Download Free Scrolls
             </button>
           @else
-            <button class="bookdetail-btn bookdetail-btn-gold bookdetail-btn-lg js-book-direct-payment" type="button">
+           @if($hasBought or $book->price == 0 or $activeSubscribe and $book->type != 'Print')
+            <button class="bookdetail-btn bookdetail-btn-gold bookdetail-btn-lg" type="button" 
+                data-book-type="{{ $book->type }}" data-book-title="{{ $book->title }}" onclick="previewPdf('{{ url($book->url) ?? '#' }}')">
+                  Download
+              </button>
+            @else
+            <button class="bookdetail-btn bookdetail-btn-gold bookdetail-btn-lg js-book-direct-payment" type="button" 
+            data-book-type="{{ $book->type }}" data-book-title="{{ $book->title }}">
               Buy Scrolls Only - €{{ $formattedPrice }}
             </button>
-            @if(auth()->check())
+            @endif
+            <!-- @if(auth()->check())
               <button class="bookdetail-btn bookdetail-btn-outline bookdetail-btn-lg"><a href="/membership">Unlock with Membership</a></button>
             @else
               <button class="bookdetail-btn bookdetail-btn-outline bookdetail-btn-lg"><a href="/membership"><a href="/login">Become a Member</a></button>
-            @endif
+            @endif -->
           @endif
         </div>
 
@@ -256,6 +253,29 @@
     </main>
   </div>
   </form>
+
+  <div id="ebookConfirmationModal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); z-index: 9999; align-items: center; justify-content: center;">
+    <div style="background: var(--panel, #1a1a1a); padding: 30px; border-radius: 16px; max-width: 500px; width: 90%; border: 2px solid var(--chakra-gold, #FFD700);">
+        <div style="text-align: center; margin-bottom: 25px;">
+            <div style="font-size: 48px; margin-bottom: 15px;">📚</div>
+            <h2 style="color: var(--chakra-gold, #FFD700); margin-bottom: 10px;">E-Book Purchase</h2>
+            <p id="confirmationMessage" style="color: #ccc; line-height: 1.6; margin-bottom: 25px;">
+                This is an e-book in PDF format. After purchase, you can download it immediately.
+            </p>
+        </div>
+        
+        <div style="display: flex; gap: 15px; justify-content: center;">
+            <button id="confirmCancel" 
+                    style="padding: 12px 30px; background: transparent; border: 2px solid #666; color: #ccc; border-radius: 8px; cursor: pointer; font-weight: bold; transition: all 0.3s;">
+                Cancel
+            </button>
+            <button id="confirmProceed" 
+                    style="padding: 12px 30px; background: var(--chakra-gold, #FFD700); border: none; color: #000; border-radius: 8px; cursor: pointer; font-weight: bold; transition: all 0.3s;">
+                Continue Purchase
+            </button>
+        </div>
+    </div>
+</div>
 @endsection
 
 <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
@@ -264,15 +284,84 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery-toast-plugin/1.3.2/jquery.toast.min.js"></script>
 <script>
    $(document).ready(function() {
-  
+    
+    let currentButton = null;
+    let currentForm = null;
+
     $('body').on('click', '.js-book-direct-payment', function (e) {
+      
       const $this = $(this);
-      $this.addClass('loadingbar danger').prop('disabled', true);
-      alert('Processing your purchase. Please wait...');
-      const $form = $this.closest('form');
-      $form.attr('action', '/book/direct-payment');
-      $form.trigger('submit');
+      const bookType = $this.data('book-type');
+      const bookTitle = $this.data('book-title');
+
+      currentButton = $this;
+      currentForm = $this.closest('form');
+      
+      // Check if it's e-book or audio book
+      const isEbook = ['E-book', 'digital', 'e-book'].includes(bookType);
+      const isAudioBook = ['Audio Book', 'audio', 'Audio'].includes(bookType);
+      
+      if (isEbook || isAudioBook) {
+          // Show confirmation modal
+          const message = isEbook 
+              ? `"${bookTitle}" is an e-book in PDF format. After purchase, you can download it immediately.`
+              : `"${bookTitle}" is an audio book. After purchase, you can download the audio files immediately.`;
+          
+          $('#confirmationMessage').text(message);
+          $('#ebookConfirmationModal').css('display', 'flex');
+      } else {
+          // For physical books or other types, proceed directly
+          proceedWithPurchase($this, currentForm);
+      }
+
+      // $this.addClass('loadingbar danger').prop('disabled', true);
+      // alert('Processing your purchase. Please wait...');
+      // const $form = $this.closest('form');
+      // $form.attr('action', '/book/direct-payment');
+      // $form.trigger('submit');
     });
+
+    $('#confirmProceed').click(function() {
+        $('#ebookConfirmationModal').hide();
+        if (currentButton && currentForm) {
+            proceedWithPurchase(currentButton, currentForm);
+        }
+    });
+    
+    // Handle cancel
+    $('#confirmCancel').click(function() {
+        $('#ebookConfirmationModal').hide();
+        currentButton = null;
+        currentForm = null;
+    });
+    
+    // Also close modal when clicking outside
+    $('#ebookConfirmationModal').click(function(e) {
+        if (e.target === this) {
+            $(this).hide();
+            currentButton = null;
+            currentForm = null;
+        }
+    });
+    
+    function proceedWithPurchase($button, $form) {
+        $button.addClass('loadingbar danger').prop('disabled', true);
+        
+        // Show processing message
+        $.toast({
+            heading: 'Processing',
+            text: 'Processing your purchase. Please wait...',
+            bgColor: '#FFD700',
+            textColor: '#000',
+            hideAfter: 3000,
+            position: 'bottom-right',
+            icon: 'info'
+        });
+        
+        // Submit the form
+        $form.attr('action', '/book/direct-payment');
+        $form.trigger('submit');
+    }
   });
 
    @if(session()->has('toast'))

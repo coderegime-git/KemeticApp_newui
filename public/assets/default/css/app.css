@@ -149,7 +149,7 @@
   }
   .header-ico{
     width:44px; height:44px; border-radius:50%; display:grid; place-items:center;
-    margin:6px auto 10px;
+    margin:26px auto 10px;
     background:rgba(255,255,255,.06);
     border:1.4px solid var(--aura, var(--gold));
     box-shadow: inset 0 0 18px rgba(255,255,255,.08);
@@ -849,9 +849,30 @@
     display:flex; align-items:center; gap:10px; padding:12px 14px;
     border:1px solid var(--edge); border-radius:12px; background:rgba(255,255,255,.06)
   }
-  .login-inp input{
+  .login-inp input,
+  .login-inp select{
     flex:1; background:transparent; border:none; outline:none; color:var(--ink)
   }
+  .login-inp select option {
+      background: #1a1a1a; /* or your background color */
+      color: #fff; /* or your text color */
+  }
+
+  /* For Firefox (to remove default arrow) */
+  .login-inp select {
+      text-overflow: '';
+  }
+
+  .login-inp .select2-container {
+    width: 100% !important;
+    flex: 1;
+  }
+
+  /* Hide the original select visually (Select2 handles it, but just in case) */
+  .login-inp select.select2 {
+    display: none !important;
+  }
+
   .login-row{display:flex; gap:12px}
   .login-row > *{flex:1}
 
@@ -1043,7 +1064,9 @@
   .course-thumb img{width:100%;height:100%;object-fit:cover}
   .course-name{font-weight:800;margin:10px 0 4px}
   .course-meta{color:var(--muted);font-size:14px}
-  .course-bar{display:flex;justify-content:space-between;align-items:center;margin-top:10px}
+  .course-bar{
+    /* display:flex; */
+    justify-content:space-between;align-items:center;margin-top:10px}
 
   /* live row with small filters */
   .course-row-top{display:flex;gap:18px;align-items:center;margin-bottom:10px}
@@ -1104,7 +1127,7 @@
   .reels-thumb img, .reels-thumb video{width:100%;height:100%;object-fit:cover}
   .reels-rank{position:absolute;top:14px;left:14px;background:#e11;color:#fff;border-radius:10px;padding:4px 8px;font-weight:900;font-size:12px}
   .reels-rail-vert{position:absolute;right:6px;top:50%;translate:0 -50%;display:flex;flex-direction:column;gap:8px}
-  .reels-rail-vert .reels-circle{color:#fff;width:30px;height:30px}
+  .reels-rail-vert .reels-circle{color:#fff;width:40px;height:35px}
   .reels-meta{display:flex;align-items:center;gap:8px;margin:10px 0 8px}
   .reels-meta .reels-count{color:var(--gold);font-weight:900}
   .reels-cta{display:flex;justify-content:space-between;align-items:center;margin-top:6px}
@@ -1214,7 +1237,7 @@
   .home-btn{background:var(--gold);color:#000;font-weight:900;border:none;border-radius:999px;padding:10px 18px;cursor:pointer}
   .home-btn-outline{background:transparent;color:#fff;border:1px solid var(--edge)}
   .home-chip{display:inline-flex;align-items:center;gap:8px;background:rgba(255,255,255,.06);
-        border:1px solid var(--edge);border-radius:999px;padding:15px 10px;font-size:12px}
+        border:1px solid var(--edge);border-radius:999px;padding:20px 10px;font-size:12px}
 
   /* section */
   section{padding:32px 0 18px;border-top:1px solid var(--edge)}
@@ -1265,7 +1288,12 @@
   .home-chakra .home-dot:nth-child(5){background:var(--violet)}
 
   /* grids for sections (classes/shop/books/articles) */
-  .home-grid{display:grid;grid-template-columns:repeat(6,1fr);gap:16px}
+  .home-grid{display:grid;grid-auto-flow:column;grid-auto-columns:200px;gap:16px;overflow-x:auto;
+    padding-bottom:10px;
+    scroll-snap-type:x mandatory;
+  scrollbar-width: thin; 
+  scrollbar-color: rgba(0, 0, 0, 0.3) transparent;}
+  /* .home-grid{display:grid;grid-template-columns:repeat(6,1fr);gap:16px} */
   .home-tile{background:rgba(255,255,255,.04);border:1px solid var(--edge);border-radius:16px;padding:12px}
   .home-tile .home-thumb{width:100%;aspect-ratio:1;border-radius:14px;overflow:hidden}
   .home-tile .home-thumb img{width:100%;height:100%;object-fit:cover}
@@ -1273,17 +1301,23 @@
   .home-tile .home-price{color:var(--gold);font-weight:900}
 
   /* live now (round tv bubbles) */
-  .home-tv{display:grid;grid-template-columns:repeat(5,1fr);gap:16px}
+  .home-tv{display:grid;grid-auto-flow:column;grid-auto-columns:200px;gap:16px;overflow-x:auto;
+    padding-bottom:10px;
+    scroll-snap-type:x mandatory;
+  scrollbar-width: thin; 
+  scrollbar-color: rgba(0, 0, 0, 0.3) transparent;}
+
+  /* .home-tv{display:grid;grid-template-columns:repeat(5,1fr);gap:16px} */
   .home-tv .home-thumb-round{width:160px;height:160px}
   .home-badge-live{position:absolute;top:10px;left:10px;background:#e11;color:#fff;font-weight:900;
     border-radius:10px;padding:4px 8px;font-size:12px;border:1px solid #fff2}
 
   /* responsive */
-  @media (max-width:1100px){ .home-grid{grid-template-columns:repeat(4,1fr)} .home-tv{grid-template-columns:repeat(4,1fr)} }
-  @media (max-width:780px){ .home-grid{grid-template-columns:repeat(3,1fr)} .home-tv{grid-template-columns:repeat(3,1fr)} }
+  /* @media (max-width:1100px){ .home-grid{grid-template-columns:repeat(4,1fr)} .home-tv{grid-template-columns:repeat(4,1fr)} }
+  @media (max-width:780px){ .home-grid{grid-template-columns:repeat(3,1fr)} .home-tv{grid-template-columns:repeat(3,1fr)} } */
 
     /* Courese detail */
-    .coursedetail-wrap{max-width:1160px;margin:auto;padding:22px}
+  .coursedetail-wrap{max-width:1160px;margin:auto;padding:22px}
   .coursedetail-hero{border-radius:20px;overflow:hidden;border:1px solid var(--edge);position:relative;aspect-ratio:16/9;background:#000}
   .coursedetail-hero{display:grid;grid-template-columns:1.25fr .75fr;gap:22px;align-items:center}
   .coursedetail-hero>img, .coursedetail-hero>video, .coursedetail-hero>iframe{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;filter:brightness(.7)}
@@ -1504,8 +1538,8 @@
   }
 
   /* Book landing page */
-    .book-page {
-    max-width: 1280px;
+  .book-page {
+    max-width: 1140px;
     margin: 24px auto 40px;
     padding: 0 24px;
   }
@@ -6640,7 +6674,7 @@ ease;
       background: rgba(255, 255, 255, .06) !important;
       border: 1px solid var(--edge) !important;
       border-radius: 999px !important;
-      padding: 15px 14px !important; /* Increased padding for touch */
+      /* padding: 15px 14px !important; Increased padding for touch */
       font-size: 14px !important; /* Larger font for mobile */
       min-height: 44px !important; /* Minimum touch target size */
       white-space: nowrap !important;
@@ -7106,13 +7140,13 @@ ease;
       padding: 0px;
     }
     
-    .home-grid {
+    /* .home-grid {
       grid-template-columns: repeat(2, 1fr);
-    }
+    } */
     
-    .home-tv {
+    /* .home-tv {
       grid-template-columns: repeat(2, 1fr);
-    }
+    } */
     
     .home-hero-title {
       font-size: 32px;
@@ -7476,9 +7510,10 @@ ease;
   @media (max-width: 480px) {
     .shop-grid,
     .course-row,
-    .article-grid,
-    .home-grid,
-    .home-tv {
+    .article-grid
+    /* .home-grid, */
+    /* .home-tv */
+    {
       grid-template-columns: 1fr;
     }
     
@@ -7593,6 +7628,8 @@ ease;
     .profile-stories,
     .book-categories,
     .home-scroller,
+    .home-grid,
+    .home-tv,
     .reels-scroller {
       -webkit-overflow-scrolling: touch; /* Smooth scrolling on iOS */
       scrollbar-width: none; /* Hide scrollbar on Firefox */
@@ -7603,6 +7640,8 @@ ease;
     .profile-stories::-webkit-scrollbar,
     .book-categories::-webkit-scrollbar,
     .home-scroller::-webkit-scrollbar,
+    .home-grid::-webkit-scrollbar,
+    .home-tv::-webkit-scrollbar,
     .reels-scroller::-webkit-scrollbar {
       display: none; /* Hide scrollbar on Webkit */
     }

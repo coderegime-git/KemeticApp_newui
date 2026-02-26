@@ -1,5 +1,25 @@
 @extends('web.default.layouts.app')
+<style>
+  .membership-modal {
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,.6);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 9999;
+  }
+  .membership-modal.hidden { display: none; }
+  .membership-modal-box {
+    background: #111;
+    padding: 24px;
+    border-radius: 14px;
+    width: 100%;
+    max-width: 420px;
+  }
+  .danger { background:#d9534f; }
 
+</style>
 @section('content')
 <!-- Header -->
 <!-- <header class="membership-topbar">
@@ -42,6 +62,9 @@
   <div class="membership-wrap">
     <h2>Choose your plan</h2>
     <div class="membership-pricing-grid">
+      @php
+        $hasLifetime = $activeSubscribe && $activeSubscribe->days == 100000;
+      @endphp
       @foreach($subscribes as $subscribe)
         @php
           $membershipType = '';
@@ -54,17 +77,39 @@
           } else {
               $membershipType = $subscribe->days . ' days';
           }
+
+          $isActive = $activeSubscribe && $activeSubscribe->id == $subscribe->id;
+          $hasAnySubscription = !empty($activeSubscribe);
+
         @endphp
-        <form action="/panel/financial/recurringPay-subscribes?auto_redirect=1" method="post" class="membership-w-100">
+        <form action="/panel/financial/recurringPay-subscribes?auto_redirect=1" method="post" class="membership-w-100" id="upgradeform">
           {{ csrf_field() }}
           <input name="amount" value="{{ $subscribe->price }}" type="hidden">
-          <input name="id" value="{{ $subscribe->id }}" type="hidden">
+          <input name="id" id="upgradeid" value="{{ $subscribe->id }}" type="hidden">
 
           <article class="membership-card" id="plan-monthly" data-eur="€{{ $subscribe->price }}" data-usd="${{ $subscribe->price }}">
             <div class="membership-small">{{ $subscribe->title }}</div>
             <div class="membership-price js-price">€{{ $subscribe->price }}</div>
             <div class="membership-small">{{ $membershipType }}</div>
-            <button type='submit' class="membership-cta" data-join="monthly">Join Now</button>
+            @if($isActive)
+              @if($subscribe->days == 100000)
+                <button type="button" class="membership-cta" disabled style="opacity:.5;cursor:not-allowed;">
+                  Lifetime
+                </button>
+              @else
+                <button type="button" class="membership-cta danger" onclick="openCancelPopup({{ $subscribe->id }})">
+                  Cancel
+                </button>
+              @endif
+            @elseif($hasLifetime)
+              <button type="button" class="membership-cta" disabled style="opacity:.5;cursor:not-allowed;">
+                Join Now
+              </button>
+            @elseif($hasAnySubscription)
+              <button type='button' class="membership-cta" onclick="openUpgradePopup({{ $subscribe->id }}, {{ $activeSubscribe->id }})">Upgrade</button>
+            @else  
+              <button type='submit' class="membership-cta" data-join="monthly">Join Now</button>
+            @endif
           </article>
         </form>
       @endforeach
@@ -126,15 +171,31 @@
 <!-- Sticky CTA -->
 <div class="membership-sticky">
   <div class="membership-bar">
-    <div class="membership-left">Ready to unlock everything?</div>
-    <div style="display:flex; gap:10px;">
-      <button class="membership-cta secondary" data-join="monthly">€1/mo</button>
-      <button class="membership-cta" data-join="yearly">Join Membership</button>
-    </div>
+      <div class="membership-left">Ready to unlock everything?</div>
+      <div style="display:flex; gap:10px;">
+        <button class="membership-cta secondary" data-join="monthly">€1/mo</button>
+        <button class="membership-cta" data-join="yearly">Join Membership</button>
+      </div>
+  </div>
+</div>
+
+<div id="membershipModal" class="membership-modal hidden">
+  <div class="membership-modal-box">
+
+      <h3 id="modalTitle"></h3>
+      <p id="modalDesc"></p>
+
+      <div class="modal-actions">
+        <button class="membership-cta secondary" onclick="closeModal()">No</button>
+        <button class="membership-cta danger" id="modalConfirmBtn">Yes</button>
+      </div>
   </div>
 </div>
 @endsection
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/jquery-toast-plugin/1.3.2/jquery.toast.min.css">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery-toast-plugin/1.3.2/jquery.toast.min.js"></script>
 <script>
+  
   // Currency Toggle
   const currencyButtons = document.querySelectorAll('.pill button');
   const plans = document.querySelectorAll('.card[id^="plan-"]');
@@ -170,7 +231,20 @@
   function handleJoin(plan){
     // Example: window.location.href = `/checkout?plan=${plan}&currency=${currency}`;
     console.log('JOIN:', plan, 'currency:', currency);
-    alert(`Join ${plan} (${currency}) — hook this to your checkout`);
+    (function() {
+
+        $.toast({
+            heading: 'Success',
+            text: 'Join ${plan} (${currency}) — hook this to your checkout',
+            bgColor: '#43d477',
+            textColor: 'white',
+            hideAfter: 10000,
+            position: 'bottom-right',
+            icon: 'success'
+        });
+    })();
+    
+    // alert(`Join ${plan} (${currency}) — hook this to your checkout`);
   }
   document.querySelectorAll('[data-join]').forEach(el=>{
     el.addEventListener('click', ()=>handleJoin(el.dataset.join));
@@ -259,5 +333,149 @@
         }
     });
 </script>
+<script>
+  let selectedSubscribeId = null;
+  let actionType = null;
+  let actionsubscritionID = null;
 
+  function openCancelPopup(subscribeId) {
+      selectedSubscribeId = subscribeId;
+      actionType = 'cancel';
+
+      document.getElementById('modalTitle').innerText = 'Cancel Membership';
+      document.getElementById('modalDesc').innerText =
+          'Are you sure you want to cancel your active membership?';
+
+      document.getElementById('modalConfirmBtn').onclick = confirmAction;
+      document.getElementById('membershipModal').classList.remove('hidden');
+  }
+
+  function openUpgradePopup(subscribeId,activeSubscribe) {
+      selectedSubscribeId = activeSubscribe;
+      actionsubscritionID = subscribeId;
+      actionType = 'upgrade';
+
+      document.getElementById('modalTitle').innerText = 'Upgrade Membership';
+      document.getElementById('modalDesc').innerText =
+          'Your current membership will be replaced with this plan. Continue?';
+
+      document.getElementById('modalConfirmBtn').onclick = confirmAction;
+      document.getElementById('membershipModal').classList.remove('hidden');
+  }
+
+  function closeModal() {
+      document.getElementById('membershipModal').classList.add('hidden');
+  }
+
+  function confirmAction() {
+      closeModal();
+
+      if (actionType === 'cancel') {
+          cancelSubscription();
+      }
+
+      if (actionType === 'upgrade') {
+
+      const upgradeForm = document.getElementById('upgradeform');
+      const upgradeInput = document.getElementById('upgradeid');
+
+      upgradeInput.value = actionsubscritionID;
+      
+       fetch("/membership/cancel", {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+                "X-CSRF-TOKEN": "{{ csrf_token() }}"
+            },
+            body: JSON.stringify({
+                subscription_id: selectedSubscribeId
+            })
+        })
+        .then(res => res.json())
+        .then(data => {
+            if (!data.success) {
+              //   (function() {
+          
+              //     $.toast({
+              //         heading: 'Success',
+              //         text: data.message,
+              //         bgColor: '#43d477',
+              //         textColor: 'white',
+              //         hideAfter: 10000,
+              //         position: 'bottom-right',
+              //         icon: 'success'
+              //     });
+              // })();
+                //alert(data.message);
+                return;
+            }
+
+           upgradeForm.submit();
+        })
+        .catch(err => {
+            console.error(err);
+            (function() {
+        
+                $.toast({
+                    heading: 'Failed',
+                    text: 'Something went wrong',
+                    bgColor: '#f63c3c',
+                    textColor: 'white',
+                    hideAfter: 10000,
+                    position: 'bottom-right',
+                    icon: 'Failed'
+                });
+            })();
+            // alert("Something went wrong");
+        });
+      }
+  }
+
+  function cancelSubscription() {
+      fetch("/membership/cancel", {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+                "X-CSRF-TOKEN": "{{ csrf_token() }}"
+            },
+            body: JSON.stringify({
+                subscription_id: selectedSubscribeId
+            })
+        })
+        .then(res => res.json())
+        .then(data => {
+           (function() {
+        
+                $.toast({
+                    heading: 'Success',
+                    text: data.message,
+                    bgColor: '#43d477',
+                    textColor: 'white',
+                    hideAfter: 10000,
+                    position: 'bottom-right',
+                    icon: 'Success'
+                });
+            })();
+            // alert("Something went wrong");
+            
+            if (data.success) location.reload();
+        })
+        .catch(err => {
+            console.error(err);
+            (function() {
+        
+                $.toast({
+                    heading: 'Failed',
+                    text: 'Something went wrong',
+                    bgColor: '#f63c3c',
+                    textColor: 'white',
+                    hideAfter: 10000,
+                    position: 'bottom-right',
+                    icon: 'Failed'
+                });
+            })();
+            // alert("Something went wrong");
+        });
+  }
+</script>
 

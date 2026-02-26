@@ -262,7 +262,7 @@ class RegisterController extends Controller
         }
     
         $rules = [
-            'country_code' => ($username == 'mobile') ? 'required' : 'nullable',
+            // 'country_code' => ($username == 'mobile') ? 'required' : 'nullable',
             $username => ($username == 'mobile') ? 'required|numeric' : 'required|string|email|max:255',
             'full_name' => 'required|string|min:3',
             'password' => 'required|string|min:6|confirmed',
@@ -297,7 +297,7 @@ class RegisterController extends Controller
             'full_name' => $data['full_name'],
             'status' => User::$pending,
             'password' => Hash::make($data['password']),
-            'country_id' => $data['country_id'],
+            // 'country_id' => $data['country_id'],
             'affiliate' => $usersAffiliateStatus,
             'created_at' => time()
         ]);

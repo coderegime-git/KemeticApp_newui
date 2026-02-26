@@ -24,7 +24,7 @@
 
       <div class="profile-head-info">
         <div class="profile-title">{{ $user["full_name"] }}</div>
-        <div class="profile-subtitle">{{ $user["caption"] }}</div>
+        <div class="profile-subtitle">{{ $user["role"]["caption"] }}</div>
 
         <div class="profile-counters">
           <div class="profile-chip"><span class="profile-dot like"></span> <span>Likes</span> <span style="opacity:.8;">{{ $totalLikes ?? 0 }}</span></div>
@@ -33,6 +33,7 @@
         </div>
       </div>
 
+       @if(auth()->check() && auth()->id() != $user->id)
       <button type="button" id="followToggle" data-user-id="{{ $user['id'] }}" class="profile-follow">
         @if(!empty($authUserIsFollower) and $authUserIsFollower)
             Unconnect
@@ -45,6 +46,7 @@
             {{ trans('panel.follow') }}
         @endif -->
       </button>
+       @endif
     </section>
 
     <!-- Stories row -->
@@ -87,7 +89,7 @@
     <nav class="profile-tabs" id="tabs">
       <a class="profile-tab active" data-tab="reels">Reels</a>
       <a class="profile-tab" data-tab="courses">Courses</a>
-      <a class="profile-tab" data-tab="live">Livestreams</a>
+      <!-- <a class="profile-tab" data-tab="live">Livestreams</a> -->
       <a class="profile-tab" data-tab="shop">Shop</a>
       <a class="profile-tab" data-tab="articles">Articles</a>
       <a class="profile-tab" data-tab="reviews">Reviews</a>
@@ -102,19 +104,27 @@
              @foreach($user->reels as $reel)
           <a class="profile-card" href="#">
              <video class="reel-video" controls preload="metadata" poster="{{ url($reel->thumbnail_url) }}">
-                                    <source src="{{ url($reel->video_path) }}" type="video/mp4">
+                                    <source src="{{ url($reel->video_url) }}" type="video/mp4">
                                     {{ $reel->title }}
                                 </video>
               <!-- <img src="{{ url($reel->video_path) }}" alt="{{ $reel->title }}"> -->
-            <div class="profile-badge"><span class="profile-star">★</span> 4,320</div>
+            <div class="profile-badge"><span class="profile-star">★</span> {{$reel->like_count ?? 0}}</div>
           </a>
           @endforeach
           @else
-          @include(getTemplate() . '.includes.no-result',[
-              'file_name' => 'webinar.png',
-              'title' => trans('site.instructor_not_have_reel'),
-              'hint' => '',
-          ])
+            @if($user->role->caption === 'Wisdom Keeper' || $user->role->caption === 'wisdom_keeper')
+              @include(getTemplate() . '.includes.no-result',[
+                  'file_name' => 'webinar.png',
+                  'title' => trans('site.instructor_not_have_reel'),
+                  'hint' => '',
+              ])
+            @else
+              @include(getTemplate() . '.includes.no-result',[
+                  'file_name' => 'webinar.png',
+                  'title' => 'This Seeker hasn\'t shared any reels yet',
+                  'hint' => '',
+              ])
+            @endif
       @endif
         </section>
       </div>
@@ -122,25 +132,42 @@
       <!-- Courses Grid -->
       <div class="tab-content" id="courses-content">
         <section class="profile-grid">
-          @if(!empty($webinars) and !$webinars->isEmpty())
-          @foreach($webinars as $webinar)
-          <a class="profile-card" href="{{ $webinar->getUrl() }}">
-              <img src="{{ $webinar->getImage() }}" alt="{{ $webinar->title }}">
-            <div class="profile-badge"><span class="profile-star">★</span> 4,320</div>
-          </a>
-          @endforeach
+          @if($isWisdomKeeper)
+            @if(!empty($webinars) and !$webinars->isEmpty())
+              @foreach($webinars as $webinar)
+              <a class="profile-card" href="{{ $webinar->getUrl() }}">
+                  <img src="{{ $webinar->getImage() }}" alt="{{ $webinar->title }}">
+                <div class="profile-badge"><span class="profile-star">★</span> {{ $webinar->like_count ?? 0 }}</div>
+              </a>
+              @endforeach
+            @else
+              @include(getTemplate() . '.includes.no-result',[
+                  'file_name' => 'webinar.png',
+                  'title' => trans('site.instructor_not_have_webinar'),
+                  'hint' => '',
+              ])
+            @endif
           @else
-          @include(getTemplate() . '.includes.no-result',[
-              'file_name' => 'webinar.png',
-              'title' => trans('site.instructor_not_have_webinar'),
-              'hint' => '',
-          ])
-      @endif
+             @if($seekerLikedWebinars->count())
+              @foreach($seekerLikedWebinars as $webinar)
+                <a class="profile-card" href="{{ $webinar->getUrl() }}">
+                  <img src="{{ $webinar->getImage() }}" alt="{{ $webinar->title }}">
+                  <div class="profile-badge"><span class="profile-star">★</span> {{ $webinar->like_count ?? 0 }}</div>
+                </a>
+              @endforeach
+            @else
+              @include(getTemplate() . '.includes.no-result', [
+                'file_name' => 'webinar.png',
+                'title' => "This Seeker hasn't liked any courses yet",
+                'hint' => '',
+              ])
+            @endif
+          @endif
         </section>
       </div>
 
       <!-- Livestreams Grid -->
-      <div class="tab-content" id="live-content">
+      <!-- <div class="tab-content" id="live-content">
         <section class="profile-grid">
           <a class="profile-card" href="#">
             <img src="https://images.unsplash.com/photo-1500530855697-b586d89ba3ee?w=1200" alt="">
@@ -167,24 +194,41 @@
             <div class="profile-badge"><span class="profile-star">★</span> 6,750</div>
           </a>
         </section>
-      </div>
+      </div> -->
 
       <!-- Shop Grid -->
       <div class="tab-content" id="shop-content">
         <section class="profile-grid">
-          @if(!empty($user->products) and !$user->products->isEmpty())
-             @foreach($user->products as $product)
-          <a class="profile-card" href="{{ $product->getUrl() }}">
-             <img src="{{ $product->thumbnail }}" class="img-cover" alt="{{ $product->title }}">
-            <div class="profile-badge"><span class="profile-star">★</span> 4,320</div>
-          </a>
-          @endforeach
-          @else
+          @if($isWisdomKeeper)
+            @if(!empty($user->products) and !$user->products->isEmpty())
+              @foreach($user->products as $product)
+                <a class="profile-card" href="{{ $product->getUrl() }}">
+                  <img src="{{ $product->thumbnail }}" class="img-cover" alt="{{ $product->title }}">
+                  <div class="profile-badge"><span class="profile-star">★</span> {{ $product->like_count ?? 0 }}</div>
+                </a>
+              @endforeach
+            @else
               @include(getTemplate() . '.includes.no-result',[
                   'file_name' => 'webinar.png',
                   'title' => trans('update.instructor_not_have_products'),
                   'hint' => '',
               ])
+            @endif
+          @else
+           @if($seekerLikedProducts->count())
+              @foreach($seekerLikedProducts as $product)
+                <a class="profile-card" href="{{ $product->getUrl() }}">
+                  <img src="{{ $product->thumbnail }}" class="img-cover" alt="{{ $product->title }}">
+                  <div class="profile-badge"><span class="profile-star">★</span> {{ $product->like_count ?? 0 }}</div>
+                </a>
+              @endforeach
+            @else
+              @include(getTemplate() . '.includes.no-result', [
+                'file_name' => 'webinar.png',
+                'title' => "This Seeker hasn't liked any products yet",
+                'hint' => '',
+              ])
+            @endif
           @endif
         </section>
       </div>
@@ -192,19 +236,36 @@
       <!-- Articles Grid -->
       <div class="tab-content" id="articles-content">
         <section class="profile-grid">
-          @if(!empty($user->blog) and !$user->blog->isEmpty())
-           @foreach($user->blog as $post)
-          <a class="profile-card" href="{{ $post->getUrl() }}">
-              <img src="{{ $post->image }}" class="img-cover" alt="{{ $post->title }}">
-            <div class="profile-badge"><span class="profile-star">★</span> 4,320</div>
-          </a>
-          @endforeach
+          @if($isWisdomKeeper)
+            @if(!empty($user->blog) and !$user->blog->isEmpty())
+              @foreach($user->blog as $post)
+              <a class="profile-card" href="{{ $post->getUrl() }}">
+                  <img src="{{ $post->image }}" class="img-cover" alt="{{ $post->title }}">
+                <div class="profile-badge"><span class="profile-star">★</span> {{ $post->like_count ?? 0 }}</div>
+              </a>
+              @endforeach
+            @else
+                @include(getTemplate() . '.includes.no-result',[
+                    'file_name' => 'webinar.png',
+                    'title' => trans('update.instructor_not_have_posts'),
+                    'hint' => '',
+                ])
+            @endif
           @else
-              @include(getTemplate() . '.includes.no-result',[
-                  'file_name' => 'webinar.png',
-                  'title' => trans('update.instructor_not_have_posts'),
-                  'hint' => '',
+            @if($seekerLikedArticles->count())
+              @foreach($seekerLikedArticles as $post)
+                <a class="profile-card" href="{{ $post->getUrl() }}">
+                  <img src="{{ $post->image }}" class="img-cover" alt="{{ $post->title }}">
+                  <div class="profile-badge"><span class="profile-star">★</span> {{ $post->like_count ?? 0 }}</div>
+                </a>
+              @endforeach
+            @else
+              @include(getTemplate() . '.includes.no-result', [
+                'file_name' => 'webinar.png',
+                'title' => "This Seeker hasn't liked any articles yet",
+                'hint' => '',
               ])
+            @endif
           @endif
         </section>
       </div>
@@ -212,30 +273,109 @@
       <!-- Reviews Grid -->
       <div class="tab-content" id="reviews-content">
         <section class="profile-grid">
-          <a class="profile-card" href="#">
-            <img src="https://images.unsplash.com/photo-1500530855697-b586d89ba3ee?w=1200" alt="">
-            <div class="profile-badge"><span class="profile-star">★</span> 4,560</div>
-          </a>
-          <a class="profile-card" href="#">
-            <img src="https://images.unsplash.com/photo-1519681393784-d120267933ba?w=1200" alt="">
-            <div class="profile-badge"><span class="profile-star">★</span> 3,890</div>
-          </a>
-          <a class="profile-card" href="#">
-            <img src="https://images.unsplash.com/photo-1517433456452-f9633a875f6f?w=1200" alt="">
-            <div class="profile-badge"><span class="profile-star">★</span> 5,210</div>
-          </a>
-          <a class="profile-card" href="#">
-            <img src="https://images.unsplash.com/photo-1503676260728-1c00da094a0b?w=1200" alt="">
-            <div class="profile-badge"><span class="profile-star">★</span> 4,780</div>
-          </a>
-          <a class="profile-card" href="#">
-            <img src="https://images.unsplash.com/photo-1596495578065-8fbecb91a9d1?w=1200" alt="">
-            <div class="profile-badge"><span class="profile-star">★</span> 3,450</div>
-          </a>
-          <a class="profile-card" href="#">
-            <img src="https://images.unsplash.com/photo-1603575449299-3d82f74a0f9d?w=1200" alt="">
-            <div class="profile-badge"><span class="profile-star">★</span> 6,120</div>
-          </a>
+          @if($isWisdomKeeper)
+            @php
+              $allReceivedReviews = collect();
+              foreach(['webinars','products','articles','reels'] as $type) {
+                if(!empty($wisdomKeeperReceivedReviews[$type])) {
+                  $allReceivedReviews = $allReceivedReviews->merge($wisdomKeeperReceivedReviews[$type]);
+                }
+              }
+            @endphp
+
+            @if($allReceivedReviews->count())
+              @foreach($allReceivedReviews as $review)
+                <div class="profile-card review-card" style="padding: 16px; display:flex; flex-direction:column; gap:8px;">
+
+                  {{-- Reviewer info --}}
+                  <div style="display:flex; align-items:center; gap:8px;">
+                    <img src="{{ $review->reviewer_avatar ?? '/assets/default/img/default/avatar-1.png' }}" 
+                        alt="{{ $review->reviewer_name }}"
+                        style="width:36px; height:36px; border-radius:50%; object-fit:cover;">
+                    <span style="font-weight:600; font-size:14px;">{{ $review->reviewer_name }}</span>
+                  </div>
+
+                  {{-- Star Rating --}}
+                  <div style="color:#f5a623; font-size:14px;">
+                    @for($i = 1; $i <= 5; $i++)
+                      {{ $i <= ($review->rates ?? $review->rating ?? 0) ? '★' : '☆' }}
+                    @endfor
+                  </div>
+
+                  {{-- Review text --}}
+                  <p style="font-size:13px; color:#555; margin:0;">
+                    {{ $review->review ?? $review->description ?? '' }}
+                  </p>
+
+                  {{-- Content it's about --}}
+                  <small style="color:#999;">
+                    On: <em>{{ $review->content_title }}</em>
+                  </small>
+
+                </div>
+              @endforeach
+            @else
+              @include(getTemplate() . '.includes.no-result', [
+                'file_name' => 'webinar.png',
+                'title' => 'No reviews received yet',
+                'hint' => '',
+              ])
+            @endif
+          @else
+            @php $hasReviews = false; @endphp
+
+            @foreach(['webinars','products','articles','reels'] as $type)
+              @if(!empty($seekerReviews[$type]) && $seekerReviews[$type]->count())
+                @php $hasReviews = true; @endphp
+                @foreach($seekerReviews[$type] as $item)
+
+                  @if($type === 'webinars')
+                  <a class="profile-card" href="/course/{{ $item->slug }}">
+                    <img src="{{ $item->thumbnail ?? '' }}" class="img-cover" alt="{{ $item->title ?? '' }}">
+                     <div class="profile-badge">
+                      <span class="profile-star">★</span> {{ $item->rating ?? $item->rates ?? 0 }}
+                    </div>
+                  </a>
+
+                  @elseif($type === 'products')
+                  <a class="profile-card" href="/products/{{ $item->slug }}">
+                    <img src="{{ $item->thumbnail ?? '' }}" class="img-cover" alt="{{ $item->title ?? '' }}">
+                    <div class="profile-badge">
+                      <span class="profile-star">★</span> {{ $item->rating ?? $item->rates ?? 0 }}
+                    </div>
+                  </a>
+
+                  @elseif($type === 'articles')
+                  <a class="profile-card" href="/blog/{{ $item->slug }}">
+                    <img src="{{ $item->image ?? '' }}" class="img-cover" alt="{{ $item->title ?? '' }}">
+                    <div class="profile-badge">
+                      <span class="profile-star">★</span> {{ $item->rating ?? $item->rates ?? 0 }}
+                    </div>
+                  </a>
+
+                  @elseif($type === 'reels')
+                  <a class="profile-card" href="#">
+                    <video class="reel-video" controls preload="metadata" poster="{{ url($item->thumbnail_url ?? '') }}">
+                      <source src="{{ url('/store/reels/videos/'.$item->video_path ?? '') }}" type="video/mp4">
+                      {{ $item->title }}
+                    </video>
+                     <div class="profile-badge">
+                      <span class="profile-star">★</span> {{ $item->rating ?? $item->rates ?? 0 }}
+                    </div>
+                  </a>
+                  @endif
+                @endforeach
+              @endif
+            @endforeach
+
+            @if(!$hasReviews)
+              @include(getTemplate() . '.includes.no-result', [
+                'file_name' => 'webinar.png',
+                'title' => "This Seeker hasn't submitted any reviews yet",
+                'hint' => '',
+              ])
+            @endif
+          @endif
         </section>
       </div>
     </div>
@@ -297,6 +437,8 @@
 @endsection
 
 @push('scripts_bottom')
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/jquery-toast-plugin/1.3.2/jquery.toast.min.css">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jquery-toast-plugin/1.3.2/jquery.toast.min.js"></script>
 <script>
   document.addEventListener('DOMContentLoaded', function() {
     console.log('DOM loaded - initializing tabs');
@@ -306,6 +448,7 @@
     let currentFile = null;
     let storyTimeout;
     let currentFileData = null;
+    let isUploading = false;
     let currentFileName = '';
     let currentFileType = '';
     const storyDuration = 30000;
@@ -378,16 +521,40 @@
       storyUploadModal.classList.remove('active');
       resetUploadForm();
     });
+
+    storyUploadModal.addEventListener('click', (e) => {
+      if (e.target === storyUploadModal) {
+        storyUploadModal.classList.remove('active');
+        resetUploadForm();
+      }
+    });
+
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape' && storyUploadModal.classList.contains('active')) {
+        storyUploadModal.classList.remove('active');
+        resetUploadForm();
+      }
+    });
     
     // Click on choose button
     storyChooseBtn.addEventListener('click', () => {
-      storyFileInput.click();
+      document.getElementById('storyFileInput').click();
     });
     
     // Handle file selection
-    storyFileInput.addEventListener('change', function(e) {
+    storyFileInput.addEventListener('change', handleFileChange);
+
+    // storyFileInput.addEventListener('change', function(e) {
+      
+    // });
+
+    function handleFileChange(e) {
       const file = e.target.files[0];
-      if (!file) return;
+      if (!file) {
+        // If no file selected (user canceled), reset everything
+        resetUploadForm();
+        return;
+      }
 
       currentFileData = file;
       currentFileName = file.name;
@@ -397,6 +564,8 @@
       const validTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/gif', 'video/mp4', 'video/quicktime'];
       if (!validTypes.includes(file.type)) {
           showError('Please select a valid image or video file (JPG, PNG, GIF, MP4)');
+          storyFileInput.value = ''; // Clear the invalid selection
+          resetUploadForm();
           return;
       }
       
@@ -404,6 +573,8 @@
       const maxSize = 50 * 1024 * 1024; // 50MB in bytes
       if (file.size > maxSize) {
         showError('File size should be less than 50MB');
+        storyFileInput.value = ''; // Clear the invalid selection
+        resetUploadForm();
         return;
       }
       
@@ -417,6 +588,7 @@
           imagePreview.src = e.target.result;
           imagePreview.classList.add('active');
           videoPreview.classList.remove('active');
+          videoPreview.pause();
         };
         reader.readAsDataURL(file);
       } else if (file.type.startsWith('video/')) {
@@ -425,22 +597,26 @@
           videoPreview.src = e.target.result;
           videoPreview.classList.add('active');
           imagePreview.classList.remove('active');
+          imagePreview.src = '';
         };
         reader.readAsDataURL(file);
       }
       
       // Enable upload button
       uploadBtn.disabled = false;
-    });
+    }
     
     // Handle form submission
     storyUploadForm.addEventListener('submit', async function(e) {
       e.preventDefault();
       
+      if (isUploading) return; 
       if (!currentFileData) {
         showError('Please select a file first');
         return;
       }
+
+      isUploading = true;
       
       const formData = new FormData();
       formData.append('story', currentFileData, currentFileName);
@@ -481,6 +657,7 @@
         //console.error('Upload error:', error);
         showError('Upload error:', error.message || 'An error occurred during upload.');
       } finally {
+        isUploading = false;
         uploadProgress.classList.remove('active');
         uploadProgressBar.style.width = '0%';
         uploadBtn.disabled = false;
@@ -503,23 +680,51 @@
     }
     
     function showSuccess(message) {
+      (function() {
+        
+          $.toast({
+              heading: 'Success',
+              text: message,
+              bgColor: '#43d477',
+              textColor: 'white',
+              hideAfter: 10000,
+              position: 'bottom-right',
+              icon: 'success'
+          });
+      })();
       // You can implement a success toast notification here
-      alert(message); // Temporary success message
+      //alert(message); // Temporary success message
     }
     
     function resetUploadForm() {
+      const oldInput = document.getElementById('storyFileInput');
+      const newInput = oldInput.cloneNode(true);
+      oldInput.parentNode.replaceChild(newInput, oldInput);
+      
+      // Re-attach the change event to the new input
+      newInput.addEventListener('change', handleFileChange);
+      
+      // Re-attach click to choose button
+      storyChooseBtn.onclick = () => newInput.click();
+
       storyFileInput.value = '';
       imagePreview.src = '';
       imagePreview.classList.remove('active');
       videoPreview.src = '';
       videoPreview.classList.remove('active');
+      videoPreview.pause();
+
       storyUploadForm.reset();
       uploadBtn.disabled = true;
       hideError();
+
+      uploadProgress.classList.remove('active');
+      uploadProgressBar.style.width = '0%';
       
       currentFileData = null;
       currentFileName = '';
       currentFileType = '';
+      isUploading = false;
     }
     
     // Story Viewer Functionality
@@ -724,7 +929,7 @@
 
 <script src="/assets/default/vendors/persian-datepicker/persian-date.js"></script>
 <script src="/assets/default/vendors/persian-datepicker/persian-datepicker.js"></script>
-<script src="/assets/default/js/parts/profile.min.js"></script>
+
 
 @if(!empty($user->live_chat_js_code) and !empty(getFeaturesSettings('show_live_chat_widget')))
   <script>

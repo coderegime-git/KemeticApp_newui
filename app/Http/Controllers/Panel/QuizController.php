@@ -429,7 +429,10 @@ class QuizController extends Controller
             }
         }
 
-        return response()->json([], 422);
+        $url = '/panel/webinars';
+        return redirect($url);
+
+        // return response()->json([], 422);
     }
 
     public function start(Request $request, $id)

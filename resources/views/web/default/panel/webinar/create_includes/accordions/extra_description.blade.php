@@ -137,13 +137,16 @@
     <!-- HEADER -->
     <div class="kemetic-accordion-header"
          role="tab"
-         id="{{ $extraDescriptionType }}_{{ !empty($extraDescription) ? $extraDescription->id :'record' }}"
-         data-toggle="collapse"
-         href="#collapseExtraDescription{{ !empty($extraDescription) ? $extraDescription->id :'record' }}"
-         aria-expanded="true">
+         id="{{ $extraDescriptionType }}_{{ !empty($extraDescription) ? $extraDescription->id :'record' }}">
 
         <!-- Title -->
-        <div class="kemetic-acc-title">
+        <div class="kemetic-acc-title"
+             href="#collapseExtraDescription{{ !empty($extraDescription) ? $extraDescription->id :'record' }}"
+             aria-controls="collapseExtraDescription{{ !empty($extraDescription) ? $extraDescription->id :'record' }}"
+             data-parent="#{{ $extraDescriptionParentAccordion }}"
+             role="button"
+             data-toggle="collapse"
+             aria-expanded="true">
             @if(!empty($extraDescription) and !empty($extraDescription->value))
                 @if($extraDescriptionType == \App\Models\WebinarExtraDescription::$COMPANY_LOGOS)
                     <img src="{{ $extraDescription->value }}"
@@ -160,30 +163,43 @@
         <!-- Actions -->
         <div class="kemetic-acc-actions">
 
-            <i data-feather="move" class="kemetic-icon drag-icon"></i>
+            <i data-feather="move" class="kemetic-icon drag-icon mr-10 cursor-pointer" height="20"></i>
 
             @if(!empty($extraDescription))
-                <div class="dropdown kemetic-dropdown">
-                    <button class="kemetic-dot-btn" data-toggle="dropdown">
-                        <i data-feather="more-vertical"></i>
+                <div class="btn-group dropdown kemetic-dropdown table-actions mr-15">
+                    <button type="button"
+                            class="kemetic-dot-btn dropdown-toggle d-flex align-items-center justify-content-center"
+                            data-toggle="dropdown"
+                            aria-haspopup="true"
+                            aria-expanded="false">
+                        <i data-feather="more-vertical" height="20"></i>
                     </button>
 
                     <div class="dropdown-menu kemetic-dropdown-menu">
                         <a href="/panel/webinar-extra-description/{{ $extraDescription->id }}/delete"
-                           class="dropdown-item text-danger">
+                           class="delete-action btn btn-sm btn-transparent text-danger">
                             {{ trans('public.delete') }}
                         </a>
                     </div>
                 </div>
             @endif
 
+            {{-- Chevron toggle — needs same data-toggle/data-parent as the title so accordion works correctly --}}
             <i data-feather="chevron-down"
-               class="kemetic-icon chevron-icon"></i>
+               class="kemetic-icon chevron-icon collapse-chevron-icon"
+               height="20"
+               href="#collapseExtraDescription{{ !empty($extraDescription) ? $extraDescription->id :'record' }}"
+               aria-controls="collapseExtraDescription{{ !empty($extraDescription) ? $extraDescription->id :'record' }}"
+               data-parent="#{{ $extraDescriptionParentAccordion }}"
+               role="button"
+               data-toggle="collapse"
+               aria-expanded="true"></i>
         </div>
     </div>
 
     <!-- BODY -->
     <div id="collapseExtraDescription{{ !empty($extraDescription) ? $extraDescription->id :'record' }}"
+         aria-labelledby="{{ $extraDescriptionType }}_{{ !empty($extraDescription) ? $extraDescription->id :'record' }}"
          class="collapse kemetic-accordion-body @if(empty($extraDescription)) show @endif"
          role="tabpanel">
 
@@ -215,15 +231,18 @@
                                 <div class="kemetic-input-group">
                                     <button type="button"
                                             class="kemetic-upload-btn panel-file-manager"
-                                            data-input="image{{ !empty($extraDescription) ? $extraDescription->id : 'record' }}">
-                                        <i data-feather="upload"></i>
+                                            data-input="image{{ !empty($extraDescription) ? $extraDescription->id : 'record' }}"
+                                            data-preview="holder">
+                                        <i data-feather="upload" width="18" height="18"></i>
                                     </button>
 
                                     <input type="text"
                                            id="image{{ !empty($extraDescription) ? $extraDescription->id : 'record' }}"
                                            name="ajax[{{ !empty($extraDescription) ? $extraDescription->id : 'new' }}][value]"
                                            value="{{ !empty($extraDescription) ? $extraDescription->value : '' }}"
-                                           class="kemetic-input js-ajax-value">
+                                           class="kemetic-input js-ajax-value"
+                                           placeholder=""/>
+                                    <div class="invalid-feedback"></div>
                                 </div>
                             </div>
 
@@ -233,15 +252,23 @@
                                 <div class="kemetic-form-group">
                                     <label class="kemetic-label">{{ trans('auth.language') }}</label>
                                     <select name="ajax[{{ !empty($extraDescription) ? $extraDescription->id : 'new' }}][locale]"
-                                            class="kemetic-input {{ !empty($extraDescription) ? 'js-webinar-content-locale' : '' }}">
+                                            class="kemetic-input {{ !empty($extraDescription) ? 'js-webinar-content-locale' : '' }}"
+                                            data-webinar-id="{{ !empty($webinar) ? $webinar->id : '' }}"
+                                            data-id="{{ !empty($extraDescription) ? $extraDescription->id : '' }}"
+                                            data-relation="webinarExtraDescription"
+                                            data-fields="value">
                                         @foreach($userLanguages as $lang => $language)
                                             <option value="{{ $lang }}"
-                                                {{ (!empty($extraDescription) && $extraDescription->locale == $lang) ? 'selected' : '' }}>
+                                                {{ (!empty($extraDescription) and !empty($extraDescription->locale)) ? (mb_strtolower($extraDescription->locale) == mb_strtolower($lang) ? 'selected' : '') : ($locale == $lang ? 'selected' : '') }}>
                                                 {{ $language }}
                                             </option>
                                         @endforeach
                                     </select>
                                 </div>
+                            @else
+                                <input type="hidden"
+                                       name="ajax[{{ !empty($extraDescription) ? $extraDescription->id : 'new' }}][locale]"
+                                       value="{{ $defaultLocale }}">
                             @endif
 
                             <div class="kemetic-form-group">
@@ -249,7 +276,8 @@
                                 <input type="text"
                                        name="ajax[{{ !empty($extraDescription) ? $extraDescription->id : 'new' }}][value]"
                                        class="kemetic-input js-ajax-value"
-                                       value="{{ !empty($extraDescription) ? $extraDescription->value : '' }}">
+                                       value="{{ !empty($extraDescription) ? $extraDescription->value : '' }}"/>
+                                <div class="invalid-feedback"></div>
                             </div>
 
                         @endif

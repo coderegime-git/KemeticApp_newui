@@ -46,7 +46,7 @@
                                             <input type="text" name="title"
                                                    class="form-control  @error('title') is-invalid @enderror"
                                                    value="{{ !empty($book) ? $book->title : old('title') }}"
-                                                   placeholder="{{ trans('admin/main.choose_title') }}"/>
+                                                   placeholder="{{ trans('admin/main.choose_title') }}" required/>
                                             @error('title')
                                             <div class="invalid-feedback">
                                                 {{ $message }}
@@ -55,8 +55,24 @@
                                         </div>
 
                                         <div class="form-group">
+                                            <label>{{ trans('admin/main.type') }}</label>
+                                            <select class="form-control @error('type') is-invalid @enderror" required name="type" id="book_type" onchange="togglePrintFields()">
+                                                <option value="" {{ empty($book) ? 'selected' : '' }}>{{ trans('admin/main.choose_type') }}</option>
+                                                <option value="E-book" {{ (!empty($book) && $book->type == 'E-book') || old('type') == 'E-book' ? 'selected' : '' }}>E-book</option>
+                                                <option value="Audio Book" {{ (!empty($book) && $book->type == 'Audio Book') || old('type') == 'Audio Book' ? 'selected' : '' }}>Audio Book</option>
+                                                <option value="Print" {{ (!empty($book) && $book->type == 'Print') || old('type') == 'Print' ? 'selected' : '' }}>Print</option>                                                
+                                            </select>
+
+                                            @error('type')
+                                            <div class="invalid-feedback">
+                                                {{ $message }}
+                                            </div>
+                                            @enderror
+                                        </div>
+
+                                        <div class="form-group">
                                             <label>{{ trans('/admin/main.category') }}</label>
-                                            <select class="form-control @error('category_id') is-invalid @enderror" name="category_id">
+                                            <select class="form-control @error('category_id') is-invalid @enderror" name="category_id" required>
                                                 <option {{ !empty($trend) ? '' : 'selected' }} disabled>{{ trans('admin/main.choose_category') }}</option>
 
                                                 @foreach($categories as $category)
@@ -79,7 +95,7 @@
                                                         <i class="fa fa-upload"></i>
                                                     </button>
                                                 </div>
-                                                <input type="text" name="image_cover" id="cover_image" value="{{ !empty($book) ? $book->image_cover : old('image_cover') }}" class="form-control @error('image_cover')  is-invalid @enderror"/>
+                                                <input type="text" name="image_cover" id="cover_image" value="{{ !empty($book) ? $book->image_cover : old('image_cover') }}" class="form-control @error('image_cover')  is-invalid @enderror" required/>
                                                 <div class="input-group-append">
                                                     <button type="button" class="input-group-text admin-file-view" data-input="cover_image">
                                                         <i class="fa fa-eye"></i>
@@ -94,14 +110,14 @@
                                         </div>
 
                                         <div class="form-group mt-15">
-                                            <label class="input-label">{{ trans('update.path') }}</label>
+                                            <label class="input-label">PDF (Front, Spine & Back cover contain the full layout as a single spread pdf)</label>
                                             <div class="input-group">
                                                 <div class="input-group-prepend">
                                                     <button type="button" class="input-group-text admin-file-manager" data-input="path_image" data-preview="holder">
                                                         <i class="fa fa-upload"></i>
                                                     </button>
                                                 </div>
-                                                <input type="text" name="image_path" id="path_image" value="{{ !empty($book) ? $book->url : old('image_path') }}" class="form-control @error('image_path')  is-invalid @enderror"/>
+                                                <input type="text" name="image_path" id="path_image" value="{{ !empty($book) ? $book->url : old('image_path') }}" class="form-control @error('image_path')  is-invalid @enderror" required/>
                                                 <!-- <div class="input-group-append">
                                                     <button type="button" class="input-group-text admin-file-view" data-input="path_image">
                                                         <i class="fa fa-eye"></i>
@@ -115,36 +131,38 @@
                                             </div>
                                         </div>
 
-                                        <div class="form-group">
-                                            <label class="input-label">Pages</label>
-                                            <input type="number" id="page_count" name="page_count" value="{{ !empty($book) ? $book->page_count : old('page_count') }}" class="form-control @error('page_count')  is-invalid @enderror" placeholder="0" required onchange="calculateLuluPrice()"/>
-                                            @error('page_count')
-                                            <div class="invalid-feedback">
-                                                {{ $message }}
+                                        <div id="print_fields" class="print-fields" style="{{ (!empty($book) && $book->type == 'Print') ? '' : 'display: none;' }}">
+                                            <div class="form-group">
+                                                <label class="input-label">Pages</label>
+                                                <input type="number" id="page_count" name="page_count" value="{{ !empty($book) ? $book->page_count : old('page_count') }}" class="form-control @error('page_count')  is-invalid @enderror" placeholder="0" onchange="calculateLuluPrice()"/>
+                                                @error('page_count')
+                                                <div class="invalid-feedback">
+                                                    {{ $message }}
+                                                </div>
+                                                @enderror
                                             </div>
-                                            @enderror
-                                        </div>
 
-                                        <div class="form-group">
-                                            <label class="input-label">Shipping Price ({{ $currency }})</label>
-                                            <input type="number" id="shipping_price" name="shipping_price" value="{{ !empty($book) ? $book->shipping_price : old('shipping_price', '14.85') }}" 
-                                            class="form-control @error('shipping_price')  is-invalid @enderror" placeholder="{{ trans('public.0_for_free') }}" readonly/>
-                                            @error('shipping_price')
-                                            <div class="invalid-feedback">
-                                                {{ $message }}
+                                            <div class="form-group">
+                                                <label class="input-label">Shipping Price ({{ $currency }})</label>
+                                                <input type="number" id="shipping_price" name="shipping_price" value="{{ !empty($book) ? $book->shipping_price : old('shipping_price', '14.85') }}" 
+                                                class="form-control @error('shipping_price')  is-invalid @enderror" placeholder="{{ trans('public.0_for_free') }}" readonly/>
+                                                @error('shipping_price')
+                                                <div class="invalid-feedback">
+                                                    {{ $message }}
+                                                </div>
+                                                @enderror
                                             </div>
-                                            @enderror
-                                        </div>
 
-                                        <div class="form-group">
-                                            <label class="input-label">Print Price ({{ $currency }})</label>
-                                            <input type="number" id="print_price" name="print_price" value="{{ !empty($book) ? $book->print_price : old('print_price') }}" 
-                                            class="form-control @error('print_price')  is-invalid @enderror" placeholder="{{ trans('public.0_for_free') }}" readonly/>
-                                            @error('print_price')
-                                            <div class="invalid-feedback">
-                                                {{ $message }}
+                                            <div class="form-group">
+                                                <label class="input-label">Print Price ({{ $currency }})</label>
+                                                <input type="number" id="print_price" name="print_price" value="{{ !empty($book) ? $book->print_price : old('print_price') }}" 
+                                                class="form-control @error('print_price')  is-invalid @enderror" placeholder="{{ trans('public.0_for_free') }}" readonly/>
+                                                @error('print_price')
+                                                <div class="invalid-feedback">
+                                                    {{ $message }}
+                                                </div>
+                                                @enderror
                                             </div>
-                                            @enderror
                                         </div>
 
                                         <div class="form-group">
@@ -176,29 +194,8 @@
                                             </div>
                                             @enderror
                                         </div>
-
-                                        <div class="form-group">
-                                            <label>{{ trans('admin/main.type') }}</label>
-                                            <select class="form-control @error('type') is-invalid @enderror" name="type">
-                                                <option value="" {{ empty($book) ? 'selected' : '' }}>{{ trans('admin/main.choose_type') }}</option>
-                                                <option value="E-book" {{ (!empty($book) && $book->type == 'E-book') || old('type') == 'E-book' ? 'selected' : '' }}>E-book</option>
-                                                <option value="Audio Book" {{ (!empty($book) && $book->type == 'Audio Book') || old('type') == 'Audio Book' ? 'selected' : '' }}>Audio Book</option>
-                                                <option value="Print" {{ (!empty($book) && $book->type == 'Print') || old('type') == 'Print' ? 'selected' : '' }}>Print</option>                                                
-                                            </select>
-
-                                            @error('type')
-                                            <div class="invalid-feedback">
-                                                {{ $message }}
-                                            </div>
-                                            @enderror
-                                        </div>
-
                                     </div>
-
-                                    
                                 </div>
-
-                               
 
                                 <div class="form-group mt-15">
                                     <label class="input-label">{{ trans('public.description') }}</label>
@@ -235,15 +232,56 @@
 @endsection
 @push('scripts_bottom')
     <script src="/assets/vendors/summernote/summernote-bs4.min.js"></script>
-    
-    
 <script>
     
     document.addEventListener('DOMContentLoaded', function() {
+        togglePrintFields();
         calculateTotalPrice();
     });
 
+    function togglePrintFields() {
+
+        const bookType = document.getElementById('book_type').value;
+        const printFields = document.getElementById('print_fields');
+        const pageCountInput = document.getElementById('page_count');
+        const shippingPriceInput = document.getElementById('shipping_price');
+        const printPriceInput = document.getElementById('print_price');
+        
+        if (bookType === 'Print') {
+            printFields.style.display = 'block';
+            
+            // Make print-related fields required for print books
+            pageCountInput.required = true;
+            shippingPriceInput.required = true;
+            printPriceInput.required = true;
+            shippingPriceInput.value = '14.85'; 
+        } else {
+            printFields.style.display = 'none';
+            
+            // Clear and disable print-related fields for non-print books
+            pageCountInput.value = '';
+            pageCountInput.required = false;
+            
+            shippingPriceInput.value = '';
+            shippingPriceInput.required = false;
+            
+            printPriceInput.value = '';
+            printPriceInput.required = false;
+            calculatePlatformFee();
+            // Recalculate total price with zero values
+            calculateTotalPrice();
+        }
+    }
+
     async function calculateLuluPrice() {
+
+        const bookType = document.getElementById('book_type').value;
+        
+        // Only calculate Lulu price for Print books
+        if (bookType !== 'Print') {
+            return;
+        }
+
         const pagesInput = document.getElementById('page_count');
         const printPriceInput = document.getElementById('print_price');
         const bookPriceInput = document.getElementById('book_price');
@@ -281,11 +319,11 @@
                 //calculatePlatformFee();
                 
                 // Auto-fill book price suggestion
-                if (!bookPriceInput.value || bookPriceInput.value == '0') {
+                if (bookPriceInput.value != '0') {
                     //const suggestedPrice = (printPrice * 1.5).toFixed(2); // 50% markup suggestion
                     //bookPriceInput.value = suggestedPrice;
                     //bookPriceInput.placeholder = 'Suggested: ' + suggestedPrice;
-                    //calculatePlatformFee();
+                    calculatePlatformFee();
                 }
             } else {
                 alert('Error calculating print price: ' + (data.message || 'Unknown error'));
@@ -301,6 +339,7 @@
 
     // Function to calculate platform fee (10% of book price)
     function calculatePlatformFee() {
+
         const shippingPrice = parseFloat(document.getElementById('shipping_price').value) || 0;
         const printPrice = parseFloat(document.getElementById('print_price').value) || 0;
         const bookPriceInput = parseFloat(document.getElementById('book_price').value) || 0;
@@ -317,6 +356,7 @@
 
     // Function to calculate total price
     function calculateTotalPrice() {
+        
         const shippingPrice = parseFloat(document.getElementById('shipping_price').value) || 0;
         const printPrice = parseFloat(document.getElementById('print_price').value) || 0;
         const platformFee = parseFloat(document.getElementById('platform_price').value) || 0;

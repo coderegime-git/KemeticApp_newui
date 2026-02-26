@@ -387,14 +387,15 @@
 
     <nav class="dashboard-nav">
         <!-- Dashboard -->
-         <a href="/"><span class="dashboard-ms">home</span> Home</a>
+         <a href="/" style="display:flex; align-items:center; gap:50px; padding:13px 16px; color:var(--sidebar-text); text-decoration:none; border-radius:12px; margin-bottom:6px; transition:all .25s ease;"><span class="dashboard-ms">home</span> Home</a>
          @if(auth()->user())
-        <a href="/panel" class="{{ Request::is('panel') && !Request::is('panel/*') ? 'active' : '' }}">
+        <a href="/panel" style="display:flex; align-items:center; gap:40px; padding:13px 16px; color:var(--sidebar-text); text-decoration:none; border-radius:12px; margin-bottom:6px; transition:all .25s ease;"
+         class="{{ Request::is('panel') && !Request::is('panel/*') ? 'active' : '' }}">
             <span class="dashboard-ms">space_dashboard</span> {{ trans('panel.dashboard') }}
         </a>
-
         
-        <a href="{{ route('reels.index') }}" class="{{ Request::is('reels*') ? 'active' : '' }}">
+        <a href="{{ route('reels.index') }}" style="display:flex; align-items:center; gap:50px; padding:13px 16px; color:var(--sidebar-text); text-decoration:none; border-radius:12px; margin-bottom:6px; transition:all .25s ease;"
+         class="{{ (request()->is('panel/reels')) ? 'active' : '' }}">
             <span class="dashboard-ms">movie</span> Portals
         </a>
         @endif
@@ -1028,7 +1029,8 @@
 
             @if(!empty($rewardSetting) and $rewardSetting['status'] == '1')
                 @can('panel_rewards')
-                    <a href="/panel/rewards" class="{{ (request()->is('panel/rewards')) ? 'active' : '' }}">
+                    <a href="/panel/rewards" style="display:flex; align-items:center; gap:30px; padding:13px 16px; color:var(--sidebar-text); text-decoration:none; border-radius:12px; margin-bottom:6px; transition:all .25s ease;"
+                    class="{{ (request()->is('panel/rewards')) ? 'active' : '' }}">
                         <span class="dashboard-ms">military_tech</span> {{ trans('update.rewards') }}
                     </a>
                 @endcan
@@ -1065,34 +1067,36 @@
                 </div>
             </div>
 
-            <div class="nav-collapsible {{ (request()->is('panel/livestream') or request()->is('panel/livestream/*')) ? 'open' : '' }}">
+            <!-- <div class="nav-collapsible {{ (request()->is('panel/livestream') or request()->is('panel/livestream/*')) ? 'open' : '' }}">
                 <a class="nav-collapsible-toggle {{ (request()->is('panel/livestream') or request()->is('panel/livestream/*')) ? 'active' : '' }}">
                     <span class="dashboard-ms">live_tv</span>Livestream
                     <span class="nav-arrow">›</span>
                 </a>
                 <div class="nav-collapsible-content">
-                    <!-- <a href="/panel/livestream/create" class="{{ (request()->is('panel/livestream/create')) ? 'active' : '' }}">
+                    <a href="/panel/livestream/create" class="{{ (request()->is('panel/livestream/create')) ? 'active' : '' }}">
                         <span class="dashboard-ms">add_circle</span> New Livestream
-                    </a> -->
+                    </a>
 
                     <a href="/panel/livestream/" class="{{ (request()->is('panel/livestream/')) ? 'active' : '' }}">
                         <span class="dashboard-ms">live_tv</span> Livestream
                     </a>
                 </div>
-            </div>
+            </div> -->
         
         
 
         <!-- ========== NOTIFICATIONS ========== -->
         @can('panel_notifications')
-        <a href="/panel/notifications" class="{{ Request::is('panel/notifications*') ? 'active' : '' }}">
+        <a href="/panel/notifications" style="display:flex; align-items:center; gap:40px; padding:13px 16px; color:var(--sidebar-text); text-decoration:none; border-radius:12px; margin-bottom:6px; transition:all .25s ease;"
+        class="{{ Request::is('panel/notifications*') ? 'active' : '' }}">
             <span class="dashboard-ms">notifications</span> {{ trans('panel.notifications') }}
         </a>
         @endcan
 
         <!-- ========== SETTINGS ========== -->
         @can('panel_others_profile_setting')
-        <a href="/panel/setting" class="{{ Request::is('panel/setting*') ? 'active' : '' }}">
+        <a href="/panel/setting" style="display:flex; align-items:center; gap:40px; padding:13px 16px; color:var(--sidebar-text); text-decoration:none; border-radius:12px; margin-bottom:6px; transition:all .25s ease;"
+        class="{{ Request::is('panel/setting*') ? 'active' : '' }}">
             <span class="dashboard-ms">settings</span> {{ trans('panel.settings') }}
         </a>
         @endcan
@@ -1100,7 +1104,8 @@
 
         <!-- ========== PROFILE ========== -->
        
-            <a href="{{ $authUser->getProfileUrl() }}" class="{{ Request::is('users/*') ? 'active' : '' }}">
+            <a href="{{ $authUser->getProfileUrl() }}" style="display:flex; align-items:center; gap:40px; padding:13px 16px; color:var(--sidebar-text); text-decoration:none; border-radius:12px; margin-bottom:6px; transition:all .25s ease;" 
+            class="{{ Request::is('users/*') ? 'active' : '' }}">
                 <span class="dashboard-ms">person</span> {{ trans('public.my_profile') }}
             </a>
              <!-- @if($authUser->isTeacher() || $authUser->isOrganization()) -->
@@ -1110,7 +1115,7 @@
 
         <!-- ========== LOGOUT ========== -->
         @can('panel_others_logout')
-        <a href="/logout">
+        <a href="/logout" style="display:flex; align-items:center; gap:40px; padding:13px 16px; color:var(--sidebar-text); text-decoration:none; border-radius:12px; margin-bottom:6px; transition:all .25s ease;">
             <span class="dashboard-ms">logout</span> {{ trans('panel.log_out') }}
         </a>
         @endcan

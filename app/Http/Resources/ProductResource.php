@@ -49,7 +49,8 @@ class ProductResource extends JsonResource
             'price' => (string)convertPriceToUserCurrency($this->price),
             'price_with_discount' => (string)convertPriceToUserCurrency($this->getPriceWithActiveDiscountPrice()),
             'cashback_rules' => (string)$this->cashbackRules,
-            'is_purchased' => isset($this->purchaseStatus) ? true : false,
+            'is_purchased' => $this->purchaseStatus ?? false,
+            //'is_purchased' => isset($this->purchaseStatus) ? true : false,
             $this->mergeWhen($this->show, function () {
                 
                 return [

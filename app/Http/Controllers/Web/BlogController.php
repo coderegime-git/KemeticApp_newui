@@ -10,10 +10,13 @@ use Illuminate\Http\Request;
 
 class BlogController extends Controller
 {
-    public function index(Request $request, $category = null)
+    public function index(Request $request)
     {
+        $data = $request->all();
+        
         $author = $request->get('author', null);
         $search = $request->get('search', null);
+        $categoryId = $request->get('category_id', null);
         
         $seoSettings = getSeoMetas('blog');
         $pageTitle = !empty($seoSettings['title']) ? $seoSettings['title'] : trans('home.blog');
@@ -25,15 +28,6 @@ class BlogController extends Controller
         $query = Blog::where('status', 'publish')
             ->orderBy('updated_at', 'desc')
             ->orderBy('created_at', 'desc');
-
-        if (!empty($category)) {
-            $blogCategory = $blogCategories->where('slug', $category)->first();
-            if (!empty($blogCategory)) {
-                $query->where('category_id', $blogCategory->id);
-                $pageTitle .= ' ' . $blogCategory->title;
-                $pageDescription .= ' ' . $blogCategory->title;
-            }
-        }
 
         $selectedCategory = null;
 
@@ -49,6 +43,11 @@ class BlogController extends Controller
             $query->whereTranslationLike('title', "%$search%");
         }
 
+        if (!empty($categoryId)) {
+            $query->where('category_id', $categoryId);
+        }
+
+
         $blogCount = $query->count();
 
         $blog = $query->with([
@@ -61,6 +60,13 @@ class BlogController extends Controller
             ->paginate(8);
 
         $popularPosts = $this->getPopularPosts();
+
+        $selectedCategory = null;
+
+        if (!empty($data['category_id'])) {
+            $selectedCategory = BlogCategory::where('id', $data['category_id'])->first();
+        }
+
 
         $data = [
             'pageTitle' => $pageTitle,

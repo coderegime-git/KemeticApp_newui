@@ -134,7 +134,10 @@
       <div>
         <label class="login-label">Confirm password</label>
         <div class="login-inp"><input id="su-pass2"  name="password_confirmation"  type="password" placeholder="Repeat password" minlength="6" required></div>
-         @error('password_confirmation')
+        <div id="password-match-error" class="invalid-feedback" style="display: none;">
+          Passwords do not match
+        </div> 
+        @error('password_confirmation')
           <div class="invalid-feedback">
               {{ $message }}
           </div>
@@ -236,16 +239,24 @@
     el.type = el.type === 'password' ? 'text' : 'password';
     btn.textContent = el.type === 'password' ? 'Show' : 'Hide';
   }
-  
+
   function checkMatch(){
     const a = document.getElementById('su-pass').value;
     const b = document.getElementById('su-pass2').value;
+    const errorDiv = document.getElementById('password-match-error');
     if(a !== b){ 
-      alert('Passwords do not match'); 
+      errorDiv.style.display = 'block';
       return false;
     }
+    else
+    {
+      errorDiv.style.display = 'none';
+      return true;
+    }
+
     return true;
   }
+  
 
   // Auto-switch to signup if there are signup errors
   document.addEventListener('DOMContentLoaded', function() {

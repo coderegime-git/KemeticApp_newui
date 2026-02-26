@@ -155,10 +155,6 @@
     transform: translateY(-1px);
 }
 
-.kemetic-section {
-    padding: 10px 0;
-}
-
 .kemetic-title {
     font-size: 20px;
     color: #f2c94c;
@@ -219,6 +215,64 @@
 .text-dark-blue {
     color: #5dade2 !important;
 }
+
+/* ===============================
+   SELECT2 – KEMETIC DARK THEME
+================================ */
+
+/* main box */
+.select2-container--default .select2-selection--single {
+    background: #0d0d0d !important;
+    border: 1px solid rgba(242,201,76,.35) !important;
+    border-radius: 14px !important;
+    height: 45px !important;
+    display: flex;
+    align-items: center;
+    color: #e0e0e0 !important;
+}
+
+/* text */
+.select2-container--default .select2-selection--single .select2-selection__rendered {
+    color: #e0e0e0 !important;
+    line-height: 45px !important;
+}
+
+/* arrow */
+.select2-container--default .select2-selection--single .select2-selection__arrow b {
+    border-color: #f2c94c transparent transparent transparent !important;
+}
+
+/* dropdown */
+.select2-dropdown {
+    background: #0f0f0f !important;
+    border: 1px solid rgba(242,201,76,.35) !important;
+    border-radius: 12px !important;
+}
+
+/* options */
+.select2-results__option {
+    color: #e0e0e0 !important;
+    padding: 10px 14px !important;
+}
+
+/* hover */
+.select2-results__option--highlighted {
+    background: rgba(242,201,76,.15) !important;
+    color: #fff !important;
+}
+
+/* selected */
+.select2-results__option[aria-selected=true] {
+    background: rgba(242,201,76,.25) !important;
+}
+
+/* search box */
+.select2-search--dropdown .select2-search__field {
+    background: #0d0d0d !important;
+    border: 1px solid rgba(242,201,76,.35) !important;
+    color: #fff !important;
+    border-radius: 8px !important;
+}
 </style>
 @endpush
 @push('styles_top')
@@ -269,14 +323,17 @@
                         <div class="kemetic-form-group">
                             <label class="kemetic-label">{{ trans('public.from') }}</label>
                             <div class="kemetic-input-group">
-                                <span class="kemetic-icon">
-                                    <i data-feather="calendar"></i>
-                                </span>
-                                <input type="text"
-                                       name="from"
-                                       autocomplete="off"
-                                       class="kemetic-input @if(!empty(request()->get('from'))) datepicker @else datefilter @endif"
-                                       value="{{ request()->get('from','') }}">
+                                <input type="date"
+                                    class="form-control kemetic-input text-center"
+                                    name="from"
+                                    value="{{ request()->get('from') }}">
+                                    <!-- <span class="input-group-text kemetic-icon bg-gold text-black">
+                                        <i data-feather="calendar" width="18" height="18"></i>
+                                    </span> -->
+
+                                    <!-- <input type="text" name="from" autocomplete="off"
+                                        class="form-control kemetic-input @if(request()->get('from')) datepicker @else datefilter @endif"
+                                        value="{{ request()->get('from','') }}"> -->
                             </div>
                         </div>
                     </div>
@@ -285,14 +342,18 @@
                         <div class="kemetic-form-group">
                             <label class="kemetic-label">{{ trans('public.to') }}</label>
                             <div class="kemetic-input-group">
-                                <span class="kemetic-icon">
-                                    <i data-feather="calendar"></i>
-                                </span>
-                                <input type="text"
-                                       name="to"
-                                       autocomplete="off"
-                                       class="kemetic-input @if(!empty(request()->get('to'))) datepicker @else datefilter @endif"
-                                       value="{{ request()->get('to','') }}">
+                                <input type="date"
+                                    class="form-control kemetic-input text-center"
+                                    name="to"
+                                    value="{{ request()->get('to') }}">
+
+                                <!-- <span class="input-group-text kemetic-icon bg-gold text-black">
+                                    <i data-feather="calendar" width="18" height="18"></i>
+                                </span> -->
+                                
+                                <!-- <input type="text" name="to" autocomplete="off"
+                                    class="form-control kemetic-input @if(request()->get('to')) datepicker @else datefilter @endif"
+                                    value="{{ request()->get('to','') }}"> -->
                             </div>
                         </div>
                     </div>
@@ -357,7 +418,7 @@
 
     <div class="panel-section-card py-20 px-25 mt-20">
         <div class="table-responsive">
-            <table class="table custom-table text-center">
+            <table class="custom-table text-center">
                 <thead>
                 <tr>
                     <th>{{ trans('quiz.student') }}</th>
@@ -479,7 +540,7 @@
             </table>
         </div>
 
-        <div class="my-30">
+        <div class="my-30" style="padding: 10px;">
             {{ $sales->appends(request()->input())->links('vendor.pagination.panel') }}
         </div>
     </div>

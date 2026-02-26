@@ -174,7 +174,7 @@
         @if($assignments->count() > 0)
             <div class="kemetic-table-card">
                 <div class="table-responsive">
-                    <table class="table text-center custom-table">
+                    <table class="text-center custom-table">
                         <thead>
                             <tr>
                                 <th>{{ trans('update.title_and_course') }}</th>
@@ -231,7 +231,7 @@
                 </div>
 
                 {{-- PAGINATION --}}
-                <div class="my-30">
+                <div class="my-30" style="padding: 10px;">
                     {{ $assignments->appends(request()->input())->links('vendor.pagination.panel') }}
                 </div>
             </div>

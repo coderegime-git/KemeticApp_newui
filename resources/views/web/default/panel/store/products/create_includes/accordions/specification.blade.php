@@ -104,6 +104,13 @@
     font-size: 12px;
 }
 
+/* Allow-selection toggle label */
+.kemetic-toggle-label {
+    color: #ccc;
+    font-size: 13px;
+    font-weight: 500;
+}
+
 .custom-control {
   position: relative;
   z-index: 1;
@@ -131,10 +138,10 @@
   color: #ffffff;
   border-color: #F2C94C;
   background-color: #F2C94C;
-  box-shadow: 0 0 10px rgba(242, 201, 76, 0.45); */
+  box-shadow: 0 0 10px rgba(242, 201, 76, 0.45);
 }
 .custom-control-input:focus ~ .custom-control-label::before {
-  box-shadow: none, 1.5rem;
+  box-shadow: none;
 }
 .custom-control-input:focus:not(:checked) ~ .custom-control-label::before {
   border-color: #43d477;
@@ -144,11 +151,13 @@
   background-color: #43d477;
   border-color: #43d477;
 }
-.custom-control-input[disabled] ~ .custom-control-label, .custom-control-input:disabled ~ .custom-control-label {
+.custom-control-input[disabled] ~ .custom-control-label,
+.custom-control-input:disabled ~ .custom-control-label {
   color: #6c757d;
 }
-.custom-control-input[disabled] ~ .custom-control-label::before, .custom-control-input:disabled ~ .custom-control-label::before {
-  background-color: #f1f1f1;
+.custom-control-input[disabled] ~ .custom-control-label::before,
+.custom-control-input:disabled ~ .custom-control-label::before {
+  background-color: #1a1a1a;
 }
 
 .custom-control-label {
@@ -165,8 +174,8 @@
   height: 1.5rem;
   pointer-events: none;
   content: "";
-  background-color: #ffffff;
-  border: 2px solid #adb5bd;
+  background-color: #1e1e1e;
+  border: 2px solid #444;
   box-shadow: none;
 }
 .custom-control-label::after {
@@ -189,15 +198,15 @@
 .custom-checkbox .custom-control-input:indeterminate ~ .custom-control-label::before {
   border-color: #F2C94C;
   background-color: #F2C94C;
-}#
+}
 .custom-checkbox .custom-control-input:indeterminate ~ .custom-control-label::after {
   background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' width='4' height='4' viewBox='0 0 4 4'%3e%3cpath stroke='%23ffffff' d='M0 2h4'/%3e%3c/svg%3e");
 }
 .custom-checkbox .custom-control-input:disabled:checked ~ .custom-control-label::before {
-  background-color: #F2C94C;
+  background-color: rgba(242,201,76,0.4);
 }
 .custom-checkbox .custom-control-input:disabled:indeterminate ~ .custom-control-label::before {
-  background-color: #F2C94C;
+  background-color: rgba(242,201,76,0.4);
 }
 
 .custom-radio .custom-control-label::before {
@@ -224,9 +233,10 @@
   left: calc(-3.125rem + 4px);
   width: calc(1.5rem - 8px);
   height: calc(1.5rem - 8px);
-  background-color: #adb5bd;
+  background-color: #555;
   border-radius: 0.75rem;
-  transition: transform 0.15s ease-in-out, background-color 0.15s ease-in-out, border-color 0.15s ease-in-out, box-shadow 0.15s ease-in-out;
+  transition: transform 0.15s ease-in-out, background-color 0.15s ease-in-out,
+              border-color 0.15s ease-in-out, box-shadow 0.15s ease-in-out;
 }
 @media (prefers-reduced-motion: reduce) {
   .custom-switch .custom-control-label::after {
@@ -238,10 +248,12 @@
   transform: translateX(1.125rem);
 }
 .custom-switch .custom-control-input:disabled:checked ~ .custom-control-label::before {
-  background-color: rgba(67, 212, 119, 0.5);
+  background-color: rgba(242,201,76,0.4);
 }
 
+
 </style>
+
 <li data-id="{{ !empty($selectedSpecification) ? $selectedSpecification->id :'' }}"
     class="accordion-row kemetic-accordion-item mt-25">
 
@@ -251,6 +263,8 @@
          id="specification_{{ !empty($selectedSpecification) ? $selectedSpecification->id :'record' }}"
          data-toggle="collapse"
          href="#collapseSpecification{{ !empty($selectedSpecification) ? $selectedSpecification->id :'record' }}"
+         aria-controls="collapseSpecification{{ !empty($selectedSpecification) ? $selectedSpecification->id :'record' }}"
+         data-parent="#specificationsAccordion"
          aria-expanded="true">
 
         <div class="d-flex align-items-center">
@@ -274,23 +288,33 @@
             @endif
 
             <i data-feather="move"
-               class="kemetic-drag-icon mr-12"></i>
+               class="kemetic-drag-icon mr-12 cursor-pointer"
+               height="20"></i>
 
             @if(!empty($selectedSpecification))
                 <a href="/panel/store/products/specifications/{{ $selectedSpecification->id }}/delete"
                    class="kemetic-icon-btn-danger delete-action mr-10">
-                    <i data-feather="trash-2"></i>
+                    <i data-feather="trash-2" height="20"></i>
                 </a>
             @endif
 
             <i data-feather="chevron-down"
-               class="kemetic-chevron"></i>
+               class="kemetic-chevron"
+               height="20"
+               href="#collapseSpecification{{ !empty($selectedSpecification) ? $selectedSpecification->id :'record' }}"
+               aria-controls="collapseSpecification{{ !empty($selectedSpecification) ? $selectedSpecification->id :'record' }}"
+               data-parent="#specificationsAccordion"
+               role="button"
+               data-toggle="collapse"
+               aria-expanded="true"></i>
         </div>
     </div>
 
     {{-- ================= BODY ================= --}}
     <div id="collapseSpecification{{ !empty($selectedSpecification) ? $selectedSpecification->id :'record' }}"
-         class="collapse @if(empty($selectedSpecification)) show @endif">
+         aria-labelledby="specification_{{ !empty($selectedSpecification) ? $selectedSpecification->id :'record' }}"
+         class="collapse @if(empty($selectedSpecification)) show @endif"
+         role="tabpanel">
 
         <div class="kemetic-accordion-body">
 
@@ -309,7 +333,7 @@
                 <div class="row">
                     <div class="col-12 col-lg-6">
 
-                        {{-- LANGUAGE --}}
+                        {{-- ── LANGUAGE ── --}}
                         @if(!empty(getGeneralSettings('content_translate')))
                             <div class="form-group kemetic-form-group">
                                 <label class="kemetic-label">{{ trans('auth.language') }}</label>
@@ -322,77 +346,140 @@
                                         data-fields="value">
                                     @foreach(getUserLanguagesLists() as $lang => $language)
                                         <option value="{{ $lang }}"
-                                            {{ (!empty($selectedSpecification) && mb_strtolower($selectedSpecification->locale ?? '') == mb_strtolower($lang)) || $locale == $lang ? 'selected' : '' }}>
+                                            {{ (!empty($selectedSpecification) and !empty($selectedSpecification->value) and !empty($selectedSpecification->locale)) ? (mb_strtolower($selectedSpecification->locale) == mb_strtolower($lang) ? 'selected' : '') : ($locale == $lang ? 'selected' : '') }}>
                                             {{ $language }}
                                         </option>
                                     @endforeach
                                 </select>
                             </div>
+                        @else
+                            {{-- ── Hidden locale fallback (restored from original) ── --}}
+                            <input type="hidden"
+                                   name="ajax[{{ !empty($selectedSpecification) ? $selectedSpecification->id : 'new' }}][locale]"
+                                   value="{{ $defaultLocale }}">
                         @endif
 
-                        {{-- SPECIFICATION --}}
+                        {{-- ── SPECIFICATION SELECT ── --}}
                         <div class="form-group kemetic-form-group mt-15">
-                            <label class="kemetic-label">{{ trans('update.specification') }}</label>
+                            <label class="kemetic-label d-block">{{ trans('update.specification') }}</label>
 
                             <select name="ajax[{{ !empty($selectedSpecification) ? $selectedSpecification->id : 'new' }}][specification_id]"
-                                    class="kemetic-select js-ajax-specification_id"
+                                    class="kemetic-select js-ajax-specification_id {{ !empty($selectedSpecification) ? '' : 'specification-select2' }}"
                                     data-placeholder="{{ trans('update.search_and_select_specifications') }}"
+                                    data-allow-clear="false"
                                     data-category="{{ !empty($product) ? $product->category_id : '' }}"
                                     {{ !empty($selectedSpecification) ? 'disabled' : '' }}>
+
                                 @if(!empty($productSpecifications))
                                     <option value="">{{ trans('update.search_and_select_specifications') }}</option>
                                     @foreach($productSpecifications as $productSpecification)
                                         <option value="{{ $productSpecification->id }}"
-                                            {{ (!empty($selectedSpecification) && $selectedSpecification->product_specification_id == $productSpecification->id) ? 'selected' : '' }}>
+                                            {{ (!empty($selectedSpecification) and $selectedSpecification->product_specification_id == $productSpecification->id) ? 'selected' : '' }}>
                                             {{ $productSpecification->title }}
                                         </option>
                                     @endforeach
+
+                                @elseif(!empty($selectedSpecification))
+                                    {{-- ── Restored: fallback option when no productSpecifications list ── --}}
+                                    <option value="{{ $selectedSpecification->specification->id }}" selected>
+                                        {{ $selectedSpecification->specification->title }}
+                                    </option>
                                 @endif
                             </select>
+
+                            <div class="invalid-feedback"></div>
+
+                            {{-- ── Restored: hidden specification_id input when editing ── --}}
+                            @if(!empty($selectedSpecification))
+                                <input type="hidden"
+                                       name="ajax[{{ $selectedSpecification->id }}][specification_id]"
+                                       value="{{ $selectedSpecification->specification->id }}">
+                            @endif
                         </div>
 
-                        {{-- MULTI VALUES --}}
-                        <div class="form-group kemetic-form-group js-multi-values-input {{ (!empty($selectedSpecification) && $selectedSpecification->type == 'multi_value') ? '' : 'd-none' }}">
-                            <label class="kemetic-label">{{ trans('update.parameters') }}</label>
+                        {{-- ── MULTI VALUES ── --}}
+                        <div class="form-group kemetic-form-group js-multi-values-input {{ (!empty($selectedSpecification) and $selectedSpecification->type == 'multi_value') ? '' : 'd-none' }}">
+                            <label class="kemetic-label d-block">{{ trans('update.parameters') }}</label>
 
+                            @php
+                                $selectedMultiValues = [];
+                                if (!empty($selectedSpecification)) {
+                                    $selectedMultiValues = $selectedSpecification->selectedMultiValues->pluck('specification_multi_value_id')->toArray();
+                                }
+                            @endphp
+
+                            {{-- ── Restored: full select2 classes & data attributes ── --}}
                             <select name="ajax[{{ !empty($selectedSpecification) ? $selectedSpecification->id : 'new' }}][multi_values][]"
-                                    class="kemetic-select"
-                                    multiple>
-                                @if(!empty($selectedSpecification->specification))
+                                    class="kemetic-select js-ajax-multi_values {{ !empty($selectedSpecification) ? 'select-multi-values-select2' : 'multi_values-select' }}"
+                                    multiple
+                                    data-placeholder="{{ trans('update.select_specification_params') }}"
+                                    data-allow-clear="false"
+                                    data-search="false">
+
+                                @if(!empty($selectedSpecification->specification) and !empty($selectedSpecification->specification->multiValues))
                                     @foreach($selectedSpecification->specification->multiValues as $multiValue)
                                         <option value="{{ $multiValue->id }}"
-                                            {{ in_array($multiValue->id, $selectedSpecification->selectedMultiValues->pluck('specification_multi_value_id')->toArray()) ? 'selected' : '' }}>
+                                            {{ in_array($multiValue->id, $selectedMultiValues) ? 'selected' : '' }}>
                                             {{ $multiValue->title }}
                                         </option>
                                     @endforeach
                                 @endif
                             </select>
+
+                            <div class="invalid-feedback"></div>
                         </div>
 
-                        {{-- SUMMARY --}}
-                        <div class="form-group kemetic-form-group js-summery-input {{ (!empty($selectedSpecification) && $selectedSpecification->type == 'textarea') ? '' : 'd-none' }}">
-                            <label class="kemetic-label">{{ trans('update.product_summary') }}</label>
-                            <textarea rows="4"
-                                      class="kemetic-textarea"
-                                      name="ajax[{{ !empty($selectedSpecification) ? $selectedSpecification->id : 'new' }}][summary]">{{ $selectedSpecification->value ?? '' }}</textarea>
+                        {{-- ── SUMMARY (textarea) ── --}}
+                        <div class="form-group kemetic-form-group js-summery-input {{ (!empty($selectedSpecification) and $selectedSpecification->type == 'textarea') ? '' : 'd-none' }}">
+                            <label class="kemetic-label d-block">{{ trans('update.product_summary') }}</label>
+                            <textarea name="ajax[{{ !empty($selectedSpecification) ? $selectedSpecification->id : 'new' }}][summary]"
+                                      rows="4"
+                                      class="kemetic-textarea js-ajax-summary">{{ (!empty($selectedSpecification) and $selectedSpecification->type == 'textarea') ? $selectedSpecification->value : '' }}</textarea>
+                            <div class="invalid-feedback"></div>
                         </div>
 
-                         <div class="form-group kemetic-form-group mt-20">
+                        {{-- ── ALLOW USER SELECTION (restored) ── --}}
+                        <div class="form-group kemetic-form-group mt-20 js-allow-selection-input {{ (!empty($selectedSpecification) and $selectedSpecification->type == 'multi_value') ? '' : 'd-none' }}">
                             <div class="d-flex align-items-center justify-content-between">
-                                <label class="kemetic-label" for="specificationStatusSwitch{{ !empty($selectedSpecification) ? $selectedSpecification->id : '_record' }}">{{ trans('public.active') }}</label>
+                                <label class="kemetic-label cursor-pointer"
+                                       for="specificationAllowSelectionSwitch{{ !empty($selectedSpecification) ? $selectedSpecification->id : '_record' }}">
+                                    {{ trans('update.allow_user_selection') }}
+                                </label>
                                 <div class="custom-control custom-switch">
-                                    <input type="checkbox" name="ajax[{{ !empty($selectedSpecification) ? $selectedSpecification->id : 'new' }}][status]" class="custom-control-input" id="specificationStatusSwitch{{ !empty($selectedSpecification) ? $selectedSpecification->id : '_record' }}" {{ (empty($selectedSpecification) or $selectedSpecification->status == \App\Models\ProductSelectedSpecification::$Active) ? 'checked' : ''  }}>
-                                    <label class="custom-control-label" for="specificationStatusSwitch{{ !empty($selectedSpecification) ? $selectedSpecification->id : '_record' }}"></label>
+                                    <input type="checkbox"
+                                           name="ajax[{{ !empty($selectedSpecification) ? $selectedSpecification->id : 'new' }}][allow_selection]"
+                                           class="custom-control-input"
+                                           id="specificationAllowSelectionSwitch{{ !empty($selectedSpecification) ? $selectedSpecification->id : '_record' }}"
+                                           {{ (!empty($selectedSpecification) and $selectedSpecification->allow_selection) ? 'checked' : '' }}>
+                                    <label class="custom-control-label"
+                                           for="specificationAllowSelectionSwitch{{ !empty($selectedSpecification) ? $selectedSpecification->id : '_record' }}"></label>
                                 </div>
                             </div>
                         </div>
 
-                       
+                        {{-- ── ACTIVE STATUS ── --}}
+                        <div class="form-group kemetic-form-group mt-20">
+                            <div class="d-flex align-items-center justify-content-between">
+                                <label class="kemetic-label cursor-pointer"
+                                       for="specificationStatusSwitch{{ !empty($selectedSpecification) ? $selectedSpecification->id : '_record' }}">
+                                    {{ trans('public.active') }}
+                                </label>
+                                <div class="custom-control custom-switch">
+                                    <input type="checkbox"
+                                           name="ajax[{{ !empty($selectedSpecification) ? $selectedSpecification->id : 'new' }}][status]"
+                                           class="custom-control-input"
+                                           id="specificationStatusSwitch{{ !empty($selectedSpecification) ? $selectedSpecification->id : '_record' }}"
+                                           {{ (empty($selectedSpecification) or $selectedSpecification->status == \App\Models\ProductSelectedSpecification::$Active) ? 'checked' : '' }}>
+                                    <label class="custom-control-label"
+                                           for="specificationStatusSwitch{{ !empty($selectedSpecification) ? $selectedSpecification->id : '_record' }}"></label>
+                                </div>
+                            </div>
+                        </div>
 
                     </div>
                 </div>
 
-                {{-- ACTIONS --}}
+                {{-- ── ACTIONS ── --}}
                 <div class="mt-30 d-flex align-items-center">
                     <button type="button"
                             class="js-save-specification kemetic-btn-primary">
@@ -406,6 +493,7 @@
                         </button>
                     @endif
                 </div>
+
             </div>
         </div>
     </div>

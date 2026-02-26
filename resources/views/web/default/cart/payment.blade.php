@@ -86,9 +86,9 @@
                                 <div class="checkout-pay-chip checkout-selected">
                                     <input type="radio" name="gateway" id="{{ $paymentChannel->title }}" data-class="{{ $paymentChannel->class_name }}" value="{{ $paymentChannel->id }}">
                                     <label for="{{ $paymentChannel->title }}" class="h-100 rounded-sm p-20 p-lg-45 d-flex flex-column align-items-center justify-content-center">
-                                        <img src="{{ $paymentChannel->image }}" width="120" height="60" alt="">
+                                        <img src="{{ $paymentChannel->image }}" width="120" height="60" alt="" style="background: white;">
 
-                                        <p class="mt-30 mt-lg-50 font-weight-500 text-dark-blue">
+                                        <p class="mt-30 mt-lg-50 font-weight-500 text-dark-blue" >
                                             {{ trans('financial.pay_via') }}
                                             <!-- <span class="font-weight-bold font-14">{{ $paymentChannel->title }}</span> -->
                                         </p>
@@ -107,9 +107,9 @@
                 @if(!empty($invalidChannels) and empty(getFinancialSettings("hide_disabled_payment_gateways")))
                     @foreach($invalidChannels as $invalidChannel)
                         <div class="checkout-pay-chip checkout-full">
-                            <img src="{{ $invalidChannel->image }}" width="120" height="60" alt="">
+                            <img src="{{ $invalidChannel->image }}" width="120" height="60" alt="" style="background: white;">
 
-                            <p class="mt-30 mt-lg-50 font-weight-500 text-dark-blue">
+                            <p class="mt-30 mt-lg-50 font-weight-500 text-dark-blue" >
                                 {{ trans('financial.pay_via') }}
                                 <span class="font-weight-bold font-14">{{ $invalidChannel->title }}</span>
                             </p>

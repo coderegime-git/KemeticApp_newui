@@ -1,511 +1,667 @@
 @extends('web.default.layouts.newapp')
+
 <style>
- /* Section Title */
+  /* KEMETIC STATS */
+.kemetic-stat-section {
+    margin-top: 25px;
+}
+
 .kemetic-title {
-    color: #f5c77a;
+    font-size: 22px;
     font-weight: 700;
-    letter-spacing: 0.5px;
+    color: #F2C94C;
+    margin-bottom: 18px;
 }
 
-/* Container */
-.kemetic-stats-container {
-    background: linear-gradient(145deg, #0b0b0b, #141414);
-    border-radius: 16px;
-    border: 1px solid rgba(245, 199, 122, 0.15);
-    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.6);
-}
-
-/* Card */
+/* CARD */
 .kemetic-stat-card {
-    background: radial-gradient(
-        circle at top,
-        rgba(245, 199, 122, 0.08),
-        transparent 70%
-    );
-    border-radius: 14px;
-    padding: 30px 20px;
-    height: 100%;
-    transition: all 0.3s ease;
+    background: linear-gradient(180deg, #121212, #0b0b0b);
+    border: 1px solid #262626;
+    border-radius: 18px;
+    padding: 26px 18px;
 }
 
-.kemetic-stat-card:hover {
-    transform: translateY(-6px);
-    box-shadow: 0 12px 28px rgba(245, 199, 122, 0.15);
+/* ITEM */
+.kemetic-stat-item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 6px;
 }
 
-/* Icon */
-.kemetic-icon-wrapper {
-    /* width: 72px;
-    height: 72px;
-    border-radius: 50%; */
-    /* background: linear-gradient(135deg, #f5c77a, #c89b3c); */
+/* ICON */
+.kemetic-stat-icon {
+    width: 56px;
+    height: 56px;
+    border-radius: 50%;
+    background: rgba(242, 201, 76, 0.15);
     display: flex;
     align-items: center;
     justify-content: center;
-    margin-bottom: 15px; 
+}
+.kemetic-stat-icon img {
+    width: 28px;
+    filter: invert(0.9);
 }
 
-.kemetic-icon-wrapper img {
-    /* width: 36px; */
-    /* filter: brightness(0) invert(1); */
+/* VALUE */
+.kemetic-stat-value {
+    font-size: 30px;
+    font-weight: 700;
+    color: #F2C94C;
 }
 
-/* Numbers */
-.kemetic-stat-number {
-    font-size: 32px;
-    font-weight: 800;
-    color: #f5c77a;
-    margin-top: 10px;
-}
-
-/* Labels */
+/* LABEL */
 .kemetic-stat-label {
     font-size: 14px;
-    color: #b7b7b7;
-    margin-top: 6px;
-    letter-spacing: 0.4px;
-}
-
-/* Card */
-.kemetic-filter-card {
-    background: linear-gradient(145deg, #0c0c0c, #151515);
-    border-radius: 16px;
-    border: 1px solid rgba(245, 199, 122, 0.15);
-    box-shadow: 0 12px 30px rgba(0, 0, 0, 0.65);
-}
-
-/* Labels */
-.kemetic-input-label {
-    font-size: 13px;
-    font-weight: 600;
-    color: #f5c77a;
-    margin-bottom: 6px;
-}
-
-/* Inputs */
-.kemetic-input {
-    background: #0f0f0f;
-    border: 1px solid rgba(245, 199, 122, 0.2);
-    color: #ffffff;
-    border-radius: 10px;
-    height: 44px;
-}
-
-.kemetic-input::placeholder {
-    color: #8d8d8d;
-}
-
-.kemetic-input:focus {
-    background: #0f0f0f;
-    border-color: #f5c77a;
-    box-shadow: 0 0 0 0.15rem rgba(245, 199, 122, 0.25);
-    color: #ffffff;
-}
-
-/* Input group */
-.kemetic-input-group {
-    display: flex;
-    align-items: center;
-}
-
-.kemetic-input-icon {
-    background: linear-gradient(135deg, #f5c77a, #c89b3c);
-    color: #000;
-    border-radius: 10px 0 0 10px;
-    padding: 0 12px;
-    display: flex;
-    align-items: center;
-}
-
-/* Button */
-.kemetic-btn-gold {
-    background: linear-gradient(135deg, #f5c77a, #c89b3c);
-    border: none;
-    color: #000;
-    font-weight: 700;
-    height: 46px;
-    border-radius: 12px;
-    transition: all 0.3s ease;
-}
-
-.kemetic-btn-gold:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 8px 20px rgba(245, 199, 122, 0.4);
-}
-
-/* Table Card */
-.kemetic-table-card {
-    background: linear-gradient(145deg, #0b0b0b, #151515);
-    border-radius: 18px;
-    border: 1px solid rgba(245, 199, 122, 0.15);
-    box-shadow: 0 15px 40px rgba(0, 0, 0, 0.75);
-}
-
-/* Table */
-.kemetic-table {
-    color: #ffffff;
-    margin-bottom: 0;
-}
-
-.kemetic-table thead th {
-    border: none;
-    padding: 14px 12px;
-    font-size: 13px;
-    font-weight: 600;
-    color: #f5c77a;
-    text-transform: uppercase;
-    letter-spacing: 0.5px;
-}
-
-/* Rows */
-.kemetic-row {
-    border-top: 1px solid rgba(255, 255, 255, 0.06);
-    transition: all 0.25s ease;
-}
-
-.kemetic-row:hover {
-    background: rgba(245, 199, 122, 0.05);
-}
-
-/* Title */
-.kemetic-table-title {
-    font-size: 15px;
-    font-weight: 600;
-    color: #ffffff;
-}
-
-.kemetic-table-subtitle {
-    font-size: 12px;
     color: #9a9a9a;
 }
 
-/* Meta */
-.kemetic-table-meta {
-    font-size: 14px;
-    font-weight: 500;
-    color: #d6d6d6;
+/* MOBILE */
+@media (max-width: 768px) {
+    .kemetic-stat-card {
+        padding: 20px 12px;
+    }
+    .kemetic-stat-value {
+        font-size: 24px;
+    }
 }
 
-/* Buttons */
-.kemetic-btn-outline {
-    border: 1px solid #f5c77a;
-    background: transparent;
-    color: #f5c77a;
+/* KEMETIC FILTER */
+.kemetic-filter-section {
+    color: #eaeaea;
+}
+
+.kemetic-title {
+    font-size: 22px;
+    font-weight: 700;
+    color: #F2C94C;
+}
+
+/* CARD */
+.kemetic-filter-card {
+    background: linear-gradient(180deg, #121212, #0a0a0a);
+    border: 1px solid #262626;
+    border-radius: 18px;
+    padding: 26px 22px;
+}
+
+/* LABEL */
+.kemetic-label {
     font-size: 13px;
-    padding: 5px 14px;
-    border-radius: 20px;
-    transition: all 0.3s ease;
+    color: #b5b5b5;
+    margin-bottom: 6px;
+    display: block;
 }
 
-.kemetic-btn-outline:hover {
-    background: #f5c77a;
-    color: #000;
+/* INPUT GROUP */
+.kemetic-input-group {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    background: #0f0f0f;
+    border: 1px solid #2a2a2a;
+    border-radius: 12px;
+    padding: 10px 12px;
 }
 
-/* Actions */
-.kemetic-action-btn {
+.kemetic-input-group i {
+    color: #F2C94C;
+}
+
+/* INPUT */
+.kemetic-input {
+    width: 100%;
     background: transparent;
     border: none;
-    color: #f5c77a;
-}
-
-.kemetic-actions .dropdown-menu {
-    background: #111;
-    border: 1px solid rgba(245, 199, 122, 0.2);
-    border-radius: 12px;
-}
-
-.kemetic-dropdown-item {
-    color: #f5c77a;
+    color: #fff;
+    outline: none;
     font-size: 14px;
 }
 
-.kemetic-dropdown-item:hover {
-    background: rgba(245, 199, 122, 0.1);
-    color: #ffffff;
+/* SELECT2 */
+.select2-container--default .select2-selection--single {
+    background: #0f0f0f !important;
+    border: 1px solid #2a2a2a !important;
+    border-radius: 12px !important;
+    height: 44px !important;
+    display: flex;
+    align-items: center;
+}
+.select2-selection__rendered {
+    color: #fff !important;
+    line-height: 44px !important;
+}
+.select2-container--default .select2-selection--single .select2-selection__arrow {
+    height: 42px !important;
+}
+.select2-container--default .select2-selection--single .select2-selection__arrow b {
+    border-color: #F2C94C transparent transparent transparent !important;
+}
+.select2-dropdown {
+    background: #0f0f0f !important;
+    border: 1px solid rgba(242,201,76,.35) !important;
+    border-radius: 12px !important;
+}
+.select2-results__option {
+    color: #e0e0e0 !important;
+    padding: 10px 14px !important;
+}
+.select2-results__option--highlighted {
+    background: rgba(242,201,76,.15) !important;
+    color: #fff !important;
+}
+.select2-results__option[aria-selected=true] {
+    background: rgba(242,201,76,.25) !important;
+}
+.select2-search--dropdown .select2-search__field {
+    background: #0d0d0d !important;
+    border: 1px solid rgba(242,201,76,.35) !important;
+    color: #fff !important;
+    border-radius: 8px !important;
 }
 
+/* BUTTON */
+.kemetic-btn {
+    background: linear-gradient(135deg, #F2C94C, #d4af37);
+    border: none;
+    border-radius: 14px;
+    padding: 12px;
+    font-weight: 700;
+    color: #000;
+    transition: 0.3s ease;
+}
+.kemetic-btn:hover {
+    background: linear-gradient(135deg, #d4af37, #F2C94C);
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(242,201,76,0.4);
+}
+.kemetic-btn-sm {
+    padding: 8px 16px;
+    font-size: 13px;
+}
+
+/* TABLE CARD */
+.kemetic-table-card {
+    background: linear-gradient(180deg,#121212,#0a0a0a);
+    border:1px solid #262626;
+    border-radius:18px;
+    padding:20px;
+}
+
+/* TABLE */
+.kemetic-table {
+    width:100%;
+    border-collapse:separate;
+    border-spacing:0 10px;
+}
+.kemetic-table thead th {
+    color:#aaa; 
+    font-size:13px;
+    font-weight:600; 
+    text-align:center;
+    padding-bottom: 10px;
+}
+.kemetic-table thead th.text-left {
+    text-align: left;
+}
+.kemetic-table tbody tr {
+    background:#0f0f0f;
+    border:1px solid #262626;
+    transition: 0.3s ease;
+}
+.kemetic-table tbody tr:hover {
+    background: #1a1a1a;
+    border-color: rgba(242,201,76,0.3);
+}
+.kemetic-table td {
+    padding:14px;
+    text-align:center;
+    vertical-align:middle;
+}
+.kemetic-table td.text-left { 
+    text-align:left; 
+}
+.kemetic-table td.text-right {
+    text-align: right;
+}
+
+/* TITLE CELL */
+.kemetic-title-cell .title {
+    color:#fff; 
+    font-weight:600;
+    font-size: 15px;
+}
+.kemetic-title-cell small {
+    color:#888; 
+    display:block;
+    font-size: 11px;
+    margin-top: 2px;
+}
+
+/* META TEXT */
+.kemetic-meta {
+    color: #d6d6d6;
+    font-size: 14px;
+    font-weight: 500;
+}
+
+/* VIEW BUTTON */
+.view-btn {
+    background: transparent;
+    border: 1px solid rgba(242,201,76,0.4);
+    color: #F2C94C;
+    border-radius: 20px;
+    padding: 5px 16px;
+    font-size: 13px;
+    transition: 0.3s ease;
+}
+.view-btn:hover {
+    background: rgba(242,201,76,0.1);
+    border-color: #F2C94C;
+}
+
+/* COLOR BADGES */
+.color-badge {
+    padding: 4px 12px;
+    border-radius: 20px;
+    font-size: 12px;
+    font-weight: 500;
+    display: inline-block;
+}
+.color-badge.brown {
+    background: #8B4513;
+    color: #fff;
+}
+.color-badge.gray {
+    background: #808080;
+    color: #fff;
+}
+.color-badge.orange {
+    background: #FFA500;
+    color: #000;
+}
+.color-badge.yellow {
+    background: #FFD700;
+    color: #000;
+}
+.color-badge.green {
+    background: #2ecc71;
+    color: #000;
+}
+.color-badge.blue {
+    background: #3498db;
+    color: #fff;
+}
+.color-badge.red {
+    background: #e74c3c;
+    color: #fff;
+}
+.color-badge.purple {
+    background: #9b59b6;
+    color: #fff;
+}
+.color-badge.course {
+    background: rgba(242,201,76,0.15);
+    color: #F2C94C;
+    border: 1px solid rgba(242,201,76,0.3);
+}
+.color-badge.general {
+    background: rgba(255,255,255,0.1);
+    color: #fff;
+    border: 1px solid rgba(255,255,255,0.2);
+}
+
+/* ACTIONS */
+.kemetic-actions button {
+    background: none;
+    border: none;
+    color: #F2C94C;
+}
+.kemetic-actions .dropdown-menu {
+    background: #121212;
+    border: 1px solid #2a2a2a;
+    border-radius: 12px;
+    padding: 8px 0;
+}
+.kemetic-actions .dropdown-item {
+    color: #F2C94C;
+    padding: 8px 16px;
+    font-size: 14px;
+}
+.kemetic-actions .dropdown-item:hover {
+    background: rgba(242,201,76,0.1);
+    color: #fff;
+}
+.kemetic-actions .dropdown-item.text-danger {
+    color: #e74c3c !important;
+}
+.kemetic-actions .dropdown-item.text-danger:hover {
+    background: rgba(231,76,60,0.1);
+}
+
+/* MODAL */
+.modal-content {
+    background: #121212;
+    border: 1px solid #262626;
+    border-radius: 18px;
+}
+.modal-header {
+    border-bottom: 1px solid #262626;
+}
+.modal-title {
+    color: #F2C94C;
+    font-weight: 700;
+}
+.modal-body {
+    color: #eaeaea;
+}
+.modal-time {
+    color: #888;
+    font-size: 12px;
+    display: block;
+    margin-top: 5px;
+}
+.modal-message {
+    color: #eaeaea;
+    font-size: 14px;
+    line-height: 1.6;
+    margin-top: 15px;
+    white-space: pre-wrap;
+}
+.modal-footer {
+    border-top: 1px solid #262626;
+}
+.modal-footer .btn {
+    background: #1a1a1a;
+    border: 1px solid #262626;
+    color: #fff;
+    border-radius: 12px;
+    padding: 8px 20px;
+}
+.modal-footer .btn:hover {
+    background: #2a2a2a;
+}
+
+/* NO RESULT */
+.no-result-card {
+    background: linear-gradient(180deg,#121212,#0a0a0a);
+    border:1px solid #262626;
+    border-radius:18px;
+    padding:40px;
+    text-align: center;
+}
+.no-result-card img {
+    opacity: 0.7;
+    margin-bottom: 20px;
+}
+.no-result-card h3 {
+    color: #F2C94C;
+    font-size: 20px;
+    margin-bottom: 10px;
+}
+.no-result-card p {
+    color: #888;
+    font-size: 14px;
+}
 </style>
+
 @push('styles_top')
     <link rel="stylesheet" href="/assets/default/vendors/daterangepicker/daterangepicker.min.css">
+    <link rel="stylesheet" href="/assets/default/vendors/select2/select2.min.css">
 @endpush
 
 @section('content')
 
     {{-- Statistics --}}
     @if(empty($isCourseNotice))
-        <section class="mt-35">
-    <h2 class="section-title kemetic-title">
-        {{ trans('update.noticeboard_statistics') }}
-    </h2>
+        <section class="kemetic-stat-section">
+            <h2 class="kemetic-title">{{ trans('update.noticeboard_statistics') }}</h2>
 
-    <div class="kemetic-stats-container mt-25 p-25 p-lg-35">
-        <div class="row text-center">
-
-            <!-- Total Noticeboards -->
-            <div class="col-12 col-md-4 mb-25 mb-md-0">
-                <div class="kemetic-stat-card">
-                    <div class="kemetic-icon-wrapper">
-                        <img src="/assets/default/img/activity/homework.svg" alt="">
+            <div class="kemetic-stat-card">
+                <div class="row text-center">
+                    <div class="col-4">
+                        <div class="kemetic-stat-item">
+                            <div class="kemetic-stat-icon">
+                                <img src="/assets/default/img/activity/homework.svg" alt="">
+                            </div>
+                            <div class="kemetic-stat-value">{{ $totalNoticeboards }}</div>
+                            <div class="kemetic-stat-label">{{ trans('update.total_noticeboards') }}</div>
+                        </div>
                     </div>
-                    <strong class="kemetic-stat-number">
-                        {{ $totalNoticeboards }}
-                    </strong>
-                    <span class="kemetic-stat-label">
-                        {{ trans('update.total_noticeboards') }}
-                    </span>
+
+                    <div class="col-4">
+                        <div class="kemetic-stat-item">
+                            <div class="kemetic-stat-icon">
+                                <img src="/assets/default/img/activity/58.svg" alt="">
+                            </div>
+                            <div class="kemetic-stat-value">{{ $totalCourseNotices }}</div>
+                            <div class="kemetic-stat-label">{{ trans('update.course_notices') }}</div>
+                        </div>
+                    </div>
+
+                    <div class="col-4">
+                        <div class="kemetic-stat-item">
+                            <div class="kemetic-stat-icon">
+                                <img src="/assets/default/img/activity/45.svg" alt="">
+                            </div>
+                            <div class="kemetic-stat-value">{{ $totalGeneralNotices }}</div>
+                            <div class="kemetic-stat-label">{{ trans('update.general_notices') }}</div>
+                        </div>
+                    </div>
                 </div>
             </div>
-
-            <!-- Course Notices -->
-            <div class="col-12 col-md-4 mb-25 mb-md-0">
-                <div class="kemetic-stat-card">
-                    <div class="kemetic-icon-wrapper">
-                        <img src="/assets/default/img/activity/58.svg" alt="">
-                    </div>
-                    <strong class="kemetic-stat-number">
-                        {{ $totalCourseNotices }}
-                    </strong>
-                    <span class="kemetic-stat-label">
-                        {{ trans('update.course_notices') }}
-                    </span>
-                </div>
-            </div>
-
-            <!-- General Notices -->
-            <div class="col-12 col-md-4">
-                <div class="kemetic-stat-card">
-                    <div class="kemetic-icon-wrapper">
-                        <img src="/assets/default/img/activity/45.svg" alt="">
-                    </div>
-                    <strong class="kemetic-stat-number">
-                        {{ $totalGeneralNotices }}
-                    </strong>
-                    <span class="kemetic-stat-label">
-                        {{ trans('update.general_notices') }}
-                    </span>
-                </div>
-            </div>
-
-        </div>
-    </div>
-</section>
-
+        </section>
     @endif
 
     {{-- Filters --}}
- <section class="mt-35">
-    <h2 class="section-title kemetic-title">
-        {{ trans('update.filter_noticeboards') }}
-    </h2>
+    <section class="kemetic-filter-section mt-30">
+        <h2 class="kemetic-title">{{ trans('update.filter_noticeboards') }}</h2>
 
-    <div class="kemetic-filter-card mt-25 p-25 p-lg-35" style="padding:10px;">
-        <form action="{{ request()->url() }}" method="get" class="row g-3 align-items-end">
-
-            {{-- Date Range --}}
-            <div class="col-12 col-lg-4">
-                <div class="row g-3">
-                    <div class="col-6">
-                        <label class="kemetic-input-label">{{ trans('public.from') }}</label>
-                        <div class="kemetic-input-group">
-                            <span class="kemetic-input-icon">
-                                <i data-feather="calendar" width="18" height="18"></i>
-                            </span>
-                            <input type="text"
-                                   name="from"
-                                   autocomplete="off"
-                                   class="form-control kemetic-input @if(request()->get('from')) datepicker @else datefilter @endif"
-                                   value="{{ request()->get('from','') }}">
-                        </div>
-                    </div>
-
-                    <div class="col-6">
-                        <label class="kemetic-input-label">{{ trans('public.to') }}</label>
-                        <div class="kemetic-input-group">
-                            <span class="kemetic-input-icon">
-                                <i data-feather="calendar" width="18" height="18"></i>
-                            </span>
-                            <input type="text"
-                                   name="to"
-                                   autocomplete="off"
-                                   class="form-control kemetic-input @if(request()->get('to')) datepicker @else datefilter @endif"
-                                   value="{{ request()->get('to','') }}">
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            {{-- Course & Title --}}
-            <div class="col-12 col-lg-6">
+        <div class="kemetic-filter-card mt-20">
+            <form action="{{ request()->url() }}" method="get">
                 <div class="row g-3">
 
+                    {{-- Date range --}}
                     <div class="col-12 col-lg-4">
-                        <label class="kemetic-input-label">{{ trans('product.course') }}</label>
-                        <select name="webinar_id" class="form-control kemetic-input select2">
-                            <option value="">{{ trans('webinars.all_courses') }}</option>
-                            @foreach($webinars as $webinar)
-                                <option value="{{ $webinar->id }}" @if(request()->get('webinar_id') == $webinar->id) selected @endif>
-                                    {{ $webinar->title }}
-                                </option>
-                            @endforeach
-                        </select>
-                    </div>
+                        <div class="row g-2">
+                            <div class="col-6">
+                                <label class="kemetic-label">{{ trans('public.from') }}</label>
+                                <div class="kemetic-input-group">
+                                    <!-- <i data-feather="calendar" width="18" height="18"></i> -->
+                                    <input type="date" name="from" autocomplete="off"
+                                        class="kemetic-input"
+                                        value="{{ request()->get('from','') }}">
+                                </div>
+                            </div>
 
-                    <div class="col-12 {{ !empty($isCourseNotice) ? 'col-lg-5' : 'col-lg-8' }}">
-                        <label class="kemetic-input-label">{{ trans('public.title') }}</label>
-                        <input type="text"
-                               name="title"
-                               class="form-control kemetic-input"
-                               value="{{ request()->get('title') }}"
-                               placeholder="{{ trans('public.search') }}">
-                    </div>
-
-                    @if(!empty($isCourseNotice))
-                        <div class="col-12 col-lg-3">
-                            <label class="kemetic-input-label">{{ trans('update.color') }}</label>
-                            <select name="color" class="form-control kemetic-input select2">
-                                <option value="">{{ trans('update.all_colors') }}</option>
-                                @foreach(\App\Models\CourseNoticeboard::$colors as $noticeColor)
-                                    <option value="{{ $noticeColor }}" @if(request()->get('color') == $noticeColor) selected @endif>
-                                        {{ trans('update.course_noticeboard_color_'.$noticeColor) }}
-                                    </option>
-                                @endforeach
-                            </select>
+                            <div class="col-6">
+                                <label class="kemetic-label">{{ trans('public.to') }}</label>
+                                <div class="kemetic-input-group">
+                                    <!-- <i data-feather="calendar" width="18" height="18"></i> -->
+                                    <input type="date" name="to" autocomplete="off"
+                                        class="kemetic-input"
+                                        value="{{ request()->get('to','') }}">
+                                </div>
+                            </div>
                         </div>
-                    @endif
+                    </div>
+
+                    {{-- Course & Title --}}
+                    <div class="col-12 col-lg-6">
+                        <div class="row g-2">
+                            <div class="col-12 col-lg-4">
+                                <label class="kemetic-label">{{ trans('product.course') }}</label>
+                                <select name="webinar_id" class="kemetic-select select2" style="width: 100%;">
+                                    <option value="">{{ trans('webinars.all_courses') }}</option>
+                                    @foreach($webinars as $webinar)
+                                        <option value="{{ $webinar->id }}" @if(request()->get('webinar_id') == $webinar->id) selected @endif>
+                                            {{ $webinar->title }}
+                                        </option>
+                                    @endforeach
+                                </select>
+                            </div>
+
+                            <div class="col-12 {{ !empty($isCourseNotice) ? 'col-lg-5' : 'col-lg-8' }}">
+                                <label class="kemetic-label">{{ trans('public.title') }}</label>
+                                <div class="kemetic-input-group">
+                                    <i data-feather="search" width="18" height="18"></i>
+                                    <input type="text" name="title"
+                                        class="kemetic-input"
+                                        value="{{ request()->get('title') }}"
+                                        placeholder="{{ trans('public.search') }}">
+                                </div>
+                            </div>
+
+                            @if(!empty($isCourseNotice))
+                                <div class="col-12 col-lg-3">
+                                    <label class="kemetic-label">{{ trans('update.color') }}</label>
+                                    <select name="color" class="kemetic-select select2" style="width: 100%;">
+                                        <option value="">{{ trans('update.all_colors') }}</option>
+                                        @foreach(\App\Models\CourseNoticeboard::$colors as $noticeColor)
+                                            <option value="{{ $noticeColor }}" @if(request()->get('color') == $noticeColor) selected @endif>
+                                                {{ trans('update.course_noticeboard_color_'.$noticeColor) }}
+                                            </option>
+                                        @endforeach
+                                    </select>
+                                </div>
+                            @endif
+                        </div>
+                    </div>
+
+                    {{-- Submit --}}
+                    <div class="col-12 col-lg-2 d-flex align-items-end">
+                        <button type="submit" class="kemetic-btn w-100">
+                            {{ trans('public.show_results') }}
+                        </button>
+                    </div>
 
                 </div>
-            </div>
-
-            {{-- Submit --}}
-            <div class="col-12 col-lg-2">
-                <button type="submit" class="btn kemetic-btn-gold w-100">
-                    {{ trans('public.show_results') }}
-                </button>
-            </div>
-
-        </form>
-    </div>
-</section>
-
-
+            </form>
+        </div>
+    </section>
 
     {{-- Noticeboard Table --}}
-   <section class="mt-35">
-    <h2 class="section-title kemetic-title">
-        {{ trans('panel.noticeboards') }}
-    </h2>
+    <section class="kemetic-section mt-40">
+        <h2 class="kemetic-title">{{ trans('panel.noticeboards') }}</h2>
 
-    @if(!empty($noticeboards) and !$noticeboards->isEmpty())
-        <div class="kemetic-table-card mt-25 p-25 p-lg-35">
-            <div class="table-responsive">
+        @if(!empty($noticeboards) and !$noticeboards->isEmpty())
 
-                <table class="table kemetic-table align-middle">
-                    <thead>
-                    <tr>
-                        <th class="text-left">{{ trans('webinars.title') }}</th>
-                        <th class="text-center">{{ trans('site.message') }}</th>
-                        <th class="text-center">
-                            {{ !empty($isCourseNotice) ? trans('update.color') : trans('public.type') }}
-                        </th>
-                        <th class="text-center">{{ trans('public.date') }}</th>
-                        <th class="text-right"></th>
-                    </tr>
-                    </thead>
+            <div class="kemetic-table-card mt-25">
+                <div class="table-responsive">
+                    <table class="kemetic-table">
+                        <thead>
+                            <tr>
+                                <th class="text-left">{{ trans('webinars.title') }}</th>
+                                <th>{{ trans('site.message') }}</th>
+                                <th>{{ !empty($isCourseNotice) ? trans('update.color') : trans('public.type') }}</th>
+                                <th>{{ trans('public.date') }}</th>
+                                <th class="text-right"></th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach($noticeboards as $noticeboard)
+                                <tr>
+                                    <td class="text-left">
+                                        <div class="kemetic-title-cell">
+                                            <span class="title">{{ $noticeboard->title }}</span>
+                                            @if(!empty($noticeboard->webinar))
+                                                <small>{{ $noticeboard->webinar->title }}</small>
+                                            @endif
+                                        </div>
+                                    </td>
 
-                    <tbody>
-                    @foreach($noticeboards as $noticeboard)
-                        <tr class="kemetic-row">
-                            <td class="text-left">
-                                <span class="d-block kemetic-table-title">
-                                    {{ $noticeboard->title }}
-                                </span>
+                                    <td>
+                                        <input type="hidden" class="js-noticeboard-message" value="{{ nl2br($noticeboard->message) }}">
+                                        <input type="hidden" class="js-noticeboard-title" value="{{ $noticeboard->title }}">
+                                        <input type="hidden" class="js-noticeboard-date" value="{{ dateTimeFormat($noticeboard->created_at,'j M Y | H:i') }}">
+                                        <button type="button" class="view-btn js-view-message" data-notice-id="{{ $noticeboard->id }}">
+                                            {{ trans('public.view') }}
+                                        </button>
+                                    </td>
 
-                                @if(!empty($noticeboard->webinar))
-                                    <span class="d-block kemetic-table-subtitle">
-                                        {{ $noticeboard->webinar->title }}
-                                    </span>
-                                @endif
-                            </td>
+                                    <td>
+                                        @if(!empty($isCourseNotice))
+                                            <span class="color-badge {{ $noticeboard->color }}">
+                                                {{ trans('update.course_noticeboard_color_'.$noticeboard->color) }}
+                                            </span>
+                                        @else
+                                            @if(!empty($noticeboard->instructor_id) and !empty($noticeboard->webinar_id))
+                                                <span class="color-badge course">{{ trans('product.course') }}</span>
+                                            @else
+                                                <span class="color-badge general">{{ trans('public.'.$noticeboard->type) }}</span>
+                                            @endif
+                                        @endif
+                                    </td>
 
-                            <td class="text-center">
-                                <button type="button"
-                                        class="btn kemetic-btn-outline js-view-message">
-                                    {{ trans('public.view') }}
-                                </button>
-                                <input type="hidden"
-                                       class="js-noticeboard-message"
-                                       value="{{ nl2br($noticeboard->message) }}">
-                            </td>
+                                    <td>
+                                        <span class="kemetic-meta">{{ dateTimeFormat($noticeboard->created_at,'j M Y | H:i') }}</span>
+                                    </td>
 
-                            <td class="text-center kemetic-table-meta">
-                                @if(!empty($isCourseNotice))
-                                    {{ trans('update.course_noticeboard_color_'.$noticeboard->color) }}
-                                @else
-                                    @if(!empty($noticeboard->instructor_id) and !empty($noticeboard->webinar_id))
-                                        {{ trans('product.course') }}
-                                    @else
-                                        {{ trans('public.'.$noticeboard->type) }}
-                                    @endif
-                                @endif
-                            </td>
-
-                            <td class="text-center kemetic-table-meta">
-                                {{ dateTimeFormat($noticeboard->created_at,'j M Y | H:i') }}
-                            </td>
-
-                            <td class="text-right">
-                                <div class="dropdown kemetic-actions">
-                                    <button class="btn kemetic-action-btn"
-                                            data-toggle="dropdown">
-                                        <i data-feather="more-vertical" height="18"></i>
-                                    </button>
-
-                                    <div class="dropdown-menu dropdown-menu-right">
-                                        @can('panel_noticeboard_create')
-                                            <a href="/panel/{{ (!empty($isCourseNotice) and $isCourseNotice) ? 'course-noticeboard' : 'noticeboard' }}/{{ $noticeboard->id }}/edit"
-                                               class="dropdown-item kemetic-dropdown-item">
-                                                {{ trans('public.edit') }}
-                                            </a>
-                                        @endcan
-
-                                        @can('panel_noticeboard_delete')
-                                            <a href="/panel/{{ (!empty($isCourseNotice) and $isCourseNotice) ? 'course-noticeboard' : 'noticeboard' }}/{{ $noticeboard->id }}/delete"
-                                               class="dropdown-item kemetic-dropdown-item text-danger">
-                                                {{ trans('public.delete') }}
-                                            </a>
-                                        @endcan
-                                    </div>
-                                </div>
-                            </td>
-                        </tr>
-                    @endforeach
-                    </tbody>
-
-                </table>
+                                    <td class="text-right">
+                                        <div class="dropdown kemetic-actions">
+                                            <button data-toggle="dropdown">
+                                                <i data-feather="more-vertical" height="18"></i>
+                                            </button>
+                                            <div class="dropdown-menu dropdown-menu-right">
+                                                @can('panel_noticeboard_create')
+                                                    <a href="/panel/{{ (!empty($isCourseNotice) and $isCourseNotice) ? 'course-noticeboard' : 'noticeboard' }}/{{ $noticeboard->id }}/edit" 
+                                                       class="dropdown-item">
+                                                        {{ trans('public.edit') }}
+                                                    </a>
+                                                @endcan
+                                                @can('panel_noticeboard_delete')
+                                                    <a href="/panel/{{ (!empty($isCourseNotice) and $isCourseNotice) ? 'course-noticeboard' : 'noticeboard' }}/{{ $noticeboard->id }}/delete" 
+                                                       class="dropdown-item text-danger">
+                                                        {{ trans('public.delete') }}
+                                                    </a>
+                                                @endcan
+                                            </div>
+                                        </div>
+                                    </td>
+                                </tr>
+                            @endforeach
+                        </tbody>
+                    </table>
+                </div>
             </div>
-        </div>
-    @else
-        @include(getTemplate() . '.includes.no-result',[
-            'file_name' => 'comment.png',
-            'title' => trans('panel.comments_no_result'),
-            'hint' => nl2br(trans('panel.comments_no_result_hint')),
-        ])
-    @endif
-</section>
 
+        @else
+            <div class="no-result-card mt-25">
+                @include(getTemplate() . '.includes.no-result',[
+                    'file_name' => 'comment.png',
+                    'title' => trans('panel.comments_no_result'),
+                    'hint' => nl2br(trans('panel.comments_no_result_hint')),
+                ])
+            </div>
+        @endif
+    </section>
 
     {{-- Pagination --}}
-    <div class="my-30">
-        {{ $noticeboards->appends(request()->input())->links('vendor.pagination.panel') }}
-    </div>
+    @if(!empty($noticeboards) and !$noticeboards->isEmpty())
+        <div class="my-30">
+            {{ $noticeboards->appends(request()->input())->links('vendor.pagination.panel') }}
+        </div>
+    @endif
 
     {{-- Message Modal --}}
-    <div class="d-none" id="noticeboardMessageModal">
-        <div class="text-center">
-            <h3 class="modal-title font-16 font-weight-bold text-dark-blue"></h3>
-            <span class="modal-time d-block font-12 text-gray mt-2"></span>
-            <p class="modal-message font-weight-500 text-gray mt-2"></p>
+    <div class="modal fade" id="noticeboardMessageModal" tabindex="-1" role="dialog" aria-hidden="true">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="modalTitle"></h5>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true" style="color: #111010;">&times;</span>
+                    </button>
+                </div>
+                <div class="modal-body">
+                    <span class="modal-time" id="modalTime" style="color: #111010;"></span>
+                    <p class="modal-message" id="modalMessage"></p>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn" data-dismiss="modal">{{ trans('public.close') }}</button>
+                </div>
+            </div>
         </div>
     </div>
 
@@ -513,5 +669,29 @@
 
 @push('scripts_bottom')
     <script src="/assets/default/vendors/daterangepicker/daterangepicker.min.js"></script>
+    <script src="/assets/default/vendors/select2/select2.min.js"></script>
+    
+    <script>
+        $(document).ready(function() {
+            // Initialize Select2
+            $('.select2').select2({
+                width: '100%',
+                theme: 'default'
+            });
+
+            // View message
+            $('.js-view-message').on('click', function() {
+                var message = $(this).closest('tr').find('.js-noticeboard-message').val();
+                var title = $(this).closest('tr').find('.js-noticeboard-title').val();
+                var date = $(this).closest('tr').find('.js-noticeboard-date').val();
+                
+                $('#modalTitle').text(title);
+                $('#modalTime').text(date);
+                $('#modalMessage').html(message);
+                $('#noticeboardMessageModal').modal('show');
+            });
+        });
+    </script>
+
     <script src="/assets/default/js/panel/noticeboard.min.js"></script>
 @endpush

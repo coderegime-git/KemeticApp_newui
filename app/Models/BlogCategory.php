@@ -43,7 +43,13 @@ class BlogCategory extends Model implements TranslatableContract
         return getTranslateAttributeValue($this, 'title');
     }
 
-
+    public function getDetailsAttribute()
+    {
+        return [
+            'id' => $this->id,
+            'title' => $this->title
+        ];
+    }
 
     public function blog()
     {
@@ -52,6 +58,7 @@ class BlogCategory extends Model implements TranslatableContract
 
     public function getUrl()
     {
-        return '/blog/categories/' . $this->slug;
+        return '/blog?category_id=' . $this->id;
+        // return '/blog/categories/' . $this->slug;
     }
 }

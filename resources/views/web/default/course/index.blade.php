@@ -105,7 +105,6 @@
         <!-- <div class="coursedetail-play"  id="embeddedVideoPlayBtn"><div class="coursedetail-btn">▶</div></div> -->
 
   <h1 class="coursedetail-title"> {{ $course->title }}</h1>
-  <div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap">
     <div class="coursedetail-teacher" id="coursedetail-teacher">
       <img src="{{ $course->teacher->avatar }}" class="img-cover course-cover-img" alt="{{ $course->teacher->full_name }}"/>
       <!-- <img src="https://images.unsplash.com/photo-1544005313-94ddf0286df2?w=200"> -->
@@ -129,6 +128,14 @@
           $authUserJoinedWaitlist = !empty($authUserWaitlist);
       }
     @endphp
+    <div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap;padding: 10px;">
+    <div class="coursedetail-title" style="font-weight:bold;">
+        @if(!empty($course->price) and $course->price > 0)
+          <span class="real">Price : {{ handlePrice($course->price, true, true, false, null, true, 'store') }}</span>
+        @else
+            <span class="real">Price : {{ trans('public.free') }}</span>
+        @endif
+    </div>
     <form action="/cart/store" method="post">
       {{ csrf_field() }}
       <input type="hidden" name="item_id" value="{{ $course->id }}">
@@ -142,7 +149,7 @@
             {{ trans('update.join_waitlist') }}
           @endif
         </button>
-      @elseif($hasBought or !empty($course->getInstallmentOrder()))
+      @elseif($hasBought or !empty($course->getInstallmentOrder()) or $course->price == 0)
         <a href="{{ $course->getLearningPageUrl() }}"> <button type="button" class="coursedetail-btn">{{ trans('update.go_to_learning_page') }}</button></a>
       @elseif(!empty($course->price) and $course->price > 0)
         <button type="button" class="coursedetail-btn btn btn-primary {{ $canSale ? 'js-course-add-to-cart-btn' : ($course->cantSaleStatus($hasBought) .' disabled ') }}">
@@ -171,12 +178,12 @@
 
         @if(!empty($installments) and count($installments) and getInstallmentsSettings('display_installment_button'))
           <a href="/course/{{ $course->slug }}/installments">
-            <button class="coursedetail-btn">{{ trans('update.pay_with_installments') }}></button> 
+            <button type="button" class="coursedetail-btn">{{ trans('update.pay_with_installments') }}></button> 
           </a>
         @endif
     @else
       <a href="{{ $canSale ? '/course/'. $course->slug .'/free' : '#' }}" class="{{ (! $canSale) ? (' disabled ' . $course->cantSaleStatus($hasBought)) : '' }}">
-        <button class="coursedetail-btn">@if(!$canSale)
+        <button type="button" class="coursedetail-btn">@if(!$canSale)
           @if($course->checkCapacityReached())
             {{ trans('update.capacity_reached') }}
             @else
@@ -188,9 +195,9 @@
       </button></a>
     @endif
 
-    @if($canSale and $course->subscribe)
+    @if($canSale and $course->subscribe and $course->price != 0)
       <a href="/subscribes/apply/{{ $course->slug }}" class="@if(!$canSale) disabled @endif">
-        <button class="coursedetail-btn">Connect</button></a>
+        <button type="button" class="coursedetail-btn">Connect</button></a>
     @endif</div>
   </div>
   </form>
@@ -366,7 +373,7 @@
   <aside class="coursedetail-panel">
     <h3>Includes</h3>
     <ul style="line-height:1.6;color:var(--muted)">
-      <li>24 video lessons</li>
+      <li>{{ $course->textLessons->count() }} video lessons</li>
       <li>Guided practices</li>
       <li>Lifetime access</li>
       <li>Certificate</li>

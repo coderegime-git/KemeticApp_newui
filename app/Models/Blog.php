@@ -114,6 +114,11 @@ class Blog extends Model implements TranslatableContract
         return getTranslateAttributeValue($this, 'content');
     }
 
+    public function saveditems()
+    {
+        return $this->hasMany('App\Models\ArticleSaved', 'article_id', 'id');
+    }
+
     public function reviews()
     {
         return $this->hasMany('App\Models\ArticleReview', 'article_id', 'id');

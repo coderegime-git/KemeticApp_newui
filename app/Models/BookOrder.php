@@ -12,6 +12,14 @@ class BookOrder extends Model
     protected $table = 'book_order';
     
     protected $primaryKey = 'id';
+    protected $guarded = ['id'];
+
+    static $status = ['pending', 'waiting_delivery', 'shipped', 'success', 'canceled'];
+    static $waitingDelivery = 'waiting_delivery';
+    static $shipped = 'shipped';
+    static $success = 'success';
+    static $canceled = 'canceled';
+    static $pending = 'pending';
     
     protected $fillable = [
         'book_id',

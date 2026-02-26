@@ -8,11 +8,11 @@ class CartItemInfo
     {
         if (!empty($cart->webinar_id)) {
             $webinar = $cart->webinar;
-
+            if (empty($webinar)) return null;
             return $this->getCourseInfo($cart, $webinar);
         } elseif (!empty($cart->bundle_id)) {
             $bundle = $cart->bundle;
-
+            if (empty($bundle)) return null;
             return $this->getBundleInfo($cart, $bundle);
         } elseif (!empty($cart->productOrder) and !empty($cart->productOrder->product)) {
             $product = $cart->productOrder->product;
@@ -24,11 +24,11 @@ class CartItemInfo
             return $this->getBookInfo($cart, $book);
         } elseif (!empty($cart->reserve_meeting_id)) {
             $creator = $cart->reserveMeeting->meeting->creator;
-
+            if (empty($creator)) return null;
             return $this->getReserveMeetingInfo($cart, $creator);
         } elseif (!empty($cart->installment_payment_id)) {
             $installmentPayment = $cart->installmentPayment;
-
+            if (empty($installmentPayment)) return null;
             return $this->getInstallmentOrderInfo($cart, $installmentPayment);
         }
     }

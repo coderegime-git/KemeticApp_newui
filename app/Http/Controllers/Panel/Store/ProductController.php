@@ -440,7 +440,7 @@ class ProductController extends Controller
                 'product_id' => $product->id,
                 'type' => ProductMedia::$thumbnail,
             ], [
-                'path' => '/store/21491/'.$data['thumbnail'],
+                'path' => $data['thumbnail'],
                 'created_at' => time(),
             ]);
         }
@@ -457,7 +457,7 @@ class ProductController extends Controller
                         'creator_id' => $user->id,
                         'product_id' => $product->id,
                         'type' => ProductMedia::$image,
-                        'path' => '/store/21491/'. $image,
+                        'path' => $image,
                         'created_at' => time(),
                     ]);
                 }
@@ -470,7 +470,7 @@ class ProductController extends Controller
                 'product_id' => $product->id,
                 'type' => ProductMedia::$video,
             ], [
-                'path' => '/store/21491/'.$data['video_demo'],
+                'path' => $data['video_demo'],
                 'created_at' => time(),
             ]);
         }
@@ -581,12 +581,27 @@ class ProductController extends Controller
                 'product' => $product
             ];
 
-            $html = (string)view("web.default.products.includes.tabs.files", $data);
+            $file = $product->files->first();
+            $donwloadurl = url($file->path);
 
+            // dd($file);
+
+            if (!$file) {
+                abort(404);
+            }
+            // dd($donwloadurl);
             return response()->json([
                 'code' => 200,
-                'html' => $html
+                'url' => $donwloadurl,
+                'filename' => $file->title ?? 'download'
             ]);
+
+            // $html = (string)view("web.default.products.includes.tabs.files", $data);
+
+            // return response()->json([
+            //     'code' => 200,
+            //     'html' => $html
+            // ]);
         }
 
         return response()->json([], 422);

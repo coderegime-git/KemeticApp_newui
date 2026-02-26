@@ -137,6 +137,30 @@
                        name="ajax[{{ !empty($ticket) ? $ticket->id : 'new' }}][bundle_id]"
                        value="{{ !empty($bundle) ? $bundle->id :'' }}">
 
+                @if(!empty(getGeneralSettings('content_translate')))
+                    <div class="row">
+                        <div class="col-12 col-lg-6">
+                            <div class="form-group">
+                                <label class="input-label">{{ trans('auth.language') }}</label>
+                                <select name="ajax[{{ !empty($ticket) ? $ticket->id : 'new' }}][locale]"
+                                        class="form-control {{ !empty($ticket) ? 'js-bundle-content-locale' : '' }}"
+                                        data-bundle-id="{{ !empty($bundle) ? $bundle->id : '' }}"
+                                        data-id="{{ !empty($ticket) ? $ticket->id : '' }}"
+                                        data-relation="tickets"
+                                        data-fields="title"
+                                >
+                                    @foreach($userLanguages as $lang => $language)
+                                        <option value="{{ $lang }}" {{ (!empty($ticket) and !empty($ticket->locale)) ? (mb_strtolower($ticket->locale) == mb_strtolower($lang) ? 'selected' : '') : ($locale == $lang ? 'selected' : '') }}>{{ $language }}</option>
+                                    @endforeach
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+                @else
+                    <input type="hidden" name="ajax[{{ !empty($ticket) ? $ticket->id : 'new' }}][locale]" value="{{ $defaultLocale }}">
+                @endif
+
+
                 {{-- Title --}}
                 <div class="row">
                     <div class="col-lg-6">
@@ -177,16 +201,16 @@
                         <div class="row">
                             <div class="col-lg-6">
                                 <label class="kemetic-label">{{ trans('public.start_date') }}</label>
-                                <input type="text"
-                                       class="form-control kemetic-input datepicker js-ajax-start_date"
+                                <input type="date"
+                                       class="form-control kemetic-input js-ajax-start_date"
                                        name="ajax[{{ !empty($ticket) ? $ticket->id : 'new' }}][start_date]"
                                        value="{{ !empty($ticket) ? dateTimeFormat($ticket->start_date,'Y-m-d',false) :'' }}">
                             </div>
 
                             <div class="col-lg-6 mt-15 mt-lg-0">
                                 <label class="kemetic-label">{{ trans('webinars.end_date') }}</label>
-                                <input type="text"
-                                       class="form-control kemetic-input datepicker js-ajax-end_date"
+                                <input type="date"
+                                       class="form-control kemetic-input js-ajax-end_date"
                                        name="ajax[{{ !empty($ticket) ? $ticket->id : 'new' }}][end_date]"
                                        value="{{ !empty($ticket) ? dateTimeFormat($ticket->end_date,'Y-m-d',false) :'' }}">
                             </div>

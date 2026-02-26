@@ -137,7 +137,7 @@ class Channel extends BasePaymentChannel implements IChannel
         
         $orderItems = OrderItem::where('order_id', $order->id)->first();
         $subscribe = Subscribe::where('id', $orderItems->subscribe_id)->first();
-
+       
         try {
             Stripe::setApiKey(env('STRIPE_SECRET'));
 
@@ -146,7 +146,8 @@ class Channel extends BasePaymentChannel implements IChannel
                 : $this->makeRecurringCallbackUrl('success');
                 
             $user = User::findOrFail($order->user_id);
-           
+            
+            // dd($user->stripe_customer_id);
             // Ensure user has a Stripe customer ID
             if (!$user->stripe_customer_id) {
                 $state = Region::where('id', $user->district_id)->where('type', 'province')->first();
@@ -168,6 +169,8 @@ class Channel extends BasePaymentChannel implements IChannel
             } else {
                 $customer = Customer::retrieve($user->stripe_customer_id);
             }
+
+            // dd($customer);
 
             if($subscribe->usable_count == '1'){
 
@@ -210,6 +213,8 @@ class Channel extends BasePaymentChannel implements IChannel
                     'success_url' => $successUrl,
                 ];
             }
+
+            // dd($checkoutData);
             // ✅ Create Stripe Checkout Session with a 1-Minute Recurring Payment Plan
             // $checkoutData = [
             //     //'payment_method_types' => ['card', 'bancontact', 'ideal', 'p24', 'sofort', 'klarna', 'giropay', 'eps'],
@@ -273,6 +278,7 @@ class Channel extends BasePaymentChannel implements IChannel
     public function verify(Request $request)
     {
         $data = $request->all();
+        // dd($data);
         Log::info('verify request CHANNEL : ', $data);
         $status = $data['status'];
         $order_id = session()->get($this->order_session_key, null) ?? $data['order_id'];
@@ -290,30 +296,35 @@ class Channel extends BasePaymentChannel implements IChannel
         }else{
             $userid = $user->id;
         }
-        
+
         $order = Order::where('id', $order_id)
             ->where('user_id', $userid)
             ->first();
-        
+       
         if ($status == 'success' and !empty($request->session_id) and !empty($order)) {
             //Stripe::setApiKey($this->api_secret);
             Stripe::setApikey(env('STRIPE_SECRET'));
+            // dd(env('STRIPE_SECRET'));
             $session = Session::retrieve($request->session_id);
+            
             Log::info('session id : ', [$session]);
             if (!empty($session) and $session->payment_status == 'paid') {
+
                 $order->update([
                     'status' => Order::$paying
                 ]);
-
+                // dd($order);
                 return $order;
             }
         }
-
+        // dd('payment failed');
         // is fail
 
         if (!empty($order)) {
             $order->update(['status' => Order::$fail]);
         }
+
+        
 
         return $order;
     }

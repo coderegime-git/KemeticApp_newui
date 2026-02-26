@@ -21,27 +21,7 @@ Route::get('/', function () {
     return view('welcome');
 });
 
-Route::get('/test-email', function () {
-    try {
-        Mail::raw('Hello, this is a test email from Laravel!', function ($message) {
-            $message->to('murugesapandianr@gmail.com')
-                    ->subject('Laravel Test Email')
-                    ->from('blackbeaconbv@gmail.com', 'Kemetic App');
-        });
-        
-        return response()->json([
-            'success' => true,
-            'message' => 'Test email sent successfully!'
-        ]);
-    } catch (\Exception $e) {
-        return response()->json([
-            'success' => false,
-            'message' => 'Error: ' . $e->getMessage()
-        ], 500);
-    }
-});
-
- Route::get('/apihome', 'App\Http\Controllers\Api\ApiHomeController@index');
+Route::get('/apihome', 'App\Http\Controllers\Api\ApiHomeController@index');
 
 Route::get('getPurchaseInvocie/{id}/productOrder/{order_id}/invoice/{user_id}', [ProductOrderController::class, 'purchaseInvoice']);
 Route::get('getSalesInvocie/{id}/productOrder/{order_id}/invoice/{user_id}', [ProductOrderController::class, 'salesInvocie']);
@@ -135,6 +115,7 @@ Route::group(['namespace' => 'Web', 'middleware' => ['check_mobile_app', 'impers
 
     Route::get('/', 'HomeController@index')->name('homepage');
     Route::get('/membership', 'HomeController@membership');
+    Route::post('/membership/cancel', 'HomeController@cancelSubscription');
 
     Route::get('/getDefaultAvatar', 'DefaultAvatarController@make');
 

@@ -19,6 +19,7 @@ use App\Models\ProductSelectedSpecification;
 use App\Models\ProductSpecification;
 use App\Models\RewardAccounting;
 use App\Models\Sale;
+use App\Models\Subscribe;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -30,6 +31,15 @@ class ProductController extends Controller
     
     public function searchLists(Request $request)
     {
+        $user = null;
+
+        $activeSubscribe = "";
+
+        if (auth()->check()) {
+            $user = auth()->user();
+            $activeSubscribe = Subscribe::getActiveSubscribe($user->id);
+        }
+
         $data = $request->all();
 
         $query = Product::where('products.status', Product::$active)
@@ -58,6 +68,7 @@ class ProductController extends Controller
         $pageDescription = $seoSettings['description'] ?? '';
         $pageRobot = getPageRobot('products_lists');
         $trendingProducts = Product::getTrendingProducts(3);
+        
 
         $data = [
             'pageTitle' => $pageTitle,
@@ -65,9 +76,11 @@ class ProductController extends Controller
             'pageRobot' => $pageRobot,
             'productsCount' => $products->total(),
             'productCategories' => $categories,
+            'user' => $user,
             'selectedCategory' => $selectedCategory,
             'products' => $products,
             'trendingProducts' => $trendingProducts,
+            'activeSubscribe' => $activeSubscribe,
         ];
 
         return view(getTemplate() . '.products.search', $data);
@@ -194,9 +207,11 @@ class ProductController extends Controller
     {
         
         $user = null;
-       
+        $activeSubscribe = "";
+
         if (auth()->check()) {
             $user = auth()->user();
+            $activeSubscribe = Subscribe::getActiveSubscribe($user->id);
         }
 
         $contentLimitation = $this->checkContentLimitation($user, true);
@@ -304,7 +319,8 @@ class ProductController extends Controller
 
 
         $pageRobot = getPageRobot('product_show'); // return => index
-
+        $hasBought = $product->checkUserHasBought($user);
+        
         $data = [
             'pageTitle' => $product->title,
             'pageDescription' => $product->seo_description,
@@ -312,6 +328,8 @@ class ProductController extends Controller
             'pageMetaImage' => $product->thumbnail,
             'product' => $product,
             'user' => $user,
+            'hasBought' => $hasBought,
+            'activeSubscribe' => $activeSubscribe,
             'selectableSpecifications' => $selectableSpecifications,
             'selectedSpecifications' => $selectedSpecifications,
             'seller' => $seller,

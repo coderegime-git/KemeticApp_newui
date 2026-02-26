@@ -204,7 +204,11 @@ document.addEventListener('DOMContentLoaded', function() {
 <script src="/assets/default/js/panel/public.min.js"></script>
 <script src="/assets/default/js/parts/content_delete.min.js"></script>
 <script src="/assets/default/js/panel/ai-content-generator.min.js"></script>
-
+<script src="/assets/default/js/panel/webinar.min.js"></script>
+<script src="/assets/default/js/panel/new_product.min.js"></script>
+<script src="/assets/default/js/panel/quiz.min.js"></script>
+<script src="/assets/default/js/panel/webinar_content_locale.min.js"></script>
+<script src="/assets/default/js/panel/new_bundle.min.js"></script>
 @stack('scripts_bottom2')
 
 <script>

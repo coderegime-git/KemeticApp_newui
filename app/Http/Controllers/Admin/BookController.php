@@ -135,20 +135,30 @@ class BookController extends Controller
         
         $pdfurl = url($data['image_path']);
 
-        $interior = $pdfService->resizeForLulu(
-            $pdfurl, // interior PDF
-            false                // no full bleed
-        );
+        if($data['type'] == 'Print')
+        {
+            $interior = $pdfService->resizeForLulu(
+                $pdfurl, // interior PDF
+                false                // no full bleed
+            );
 
-        $interiorPdfPath = str_replace(public_path(), '', $interior['local_path']);
-        $pageCount = $interior['page_count'];
+            $interiorPdfPath = str_replace(public_path(), '', $interior['local_path']);
+            $pageCount = $interior['page_count'];
 
-        $cover = $pdfService->generateCoverFromPdf(
-            $pdfurl, // cover PDF
-            $pageCount
-        );
+            $cover = $pdfService->generateCoverFromPdf(
+                $pdfurl, // cover PDF
+                $pageCount
+            );
 
-        $coverPdfPath = str_replace(public_path(), '', $cover['local_path']);
+            $coverPdfPath = str_replace(public_path(), '', $cover['local_path']);
+        }
+        else
+        {
+            // For non-print books, just use the original PDF path
+            $interiorPdfPath = $data['image_cover'];
+            $coverPdfPath = $data['image_cover'];
+            $pageCount = 0;
+        }
 
         // Create the book
         $book = Book::create([
@@ -225,20 +235,30 @@ class BookController extends Controller
         
         $pdfurl = url($data['image_path']);
 
-        $interior = $pdfService->resizeForLulu(
-            $pdfurl, // interior PDF
-            false                // no full bleed
-        );
+        if($data['type'] == 'Print')
+        {
+            $interior = $pdfService->resizeForLulu(
+                $pdfurl, // interior PDF
+                false                // no full bleed
+            );
 
-        $interiorPdfPath = str_replace(public_path(), '', $interior['local_path']);
-        $pageCount = $interior['page_count'];
+            $interiorPdfPath = str_replace(public_path(), '', $interior['local_path']);
+            $pageCount = $interior['page_count'];
 
-        $cover = $pdfService->generateCoverFromPdf(
-            $pdfurl, // cover PDF
-            $pageCount
-        );
+            $cover = $pdfService->generateCoverFromPdf(
+                $pdfurl, // cover PDF
+                $pageCount
+            );
 
-        $coverPdfPath = str_replace(public_path(), '', $cover['local_path']);
+            $coverPdfPath = str_replace(public_path(), '', $cover['local_path']);
+        }
+        else
+        {
+            // For non-print books, just use the original PDF path
+            $interiorPdfPath = $data['image_cover'];
+            $coverPdfPath = $data['image_cover'];
+            $pageCount = 0;
+        }
 
         // Update the book
         $book->update([

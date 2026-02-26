@@ -310,16 +310,17 @@
                             <div class="kemetic-form-group">
                                 <label class="kemetic-label">{{ trans('public.from') }}</label>
                                 <div class="kemetic-input-group">
-                                    <span class="kemetic-icon">
-                                        <i data-feather="calendar"></i>
-                                    </span>
-                                    <input
-                                        type="text"
+                                    <input type="date"
+                                        class="form-control kemetic-input text-center"
                                         name="from"
-                                        autocomplete="off"
-                                        value="{{ request()->get('from') }}"
-                                        class="kemetic-input {{ !empty(request()->get('from')) ? 'datepicker' : 'datefilter' }}"
-                                    />
+                                        value="{{ request()->get('from') }}">
+                                        <!-- <span class="input-group-text kemetic-icon bg-gold text-black">
+                                            <i data-feather="calendar" width="18" height="18"></i>
+                                        </span> -->
+
+                                        <!-- <input type="text" name="from" autocomplete="off"
+                                            class="form-control kemetic-input @if(request()->get('from')) datepicker @else datefilter @endif"
+                                            value="{{ request()->get('from','') }}"> -->
                                 </div>
                             </div>
                         </div>
@@ -328,16 +329,18 @@
                             <div class="kemetic-form-group">
                                 <label class="kemetic-label">{{ trans('public.to') }}</label>
                                 <div class="kemetic-input-group">
-                                    <span class="kemetic-icon">
-                                        <i data-feather="calendar"></i>
-                                    </span>
-                                    <input
-                                        type="text"
+                                    <input type="date"
+                                        class="form-control kemetic-input text-center"
                                         name="to"
-                                        autocomplete="off"
-                                        value="{{ request()->get('to') }}"
-                                        class="kemetic-input {{ !empty(request()->get('to')) ? 'datepicker' : 'datefilter' }}"
-                                    />
+                                        value="{{ request()->get('to') }}">
+
+                                    <!-- <span class="input-group-text kemetic-icon bg-gold text-black">
+                                        <i data-feather="calendar" width="18" height="18"></i>
+                                    </span> -->
+                                    
+                                    <!-- <input type="text" name="to" autocomplete="off"
+                                        class="form-control kemetic-input @if(request()->get('to')) datepicker @else datefilter @endif"
+                                        value="{{ request()->get('to','') }}"> -->
                                 </div>
                             </div>
                         </div>
@@ -398,7 +401,7 @@
     @if(!$comments->isEmpty())
         <div class="k-card py-20 px-25 mt-20">
             <div class="table-responsive">
-                <table class="table k-table text-center">
+                <table class="k-table text-center">
                     <thead>
                     <tr>
                         <th class="text-left">{{ trans('panel.user') }}</th>
@@ -487,7 +490,7 @@
     @endif
 </section>
 
-<div class="my-30">
+<div class="my-30" style="padding: 10px;">
     {{ $comments->appends(request()->input())->links('vendor.pagination.panel') }}
 </div>
 

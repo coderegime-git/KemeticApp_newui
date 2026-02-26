@@ -56,6 +56,7 @@ class BookController extends Controller
             $query->select('id', 'full_name');
         }])
         ->withCount('comments')
+        ->where('creator_id',auth()->id())
         ->orderBy('created_at', 'desc')
         ->paginate(10);
 
@@ -135,20 +136,29 @@ class BookController extends Controller
         
         $pdfurl = url($data['image_path']);
 
-        $interior = $pdfService->resizeForLulu(
-            $pdfurl, // interior PDF
-            false                // no full bleed
-        );
+        if($data['type'] == 'Print')
+        {
+            $interior = $pdfService->resizeForLulu(
+                $pdfurl, // interior PDF
+                false                // no full bleed
+            );
 
-        $interiorPdfPath = str_replace(public_path(), '', $interior['local_path']);
-        $pageCount = $interior['page_count'];
+            $interiorPdfPath = str_replace(public_path(), '', $interior['local_path']);
+            $pageCount = $interior['page_count'];
 
-        $cover = $pdfService->generateCoverFromPdf(
-            $pdfurl, // cover PDF
-            $pageCount
-        );
+            $cover = $pdfService->generateCoverFromPdf(
+                $pdfurl, // cover PDF
+                $pageCount
+            );
 
-        $coverPdfPath = str_replace(public_path(), '', $cover['local_path']);
+            $coverPdfPath = str_replace(public_path(), '', $cover['local_path']);
+        }
+        else
+        {
+            $interiorPdfPath = $data['image_path'];
+            $coverPdfPath = $data['image_path'];
+            $pageCount = 0;
+        }        
 
         // Create the book
         $book = Book::create([
@@ -167,6 +177,7 @@ class BookController extends Controller
             'platform_price' => $data['platform_price'] ?? null,
             'book_price' => $data['book_price'] ?? null,
             'type' => $data['type'],
+            'status' => 'active',
             'created_at' => time(),
             'updated_at' => time(),
         ]);
@@ -226,20 +237,29 @@ class BookController extends Controller
         
         $pdfurl = url($data['image_path']);
 
-        $interior = $pdfService->resizeForLulu(
-            $pdfurl, // interior PDF
-            false                // no full bleed
-        );
+        if($data['type'] == 'Print')
+        {
+            $interior = $pdfService->resizeForLulu(
+                $pdfurl, // interior PDF
+                false                // no full bleed
+            );
 
-        $interiorPdfPath = str_replace(public_path(), '', $interior['local_path']);
-        $pageCount = $interior['page_count'];
+            $interiorPdfPath = str_replace(public_path(), '', $interior['local_path']);
+            $pageCount = $interior['page_count'];
 
-        $cover = $pdfService->generateCoverFromPdf(
-            $pdfurl, // cover PDF
-            $pageCount
-        );
+            $cover = $pdfService->generateCoverFromPdf(
+                $pdfurl, // cover PDF
+                $pageCount
+            );
 
-        $coverPdfPath = str_replace(public_path(), '', $cover['local_path']);
+            $coverPdfPath = str_replace(public_path(), '', $cover['local_path']);
+        }
+        else
+        {
+            $interiorPdfPath = $data['image_path'];
+            $coverPdfPath = $data['image_path'];
+            $pageCount = 0;
+        }  
 
         // Update the book
         $book->update([

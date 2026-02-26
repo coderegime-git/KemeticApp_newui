@@ -332,16 +332,17 @@ section {
                                 </label>
 
                                 <div class="kemetic-input-group">
-                                    <span class="kemetic-icon">
-                                        <i data-feather="calendar"></i>
-                                    </span>
-                                    <input
-                                        type="text"
+                                    <input type="date"
+                                        class="kemetic-input text-center"
                                         name="from"
-                                        autocomplete="off"
-                                        value="{{ request()->get('from') }}"
-                                        class="kemetic-input {{ !empty(request()->get('from')) ? 'datepicker' : 'datefilter' }}"
-                                    />
+                                        value="{{ request()->get('from') }}">
+                                        <!-- <span class="input-group-text kemetic-icon bg-gold text-black">
+                                            <i data-feather="calendar" width="18" height="18"></i>
+                                        </span> -->
+
+                                        <!-- <input type="text" name="from" autocomplete="off"
+                                            class="form-control kemetic-input @if(request()->get('from')) datepicker @else datefilter @endif"
+                                            value="{{ request()->get('from','') }}"> -->
                                 </div>
                             </div>
                         </div>
@@ -354,16 +355,18 @@ section {
                                 </label>
 
                                 <div class="kemetic-input-group">
-                                    <span class="kemetic-icon">
-                                        <i data-feather="calendar"></i>
-                                    </span>
-                                    <input
-                                        type="text"
+                                    <input type="date"
+                                        class="kemetic-input text-center"
                                         name="to"
-                                        autocomplete="off"
-                                        value="{{ request()->get('to') }}"
-                                        class="kemetic-input {{ !empty(request()->get('to')) ? 'datepicker' : 'datefilter' }}"
-                                    />
+                                        value="{{ request()->get('to') }}">
+
+                                    <!-- <span class="input-group-text kemetic-icon bg-gold text-black">
+                                        <i data-feather="calendar" width="18" height="18"></i>
+                                    </span> -->
+                                    
+                                    <!-- <input type="text" name="to" autocomplete="off"
+                                        class="form-control kemetic-input @if(request()->get('to')) datepicker @else datefilter @endif"
+                                        value="{{ request()->get('to','') }}"> -->
                                 </div>
                             </div>
                         </div>
@@ -410,7 +413,7 @@ section {
                 <div class="row">
                     <div class="col-12 ">
                         <div class="table-responsive">
-                            <table class="table custom-table text-center ">
+                            <table class="custom-table text-center ">
                                 <thead>
                                 <tr>
                                     <th class="text-left text-gray">{{ trans('panel.webinar') }}</th>
@@ -472,7 +475,7 @@ section {
         @endif
     </section>
 
-    <div class="my-30">
+    <div class="my-30" style="padding: 10px;">
         {{ $comments->appends(request()->input())->links('vendor.pagination.panel') }}
     </div>
 @endsection

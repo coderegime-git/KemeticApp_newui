@@ -541,7 +541,12 @@ section {
                     <div class="col-12">
                         <div class="webinar-card webinar-list d-flex" style="padding:10px;">
                             <div class="image-box">
-                                <img src="{{ $webinar->getImage() }}" class="img-cover" alt="">
+                                @if($webinar->getImage())
+                                    <img src="{{ $webinar->getImage() }}" class="img-cover" alt="">
+                                @else
+                                    <img src="/noimage.png" class="img-cover" alt="">
+                                @endif
+                                <!-- <img src="{{ $webinar->getImage() }}" class="img-cover" alt=""> -->
 
                                 <div class="badges-lists">
                                     @if(!empty($webinar->deleteRequest) and $webinar->deleteRequest->status == "pending")
@@ -747,7 +752,7 @@ section {
                 </div>
             @endforeach
 
-            <div class="my-30">
+            <div class="my-30" style="padding: 10px;">
                 {{ $webinars->appends(request()->input())->links('vendor.pagination.panel') }}
             </div>
 

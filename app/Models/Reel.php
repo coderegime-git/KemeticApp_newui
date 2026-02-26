@@ -17,6 +17,7 @@ class Reel extends Model
     protected $casts = [
         'is_processed'   => 'boolean',
         'is_hidden'      => 'boolean',
+        'category_id'    => 'integer',
         'duration'       => 'integer',
         'views_count'    => 'integer',
         'likes_count'    => 'integer',
@@ -32,6 +33,7 @@ class Reel extends Model
         'title' => '',
         'caption' => '',
         'video_path' => '',
+        'category_id' => 0,
         'thumbnail_path' => '',
         'processed_video_path' => '',
         'duration' => 0,
@@ -98,6 +100,11 @@ class Reel extends Model
     public function views()
     {
         return $this->hasMany(ReelView::class);
+    }
+
+    public function category()
+    {
+        return $this->belongsTo(ReelCategory::class, 'category_id');
     }
 
     /*

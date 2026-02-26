@@ -109,10 +109,10 @@
 
         <div class="panel-section-card kemetic-card-dark py-25 px-30 mt-20">
             <div class="table-responsive">
-                <table class="table kemetic-table-dark">
+                <table class="kemetic-table-dark">
                     <thead>
                         <tr>
-                            <th class="text-left">{{ trans('public.topic') }}</th>
+                            <th class="text-center">{{ trans('public.topic') }}</th>
                             <th>{{ trans('update.forum') }}</th>
                             <th>{{ trans('update.replies') }}</th>
                             <th>{{ trans('public.publish_date') }}</th>

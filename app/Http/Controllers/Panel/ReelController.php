@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Panel;
 
 use App\Http\Controllers\Controller;
 use App\Models\Reel;
+use App\Models\ReelCategory;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
 
@@ -22,12 +23,17 @@ class ReelController extends Controller
     public function edit($id)
     {
         $reel = Reel::find($id);
-        return view('web.default.panel.reels.edit', compact('reel'));
+        $categories=ReelCategory::all()->map(function($category){
+            return $category->details ;
+        });
+
+        return view('web.default.panel.reels.edit', compact('reel', 'categories'));
     }
 
     public function update(Request $request){
         $request->validate([
             'video' => 'nullable|mimes:mp4,mov,ogg,webm|max:100000',
+            'category_id' => 'required|integer|exists:reel_categories,id',
             'title' => 'required|string|max:255',
             'caption' => 'required|string|max:1000',
         ]);
@@ -51,6 +57,7 @@ class ReelController extends Controller
         }
 
         $reel->update([
+            'category_id' => $request->category_id,
             'title' => $request->title,
             'caption' => $request->caption,
             'video_path' => $filename

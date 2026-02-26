@@ -23,6 +23,10 @@ use App\Models\MediaKit;
 use App\Models\MediaTool;
 use App\Models\Reel;
 use App\Models\Book;
+use App\Models\SubscribeUse;
+use App\Models\Accounting;
+use App\Models\Order;
+use App\Models\OrderItem;
 use App\Models\Translation\CategoryTranslation;
 use App\Models\Testimonial;
 use App\User;
@@ -598,6 +602,14 @@ class HomeController extends Controller
         $user = auth()->user();
         $installmentPlans = new InstallmentPlans($user);
 
+        $activeSubscribe = null;
+
+        if ($user) {
+            $activeSubscribe = Subscribe::getActiveSubscribe($user->id);
+        }
+
+        // dd($activeSubscribe);
+
         foreach ($subscribes as $subscribe) {
             if (getInstallmentsSettings('status') and (empty($user) or $user->enable_installments) and $subscribe->price > 0) {
                 $installments = $installmentPlans->getPlans('subscription_packages', $subscribe->id);
@@ -607,9 +619,121 @@ class HomeController extends Controller
         }
         $data = [
             'subscribes' => $subscribes ?? [],
+            'activeSubscribe' => $activeSubscribe
         ];
 
         return view(getTemplate() . '.pages.membership', $data);
+    }
+
+    public function cancelSubscription(Request $request)
+    {
+        $user = auth()->user();
+
+        if (!$user) {
+            return response()->json([
+                'success' => false,
+                'message' => 'No active subscription found'
+            ], 404);
+        }
+
+        $subscriptionId = $request->input('subscription_id');
+        // dd($subscriptionId);
+        DB::beginTransaction();
+
+        try {   
+
+            $activeSubscribe = Subscribe::getActiveSubscribe($user->id);
+
+            if (!$activeSubscribe) {
+                return apiResponse2(0, 'no_active_subscription', trans('site.no_active_subscription'));
+            }
+
+            try {
+
+                \Stripe\Stripe::setApiKey(env('STRIPE_SECRET'));
+        
+                $customer = \Stripe\Customer::retrieve($user->stripe_customer_id);
+                
+                if ($customer) {
+                    // Cancel any active subscriptions
+                    $subscriptions = \Stripe\Subscription::all([
+                        'customer' => $user->stripe_customer_id,
+                        'status' => 'active'
+                    ]);
+                    
+                    foreach ($subscriptions->data as $subscription) {
+                        $subscription->cancel();
+                    }
+                }
+            } catch (\Exception $e) {
+                \Log::error('Stripe cancellation error: ' . $e->getMessage());
+            }
+            // dd('hi1');
+            /** 3️⃣ Disable subscription usage */
+           SubscribeUse::where('user_id', $user->id)
+            ->where('subscribe_id', $subscriptionId)
+            ->delete();
+
+            /** 4️⃣ Update sales table */
+            Sale::where('buyer_id',  (string) $user->id)
+                ->where('type','subscribe')
+                ->whereNull('refund_at')
+                // ->delete();
+                ->update([
+                    'refund_at' => time(),
+                    // 'status' => 'canceled'
+                ]);
+
+            /** 5️⃣ Accounting cleanup */
+            // Accounting::where('user_id', $user->id)
+            //     ->where('type', 'subscribe')
+            //     ->delete();
+
+            /** 6️⃣ Update related orders */
+            $orderIds = OrderItem::where('user_id', $user->id)
+                ->whereNotNull('subscribe_id')
+                ->pluck('order_id');
+
+            Order::whereIn('id', $orderIds)
+                ->update([
+                    'status' => 'fail'
+                ]);
+
+            /** 7️⃣ Update user table */
+            $user->update([
+                'subscription_status' => 'canceled',
+                'subscription_id' => null,
+                'stripe_customer_id' => null
+            ]);
+
+            DB::commit();
+
+            $notifyOptions = [
+                '[u.name]' => $user->full_name,
+                '[s.p.name]' => $activeSubscribe->title,
+            ];
+            
+            sendNotification('subscripe_plan_cancel', $notifyOptions, $user->id);
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Subscription cancelled successfully'
+            ]);
+
+        } catch (\Exception $e) {
+            DB::rollBack();
+
+            \Log::error('Subscription Cancel Error', [
+                'user_id' => $user->id,
+                'error' => $e->getMessage()
+            ]);
+
+            return response()->json([
+                'success' => false,
+                'message' => 'Failed to cancel subscription',
+                'error' => $e->getMessage()
+            ], 500);
+        }
     }
 
     private function getHomeDefaultStatistics()

@@ -7,6 +7,7 @@ use App\Models\Book;
 use App\Models\Cart;
 use App\Models\BookOrder;
 use App\Models\BookCategory;
+use App\Models\Subscribe;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Http; // Add this line
 use Illuminate\Support\Facades\Cache;
@@ -38,10 +39,13 @@ class BookController extends Controller
     //     }
     // }
 
-    public function index(Request $request, $category = null)
+    public function index(Request $request)
     {
+        $data = $request->all();
+
         $creator = $request->get('creator', null);
         $search = $request->get('search', null);
+        $categoryId = $request->get('category_id', null);
         
         $seoSettings = getSeoMetas('books');
         $pageTitle = !empty($seoSettings['title']) ? $seoSettings['title'] : trans('Books');
@@ -53,23 +57,16 @@ class BookController extends Controller
         $query = Book::orderBy('updated_at', 'desc')
             ->orderBy('created_at', 'desc');
 
-        $selectedCategory = null;
-
-        if (!empty($category)) {
-            $selectedCategory = $bookCategories->where('slug', $category)->first();
-            if (!empty($selectedCategory)) {
-                $query->where('category_id', $selectedCategory->id);
-                $pageTitle .= ' ' . $selectedCategory->title;
-                $pageDescription .= ' ' . $selectedCategory->title;
-            }
-        }
-
         if (!empty($creator) and is_numeric($creator)) {
             $query->where('creator_id', $creator);
         }
 
         if (!empty($search)) {
             $query->whereTranslationLike('title', "%$search%");
+        }
+
+        if (!empty($categoryId)) {
+            $query->where('category_id', $categoryId);
         }
 
         $bookCount = $query->count();
@@ -85,6 +82,12 @@ class BookController extends Controller
 
         $popularBooks = $this->getPopularBooks();
         $popularBook = $popularBooks->first(); // Get the single popular book
+
+        $selectedCategory = null;
+
+        if (!empty($data['category_id'])) {
+            $selectedCategory = BookCategory::where('id', $data['category_id'])->first();
+        }
 
         $data = [
             'pageTitle' => $pageTitle,
@@ -116,6 +119,15 @@ class BookController extends Controller
 
     public function show($slug)
     {
+        $user = null;
+
+        $activeSubscribe = "";
+
+        if (auth()->check()) {
+            $user = auth()->user();
+            $activeSubscribe = Subscribe::getActiveSubscribe($user->id);
+        }
+
         if (!empty($slug)) {
             $book = Book::where('slug', $slug)
                 ->with([
@@ -158,6 +170,8 @@ class BookController extends Controller
                 // Calculate engagement metrics
                 $totalEngagement = $book->likes_count + $book->comments_count + $book->saved_items_count;
                 $ratingDisplay = $book->likes_count > 0 ? number_format(($book->likes_count / max($book->likes_count + 1, 1)) * 5, 1) : '4.98';
+                $hasBought = $book->checkUserHasBought($user);
+                
 
                 $data = [
                     'pageTitle' => $book->title,
@@ -167,6 +181,8 @@ class BookController extends Controller
                     'popularBooks' => $popularBooks,
                     'pageRobot' => $pageRobot,
                     'book' => $book,
+                    'hasBought' => $hasBought,
+                    'activeSubscribe' => $activeSubscribe,
                     'likeCount' => $book->likes_count,
                     'shareCount' => $book->share_count,
                     'giftCount' => $book->gift_count,

@@ -30,6 +30,8 @@ Route::group([], function () {
     Route::group(['prefix' => 'subscribe'], function () {
         Route::get('/', ['uses' => 'SubscribesController@index']);
         Route::post('/pay', ['uses' => 'SubscribesController@pay']);
+        Route::post('/cancel', ['uses' => 'SubscribesController@cancelSubscription']);
+        Route::post('/recurringPay', ['uses' => 'SubscribesController@recurringPay']);
         Route::post('/web_pay', ['uses' => 'SubscribesController@webPayGenerator']);
         Route::post('/apply', ['uses' => 'SubscribesController@apply']);
         Route::post('/general_apply', ['uses' => 'SubscribesController@generalApply']);
@@ -179,6 +181,7 @@ Route::group([], function () {
     });
     Route::group(['prefix' => 'payments'], function () {
         Route::post('/request', 'PaymentsController@paymentRequest');
+        Route::post('/subscriberequest', 'PaymentsController@paymentsubscribeRequest');
         Route::post('/credit', 'PaymentsController@paymentByCredit');
         Route::get('/verify/{gateway}', ['as' => 'payment_verify', 'uses' => 'PaymentsController@paymentVerify']);
         Route::post('/verify/{gateway}', ['as' => 'payment_verify_post', 'uses' => 'PaymentsController@paymentVerify']);
@@ -209,6 +212,12 @@ Route::group([], function () {
         Route::get('/purchases/comments', 'ProductController@purchasedComment');
         Route::get('/ongoing_orders', 'ProductController@ongoingOrders');
         Route::get('/purchase_history', 'ProductController@purchaseHistory');
+       
+    });
+
+    Route::group(['prefix' => 'book'], function () {
+       
+        Route::get('/purchases', 'BookOrderController@getPurchases');
        
     });
 
@@ -265,6 +274,8 @@ Route::group([], function () {
         Route::post('/{webinar}/forums', ['uses' => 'CourseForumController@store']);
         Route::put('/forums/{forum}', ['uses' => 'CourseForumController@update']);
         Route::post('/forums/{forum}/pin', ['uses' => 'CourseForumController@pin']);
+        Route::post('/course/create', ['uses' => 'WebinarsController@store']);
+        Route::post('/course/users', ['uses' => 'WebinarsController@userssearch']);
 
         Route::group(['prefix' => 'forums'], function () {
             Route::get('/{forum}/answers', ['uses' => 'CourseForumAnswerController@index']);

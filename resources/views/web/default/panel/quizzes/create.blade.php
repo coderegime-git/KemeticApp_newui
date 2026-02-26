@@ -15,6 +15,5 @@
     </script>
 
     <script src="/assets/default/vendors/sortable/jquery-ui.min.js"></script>
-    <script src="/assets/default/js/panel/quiz.min.js"></script>
     <script src="/assets/default/js/panel/webinar_content_locale.min.js"></script>
 @endpush

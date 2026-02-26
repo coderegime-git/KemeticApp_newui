@@ -1,5 +1,4 @@
 <?php
-
 namespace App\Http\Controllers\Api\Web;
 
 use App\Http\Controllers\Api\Controller;
@@ -33,13 +32,12 @@ use App\Models\{
 };
 use App\Mixins\Installment\InstallmentPlans;
 use App\Models\Role;
+use App\Models\Comment;
+use App\Models\WebinarReview;
 use App\User;
-
 
 class WebinarController extends Controller
 {
-
-
     public function index()
     {
         // $webinars = Webinar::where('webinars.status', 'active')
@@ -80,7 +78,6 @@ class WebinarController extends Controller
         //         return $webinar->brief;
         //     });
         $user = apiAuth();
-        //print_r($user);die;
 
         $webinars = Webinar::where('webinars.status', 'active')
             ->with([
@@ -119,39 +116,37 @@ class WebinarController extends Controller
             ->handleFilters()
             ->get()
             ->groupBy('id')
-            ->map(function ($group) {
-                $webinar = $group->first(); // Webinar data
-    
-                // Create the products array
-                $products = $group->map(function ($item) {
-                    return [
-                        'reference_name' => $item->reference_name,
-                        'product_id' => $item->product_id,
-                        'display_name' => $item->display_name,
-                        'description' => $item->product_description, // Clean description
-                        'type' => $item->type,
-                    ];
-                })->filter(function ($product) {
-                    return $product['product_id'] !== null; // Filter out null product rows
-                })->values()->toArray();
+        ->map(function ($group) {
+            $webinar = $group->first(); // Webinar data
 
-                // Add the products array as a top-level field in the webinar
-                $webinar->product = $products ?: []; // Add products to the webinar object
-                $thumbnailImage =  url($webinar->thumbnail);
-                $coverImage = url($webinar->image_cover);
-                $webinar->thumbnail = $thumbnailImage;
-                $webinar->image = $coverImage;
-                // Unset the extra fields from the webinar object to avoid duplicates
-                unset($webinar->reference_name, $webinar->product_id, $webinar->display_name, $webinar->product_description, $webinar->type);
+            // Create the products array
+            $products = $group->map(function ($item) {
+                return [
+                    'reference_name' => $item->reference_name,
+                    'product_id' => $item->product_id,
+                    'display_name' => $item->display_name,
+                    'description' => $item->product_description, // Clean description
+                    'type' => $item->type,
+                ];
+            })->filter(function ($product) {
+                return $product['product_id'] !== null; // Filter out null product rows
+            })->values()->toArray();
 
-                return $webinar;
-            })
-            
-            ->flatten(1); // Flatten the result into a single-level collection
- 
+            // Add the products array as a top-level field in the webinar
+            $webinar->product = $products ?: []; // Add products to the webinar object
+            $thumbnailImage =  url($webinar->thumbnail);
+            $coverImage = url($webinar->image_cover);
+            $webinar->thumbnail = $thumbnailImage;
+            $webinar->image = $coverImage;
+            // Unset the extra fields from the webinar object to avoid duplicates
+            unset($webinar->reference_name, $webinar->product_id, $webinar->display_name, $webinar->product_description, $webinar->type);
+
+            return $webinar;
+        })
+        
+        ->flatten(1); // Flatten the result into a single-level collection
 
         return apiResponse2(1, 'retrieved', trans('api.public.retrieved'), $webinars);
-
     }
 
     private function getUserIdFromToken(Request $request)
@@ -209,7 +204,6 @@ class WebinarController extends Controller
     //                 $course->teacher->avatar = url($course->teacher->avatar);
     //                 return $course;
     //             });
-
     //     }
 
     //     // Latest Bundles
@@ -408,7 +402,7 @@ class WebinarController extends Controller
     public function home(Request $request)
     {
         $userId = $this->getUserIdFromToken($request);
-
+        
         $homeSections = HomeSection::orderBy('order', 'asc')->get();
         $selectedSectionsName = $homeSections->pluck('name')->toArray();
 
@@ -422,19 +416,18 @@ class WebinarController extends Controller
                 ->with(['teacher:id,full_name,avatar', 'reviews' => fn($q) => $q->where('status', 'active'), 'tickets', 'feature'])
                 ->limit(6)
                 ->get()
-                ->map(function ($course) {
-                    $course->thumbnail = !empty($course->thumbnail) ? url($course->thumbnail) : null;
-                    $course->image_cover = !empty($course->image_cover) ? url($course->image_cover) : null;
-                    
-                    if ($course->teacher && !empty($course->teacher->avatar)) {
-                        $course->teacher->avatar = url($course->teacher->avatar);
-                    }
-                    
-                    return $course;
-                });
+            ->map(function ($course) {
+                $course->thumbnail = !empty($course->thumbnail) ? url($course->thumbnail) : null;
+                $course->image_cover = !empty($course->image_cover) ? url($course->image_cover) : null;
+                
+                if ($course->teacher && !empty($course->teacher->avatar)) {
+                    $course->teacher->avatar = url($course->teacher->avatar);
+                }
+                
+                return $course;
+            });
         }
-
-        // Best Sellers
+        
         if (in_array(HomeSection::$best_sellers, $selectedSectionsName)) {
             $bestSaleWebinarsIds = Sale::whereNotNull('webinar_id')
                 ->select(DB::raw('COUNT(id) as cnt, webinar_id'))
@@ -449,16 +442,16 @@ class WebinarController extends Controller
                 ->where('private', false)
                 ->with(['teacher:id,full_name,avatar', 'reviews' => fn($q) => $q->where('status', 'active'), 'sales', 'tickets', 'feature'])
                 ->get()
-                ->map(function ($topsale) {
-                    $topsale->thumbnail = !empty($topsale->thumbnail) ? url($topsale->thumbnail) : null;
-                    $topsale->image_cover = !empty($topsale->image_cover) ? url($topsale->image_cover) : null;
-                    
-                    if ($topsale->teacher && !empty($topsale->teacher->avatar)) {
-                        $topsale->teacher->avatar = url($topsale->teacher->avatar);
-                    }
-                    
-                    return $topsale;
-                });
+            ->map(function ($topsale) {
+                $topsale->thumbnail = !empty($topsale->thumbnail) ? url($topsale->thumbnail) : null;
+                $topsale->image_cover = !empty($topsale->image_cover) ? url($topsale->image_cover) : null;
+                
+                if ($topsale->teacher && !empty($topsale->teacher->avatar)) {
+                    $topsale->teacher->avatar = url($topsale->teacher->avatar);
+                }
+                
+                return $topsale;
+            });
         }
 
         // Best Rated
@@ -473,16 +466,16 @@ class WebinarController extends Controller
                 ->with(['teacher:id,full_name,avatar'])
                 ->limit(1)
                 ->get()
-                ->map(function ($toprate) {
-                    $toprate->thumbnail = !empty($toprate->thumbnail) ? url($toprate->thumbnail) : null;
-                    $toprate->image_cover = !empty($toprate->image_cover) ? url($toprate->image_cover) : null;
-                    
-                    if ($toprate->teacher && !empty($toprate->teacher->avatar)) {
-                        $toprate->teacher->avatar = url($toprate->teacher->avatar);
-                    }
-                    
-                    return $toprate;
-                });
+            ->map(function ($toprate) {
+                $toprate->thumbnail = !empty($toprate->thumbnail) ? url($toprate->thumbnail) : null;
+                $toprate->image_cover = !empty($toprate->image_cover) ? url($toprate->image_cover) : null;
+                
+                if ($toprate->teacher && !empty($toprate->teacher->avatar)) {
+                    $toprate->teacher->avatar = url($toprate->teacher->avatar);
+                }
+                
+                return $toprate;
+            });
         }
 
         // Store Products
@@ -492,12 +485,17 @@ class WebinarController extends Controller
                 ->with(['creator:id,full_name,avatar'])
                 ->limit(6)
                 ->get()
-                ->map(function ($shop) {
-                    if ($shop->creator && !empty($shop->creator->avatar)) {
-                        $shop->creator->avatar = url($shop->creator->avatar);
-                    }
-                    return $shop;
-                });
+            ->map(function ($shop) {
+                if ($shop->creator && !empty($shop->creator->avatar)) {
+                    $shop->creator->avatar = url($shop->creator->avatar);
+                }
+                
+                $shop->image = url($shop->getImage());
+                
+                return $shop;
+            });
+
+            
         }
 
         // Blogs
@@ -508,10 +506,10 @@ class WebinarController extends Controller
                 ->orderBy('created_at', 'desc')
                 ->limit(3)
                 ->get()
-                ->map(function ($articles) {
-                    $articles->image = !empty($articles->image) ? url($articles->image) : null;
-                    return $articles;
-                });
+            ->map(function ($articles) {
+                $articles->image = !empty($articles->image) ? url($articles->image) : null;
+                return $articles;
+            });
         }
 
         $data['reels'] = Reel::where('is_hidden','0')->orderby('id','desc')->limit(6)->get();
@@ -523,7 +521,8 @@ class WebinarController extends Controller
         });
 
         
-        $data['livestream'] = Livestream::orderBy('created_at', 'desc')
+        $data['livestream'] = Livestream::where('livestream_end', 'No')
+            ->orderBy('created_at', 'desc')
             ->with(['creator' => function($query) {  // Changed from 'user' to 'creator'
                 $query->select('id', 'full_name', 'avatar', 'country_id');
             }])
@@ -536,9 +535,9 @@ class WebinarController extends Controller
                 // Get country name from Region table
                 if ($livestream->creator->country_id) {
                     $country = Region::select('title')
-                                    ->where('id', $livestream->creator->country_id)
-                                    ->where('type', Region::$country)
-                                    ->first();
+                        ->where('id', $livestream->creator->country_id)
+                        ->where('type', Region::$country)
+                        ->first();
                     
                     if ($country) {
                         $countryName = $country->title;
@@ -561,13 +560,21 @@ class WebinarController extends Controller
             }
             return $livestream;
         });
-        
 
         return apiResponse2(1, 'retrieved', trans('api.public.retrieved'), $data);
     }
 
     public function getWebinarsCombined(Request $request)
     {
+        $userId = $this->getUserIdFromToken($request);
+
+        $offset = $request->has('offset') ? (int) $request->get('offset') : null;
+        $limit  = $request->has('limit') ? (int) $request->get('limit') : null;
+
+        $usePagination = !is_null($offset) && !is_null($limit);
+
+        $dbOffset = $usePagination ? ($offset * $limit) : null;
+        
         $data = [];
         $sort = $request->get('sort', 'newest');
         $categorySlug = $request->get('category', null);
@@ -599,6 +606,37 @@ class WebinarController extends Controller
             });
         }
 
+        if ($userId) {
+            // Get user's like statistics by webinar category
+            $userLikesByCategory = DB::table('webinar_like')
+                ->join('webinars', 'webinar_like.webinar_id', '=', 'webinars.id')
+                ->where('webinar_like.user_id', $userId)
+                ->whereNotNull('webinars.category_id')
+                ->select(
+                    'webinars.category_id',
+                    DB::raw('COUNT(*) as likes')
+                )
+                ->groupBy('webinars.category_id')
+                ->orderByDesc('likes')
+                ->get();
+
+            if ($userLikesByCategory->isNotEmpty()) {
+                // Build CASE statement for ordering
+                $caseStatements = [];
+                foreach ($userLikesByCategory as $index => $category) {
+                    $caseStatements[] = "WHEN category_id = {$category->category_id} THEN {$index}";
+                }
+                
+                // Add other categories
+                $caseStatements[] = "WHEN category_id IS NOT NULL THEN " . count($userLikesByCategory);
+                $caseStatements[] = "WHEN category_id IS NULL THEN " . (count($userLikesByCategory) + 1);
+                
+                $caseSql = "CASE " . implode(' ', $caseStatements) . " END";
+                
+                $webinarsQuery->orderByRaw($caseSql);
+            }
+        }
+
         // Apply sorting
         switch ($sort) {
             case 'newest':
@@ -611,17 +649,31 @@ class WebinarController extends Controller
                 $webinarsQuery->orderBy('created_at', 'desc');
         }
 
+        $totalCourses = $webinarsQuery->count();
+
+        if ($usePagination) {
+            $webinarsQuery->offset($dbOffset)->limit($limit);
+        }
+
         // Get regular webinars
         $webinars = $webinarsQuery->with([
             'teacher:id,full_name,avatar', 
             'reviews' => fn($q) => $q->where('status', 'active'), 
             'tickets', 
-            'feature'
+            'feature',
+            'likes',
+            'savedcourse'
         ])
-        // ->limit(6)
+        // ->offset($dbOffset)
+        // ->limit($limit)
         ->get()
-        ->map(function ($course) {
+        ->map(function ($course) use ($userId){
             // Add proper null checking for thumbnail
+
+            $isLiked = $course->likes->contains('user_id', $userId);
+             
+            $isSaved = $course->savedcourse->contains('user_id', $userId);
+
             if (!empty($course->thumbnail)) {
                 $course->thumbnail = url($course->thumbnail);
             }
@@ -635,6 +687,9 @@ class WebinarController extends Controller
             if ($course->teacher && !empty($course->teacher->avatar)) {
                 $course->teacher->avatar = url($course->teacher->avatar);
             }
+
+            $course->is_liked = $isLiked;
+            $course->is_saved = $isSaved;
             
             return $course;
         });
@@ -725,11 +780,10 @@ class WebinarController extends Controller
         if ($isFree) {
             $liveClassesQuery->where(function($query) {
                 $query->where('price', 0)
-                    ->orWhere('price', null);
+                ->orWhere('price', null);
             });
         }
-
-        // Newest Live Classes
+        
         $newestLiveClasses = clone $liveClassesQuery;
         $newestLiveClasses = $newestLiveClasses->orderBy('created_at', 'desc')
             ->with([
@@ -738,23 +792,23 @@ class WebinarController extends Controller
                 'tickets', 
                 'feature'
             ])
-            ->get()
-            ->map(function ($liveClass) {
-                // Add proper null checking
-                if (!empty($liveClass->thumbnail)) {
-                    $liveClass->thumbnail = url($liveClass->thumbnail);
-                }
-                
-                if (!empty($liveClass->image_cover)) {
-                    $liveClass->image_cover = url($liveClass->image_cover);
-                }
-                
-                if ($liveClass->teacher && !empty($liveClass->teacher->avatar)) {
-                    $liveClass->teacher->avatar = url($liveClass->teacher->avatar);
-                }
-                
-                return $liveClass;
-            });
+        ->get()
+        ->map(function ($liveClass) {
+            // Add proper null checking
+            if (!empty($liveClass->thumbnail)) {
+                $liveClass->thumbnail = url($liveClass->thumbnail);
+            }
+            
+            if (!empty($liveClass->image_cover)) {
+                $liveClass->image_cover = url($liveClass->image_cover);
+            }
+            
+            if ($liveClass->teacher && !empty($liveClass->teacher->avatar)) {
+                $liveClass->teacher->avatar = url($liveClass->teacher->avatar);
+            }
+            
+            return $liveClass;
+        });
 
         // Top Rated Live Classes
         $topRatedLiveClasses = Webinar::join('webinar_reviews', 'webinars.id', '=', 'webinar_reviews.webinar_id')
@@ -771,31 +825,188 @@ class WebinarController extends Controller
                 'tickets', 
                 'feature'
             ])
-            ->get()
-            ->map(function ($liveClass) {
-                // Add proper null checking
-                if (!empty($liveClass->thumbnail)) {
-                    $liveClass->thumbnail = url($liveClass->thumbnail);
-                }
-                
-                if (!empty($liveClass->image_cover)) {
-                    $liveClass->image_cover = url($liveClass->image_cover);
-                }
-                
-                if ($liveClass->teacher && !empty($liveClass->teacher->avatar)) {
-                    $liveClass->teacher->avatar = url($liveClass->teacher->avatar);
-                }
-                
-                return $liveClass;
-            });
+        ->get()
+        ->map(function ($liveClass) {
+            // Add proper null checking
+            if (!empty($liveClass->thumbnail)) {
+                $liveClass->thumbnail = url($liveClass->thumbnail);
+            }
+            
+            if (!empty($liveClass->image_cover)) {
+                $liveClass->image_cover = url($liveClass->image_cover);
+            }
+            
+            if ($liveClass->teacher && !empty($liveClass->teacher->avatar)) {
+                $liveClass->teacher->avatar = url($liveClass->teacher->avatar);
+            }
+            
+            return $liveClass;
+        });
 
         $data['course'] = $webinars;
         $data['bestrate'] = $bestRateWebinars;
         $data['bestsale'] = $bestSaleWebinars;
         $data['newest_live_classes'] = $newestLiveClasses;
         $data['top_rated_live_classes'] = $topRatedLiveClasses;
+        $data['course_meta'] = [
+            'offset' => $offset,
+            'limit' => $limit,
+            'has_more' => (($dbOffset + $limit) < $totalCourses)
+        ];
 
         return apiResponse2(1, 'retrieved', trans('api.public.retrieved'), $data);
+    }
+
+    public function courseDetails(Request $request, $id)
+    {
+        $userid = $this->getUserIdFromToken($request);
+        
+        $data = [];
+        $courseId = $id;
+
+        $offset = (int) $request->query('offset', 0); // page index
+        $limit  = (int) $request->query('limit', 10);
+        $dbOffset = $offset * $limit;
+        
+        $baseWebinar = Webinar::where('webinars.status', 'active')
+        ->where('webinars.private', false)
+        ->where('webinars.id', $id)
+        ->first();
+
+        if (empty($baseWebinar)) {
+            return apiResponse2(0, 'invalid', trans('api.public.invalid'));
+        }
+
+        $categoryId = $baseWebinar->category_id;
+        
+        $likedCategoryIds = [];
+
+        if ($userid) {
+            $likedCategoryIds = DB::table('webinar_like')
+                ->join('webinars', 'webinar_like.webinar_id', '=', 'webinars.id')
+                ->where('webinar_like.user_id', $userid)
+                ->whereNotNull('webinars.category_id')
+                ->select(
+                    'webinars.category_id',
+                    DB::raw('COUNT(*) as total')
+                )
+                ->groupBy('webinars.category_id')
+                ->orderByDesc('total')
+                ->pluck('category_id')
+                ->toArray();
+        }
+
+        // ================================
+        // BASE QUERY
+        // ================================
+        $query = Webinar::where('webinars.status', 'active')
+            ->where('webinars.private', false)
+            ->where('webinars.id', '!=', $id)
+            ->leftJoin(
+                'apple_product_table',
+                'webinars.reference_id',
+                '=',
+                'apple_product_table.id'
+            )
+            ->select(
+                'webinars.*',
+                'apple_product_table.reference_name',
+                'apple_product_table.product_id',
+                'apple_product_table.display_name',
+                'apple_product_table.description as product_description',
+                'apple_product_table.type'
+            );
+
+        // ================================
+        // CATEGORY PRIORITY ORDER
+        // ================================
+        if (!empty($likedCategoryIds)) {
+            $case = [];
+
+            foreach ($likedCategoryIds as $index => $catId) {
+                $case[] = "WHEN webinars.category_id = {$catId} THEN {$index}";
+            }
+
+            $caseSql = "CASE " . implode(' ', $case) . " ELSE " . count($likedCategoryIds) . " END";
+            $query->orderByRaw($caseSql);
+        }
+
+        // Secondary order
+        $query->orderByDesc('webinars.like_count')
+            ->orderByDesc('webinars.id');
+
+        $totalCourses = (clone $query)->count();
+
+        // ================================
+        // OFFSET ADJUSTMENT
+        // ================================
+        $dbOffset = $offset * $request->query('limit', 10);
+
+        if ($offset === 0) {
+            // selected course first
+            $details = $baseWebinar->details;
+
+            $details['product'] = [
+                'reference_name' => null,
+                'product_id'     => null,
+                'display_name'   => null,
+                'description'    => null,
+                'type'           => null,
+            ];
+
+            $details['is_selected'] = true;
+            $details['is_liked'] = $baseWebinar->likes->contains('user_id', $userid);
+            $details['is_saved'] = $baseWebinar->savedcourse->contains('user_id', $userid);
+            $details['like_count']  = $baseWebinar->like_count;
+            $details['saved_count'] = $baseWebinar->saved_count;
+            $details['share_count'] = $baseWebinar->share_count;
+            $details['gift_count']  = $baseWebinar->gift_count;
+
+            $data[] = $details;
+
+            // reduce slot
+            $limit--;
+        }
+
+        // ================================
+        // FETCH COURSES
+        // ================================
+        if ($limit > 0) {
+            $courses = $query
+                ->offset($dbOffset)
+                ->limit($limit)
+                ->get();
+
+            foreach ($courses as $webinar) {
+                $details = $webinar->details;
+
+                $details['product'] = [
+                    'reference_name' => $webinar->reference_name,
+                    'product_id'     => $webinar->product_id,
+                    'display_name'   => $webinar->display_name,
+                    'description'    => $webinar->product_description,
+                    'type'           => $webinar->type,
+                ];
+
+                $details['is_selected'] = false;
+                $details['is_liked'] = $webinar->likes->contains('user_id', $userid);
+                $details['is_saved'] = $webinar->savedcourse->contains('user_id', $userid);
+                $details['like_count']  = $webinar->like_count;
+                $details['saved_count'] = $webinar->saved_count;
+                $details['share_count'] = $webinar->share_count;
+                $details['gift_count']  = $webinar->gift_count;
+
+                $data[] = $details;
+            }
+        }
+
+        return apiResponse2(1, 'retrieved', trans('api.public.retrieved'), [
+            'offset' => $offset,
+            'limit'  => (int) $request->query('limit', 10),
+            'count'  => count($data),
+            'has_more' => (($offset + 1) * $request->query('limit', 10)) < $totalCourses,
+            'courses'=> $data
+        ]);
     }
 
     public function categoriesnew(Request $request)
@@ -826,8 +1037,7 @@ class WebinarController extends Controller
     {
         $user = apiAuth();
         $cacheKey = "course_details_{$id}_" . ($user ? $user->id : 'guest');
-    
-        // Cache for 5 minutes (300s). Adjust as needed.
+        
         return Cache::remember($cacheKey, 300, function () use ($id, $user) {
     
             $webinar = Webinar::where('webinars.status', 'active')
@@ -860,8 +1070,7 @@ class WebinarController extends Controller
             unset($webinar->reference_name, $webinar->product_id, $webinar->display_name, $webinar->product_description, $webinar->type);
     
             $details = $webinar->details;
-    
-            // Check purchase status
+            
             if ($user) {
                 $checkOrderItem = OrderItem::where('user_id', $user->id)
                     ->where('webinar_id', $webinar->id)
@@ -879,8 +1088,7 @@ class WebinarController extends Controller
     
             $details['product'] = $product;
             $data = $details;
-    
-            // Cashback rules
+            
             $cashbackRules = null;
             if (!empty($data["price"]) && getFeaturesSettings('cashback_active') && (empty($user) || !$user->disable_cashback)) {
                 $cashbackRulesMixin = new CashbackRules($user);
@@ -987,7 +1195,6 @@ class WebinarController extends Controller
                 break;
             default:
                 $table = null;
-
         }
 
         validateParam($request->all(), [
@@ -1009,16 +1216,13 @@ class WebinarController extends Controller
             abort(404);
         }
 
-
         if (!$course->checkUserHasBought($user)) {
 
             return apiResponse2(0, 'not_purchased', trans('api.webinar.not_purchased'));
         }
 
-
         $courseLearning = CourseLearning::where('user_id', $user->id)
             ->where($item, $item_id)->delete();
-
 
         if ($status) {
 
@@ -1032,8 +1236,6 @@ class WebinarController extends Controller
 
         }
         return apiResponse2(1, 'unread', trans('api.learning_status.unread'));
-
-
     }
 
     public function report(Request $request, $id)
@@ -1067,7 +1269,7 @@ class WebinarController extends Controller
         if ($single) {
             $webinars = collect([$webinars]);
         }
-        //
+        
         $user = apiAuth();
         $webinars = $webinars->map(function ($webinar) use ($user) {
 
@@ -1108,7 +1310,6 @@ class WebinarController extends Controller
                 'start_date' => $webinar->start_date,
                 'progress' => $webinar->getProgress(),
                 'category' => $webinar->category->title,
-
             ];
         });
 
@@ -1125,7 +1326,7 @@ class WebinarController extends Controller
     public function details($webinars)
     {
         $user = apiAuth();
-
+       
         $webinars = $webinars->map(function ($webinar) use ($user) {
             $hasBought = $webinar->checkUserHasBought($user);
 
@@ -1170,7 +1371,6 @@ class WebinarController extends Controller
                         'description' => $session->description,
                         'date' => dateTimeFormat($session->date, 'j M Y | H:i')
                     ];
-
                 }),
                 'sessions_with_chapter' => $webinar->chapters->where('type', WebinarChapter::$chapterSession)->map(function ($chapter) {
                     $chapter->sessions->map(function ($session) {
@@ -1181,8 +1381,6 @@ class WebinarController extends Controller
                             'date' => dateTimeFormat($session->date, 'j M Y | H:i')
                         ];
                     });
-
-
                 }),
 
                 'rate' => $webinar->getRate(),
@@ -1202,40 +1400,42 @@ class WebinarController extends Controller
                         ],
                         'create_at' => $review->created_at,
                         'description' => $review->description,
-                        'replies' => $review->comments->map(function ($reply) {
-                            return [
-                                'user' => [
-                                    'full_name' => $reply->user->full_name,
-                                    'avatar' => $reply->user->getAvatar(),
-                                ],
-                                'create_at' => $reply->created_at,
-                                'comment' => $reply->comment,
-                            ];
+                        'replies' => []
+                        // 'replies' => $review->comments->map(function ($reply) {
+                        //     return [
+                        //         'user' => [
+                        //             'full_name' => $reply->user->full_name,
+                        //             'avatar' => $reply->user->getAvatar(),
+                        //         ],
+                        //         'create_at' => $reply->created_at,
+                        //         'comment' => $reply->comment,
+                        //     ];
 
-                        })
+                        // })
 
 
                     ];
                 }),
-                'comments' => $webinar->comments->map(function ($item) {
+                'comments' => $webinar->webinarcomments->map(function ($item) {
                     return [
                         'user' => [
                             'full_name' => $item->user->full_name,
                             'avatar' => $item->user->getAvatar(),
                         ],
                         'create_at' => $item->created_at,
-                        'comment' => $item->comment,
-                        'replies' => $item->replies->map(function ($reply) {
-                            return [
-                                'user' => [
-                                    'full_name' => $reply->user->full_name,
-                                    'avatar' => $reply->user->getAvatar(),
-                                ],
-                                'create_at' => $reply->created_at,
-                                'comment' => $reply->comment,
-                            ];
+                        'comment' => $item->content,
+                        'replies' => []
+                        // 'replies' => $item->replies->map(function ($reply) {
+                        //     return [
+                        //         'user' => [
+                        //             'full_name' => $reply->user->full_name,
+                        //             'avatar' => $reply->user->getAvatar(),
+                        //         ],
+                        //         'create_at' => $reply->created_at,
+                        //         'comment' => $reply->comment,
+                        //     ];
 
-                        })
+                        // })
                     ];
                 }),
                 'discount' => $webinar->getDiscount(),
@@ -1291,7 +1491,6 @@ class WebinarController extends Controller
             return null;
         }
         return self::brief($webinar, true);
-
     }
 
     public function handleFilters($request, $query)
@@ -1439,8 +1638,6 @@ class WebinarController extends Controller
             }
         }
         return $live_webinar_status;
-
-
     }
 
     private static function progress($webinar)
@@ -1492,9 +1689,323 @@ class WebinarController extends Controller
             
         }
         
-        return apiResponse2(1, 'retrieved', 'Success', $webinarCommunityChat);
-        
+        return apiResponse2(1, 'retrieved', 'Success', $webinarCommunityChat);   
     }
 
+    public function courselike(Request $request,$id)
+    {
+        $user = auth('api')->user();
+        $userid = $user->id;
+
+        $webinar = Webinar::where('id', $id)->first();
+        
+        $like = DB::table('webinar_like')
+            ->where('webinar_id', $webinar->id)
+            ->where('user_id', $userid)
+            ->exists();
+
+        if ($like) {
+            DB::table('webinar_like')
+                ->where('webinar_id', $webinar->id)
+                ->where('user_id', $userid)
+                ->delete();
+            
+            Webinar::where('id', $id)->decrement('like_count');
+            //$webinar->decrement('like_count');
+            $action = 'unliked';
+        } else {
+            DB::table('webinar_like')->insert([
+                'user_id' => $userid,
+                'webinar_id' => $webinar->id
+            ]);
+            
+            Webinar::where('id', $id)->increment('like_count');
+            //$webinar->increment('like_count');
+            $action = 'liked';
+        }
+
+        return response()->json([
+            'status' => 'success',
+            'message' => "Webinar {$action} successfully",
+            'data' => [
+                'liked' => !$webinar,
+                'like_count' => $webinar->like_count
+            ]
+        ]);
+    }
+
+    public function courseshare(Request $request,$id)
+    {
+        $user = auth('api')->user();
+        $userid = $user->id;
+
+        $webinar = Webinar::where('id', $id)->first();
+
+        $now = time();
+
+        $share = $webinar->share()->create([
+            'user_id' => $userid,
+            'webinar_id' => $webinar->id,
+            'created_at' => $now,
+            'updated_at' => $now
+        ]);
+
+        Webinar::where('id', $id)->increment('share_count');
+        //$webinar->increment('share_count');
+        return response()->json([
+            'status' => 'success',
+            'message' => 'Webinar Shared successfully',
+            'data' => $share
+        ], 201);
+    }
+
+    public function coursegift(Request $request,$id)
+    {
+        $user = auth('api')->user();
+        $userid = $user->id;
+
+        $webinar = Webinar::where('id', $id)->first();
+        // print_r($webinar);exit;
+
+        $now = time();
+
+        $gift = $webinar->gift()->create([
+            'user_id' => $userid,
+            'webinar_id' => $webinar->id,
+            'gift_id' => $request->gift_id, 
+            'created_at' => $now,
+            'updated_at' => $now
+        ]);
+
+        Webinar::where('id', $id)->increment('gift_count');
+        //$webinar->increment('gift_count');
+        
+        return response()->json([
+            'status' => 'success',
+            'message' => 'Gift Send successfully',
+            'data' => $gift
+        ], 201);
+    }
+
+    public function coursesave(Request $request,$id)
+    {
+        $user = auth('api')->user();
+        $userid = $user->id;
+
+        $webinar = Webinar::where('id', $id)->first();
+
+        if (!$webinar) {
+            return response()->json([
+                'status' => 'error',
+                'message' => 'Course not found'
+            ], 404);
+        }
+
+        $now = time();
+
+        $save = DB::table('webinar_saved')
+            ->where('webinar_id', $webinar->id)
+            ->where('user_id', $userid)
+            ->exists();
+
+        if ($save) {
+            DB::table('webinar_saved')
+            ->where('webinar_id', $webinar->id)
+            ->where('user_id', $userid)
+            ->delete(); 
+
+            Webinar::where('id', $id)->decrement('saved_count');
+            $action = 'unsaved';
+        } else {
+            DB::table('webinar_saved')->insert([
+                'user_id' => $userid,
+                'webinar_id' => $webinar->id,
+                'created_at' => $now,
+                'updated_at' => $now
+            ]);
+            
+            Webinar::where('id', $id)->increment('saved_count');
+            $action = 'saved';
+        }
+        
+        return response()->json([
+            'status' => 'success',
+            'message' => "Webinar {$action} successfully",
+            'data' => [
+                'saved' => !$save,
+                'saved_count' => $webinar->saved_count
+            ]
+        ], 201);
+    }
+
+    public function coursecomment(Request $request,$id)
+    {
+        $user = auth('api')->user();
+        $userid = $user->id;
+        
+        $webinar = Webinar::where('id', $id)->first();
+        $now = time();
+        
+        $comment = $webinar->comments()->create([
+            'user_id' => $user->id,
+            'webinar_id' => $id,
+            'comment' => $request->input('content'),
+            'status' => 'active',
+            'created_at' => time()
+        ]);
+
+        $formattedComment = [
+            'status' => 'active',
+            'comment_user_type' => 'student',
+            'create_at' => now()->timestamp, // or $comment->created_at->timestamp
+            'comment' => $comment->comment,
+            'blog' => null,
+            'user' => [
+                'id' => $comment->user->id,
+                'full_name' => $comment->user->full_name,
+                'role_name' => 'user',
+                'bio' => $comment->user->bio,
+                'email' => $comment->user->email,
+                'mobile' => $comment->user->mobile,
+                'offline' => $comment->user->offline ?? 0,
+                'offline_message' => $comment->user->offline_message,
+                'verified' => $comment->user->verified ?? 0,
+                'rate' => $comment->user->rate ?? 0,
+                'avatar' => url($comment->user->getAvatar()),
+                'meeting_status' => $comment->user->meeting_status ?? 'no',
+                'user_group' => $comment->user->user_group,
+                'address' => $comment->user->address,
+                'status' => $comment->user->status ?? 'active'
+            ],
+            'webinar' => [
+                'image' => $comment->webinar->image,
+                'auth' => $comment->webinar->auth ?? false,
+                'can' => [
+                    'view' => $comment->webinar->can['view'] ?? true
+                ],
+                'can_view_error' => '',
+                'id' => $comment->webinar->id,
+                'status' => $comment->webinar->status,
+                'label' => $comment->webinar->label,
+                'title' => $comment->webinar->title,
+                'type' => $comment->webinar->type,
+                'link' => $comment->webinar->link,
+                'access_days' => $comment->webinar->access_days,
+                'live_webinar_status' => $comment->webinar->live_webinar_status,
+                'auth_has_bought' => $comment->webinar->auth_has_bought ?? false,
+                'sales' => [
+                    'count' => $comment->webinar->sales['count'] ?? 0,
+                    'amount' => $comment->webinar->sales['amount'] ?? '0'
+                ],
+                'sales_count_number' => $comment->webinar->sales_count_number ?? 0,
+                'is_favorite' => $comment->webinar->is_favorite ?? false,
+                'price_string' => $comment->webinar->price_string,
+                'best_ticket_string' => $comment->webinar->best_ticket_string,
+                'price' => $comment->webinar->price,
+                'tax' => $comment->webinar->tax ?? 0,
+                'tax_with_discount' => $comment->webinar->tax_with_discount ?? 0,
+                'best_ticket_price' => $comment->webinar->best_ticket_price,
+                'discount_percent' => $comment->webinar->discount_percent ?? 0,
+                'course_page_tax' => $comment->webinar->course_page_tax ?? 0,
+                'price_with_discount' => $comment->webinar->price_with_discount,
+                'discount_amount' => $comment->webinar->discount_amount ?? 0,
+                'active_special_offer' => $comment->webinar->active_special_offer,
+                'duration' => $comment->webinar->duration,
+                'teacher' => [
+                    'id' => $comment->webinar->teacher->id,
+                    'full_name' => $comment->webinar->teacher->full_name,
+                    'role_name' => $comment->webinar->teacher->role_name,
+                    'bio' => $comment->webinar->teacher->bio,
+                    'email' => $comment->webinar->teacher->email,
+                    'mobile' => $comment->webinar->teacher->mobile,
+                    'offline' => $comment->webinar->teacher->offline ?? 0,
+                    'offline_message' => $comment->webinar->teacher->offline_message,
+                    'verified' => $comment->webinar->teacher->verified ?? 0,
+                    'rate' => $comment->webinar->teacher->rate ?? 0,
+                    'avatar' => $comment->webinar->teacher->avatar,
+                    'meeting_status' => $comment->webinar->teacher->meeting_status ?? 'no',
+                    'user_group' => $comment->webinar->teacher->user_group,
+                    'address' => $comment->webinar->teacher->address,
+                    'status' => $comment->webinar->teacher->status ?? 'active'
+                ],
+                'students_count' => $comment->webinar->students_count ?? 0,
+                'rate' => $comment->webinar->rate ?? 0,
+                'rate_type' => [
+                    'content_quality' => $comment->webinar->rate_type['content_quality'] ?? 0,
+                    'instructor_skills' => $comment->webinar->rate_type['instructor_skills'] ?? 0,
+                    'purchase_worth' => $comment->webinar->rate_type['purchase_worth'] ?? 0,
+                    'support_quality' => $comment->webinar->rate_type['support_quality'] ?? 0
+                ],
+                'created_at' => $comment->webinar->created_at,
+                'start_date' => $comment->webinar->start_date,
+                'purchased_at' => $comment->webinar->purchased_at,
+                'reviews_count' => $comment->webinar->reviews_count ?? 0,
+                'points' => $comment->webinar->points,
+                'progress' => '',
+                'progress_percent' => '',
+                'category' => $comment->webinar->category,
+                'capacity' => $comment->webinar->capacity,
+                'isPrivate' => $comment->webinar->isPrivate ?? 0,
+                'forum' => $comment->webinar->forum ?? 1,
+                'badges' => $comment->webinar->badges ?? []
+            ],
+            'product' => null,
+            'replies' => []
+        ];
+
+
+        return response()->json([
+            'status' => 'success',
+            'message' => 'Comment added successfully',
+            'data' => $formattedComment
+        ], 201);
+    }
+
+    public function coursereview(Request $request,$id)
+    {
+        $user = auth('api')->user();
+        $userid = $user->id;
+
+        $now = time();
+
+        $webinar = Webinar::where('id', $id)->first();
+
+        $review = $webinar->reviews()->create([
+            'webinar_id' => $id,
+            'creator_id' => $user->id,
+            'content_quality' => 0,
+            'instructor_skills' => 0,
+            'purchase_worth' => 0,
+            'support_quality' => 0,
+            'rates' => $request->rating,
+            'description' => $request->review,
+            'created_at' => time(),
+            'status' => 'active',
+        ]);
+
+        return response()->json([
+            'status' => 'success',
+            'message' => 'Review added successfully',
+            'data' => [
+                'id' => $review->id,
+                'auth' => true, // or false based on your logic
+                'user' => [
+                    'full_name' => $user->full_name,
+                    'avatar' => $user->getAvatar() ? url($user->getAvatar()) : '',
+                ],
+                'created_at' => $review->created_at,
+                'description' => $review->description,
+                'rate' => (string) $review->rates, // Convert to string as in your example
+                'rate_type' => [
+                    'content_quality' => (int) $review->content_quality,
+                    'instructor_skills' => (int) $review->instructor_skills,
+                    'purchase_worth' => (int) $review->purchase_worth,
+                    'support_quality' => (int) $review->support_quality
+                ],
+                'replies' => [] // Empty array for replies
+            ]
+            // 'data' => $comment->load('user')
+        ], 201);
+    }
 
 }

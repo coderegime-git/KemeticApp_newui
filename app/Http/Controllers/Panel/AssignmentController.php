@@ -518,8 +518,11 @@ class AssignmentController extends Controller
             }
         }
 
-        return response()->json([
-            'code' => 200
-        ], 200);
+        $url = '/panel/webinars';
+        return redirect($url);
+
+        // return response()->json([
+        //     'code' => 200
+        // ], 200);
     }
 }

@@ -261,7 +261,4 @@
 <script>
     var saveSuccessLang = '{{ trans('webinars.success_store') }}';
 </script>
-
-<script src="/assets/default/js/panel/webinar.min.js"></script>
-<script src="/assets/default/js/panel/new_bundle.min.js"></script>
 @endpush

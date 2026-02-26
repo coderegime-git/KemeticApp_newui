@@ -251,6 +251,77 @@
     background:#1a1a1a;
 }
 
+.kemetic-select {
+    background: #1a1a1a !important;
+    border: 1px solid var(--kemetic-border) !important;
+    color: var(--kemetic-text) !important;
+    border-radius: var(--kemetic-radius) !important;
+    /* padding: 10px 14px !important; */
+    transition: 0.25s ease;
+}
+
+.kemetic-select:focus {
+    border-color: var(--kemetic-gold) !important;
+    box-shadow: 0 0 12px rgba(242, 201, 76, 0.35);
+}
+
+/* ===============================
+   SELECT2 – KEMETIC DARK THEME
+================================ */
+
+/* main box */
+.select2-container--default .select2-selection--single {
+    background: #0d0d0d !important;
+    border: 1px solid rgba(242,201,76,.35) !important;
+    border-radius: 14px !important;
+    height: 30px !important;
+    display: flex;
+    align-items: center;
+    color: #e0e0e0 !important;
+}
+
+/* text */
+.select2-container--default .select2-selection--single .select2-selection__rendered {
+    color: #e0e0e0 !important;
+    line-height: 30px !important;
+}
+
+/* arrow */
+.select2-container--default .select2-selection--single .select2-selection__arrow b {
+    border-color: #f2c94c transparent transparent transparent !important;
+}
+
+/* dropdown */
+.select2-dropdown {
+    background: #0f0f0f !important;
+    border: 1px solid rgba(242,201,76,.35) !important;
+    border-radius: 12px !important;
+}
+
+/* options */
+.select2-results__option {
+    color: #e0e0e0 !important;
+    padding: 10px 14px !important;
+}
+
+/* hover */
+.select2-results__option--highlighted {
+    background: rgba(242,201,76,.15) !important;
+    color: #fff !important;
+}
+
+/* selected */
+.select2-results__option[aria-selected=true] {
+    background: rgba(242,201,76,.25) !important;
+}
+
+/* search box */
+.select2-search--dropdown .select2-search__field {
+    background: #0d0d0d !important;
+    border: 1px solid rgba(242,201,76,.35) !important;
+    color: #fff !important;
+    border-radius: 8px !important;
+}
 </style>
 @push('styles_top')
     <link rel="stylesheet" href="/assets/default/vendors/daterangepicker/daterangepicker.min.css">
@@ -315,24 +386,35 @@
                         <div class="col-6">
                             <label class="kemetic-label">{{ trans('public.from') }}</label>
                             <div class="kemetic-input-group">
-                                <i data-feather="calendar"></i>
-                                <input type="text"
-                                    name="from"
-                                    autocomplete="off"
-                                    class="kemetic-input @if(request()->get('from')) datepicker @else datefilter @endif"
-                                    value="{{ request()->get('from','') }}">
+                                <input type="date"
+                                class="kemetic-input text-center"
+                                name="from"
+                                value="{{ request()->get('from') }}">
+                                <!-- <span class="input-group-text kemetic-icon bg-gold text-black">
+                                    <i data-feather="calendar" width="18" height="18"></i>
+                                </span> -->
+
+                                <!-- <input type="text" name="from" autocomplete="off"
+                                    class="form-control kemetic-input @if(request()->get('from')) datepicker @else datefilter @endif"
+                                    value="{{ request()->get('from','') }}"> -->
                             </div>
                         </div>
 
                         <div class="col-6">
                             <label class="kemetic-label">{{ trans('public.to') }}</label>
                             <div class="kemetic-input-group">
-                                <i data-feather="calendar"></i>
-                                <input type="text"
-                                    name="to"
-                                    autocomplete="off"
-                                    class="kemetic-input @if(request()->get('to')) datepicker @else datefilter @endif"
-                                    value="{{ request()->get('to','') }}">
+                                <input type="date"
+                                class="kemetic-input text-center"
+                                name="to"
+                                value="{{ request()->get('to') }}">
+
+                            <!-- <span class="input-group-text kemetic-icon bg-gold text-black">
+                                <i data-feather="calendar" width="18" height="18"></i>
+                            </span> -->
+                            
+                            <!-- <input type="text" name="to" autocomplete="off"
+                                   class="form-control kemetic-input @if(request()->get('to')) datepicker @else datefilter @endif"
+                                   value="{{ request()->get('to','') }}"> -->
                             </div>
                         </div>
                     </div>
@@ -345,7 +427,7 @@
                         <div class="col-12 col-lg-6">
                             <label class="kemetic-label">{{ trans('quiz.quiz_or_webinar') }}</label>
                              <div class="kemetic-input-group">
-                            <select name="quiz_id" class="kemetic-input select2" data-placeholder="{{ trans('public.all') }}">
+                            <select name="quiz_id" class="kemetic-select select2" data-placeholder="{{ trans('public.all') }}">
                                 <option value="all">{{ trans('public.all') }}</option>
                                 @foreach($allQuizzesLists as $allQuiz)
                                     <option value="{{ $allQuiz->id }}"
@@ -372,7 +454,7 @@
                                 <div class="col-6">
                                     <label class="kemetic-label">{{ trans('public.status') }}</label>
                                      <div class="kemetic-input-group">
-                                    <select name="status" class="kemetic-input">
+                                    <select name="status" class="kemetic-select">
                                         <option value="all">{{ trans('public.all') }}</option>
                                         <option value="active" @if(request()->get('status') == 'active') selected @endif>
                                             {{ trans('public.active') }}

@@ -1,5 +1,4 @@
 <?php
-
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -19,10 +18,7 @@ class GiftReel extends Model
         'created_at',
         'updated_at'
     ];
-
-    /**
-     * Get the reel gifts for the gift.
-     */
+    
     public function reelGifts()
     {
         return $this->hasMany(ReelGift::class);

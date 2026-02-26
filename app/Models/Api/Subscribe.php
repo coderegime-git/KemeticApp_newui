@@ -6,7 +6,6 @@ use App\Models\Subscribe as Model;
 
 class Subscribe extends Model
 {
-    //
     public function getDetailsAttribute(){
         return [
             'id'=>$this->id ,

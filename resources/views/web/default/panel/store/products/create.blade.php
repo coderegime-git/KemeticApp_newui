@@ -166,6 +166,6 @@
         var requestFailedLang = '{{ trans('public.request_failed') }}';
         var maxFourImageCanSelect = '{{ trans('update.max_four_image_can_select') }}';
     </script>
-
-    <script src="/assets/default/js/panel/new_product.min.js"></script>
+    
+   
 @endpush

@@ -1,28 +1,36 @@
 @extends('web.default.layouts.newapp')
 
+@push('styles_top')
 <style>
-    /* ======================================================
-   KEMETIC COURSE NOTES
-   Black • Gold • Learning Dashboard
-====================================================== */
-
+/* =========================
+   KEMETIC THEME VARIABLES
+========================= */
 :root {
     --k-bg: #0b0b0b;
     --k-card: #141414;
-    --k-border: rgba(242, 201, 76, 0.28);
-    --k-gold: #F2C94C;
-    --k-gold-soft: rgba(242, 201, 76, 0.18);
-    --k-text: #e8e8e8;
-    --k-muted: #9b9b9b;
-    --k-radius: 16px;
+    --k-gold: #d4af37;
+    --k-gold-soft: rgba(212,175,55,.25);
+    --k-border: rgba(212,175,55,.15);
+    --k-text: #f5f5f5;
+    --k-muted: #9a9a9a;
+    --k-radius: 18px;
+    --k-shadow: 0 12px 40px rgba(0,0,0,.65);
 }
 
-/* SECTION TITLE */
+/* =========================
+   PAGE
+========================= */
+.kemetic-page {
+    background: radial-gradient(circle at top, #1a1a1a, #000);
+    min-height: 100vh;
+    padding: 25px;
+    color: var(--k-text);
+}
+
 .section-title {
-    font-size: 18px;
-    font-weight: 700;
     color: var(--k-gold);
-    letter-spacing: 0.4px;
+    font-weight: 700;
+    letter-spacing: .6px;
     position: relative;
 }
 
@@ -35,59 +43,91 @@
     background: linear-gradient(to right, var(--k-gold), transparent);
 }
 
-/* CARD */
-.panel-section-card {
-    background: linear-gradient(180deg, #161616, #0f0f0f);
+/* =========================
+   TABLE CARD
+========================= */
+.kemetic-table-card {
+    background: linear-gradient(180deg, #121212, #0a0a0a);
     border: 1px solid var(--k-border);
     border-radius: var(--k-radius);
-    box-shadow: 0 18px 45px rgba(0, 0, 0, 0.75);
+    padding: 20px;
+    box-shadow: var(--k-shadow);
 }
 
-/* TABLE */
-.custom-table {
+/* =========================
+   TABLE
+========================= */
+.kemetic-table {
+    width: 100%;
     border-collapse: separate;
     border-spacing: 0 12px;
 }
 
-.custom-table thead th {
+.kemetic-table thead th {
+    background: transparent;
+    color: var(--k-gold);
     font-size: 13px;
     font-weight: 600;
-    color: var(--k-gold);
+    text-align: center;
     border: none;
+    padding: 15px;
 }
 
-.custom-table tbody tr {
-    background: #101010;
+.kemetic-table thead th.text-left {
+    text-align: left;
+}
+
+.kemetic-table tbody tr {
+    background: #0f0f0f;
+    border: 1px solid var(--k-border);
     border-radius: 14px;
-    transition: 0.3s ease;
+    transition: all 0.3s ease;
 }
 
-.custom-table tbody tr:hover {
+.kemetic-table tbody tr:hover {
     background: #151515;
-    box-shadow: 0 10px 28px rgba(242, 201, 76, 0.12);
+    box-shadow: 0 10px 28px rgba(212, 175, 55, 0.12);
 }
 
-.custom-table tbody td,
-.custom-table tbody th {
+.kemetic-table tbody td,
+.kemetic-table tbody th {
     border: none;
     padding: 16px 18px;
     vertical-align: middle;
     color: var(--k-text);
+    text-align: center;
 }
 
-/* COURSE NAME */
-.custom-table th span:first-child {
+.kemetic-table tbody td.text-left,
+.kemetic-table tbody th.text-left {
+    text-align: left;
+}
+
+/* =========================
+   COURSE NAME CELL
+========================= */
+.kemetic-title-cell .title {
+    color: #fff;
     font-weight: 600;
-    color: var(--k-text);
+    display: block;
 }
 
-.custom-table .text-gray {
+.kemetic-title-cell small {
+    color: var(--k-muted);
+    font-size: 12px;
+    display: block;
+    margin-top: 5px;
+}
+
+.kemetic-title-cell .text-gray {
     color: var(--k-muted) !important;
 }
 
-/* BUTTONS */
-.btn-gray200 {
-    background: rgba(242, 201, 76, 0.12);
+/* =========================
+   BUTTONS
+========================= */
+.btn-kemetic {
+    background: rgba(212, 175, 55, 0.12);
     border: 1px solid var(--k-border);
     color: var(--k-gold);
     border-radius: 10px;
@@ -97,64 +137,85 @@
     transition: 0.25s ease;
 }
 
-.btn-gray200:hover {
+.btn-kemetic:hover {
     background: var(--k-gold);
     color: #000;
 }
 
-/* DROPDOWN */
-.table-actions .dropdown-toggle {
-    color: var(--k-gold);
+/* =========================
+   DROPDOWN / ACTIONS
+========================= */
+.kemetic-actions {
+    position: relative;
 }
 
-.dropdown-menu {
-    background: #141414;
+.kemetic-actions > button {
+    background: none;
+    border: none;
+    color: var(--k-gold);
+    cursor: pointer;
+    padding: 5px 10px;
+}
+
+.kemetic-actions .dropdown-menu {
+    background: #0f0f0f;
     border: 1px solid var(--k-border);
     border-radius: 12px;
     padding: 6px;
+    min-width: 120px;
 }
 
-.dropdown-menu a {
+.kemetic-actions .dropdown-item {
     color: var(--k-text);
     font-size: 13px;
     padding: 8px 12px;
     border-radius: 8px;
+    transition: all 0.2s ease;
 }
 
-.dropdown-menu a:hover {
-    background: var(--k-gold-soft);
+.kemetic-actions .dropdown-item:hover {
+    background: rgba(212, 175, 55, 0.12);
     color: var(--k-gold);
 }
 
-/* DATE */
-.custom-table td.align-middle {
-    font-size: 13px;
+.kemetic-actions .dropdown-item.text-danger {
+    color: #e74c3c !important;
 }
 
-/* NO RESULT */
-.no-result {
-    background: #101010;
+.kemetic-actions .dropdown-item.text-danger:hover {
+    background: rgba(231, 76, 60, 0.15);
+    color: #ff6b6b !important;
+}
+
+/* =========================
+   NO RESULT
+========================= */
+.kemetic-no-result {
+    background: #0f0f0f;
     border: 1px dashed var(--k-border);
     border-radius: 18px;
     padding: 50px 20px;
+    text-align: center;
 }
 
-.no-result h2 {
+.kemetic-no-result h2 {
     color: var(--k-gold);
     font-size: 20px;
     margin-top: 15px;
 }
 
-.no-result p {
+.kemetic-no-result p {
     color: var(--k-muted);
     font-size: 14px;
 }
 
-/* PAGINATION */
+/* =========================
+   PAGINATION
+========================= */
 .pagination .page-link {
-    background: #141414;
-    border: 1px solid #2a2a2a;
-    color: var(--k-text);
+    background: #111;
+    color: var(--k-gold);
+    border: 1px solid var(--k-border);
 }
 
 .pagination .page-item.active .page-link {
@@ -163,122 +224,157 @@
     color: #000;
 }
 
-/* RESPONSIVE */
+.pagination .page-item.disabled .page-link {
+    background: #1a1a1a;
+    color: var(--k-muted);
+    border-color: #2a2a2a;
+}
+
+/* =========================
+   DATE
+========================= */
+.kemetic-date {
+    font-size: 13px;
+    color: var(--k-text);
+}
+
+/* =========================
+   ATTACHMENT LINK
+========================= */
+.kemetic-attachment {
+    color: var(--k-gold);
+    text-decoration: none;
+    font-weight: 500;
+}
+
+.kemetic-attachment:hover {
+    text-decoration: underline;
+    color: #ffd700;
+}
+
+/* =========================
+   RESPONSIVE
+========================= */
 @media (max-width: 768px) {
-    .custom-table thead {
+    .kemetic-table thead {
         display: none;
     }
 
-    .custom-table tbody tr {
+    .kemetic-table tbody tr {
         display: block;
         margin-bottom: 15px;
     }
 
-    .custom-table tbody td,
-    .custom-table tbody th {
+    .kemetic-table tbody td,
+    .kemetic-table tbody th {
         display: block;
         text-align: left;
+        padding: 12px;
+    }
+
+    .kemetic-table tbody td:before {
+        content: attr(data-label);
+        float: left;
+        font-weight: bold;
+        color: var(--k-gold);
+        margin-right: 10px;
     }
 }
-
 </style>
+@endpush
 
 @section('content')
-
+<div class="kemetic-page">
     <section>
         <div class="d-flex align-items-center justify-content-between">
             <h2 class="section-title">{{ trans('update.course_notes') }}</h2>
         </div>
 
         @if(!empty($personalNotes) and !$personalNotes->isEmpty())
+            <div class="kemetic-table-card mt-25">
+                <div class="table-responsive">
+                    <table class="kemetic-table">
+                        <thead>
+                            <tr>
+                                <th class="text-left">{{ trans('product.course') }}</th>
+                                <th class="text-left">{{ trans('public.file') }}</th>
+                                <th>{{ trans('update.note') }}</th>
 
-            <div class="panel-section-card py-20 px-25 mt-20">
-                <div class="row">
-                    <div class="col-12 ">
-                        <div class="table-responsive">
-                            <table class="table custom-table text-center ">
-                                <thead>
+                                @if(!empty(getFeaturesSettings('course_notes_attachment')))
+                                    <th>{{ trans('update.attachment') }}</th>
+                                @endif
+
+                                <th>{{ trans('public.date') }}</th>
+                                <th></th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach($personalNotes as $personalNote)
+                                @php
+                                    $item = $personalNote->getItem();
+                                @endphp
+
                                 <tr>
-                                    <th class="text-left">{{ trans('product.course') }}</th>
-                                    <th class="text-left">{{ trans('public.file') }}</th>
-                                    <th class="text-center">{{ trans('update.note') }}</th>
+                                    <td class="text-left kemetic-title-cell">
+                                        <span class="title">{{ $personalNote->course->title }}</span>
+                                        <small>{{ trans('public.by') }} {{ $personalNote->course->teacher->full_name }}</small>
+                                    </td>
+
+                                    <td class="text-left kemetic-title-cell">
+                                        @if(!empty($item))
+                                            <span class="title">{{ $item->title }}</span>
+                                            @if(!empty($item->chapter))
+                                                <small>{{ trans('public.chapter') }}: {{ $item->chapter->title }}</small>
+                                            @else
+                                                <small>-</small>
+                                            @endif
+                                        @else
+                                            <span>-</span>
+                                        @endif
+                                    </td>
+
+                                    <td>
+                                        <input type="hidden" value="{{ $personalNote->note }}">
+                                        <button type="button" class="js-show-note btn-kemetic">{{ trans('public.view') }}</button>
+                                    </td>
 
                                     @if(!empty(getFeaturesSettings('course_notes_attachment')))
-                                        <th class="text-center">{{ trans('update.attachment') }}</th>
-                                    @endif
-
-                                    <th class="text-center">{{ trans('public.date') }}</th>
-                                    <th></th>
-                                </tr>
-                                </thead>
-                                <tbody>
-
-                                @foreach($personalNotes as $personalNote)
-                                    @php
-                                        $item = $personalNote->getItem();
-                                    @endphp
-
-                                    <tr>
-                                        <th class="text-left">
-                                            <span class="d-block">{{ $personalNote->course->title }}</span>
-                                            <span class="d-block font-12 text-gray mt-5">{{ trans('public.by') }} {{ $personalNote->course->teacher->full_name }}</span>
-                                        </th>
-
-                                        <th class="text-left">
-                                            @if(!empty($item))
-                                                <span class="d-block">{{ $item->title }}</span>
-
-                                                @if(!empty($item->chapter))
-                                                    <span class="d-block font-12 text-gray mt-5">{{ trans('public.chapter') }}: {{ $item->chapter->title }}</span>
-                                                @else
-                                                    -
-                                                @endif
+                                        <td>
+                                            @if(!empty($personalNote->attachment))
+                                                <a href="/course/personal-notes/{{ $personalNote->id }}/download-attachment" class="kemetic-attachment">
+                                                    {{ trans('home.download') }}
+                                                </a>
                                             @else
                                                 -
                                             @endif
-                                        </th>
-
-                                        <td class=" text-center">
-                                            <input type="hidden" value="{{ $personalNote->note }}">
-                                            <button type="button" class="js-show-note btn btn-sm btn-gray200">{{ trans('public.view') }}</button>
                                         </td>
+                                    @endif
 
-                                        @if(!empty(getFeaturesSettings('course_notes_attachment')))
-                                            <td class="align-middle">
-                                                @if(!empty($personalNote->attachment))
-                                                    <a href="/course/personal-notes/{{ $personalNote->id }}/download-attachment" class="btn btn-sm btn-gray200">{{ trans('home.download') }}</a>
-                                                @else
-                                                    -
-                                                @endif
-                                            </td>
-                                        @endif
+                                    <td class="kemetic-date">{{ dateTimeFormat($personalNote->created_at,'j M Y | H:i') }}</td>
 
-                                        <td class="align-middle">{{ dateTimeFormat($personalNote->created_at,'j M Y | H:i') }}</td>
-
-                                        <td class="align-middle text-right">
-
-                                            <div class="btn-group dropdown table-actions">
-                                                <button type="button" class="btn-transparent dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
-                                                    <i data-feather="more-vertical" height="20"></i>
-                                                </button>
-                                                <div class="dropdown-menu">
-
-                                                    <a href="{{ "{$personalNote->course->getLearningPageUrl()}?type={$personalNote->getItemType()}&item={$personalNote->targetable_id}" }}" target="_blank" class="d-block text-left btn btn-sm btn-transparent">{{ trans('public.view') }}</a>
-
-                                                    <a href="/panel/webinars/personal-notes/{{ $personalNote->id }}/delete" class="delete-action d-block text-left btn btn-sm btn-transparent">{{ trans('public.delete') }}</a>
-                                                </div>
+                                    <td>
+                                        <div class="dropdown kemetic-actions">
+                                            <button data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                                                <i data-feather="more-vertical" height="20"></i>
+                                            </button>
+                                            <div class="dropdown-menu">
+                                                <a href="{{ "{$personalNote->course->getLearningPageUrl()}?type={$personalNote->getItemType()}&item={$personalNote->targetable_id}" }}" target="_blank" class="dropdown-item">
+                                                    {{ trans('public.view') }}
+                                                </a>
+                                                <a href="/panel/webinars/personal-notes/{{ $personalNote->id }}/delete" class="dropdown-item text-danger delete-action">
+                                                    {{ trans('public.delete') }}
+                                                </a>
                                             </div>
-                                        </td>
-                                    </tr>
-                                @endforeach
-                                </tbody>
-                            </table>
-                        </div>
-                    </div>
+                                        </div>
+                                    </td>
+                                </tr>
+                            @endforeach
+                        </tbody>
+                    </table>
                 </div>
             </div>
         @else
-            <div class="no-result my-50 d-flex align-items-center justify-content-center flex-column">
+            <div class="kemetic-no-result mt-25">
                 <div class="no-result-logo">
                     <img src="/assets/default/img/no-results/personal_note.png" alt="{{ trans('update.no_notes') }}">
                 </div>
@@ -288,18 +384,17 @@
                 </div>
             </div>
         @endif
-
     </section>
 
     <div class="my-30">
         {{ $personalNotes->appends(request()->input())->links('vendor.pagination.panel') }}
     </div>
+</div>
 @endsection
 
 @push('scripts_bottom')
     <script>
         var noteLang = '{{ trans('update.note') }}';
     </script>
-
     <script src="/assets/default/js/panel/personal_note.min.js"></script>
 @endpush
