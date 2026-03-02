@@ -448,40 +448,149 @@ class Product extends Model implements TranslatableContract
 
         return $hasBought;
     }
-    
-    public static function getTrendingProducts($limit = 3)
-    {
-       $thirtyDaysAgo = now()->subDays(30)->timestamp;
 
-        return self::where('status', self::$active)
+    public static function getTrendingProducts($limit = 3, $user = null)
+    {
+        $query = self::where('products.status', self::$active)
             ->where('ordering', true)
-            ->with(['media', 'category'])
-            ->select('products.*')
-            ->selectRaw('
-                (SELECT COUNT(*) FROM product_orders 
-                WHERE product_orders.product_id = products.id 
-                AND EXISTS (
-                    SELECT 1 FROM sales 
-                    WHERE sales.id = product_orders.sale_id 
-                    AND sales.refund_at IS NULL
-                    AND product_orders.created_at >= ?
-                )) as recent_sales_count
-            ', [$thirtyDaysAgo])
-            ->selectRaw('
-                (SELECT COUNT(*) FROM product_like 
-                WHERE product_like.product_id = products.id
-                ) as likes_count
-            ')
-            ->selectRaw('
-                (SELECT COUNT(*) FROM product_reviews 
-             WHERE product_reviews.product_id = products.id 
-             AND status = "active"
-             ) as reviews_count
-        ')
-        ->orderBy('recent_sales_count', 'desc')
-        ->orderBy('likes_count', 'desc')
-        ->orderBy('reviews_count', 'desc')
-        ->limit($limit)
-        ->get();
+            ->with(['media', 'category', 'creator:id,full_name,avatar']);
+
+        // Check if user is Wisdom Keeper
+        $isWisdomKeeper = $user && $user->role->caption === 'Wisdom Keeper';
+
+        if ($isWisdomKeeper) {
+            // Get all Wisdom Keeper user IDs for filtering
+            $wisdomKeeperIds = User::whereHas('role', function($q) {
+                $q->where('caption', 'Wisdom Keeper');
+            })->pluck('id')->toArray();
+
+            // Wisdom Keeper logic: show only Wisdom Keeper created products, sorted by highest reviews first
+            return $query->whereIn('products.creator_id', $wisdomKeeperIds)
+                ->leftJoin('product_reviews', 'products.id', '=', 'product_reviews.product_id')
+                ->leftJoin('product_like', 'products.id', '=', 'product_like.product_id')
+                ->select('products.*',
+                    DB::raw('COUNT(DISTINCT product_like.id) as likes_count'),
+                    DB::raw('AVG(product_reviews.rates) as avg_rating'),
+                    DB::raw('COUNT(DISTINCT product_reviews.id) as review_count')
+                )
+                ->groupBy('products.id')
+                ->orderByRaw('
+                    -- First priority: items with reviews (non-NULL ratings)
+                    CASE 
+                        WHEN AVG(product_reviews.rates) IS NOT NULL THEN 0
+                        ELSE 1 
+                    END,
+                    -- Then order by highest rating
+                    AVG(product_reviews.rates) DESC,
+                    -- Then by number of reviews
+                    COUNT(DISTINCT product_reviews.id) DESC,
+                    -- Then by likes
+                    COUNT(DISTINCT product_like.id) DESC,
+                    -- Finally by updated date
+                    products.updated_at DESC
+                ')
+                ->limit($limit)
+                ->get()
+                ->map(function ($product) {
+                    $product->image = url($product->getImage());
+                    return $product;
+                });
+        } else {
+            // Guest/normal user logic: prioritize by engagement metrics (sales, likes, reviews)
+            $thirtyDaysAgo = now()->subDays(30)->timestamp;
+
+            return $query->select('products.*')
+                ->selectRaw('
+                    (SELECT COUNT(*) FROM product_orders 
+                    WHERE product_orders.product_id = products.id 
+                    AND EXISTS (
+                        SELECT 1 FROM sales 
+                        WHERE sales.id = product_orders.sale_id 
+                        AND sales.refund_at IS NULL
+                        AND product_orders.created_at >= ?
+                    )) as recent_sales_count
+                ', [$thirtyDaysAgo])
+                ->selectRaw('
+                    (SELECT COUNT(*) FROM product_like 
+                    WHERE product_like.product_id = products.id
+                    ) as likes_count
+                ')
+                ->selectRaw('
+                    (SELECT COUNT(*) FROM product_reviews 
+                    WHERE product_reviews.product_id = products.id 
+                    AND status = "active"
+                    ) as reviews_count
+                ')
+                ->selectRaw('
+                    (SELECT COALESCE(AVG(rates), 0) FROM product_reviews 
+                    WHERE product_reviews.product_id = products.id 
+                    AND status = "active"
+                    ) as avg_rating
+                ')
+                ->orderByRaw('
+                    -- First by average rating
+                    (SELECT COALESCE(AVG(rates), 0) FROM product_reviews 
+                    WHERE product_reviews.product_id = products.id 
+                    AND status = "active") DESC,
+                    -- Then by engagement score
+                    ((SELECT COUNT(*) FROM product_orders 
+                        WHERE product_orders.product_id = products.id 
+                        AND EXISTS (
+                            SELECT 1 FROM sales 
+                            WHERE sales.id = product_orders.sale_id 
+                            AND sales.refund_at IS NULL
+                            AND product_orders.created_at >= ?
+                        )) * 0.4 +
+                    (SELECT COUNT(*) FROM product_like 
+                        WHERE product_like.product_id = products.id) * 0.3 +
+                    (SELECT COUNT(*) FROM product_reviews 
+                        WHERE product_reviews.product_id = products.id 
+                        AND status = "active") * 0.3) DESC,
+                    -- Finally by updated date
+                    products.updated_at DESC
+                ', [$thirtyDaysAgo])
+                ->limit($limit)
+                ->get()
+                ->map(function ($product) {
+                    $product->image = url($product->getImage());
+                    return $product;
+                });
+        }
     }
+    
+    // public static function getTrendingProducts($limit = 3)
+    // {
+    //    $thirtyDaysAgo = now()->subDays(30)->timestamp;
+
+    //     return self::where('status', self::$active)
+    //         ->where('ordering', true)
+    //         ->with(['media', 'category'])
+    //         ->select('products.*')
+    //         ->selectRaw('
+    //             (SELECT COUNT(*) FROM product_orders 
+    //             WHERE product_orders.product_id = products.id 
+    //             AND EXISTS (
+    //                 SELECT 1 FROM sales 
+    //                 WHERE sales.id = product_orders.sale_id 
+    //                 AND sales.refund_at IS NULL
+    //                 AND product_orders.created_at >= ?
+    //             )) as recent_sales_count
+    //         ', [$thirtyDaysAgo])
+    //         ->selectRaw('
+    //             (SELECT COUNT(*) FROM product_like 
+    //             WHERE product_like.product_id = products.id
+    //             ) as likes_count
+    //         ')
+    //         ->selectRaw('
+    //             (SELECT COUNT(*) FROM product_reviews 
+    //          WHERE product_reviews.product_id = products.id 
+    //          AND status = "active"
+    //          ) as reviews_count
+    //     ')
+    //     ->orderBy('recent_sales_count', 'desc')
+    //     ->orderBy('likes_count', 'desc')
+    //     ->orderBy('reviews_count', 'desc')
+    //     ->limit($limit)
+    //     ->get();
+    // }
 }

@@ -67,7 +67,7 @@ class ProductController extends Controller
         $pageTitle = $seoSettings['title'] ?? '';
         $pageDescription = $seoSettings['description'] ?? '';
         $pageRobot = getPageRobot('products_lists');
-        $trendingProducts = Product::getTrendingProducts(3);
+        $trendingProducts = Product::getTrendingProducts(3, $user);
         
 
         $data = [

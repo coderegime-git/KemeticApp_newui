@@ -54,14 +54,25 @@
 
         <div class="book-hero-meta">
           <div class="book-chakra-stars">
+            @php
+                $rate = $popularBook->getRate();
+                $i = 5;
+              @endphp
+              @while(--$i >= 5 - $rate)
+                ★
+              @endwhile
+              @while($i-- >= 0)
+                ☆
+              @endwhile
+            <!-- <span class="book-star"></span>
             <span class="book-star"></span>
             <span class="book-star"></span>
             <span class="book-star"></span>
-            <span class="book-star"></span>
-            <span class="book-star"></span>
+            <span class="book-star"></span> -->
           </div>
           <span class="book-hero-rating-count">
-            {{ $popularBook->likes_count + $popularBook->comments_count + $popularBook->saved_items_count }}+ global engagements
+            {{$popularBook->reviews->count()}} + 
+            <!-- global engagements -->
           </span>
         </div>
 
@@ -140,13 +151,13 @@
         <article class="book-book-card">
           <div class="book-book-cover">
             <img src="{{ $book->getImage() ?? 'https://images.unsplash.com/photo-1543002588-bfa74002ed7e?w=800' }}" alt="{{ $book->title }}">
-            @if($book->id === optional($popularBook)->id)
+            <!-- @if($book->id === optional($popularBook)->id)
               <span class="book-badge-tag">Global #1</span>
             @elseif($book->likes_count > 100)
               <span class="book-badge-tag">Bestseller</span>
             @else
               <span class="book-badge-tag">New</span>
-            @endif
+            @endif -->
           </div>
           <div class="book-book-title">{{ Str::limit($book->title, 13, '..') }}</div>
           <div class="book-book-category">
@@ -158,9 +169,18 @@
           </div>
           <div class="book-book-rating-row">
             <div class="book-chakra-stars-small">
-              <span></span><span></span><span></span><span></span><span></span>
+              @php
+                $rate = $book->getRate();
+                $i = 5;
+              @endphp
+              @while(--$i >= 5 - $rate)
+                ★
+              @endwhile
+              @while($i-- >= 0)
+                ☆
+              @endwhile
             </div>
-            <span>{{ $book->likes_count + $book->comments_count }} ratings</span>
+            <span>{{$book->reviews->count()}} ratings</span>
           </div>
           <div class="book-book-footer">
             <a href="{{ $book->getUrl() }}">

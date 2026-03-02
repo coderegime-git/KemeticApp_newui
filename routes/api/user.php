@@ -140,7 +140,7 @@ Route::group([], function () {
     Route::group(['prefix' => '/cart'], function () {
         // Route::get('list', ['uses' => 'CartController@index']);
         Route::post('list', ['uses' => 'CartController@index']);
-        
+        Route::get('count', ['uses' => 'CartController@cartcount']);
         Route::delete('{id}', ['uses' => 'CartController@destroy']);
         //Route::post('{id}', ['uses' => 'CartController@destroy']);
         // Route::post('coupon/validate', ['uses' => 'CartController@validateCoupon']); 

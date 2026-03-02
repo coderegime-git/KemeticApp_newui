@@ -9,6 +9,7 @@ use App\Models\ReelComment;
 use App\Models\ReelReport;
 use App\Models\ReelCategory;
 use App\Jobs\ProcessReelVideo;
+use App\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
@@ -39,6 +40,15 @@ class ReelController extends Controller
         //     // You can log the error or re-throw it
         //     throw $e;
         // }
+
+        $user = null;
+
+        $activeSubscribe = "";
+
+        if (auth()->check()) {
+            $user = auth()->user();
+        }
+
         $reels = Reel::with([
                 'user',
                 'likes' => function($query) {
@@ -54,21 +64,102 @@ class ReelController extends Controller
             ->latest()
             ->paginate(5);
 
-        $heroreels = Reel::with([
-            'user',
-            'likes' => function($query) {
-                $query->where('user_id', Auth::id());
-            },
-            'comments.user'
-        ])
-        ->where(function($query) {
-            $query->where('reports_count', '<', 15)
-                  ->orWhereNull('reports_count');
-        })
-        ->where('is_hidden', false)
-        ->where('created_at', '>=', now()->subDays(30))
-        ->orderByRaw('(likes_count * 0.4) + (comments_count * 0.3) + (views_count * 0.3) DESC')
-        ->first();
+        // $heroreels = Reel::with([
+        //     'user',
+        //     'likes' => function($query) {
+        //         $query->where('user_id', Auth::id());
+        //     },
+        //     'comments.user'
+        // ])
+        // ->where(function($query) {
+        //     $query->where('reports_count', '<', 15)
+        //           ->orWhereNull('reports_count');
+        // })
+        // ->where('is_hidden', false)
+        // ->where('created_at', '>=', now()->subDays(30))
+        // ->orderByRaw('(likes_count * 0.4) + (comments_count * 0.3) + (views_count * 0.3) DESC')
+        // ->first();
+
+        $isWisdomKeeper = $user && $user->role->caption === 'Wisdom Keeper';
+        $wisdomKeeperIds = [];
+        if ($isWisdomKeeper) {
+            $wisdomKeeperIds = User::whereHas('role', function($q) {
+                $q->where('caption', 'Wisdom Keeper');
+            })->pluck('id')->toArray();
+        }  
+
+        if ($isWisdomKeeper) {
+            // Wisdom Keeper logic for hero reel
+            $heroreels = Reel::with([
+                'user',
+                'likes' => function($query) {
+                    $query->where('user_id', Auth::id());
+                },
+                'comments.user'
+            ])
+            ->where(function($query) {
+                $query->where('reports_count', '<', 15)
+                    ->orWhereNull('reports_count');
+            })
+            ->where('reels.created_at', '>=', now()->subDays(30)) // Keep the 30-day restriction
+            ->whereIn('reels.user_id', $wisdomKeeperIds)
+            ->leftJoin('reel_review', 'reels.id', '=', 'reel_review.reel_id')
+            ->leftJoin('reel_likes', 'reels.id', '=', 'reel_likes.reel_id')
+            ->select('reels.*',
+                DB::raw('COUNT(DISTINCT reel_likes.id) as total_likes'),
+                DB::raw('AVG(reel_review.rating) as avg_rating'),
+                DB::raw('COUNT(DISTINCT reel_review.id) as review_count')
+            )
+            ->groupBy('reels.id')
+            ->orderByRaw('
+                CASE 
+                    WHEN AVG(reel_review.rating) IS NOT NULL THEN 0
+                    ELSE 1 
+                END,
+                AVG(reel_review.rating) DESC,
+                COUNT(DISTINCT reel_review.id) DESC,
+                COUNT(DISTINCT reel_likes.id) DESC,
+                reels.views_count DESC
+            ')
+            ->first();
+        } else {
+            // Guest/normal user logic for hero reel
+            $heroreels = Reel::with([
+                'user',
+                'likes' => function($query) {
+                    $query->where('user_id', Auth::id());
+                },
+                'comments.user'
+            ])
+            ->where(function($query) {
+                $query->where('reports_count', '<', 15)
+                    ->orWhereNull('reports_count');
+            })
+            ->where('reels.created_at', '>=', now()->subDays(30)) // Keep the 30-day restriction
+            ->select('reels.*')
+            ->selectRaw('
+                (SELECT COUNT(*) FROM reel_likes 
+                WHERE reel_likes.reel_id = reels.id) as total_likes
+            ')
+            ->selectRaw('
+                (SELECT COUNT(*) FROM reel_comments 
+                WHERE reel_comments.reel_id = reels.id) as total_comments
+            ')
+            ->selectRaw('
+                (SELECT COALESCE(AVG(rating), 0) FROM reel_review 
+                WHERE reel_review.reel_id = reels.id) as avg_rating
+            ')
+            ->orderByRaw('
+                (SELECT COALESCE(AVG(rating), 0) FROM reel_review 
+                WHERE reel_review.reel_id = reels.id) DESC,
+                ((SELECT COUNT(*) FROM reel_likes 
+                    WHERE reel_likes.reel_id = reels.id) * 0.4 +
+                (SELECT COUNT(*) FROM reel_comments 
+                    WHERE reel_comments.reel_id = reels.id) * 0.3 +
+                reels.views_count * 0.3) DESC
+            ')
+            ->first();
+        }
 
         $categories=ReelCategory::all()->map(function($category){
             return $category->details ;

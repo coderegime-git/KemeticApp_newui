@@ -231,8 +231,25 @@ class HomeController extends Controller
     }
     public function index()
     { 
+        $user = null;
+
+        $activeSubscribe = "";
+
+        if (auth()->check()) {
+            $user = auth()->user();
+        }
+
         $homeSections = HomeSection::orderBy('order', 'asc')->get();
         $selectedSectionsName = $homeSections->pluck('name')->toArray();
+
+        $isWisdomKeeper = $user && $user->role->caption === 'Wisdom Keeper';
+
+        $wisdomKeeperIds = [];
+        if ($isWisdomKeeper) {
+            $wisdomKeeperIds = User::whereHas('role', function($q) {
+                $q->where('caption', 'Wisdom Keeper');
+            })->pluck('id')->toArray();
+        }
 
         $featureWebinars = null;
         if (in_array(HomeSection::$featured_classes, $selectedSectionsName)) {
@@ -261,21 +278,97 @@ class HomeController extends Controller
         }
 
         if (in_array(HomeSection::$latest_classes, $selectedSectionsName)) {
-            $latestWebinars = Webinar::where('status', Webinar::$active)
+            
+            $courseQuery = Webinar::where('webinars.status', Webinar::$active)
                 ->where('private', false)
-                ->orderBy('updated_at', 'desc')
-                ->with([
-                    'teacher' => function ($qu) {
-                        $qu->select('id', 'full_name', 'avatar');
-                    },
-                    'reviews' => function ($query) {
-                        $query->where('status', 'active');
-                    },
-                    'tickets',
-                    'feature'
-                ])
-                ->limit(6)
-                ->get();
+                ->with(['teacher:id,full_name,avatar', 'reviews' => fn($q) => $q->where('webinar_reviews.status', 'active'), 'tickets', 'feature']);
+
+            if ($isWisdomKeeper) {
+                // Wisdom Keeper logic: show only Wisdom Keeper created content, sorted by highest reviews first
+                // Items with NULL ratings (no reviews) will appear after items with ratings
+                $latestWebinars = $courseQuery
+                    ->whereIn('webinars.teacher_id', $wisdomKeeperIds)
+                    ->leftJoin('webinar_reviews', 'webinars.id', '=', 'webinar_reviews.webinar_id')
+                    ->leftJoin('webinar_like', 'webinars.id', '=', 'webinar_like.webinar_id')
+                    ->select('webinars.*', 
+                        DB::raw('COUNT(DISTINCT webinar_like.id) as likes_count'),
+                        DB::raw('AVG(webinar_reviews.rates) as avg_rating'),
+                        DB::raw('COUNT(DISTINCT webinar_reviews.id) as review_count')
+                    )
+                    ->groupBy('webinars.id')
+                    ->orderByRaw('
+                        -- First priority: items with reviews (non-NULL ratings)
+                        CASE 
+                            WHEN AVG(webinar_reviews.rates) IS NOT NULL THEN 0
+                            ELSE 1 
+                        END,
+                        -- Then order by highest rating (NULLs will be last automatically in MySQL)
+                        AVG(webinar_reviews.rates) DESC,
+                        -- Then by number of reviews
+                        COUNT(DISTINCT webinar_reviews.id) DESC,
+                        -- Then by likes
+                        COUNT(DISTINCT webinar_like.id) DESC,
+                        -- Finally by updated date
+                        webinars.updated_at DESC
+                    ')
+                    ->limit(6)
+                    ->get()
+                    ->map(function ($course) {
+                        $course->thumbnail = !empty($course->thumbnail) ? url($course->thumbnail) : null;
+                        $course->image_cover = !empty($course->image_cover) ? url($course->image_cover) : null;
+                        
+                        if ($course->teacher && !empty($course->teacher->avatar)) {
+                            $course->teacher->avatar = url($course->teacher->avatar);
+                        }
+                        
+                        return $course;
+                    });
+            } else {
+                // Guest/normal user logic: prioritize by engagement metrics
+                $latestWebinars = $courseQuery
+                    ->leftJoin('webinar_reviews', 'webinars.id', '=', 'webinar_reviews.webinar_id')
+                    ->leftJoin('sales', 'webinars.id', '=', 'sales.webinar_id')
+                    ->select('webinars.*',
+                        DB::raw('COUNT(DISTINCT sales.id) as sales_count'),
+                        DB::raw('COALESCE(AVG(webinar_reviews.rates), 0) as avg_rating'),
+                        DB::raw('COUNT(DISTINCT webinar_reviews.id) as review_count')
+                    )
+                    ->groupBy('webinars.id')
+                    ->orderByRaw('
+                        COALESCE(AVG(webinar_reviews.rates), 0) DESC,
+                        (COUNT(DISTINCT sales.id) * 0.4 + 
+                        COUNT(DISTINCT webinar_reviews.id) * 0.3) DESC,
+                        webinars.updated_at DESC
+                    ')
+                    ->limit(6)
+                    ->get()
+                    ->map(function ($course) {
+                        $course->thumbnail = !empty($course->thumbnail) ? url($course->thumbnail) : null;
+                        $course->image_cover = !empty($course->image_cover) ? url($course->image_cover) : null;
+                        
+                        if ($course->teacher && !empty($course->teacher->avatar)) {
+                            $course->teacher->avatar = url($course->teacher->avatar);
+                        }
+                        
+                        return $course;
+                    });
+            }
+            
+            // $latestWebinars = Webinar::where('status', Webinar::$active)
+            //     ->where('private', false)
+            //     ->orderBy('updated_at', 'desc')
+            //     ->with([
+            //         'teacher' => function ($qu) {
+            //             $qu->select('id', 'full_name', 'avatar');
+            //         },
+            //         'reviews' => function ($query) {
+            //             $query->where('status', 'active');
+            //         },
+            //         'tickets',
+            //         'feature'
+            //     ])
+            //     ->limit(6)
+            //     ->get();
 
             //$selectedWebinarIds = array_merge($selectedWebinarIds, $latestWebinars->pluck('id')->toArray());
         }
@@ -420,15 +513,81 @@ class HomeController extends Controller
         }
 
         if (in_array(HomeSection::$store_products, $selectedSectionsName)) {
-            $newProducts = Product::where('status', Product::$active)
-                ->orderBy('updated_at', 'desc')
-                ->with([
-                    'creator' => function ($qu) {
-                        $qu->select('id', 'full_name', 'avatar');
-                    },
-                ])
-                ->limit(6)
-                ->get();
+
+            $productQuery = Product::where('products.status', Product::$active)
+                ->with(['creator:id,full_name,avatar']);
+            if ($isWisdomKeeper) {
+                // Wisdom Keeper logic for products - only Wisdom Keeper products, sorted by highest reviews
+                $newProducts = $productQuery
+                    ->whereIn('products.creator_id', $wisdomKeeperIds)
+                    ->leftJoin('product_reviews', 'products.id', '=', 'product_reviews.product_id')
+                    ->leftJoin('product_like', 'products.id', '=', 'product_like.product_id')
+                    ->select('products.*',
+                        DB::raw('COUNT(DISTINCT product_like.id) as likes_count'),
+                        DB::raw('AVG(product_reviews.rates) as avg_rating'),
+                        DB::raw('COUNT(DISTINCT product_reviews.id) as review_count')
+                    )
+                    ->groupBy('products.id')
+                    ->orderByRaw('
+                        -- First priority: items with reviews (non-NULL ratings)
+                        CASE 
+                            WHEN AVG(product_reviews.rates) IS NOT NULL THEN 0
+                            ELSE 1 
+                        END,
+                        -- Then order by highest rating
+                        AVG(product_reviews.rates) DESC,
+                        -- Then by number of reviews
+                        COUNT(DISTINCT product_reviews.id) DESC,
+                        -- Then by likes
+                        COUNT(DISTINCT product_like.id) DESC,
+                        -- Finally by updated date
+                        products.updated_at DESC
+                    ')
+                    ->limit(6)
+                    ->get()
+                    ->map(function ($shop) {
+                        if ($shop->creator && !empty($shop->creator->avatar)) {
+                            $shop->creator->avatar = url($shop->creator->avatar);
+                        }
+                        $shop->image = url($shop->getImage());
+                        return $shop;
+                    });
+            } else {
+                // Guest/normal user logic for products
+                $newProducts = $productQuery
+                    ->leftJoin('product_reviews', 'products.id', '=', 'product_reviews.product_id')
+                    ->leftJoin('product_like', 'products.id', '=', 'product_like.product_id')
+                    ->select('products.*',
+                        DB::raw('COUNT(DISTINCT product_like.id) as likes_count'),
+                        DB::raw('COALESCE(AVG(product_reviews.rates), 0) as avg_rating'),
+                        DB::raw('COUNT(DISTINCT product_reviews.id) as review_count')
+                    )
+                    ->groupBy('products.id')
+                    ->orderByRaw('
+                        COALESCE(AVG(product_reviews.rates), 0) DESC,
+                        (COUNT(DISTINCT product_like.id) * 0.5 + 
+                        COUNT(DISTINCT product_reviews.id) * 0.2) DESC,
+                        products.updated_at DESC
+                    ')
+                    ->limit(6)
+                    ->get()
+                    ->map(function ($shop) {
+                        if ($shop->creator && !empty($shop->creator->avatar)) {
+                            $shop->creator->avatar = url($shop->creator->avatar);
+                        }
+                        $shop->image = url($shop->getImage());
+                        return $shop;
+                    });
+            }
+            // $newProducts = Product::where('status', Product::$active)
+            //     ->orderBy('updated_at', 'desc')
+            //     ->with([
+            //         'creator' => function ($qu) {
+            //             $qu->select('id', 'full_name', 'avatar');
+            //         },
+            //     ])
+            //     ->limit(6)
+            //     ->get();
         }
 
         if (in_array(HomeSection::$trend_categories, $selectedSectionsName)) {
@@ -445,14 +604,76 @@ class HomeController extends Controller
         }
 
         if (in_array(HomeSection::$blog, $selectedSectionsName)) {
-            $blog = Blog::where('status', 'publish')
-                ->with(['category', 'author' => function ($query) {
-                    $query->select('id', 'full_name');
-                }])->orderBy('updated_at', 'desc')
-                ->withCount('comments')
-                ->orderBy('created_at', 'desc')
-                ->limit(3)
-                ->get();
+
+            $articleQuery = Blog::where('blog.status', 'publish')
+                ->with(['category', 'author:id,full_name'])
+                ->withCount('comments');
+            
+            if ($isWisdomKeeper) {
+                // Wisdom Keeper logic for articles - only Wisdom Keeper articles, sorted by highest reviews
+                $blog = $articleQuery
+                    ->whereIn('blog.author_id', $wisdomKeeperIds)
+                    ->leftJoin('article_reviews', 'blog.id', '=', 'article_reviews.article_id')
+                    ->leftJoin('article_like', 'blog.id', '=', 'article_like.article_id')
+                    ->select('blog.*',
+                        DB::raw('COUNT(DISTINCT article_like.id) as likes_count'),
+                        DB::raw('AVG(article_reviews.rates) as avg_rating'),
+                        DB::raw('COUNT(DISTINCT article_reviews.id) as review_count')
+                    )
+                    ->groupBy('blog.id')
+                    ->orderByRaw('
+                        -- First priority: items with reviews (non-NULL ratings)
+                        CASE 
+                            WHEN AVG(article_reviews.rates) IS NOT NULL THEN 0
+                            ELSE 1 
+                        END,
+                        -- Then order by highest rating
+                        AVG(article_reviews.rates) DESC,
+                        -- Then by number of reviews
+                        COUNT(DISTINCT article_reviews.id) DESC,
+                        -- Then by likes
+                        COUNT(DISTINCT article_like.id) DESC,
+                        -- Finally by created date
+                        blog.created_at DESC
+                    ')
+                    ->limit(6)
+                    ->get()
+                    ->map(function ($articles) {
+                        $articles->image = !empty($articles->image) ? url($articles->image) : null;
+                        return $articles;
+                    });
+            } else {
+                // Guest/normal user logic for articles
+                $blog = $articleQuery
+                    ->leftJoin('article_reviews', 'blog.id', '=', 'article_reviews.article_id')
+                    ->leftJoin('article_like', 'blog.id', '=', 'article_like.article_id')
+                    ->select('blog.*',
+                        DB::raw('COUNT(DISTINCT article_like.id) as likes_count'),
+                        DB::raw('COALESCE(AVG(article_reviews.rates), 0) as avg_rating'),
+                        DB::raw('COUNT(DISTINCT article_reviews.id) as review_count')
+                    )
+                    ->groupBy('blog.id')
+                    ->orderByRaw('
+                        COALESCE(AVG(article_reviews.rates), 0) DESC,
+                        (COUNT(DISTINCT article_like.id) * 0.4 + 
+                        COUNT(DISTINCT article_reviews.id) * 0.3) DESC,
+                        blog.created_at DESC
+                    ')
+                    ->limit(6)
+                    ->get()
+                    ->map(function ($articles) {
+                        $articles->image = !empty($articles->image) ? url($articles->image) : null;
+                        return $articles;
+                    });
+            }
+            // $blog = Blog::where('status', 'publish')
+            //     ->with(['category', 'author' => function ($query) {
+            //         $query->select('id', 'full_name');
+            //     }])->orderBy('updated_at', 'desc')
+            //     ->withCount('comments')
+            //     ->orderBy('created_at', 'desc')
+            //     ->limit(3)
+            //     ->get();
         }
 
         if (in_array(HomeSection::$instructors, $selectedSectionsName)) {
@@ -554,8 +775,123 @@ class HomeController extends Controller
             }
         }
 
-        $reels= Reel::where('is_hidden','0')->orderby('id','desc')->limit(6)->get();
-        $books= Book::orderby('id','desc')->limit(6)->get();
+        // $reels= Reel::where('is_hidden','0')->orderby('id','desc')->limit(6)->get();
+        // $books= Book::orderby('id','desc')->limit(6)->get();
+
+        $reelQuery = Reel::where('is_hidden', '0');
+
+        if ($isWisdomKeeper) {
+            // Wisdom Keeper logic for reels - only Wisdom Keeper reels, sorted by highest reviews
+            $reels = $reelQuery
+                ->whereIn('reels.user_id', $wisdomKeeperIds)
+                ->leftJoin('reel_review', 'reels.id', '=', 'reel_review.reel_id')
+                ->leftJoin('reel_likes', 'reels.id', '=', 'reel_likes.reel_id')
+                ->select('reels.*',
+                    DB::raw('COUNT(DISTINCT reel_likes.id) as likes_count'),
+                    DB::raw('AVG(reel_review.rating) as avg_rating'),
+                    DB::raw('COUNT(DISTINCT reel_review.id) as review_count')
+                )
+                ->groupBy('reels.id')
+                ->orderByRaw('
+                    -- First priority: items with reviews (non-NULL ratings)
+                    CASE 
+                        WHEN AVG(reel_review.rating) IS NOT NULL THEN 0
+                        ELSE 1 
+                    END,
+                    -- Then order by highest rating
+                    AVG(reel_review.rating) DESC,
+                    -- Then by number of reviews
+                    COUNT(DISTINCT reel_review.id) DESC,
+                    -- Then by likes
+                    COUNT(DISTINCT reel_likes.id) DESC,
+                    -- Finally by id
+                    reels.id DESC
+                ')
+                ->limit(6)
+                ->get();
+        } else {
+            // Guest/normal user logic for reels
+            $reels = $reelQuery
+                ->leftJoin('reel_review', 'reels.id', '=', 'reel_review.reel_id')
+                ->leftJoin('reel_likes', 'reels.id', '=', 'reel_likes.reel_id')
+                ->select('reels.*',
+                    DB::raw('COUNT(DISTINCT reel_likes.id) as likes_count'),
+                    DB::raw('COALESCE(AVG(reel_review.rating), 0) as avg_rating'),
+                    DB::raw('COUNT(DISTINCT reel_review.id) as review_count')
+                )
+                ->groupBy('reels.id')
+                ->orderByRaw('
+                    COALESCE(AVG(reel_review.rating), 0) DESC,
+                    (COUNT(DISTINCT reel_likes.id) * 0.4 + 
+                    COUNT(DISTINCT reel_review.id) * 0.3) DESC,
+                    reels.id DESC
+                ')
+                ->limit(6)
+                ->get();
+        }
+
+        // Books
+        $bookQuery = Book::query();
+
+        if ($isWisdomKeeper) {
+            // Wisdom Keeper logic for books - only Wisdom Keeper books, sorted by highest reviews
+            $books = $bookQuery
+                ->whereIn('book.creator_id', $wisdomKeeperIds)
+                ->leftJoin('book_review', 'book.id', '=', 'book_review.book_id')
+                ->leftJoin('book_like', 'book.id', '=', 'book_like.book_id')
+                ->select('book.*',
+                    DB::raw('COUNT(DISTINCT book_like.id) as likes_count'),
+                    DB::raw('AVG(book_review.rating) as avg_rating'),
+                    DB::raw('COUNT(DISTINCT book_review.id) as review_count')
+                )
+                ->groupBy('book.id')
+                ->orderByRaw('
+                    -- First priority: items with reviews (non-NULL ratings)
+                    CASE 
+                        WHEN AVG(book_review.rating) IS NOT NULL THEN 0
+                        ELSE 1 
+                    END,
+                    -- Then order by highest rating
+                    AVG(book_review.rating) DESC,
+                    -- Then by number of reviews
+                    COUNT(DISTINCT book_review.id) DESC,
+                    -- Then by likes
+                    COUNT(DISTINCT book_like.id) DESC,
+                    -- Finally by id
+                    book.id DESC
+                ')
+                ->limit(6)
+                ->get()
+                ->map(function ($books) {
+                    $books->image_cover = !empty($books->image_cover) ? url($books->image_cover) : null;
+                    $books->url = !empty($books->url) ? url($books->url) : null;
+                    return $books;
+                });
+        } else {
+            // Guest/normal user logic for books
+            $books = $bookQuery
+                ->leftJoin('book_review', 'book.id', '=', 'book_review.book_id')
+                ->leftJoin('book_like', 'book.id', '=', 'book_like.book_id')
+                ->select('book.*',
+                    DB::raw('COUNT(DISTINCT book_like.id) as likes_count'),
+                    DB::raw('COALESCE(AVG(book_review.rating), 0) as avg_rating'),
+                    DB::raw('COUNT(DISTINCT book_review.id) as review_count')
+                )
+                ->groupBy('book.id')
+                ->orderByRaw('
+                    COALESCE(AVG(book_review.rating), 0) DESC,
+                    (COUNT(DISTINCT book_like.id) * 0.4 + 
+                    COUNT(DISTINCT book_review.id) * 0.3) DESC,
+                    book.id DESC
+                ')
+                ->limit(6)
+                ->get()
+                ->map(function ($books) {
+                    $books->image_cover = !empty($books->image_cover) ? url($books->image_cover) : null;
+                    $books->url = !empty($books->url) ? url($books->url) : null;
+                    return $books;
+                });
+        }
 
         $data = [
             'pageTitle' => $pageTitle,

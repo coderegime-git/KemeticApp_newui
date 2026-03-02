@@ -291,7 +291,7 @@ class ProductController extends Controller
             $selectedCategory = ProductCategory::where('id', $data['category_id'])->first();
         }
 
-        $trendingProducts = Product::getTrendingProducts(3);
+        $trendingProducts = Product::getTrendingProducts(3, $user);
 
         if ($trendingProducts->isNotEmpty()) {
             $trendingProductIds = $trendingProducts->pluck('id')->toArray();

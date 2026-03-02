@@ -64,7 +64,31 @@
         <div class="course-sub">Featured Course</div>
         <h1 class="course-title">{{ clean($bestRateWebinar->title,'title') }}</h1>
         <p class="course-sub">{{ convertMinutesToHourAndMinute($bestRateWebinar->duration) }} {{ trans('home.hours') }} · <a href="{{ $bestRateWebinar->teacher->getProfileUrl() }}" target="_blank" class="user-name ml-5 font-14">{{ $bestRateWebinar->teacher->full_name }}</p>
-        <div class="course-stars">★★★★★ <b>{{ $bestRateWebinar->getSalesCount() }} students</b>
+        
+        @php
+          $i = 5;
+          $averageRating = 0;
+          
+          if($bestRateWebinar->reviews->count() > 0) {
+              $totalRating = 0;
+              foreach($bestRateWebinar->reviews as $review) {
+                  $totalRating += $review->rates ?? 0;
+              }
+              $averageRating = round($totalRating / $bestRateWebinar->reviews->count());
+          }
+        @endphp
+        <div class="course-stars">@if($bestRateWebinar->reviews->count() > 0)
+                  @for($i = 0; $i < $averageRating; $i++)
+                      ★
+                  @endfor
+                  @for($i = 0; $i < (5 - $averageRating); $i++)
+                      ☆
+                  @endfor
+              @else
+                  @for($i = 0; $i < 5; $i++)
+                      ☆
+                  @endfor
+              @endif <b>{{ $bestRateWebinar->getSalesCount() }} students</b>
           <!-- <b>{{ $totalStats->total_likes ?? 0 }}</b> · 12.8k students -->
         </div>
         <a href="{{ $bestRateWebinar->getUrl() }}"><div style="margin-top:14px"><button class="course-cta">Enroll Now</button></div></a>
@@ -136,24 +160,25 @@
           <div class="course-meta">{{ convertMinutesToHourAndMinute($webinar->duration) }} {{ trans('home.hours') }} · <a href="{{ $webinar->teacher->getProfileUrl() }}" target="_blank" class="user-name ml-5 font-14">{{ $webinar->teacher->full_name }}</a></div>
           <div class="course-bar">
             <div class="course-stars">
-               @php
-                      $i = 5;
-                  @endphp
+                @php
+                  $i = 5;
+                  $averageRating = 0;
+                  
+                  if($webinar->reviews->count() > 0) {
+                      $totalRating = 0;
+                      foreach($webinar->reviews as $review) {
+                          $totalRating += $review->rates ?? 0;
+                      }
+                      $averageRating = round($totalRating / $webinar->reviews->count());
+                  }
+                @endphp
                @if($webinar->reviews->count() > 0)
-                  @foreach($webinar->reviews as $review)
-                      @php
-                          $rating = $review->rates ?? 0;
-                          $filledStars = min(5, max(0, $rating));
-                          $emptyStars = 5 - $filledStars;
-                      @endphp
-                      
-                      @for($i = 0; $i < $filledStars; $i++)
-                          ★
-                      @endfor
-                      @for($i = 0; $i < $emptyStars; $i++)
-                          ☆
-                      @endfor
-                  @endforeach
+                  @for($i = 0; $i < $averageRating; $i++)
+                      ★
+                  @endfor
+                  @for($i = 0; $i < (5 - $averageRating); $i++)
+                      ☆
+                  @endfor
               @else
                   @for($i = 0; $i < 5; $i++)
                       ☆

@@ -8,7 +8,9 @@ use App\Models\Cart;
 use App\Models\BookOrder;
 use App\Models\BookCategory;
 use App\Models\Subscribe;
+use App\User;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Http; // Add this line
 use Illuminate\Support\Facades\Cache;
 
@@ -41,6 +43,14 @@ class BookController extends Controller
 
     public function index(Request $request)
     {
+        $user = null;
+
+        $activeSubscribe = "";
+
+        if (auth()->check()) {
+            $user = auth()->user();
+        }
+
         $data = $request->all();
 
         $creator = $request->get('creator', null);
@@ -80,8 +90,8 @@ class BookController extends Controller
             ->withCount(['likes', 'comments', 'share', 'gift', 'savedItems'])
             ->paginate(6);
 
-        $popularBooks = $this->getPopularBooks();
-        $popularBook = $popularBooks->first(); // Get the single popular book
+        $popularBooks = $this->getPopularBooks($user);
+        $popularBook = $popularBooks->first(); 
 
         $selectedCategory = null;
 
@@ -163,7 +173,8 @@ class BookController extends Controller
 
             if (!empty($book)) {
                 $bookCategories = BookCategory::all();
-                $popularBooks = $this->getPopularBooks();
+                $popularBooks = $this->getPopularBooks($user);
+                $popularBook = $popularBooks->first(); 
 
                 $pageRobot = getPageRobot('books');
 
@@ -179,6 +190,7 @@ class BookController extends Controller
                     'pageMetaImage' => $book->getImage(),
                     'bookCategories' => $bookCategories,
                     'popularBooks' => $popularBooks,
+                    'popularBook' => $popularBook,
                     'pageRobot' => $pageRobot,
                     'book' => $book,
                     'hasBought' => $hasBought,
@@ -202,24 +214,145 @@ class BookController extends Controller
         abort(404);
     }
 
-    private function getPopularBooks()
+    // private function getPopularBooks()
+    // {
+    //     return Book::withCount([
+    //         'likes',
+    //         'comments', 
+    //         'share',
+    //         'gift',
+    //         'savedItems'
+    //     ])
+    //     ->orderByRaw('(
+    //         (likes_count * 2) + 
+    //         (saved_items_count * 3) + 
+    //         (comments_count * 2) + 
+    //         (share_count * 1.5) + 
+    //         (gift_count * 2)
+    //     ) DESC')
+    //     ->limit(1)
+    //     ->get();
+    // }
+
+    private function getPopularBooks($user = null)
     {
-        return Book::withCount([
-            'likes',
-            'comments', 
-            'share',
-            'gift',
-            'savedItems'
-        ])
-        ->orderByRaw('(
-            (likes_count * 2) + 
-            (saved_items_count * 3) + 
-            (comments_count * 2) + 
-            (share_count * 1.5) + 
-            (gift_count * 2)
-        ) DESC')
-        ->limit(1)
-        ->get();
+        $query = Book::with([
+            'creator:id,full_name,avatar'
+        ]);
+
+        // Check if user is Wisdom Keeper
+        $isWisdomKeeper = $user && $user->role->caption === 'Wisdom Keeper';
+
+        if ($isWisdomKeeper) {
+            // Get all Wisdom Keeper user IDs for filtering
+            $wisdomKeeperIds = User::whereHas('role', function($q) {
+                $q->where('caption', 'Wisdom Keeper');
+            })->pluck('id')->toArray();
+
+            // Wisdom Keeper logic: show only Wisdom Keeper created books, sorted by highest reviews first
+            return $query->whereIn('book.creator_id', $wisdomKeeperIds)
+                ->leftJoin('book_review', 'book.id', '=', 'book_review.book_id')
+                ->leftJoin('book_like', 'book.id', '=', 'book_like.book_id')
+                ->select('book.*',
+                    DB::raw('COUNT(DISTINCT book_like.id) as likes_count'),
+                    DB::raw('AVG(book_review.rating) as avg_rating'),
+                    DB::raw('COUNT(DISTINCT book_review.id) as review_count')
+                )
+                ->groupBy('book.id')
+                ->orderByRaw('
+                    -- First priority: items with reviews (non-NULL ratings)
+                    CASE 
+                        WHEN AVG(book_review.rating) IS NOT NULL THEN 0
+                        ELSE 1 
+                    END,
+                    -- Then order by highest rating
+                    AVG(book_review.rating) DESC,
+                    -- Then by number of reviews
+                    COUNT(DISTINCT book_review.id) DESC,
+                    -- Then by likes
+                    COUNT(DISTINCT book_like.id) DESC,
+                    -- Finally by id
+                    book.id DESC
+                ')
+                ->limit(6)
+                ->get()
+                ->map(function ($book) {
+                    $book->image_cover = !empty($book->image_cover) ? url($book->image_cover) : null;
+                    $book->url = !empty($book->url) ? url($book->url) : null;
+                    if ($book->creator && !empty($book->creator->avatar)) {
+                        $book->creator->avatar = url($book->creator->avatar);
+                    }
+                    return $book;
+                });
+        } else {
+            // Guest/normal user logic: prioritize by engagement metrics
+            return $query->select('book.*')
+                ->selectRaw('
+                    (SELECT COUNT(*) FROM book_like 
+                    WHERE book_like.book_id = book.id
+                    ) as likes_count
+                ')
+                ->selectRaw('
+                    (SELECT COUNT(*) FROM book_review 
+                    WHERE book_review.book_id = book.id
+                    ) as review_count
+                ')
+                ->selectRaw('
+                    (SELECT COALESCE(AVG(rating), 0) FROM book_review 
+                    WHERE book_review.book_id = book.id
+                    ) as avg_rating
+                ')
+                ->selectRaw('
+                    (SELECT COUNT(*) FROM book_comment 
+                    WHERE book_comment.book_id = book.id 
+                    ) as comments_count
+                ')
+                ->selectRaw('
+                    (SELECT COUNT(*) FROM book_share 
+                    WHERE book_share.book_id = book.id
+                    ) as share_count
+                ')
+                ->selectRaw('
+                    (SELECT COUNT(*) FROM book_gift 
+                    WHERE book_gift.book_id = book.id
+                    ) as gift_count
+                ')
+                ->selectRaw('
+                    (SELECT COUNT(*) FROM book_saved 
+                    WHERE book_saved.book_id = book.id
+                    ) as saved_items_count
+                ')
+                ->orderByRaw('
+                    -- First by average rating
+                    (SELECT COALESCE(AVG(rating), 0) FROM book_review 
+                    WHERE book_review.book_id = book.id) DESC,
+                    -- Then by engagement score
+                    (
+                        (SELECT COUNT(*) FROM book_like 
+                        WHERE book_like.book_id = book.id) * 2 +
+                        (SELECT COUNT(*) FROM book_saved 
+                        WHERE book_saved.book_id = book.id) * 3 +
+                        (SELECT COUNT(*) FROM book_comment 
+                        WHERE book_comment.book_id = book.id) * 2 +
+                        (SELECT COUNT(*) FROM book_share 
+                        WHERE book_share.book_id = book.id) * 1.5 +
+                        (SELECT COUNT(*) FROM book_gift 
+                        WHERE book_gift.book_id = book.id) * 2
+                    ) DESC,
+                    -- Finally by id
+                    book.id DESC
+                ')
+                ->limit(6)
+                ->get()
+                ->map(function ($book) {
+                    $book->image_cover = !empty($book->image_cover) ? url($book->image_cover) : null;
+                    $book->url = !empty($book->url) ? url($book->url) : null;
+                    if ($book->creator && !empty($book->creator->avatar)) {
+                        $book->creator->avatar = url($book->creator->avatar);
+                    }
+                    return $book;
+                });
+        }
     }
 
     public function directPayment(Request $request)

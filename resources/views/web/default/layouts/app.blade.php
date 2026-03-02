@@ -23,6 +23,213 @@
 
         <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght@300;400;600&display=swap"/>
     </head>
+    <style>
+        .app-popup {
+            position: fixed;
+            inset: 0;
+            z-index: 9999;
+            display: none;
+            align-items: center;
+            justify-content: center;
+            background: rgba(0, 0, 0, 0.6);
+            backdrop-filter: blur(4px);
+            animation: fadeIn 0.3s ease;
+        }
+
+        .app-popup.active {
+            display: flex;
+        }
+
+        .app-popup-content {
+            background: #1a1a1a;  /* Black background */
+            border-radius: 20px;
+            padding: 25px 20px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.5), 0 0 0 1px rgba(255,215,0,0.3);
+            position: relative;
+            max-width: 400px;
+            margin: 0 auto;
+            border: 1px solid rgba(255, 215, 0, 0.2);
+        }
+
+        .app-popup-close {
+            position: absolute;
+            top: 12px;
+            right: 15px;
+            background: none;
+            border: none;
+            font-size: 28px;
+            cursor: pointer;
+            color: #FFD700;  /* Gold color */
+            width: 32px;
+            height: 32px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 50%;
+            transition: all 0.3s;
+            opacity: 0.8;
+        }
+
+        .app-popup-close:hover {
+            background: rgba(255, 215, 0, 0.15);
+            opacity: 1;
+            transform: scale(1.1);
+        }
+
+        .app-popup-logo {
+            text-align: center;
+            margin-bottom: 15px;
+        }
+
+        .app-popup-logo img {
+            border-radius: 15px;
+            box-shadow: 0 4px 15px rgba(255, 215, 0, 0.3);
+            border: 2px solid #FFD700;
+        }
+
+        .app-popup h4 {
+            text-align: center;
+            margin: 10px 0 5px;
+            font-size: 20px;
+            font-weight: 700;
+            color: #FFD700;  /* Gold text */
+            letter-spacing: 0.5px;
+        }
+
+        .app-popup p {
+            text-align: center;
+            color: #cccccc;  /* Light grey */
+            margin-bottom: 20px;
+            font-size: 14px;
+        }
+
+        .app-popup-buttons {
+            display: flex;
+            gap: 10px;
+            justify-content: center;
+            margin-bottom: 15px;
+        }
+
+        .app-store-btn {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            padding: 12px 20px;
+            border-radius: 12px;
+            text-decoration: none;
+            font-weight: 500;
+            transition: all 0.3s;
+            width: 100%;
+            max-width: 260px;
+            margin: 0 auto;
+            border: 1px solid transparent;
+        }
+
+        .app-store-btn:hover {
+            transform: translateY(-2px);
+            text-decoration: none;
+            box-shadow: 0 8px 20px rgba(255, 215, 0, 0.25);
+        }
+
+        .android-btn {
+            background: #2a2a2a;  /* Dark grey */
+            color: #FFD700;  /* Gold text */
+            border: 1px solid #FFD700;
+        }
+
+        .android-btn svg {
+            color: #FFD700;
+        }
+
+        .android-btn:hover {
+            background: #333333;
+            border-color: #FFD700;
+        }
+
+        .ios-btn {
+            background: #2a2a2a;  /* Dark grey */
+            color: #FFD700;  /* Gold text */
+            border: 1px solid #FFD700;
+        }
+
+        .ios-btn svg {
+            color: #FFD700;
+        }
+
+        .ios-btn:hover {
+            background: #333333;
+            border-color: #FFD700;
+        }
+
+        .app-store-btn span {
+            display: flex;
+            flex-direction: column;
+            line-height: 1.2;
+            font-size: 12px;
+            color: #cccccc;
+        }
+
+        .app-store-btn span strong {
+            color: #FFD700;
+            font-size: 16px;
+            font-weight: 700;
+        }
+
+        .app-popup-footer {
+            text-align: center;
+            margin-top: 15px;
+            padding-top: 15px;
+            border-top: 1px solid rgba(255, 215, 0, 0.2);
+        }
+
+        .app-popup-dont-show {
+            color: #FFD700;
+            text-decoration: none;
+            font-size: 13px;
+            opacity: 0.8;
+            transition: all 0.3s;
+            border-bottom: 1px dotted #FFD700;
+            padding-bottom: 2px;
+        }
+
+        .app-popup-dont-show:hover {
+            opacity: 1;
+            color: #FFD700;
+            border-bottom: 1px solid #FFD700;
+        }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to   { opacity: 1; }
+        }
+
+        @keyframes popIn {
+            from { transform: scale(0.85); opacity: 0; }
+            to   { transform: scale(1);    opacity: 1; }
+        }
+
+        /* Show only on mobile */
+        @media (min-width: 768px) {
+            .app-popup {
+                display: none !important;
+            }
+        }
+
+        /* Shine effect for gold elements */
+        .app-popup-content::before {
+            content: '';
+            position: absolute;
+            top: -2px;
+            left: -2px;
+            right: -2px;
+            bottom: -2px;
+            background: linear-gradient(45deg, #FFD700, transparent, #FFD700, transparent);
+            border-radius: 22px;
+            opacity: 0.1;
+            pointer-events: none;
+        }
+    </style>
     <script src="//code.tidio.co/upn4h71nbeh0x6rgvilseh6g1ztchf35.js" async></script>
     <body class="@if(isset($isMembershipPage) && $isMembershipPage) membership-body @endif @if($isRtl) rtl @endif">
 
@@ -274,6 +481,45 @@
             
         </div>
 
+        <div id="app-popup" class="app-popup" style="display: none;">
+            <div class="app-popup-content">
+                <!-- <button class="app-popup-close">&times;</button> -->
+                <div class="app-popup-logo">
+                    @if(!empty($generalSettings['logo']))
+                        <img src="{{ $generalSettings['logo'] }}" width="50" alt="site logo">
+                    @endif
+                </div>
+                <h4>Get Our Mobile App</h4>
+                <p>Learn anytime, anywhere with our app</p>
+                    
+                    <!-- Android Button (shown only on Android) -->
+                <div id="android-container" style="display: none;">
+                    <a href="#" id="android-link" class="app-store-btn android-btn" target="_blank">
+                        <svg width="28" height="28" viewBox="0 0 24 24" fill="currentColor">
+                            <path d="M17.523,15.3414c-.5106-.5214-.878-1.2168-.878-1.9782s.3675-1.4568.878-1.9782l2.2675-2.3196c1.8228-1.8648.7806-5.094-1.8132-5.094H5.3702c-2.5938,0-3.636,3.2292-1.8132,5.094l2.2675,2.3196c.5106.5214.878,1.2168.878,1.9782s-.3675,1.4568-.878,1.9782l-2.2675,2.3196c-1.8228,1.8648-.7806,5.094,1.8132,5.094h12.7858c2.5938,0,3.636-3.2292,1.8132-5.094l-2.2675-2.3196Zm-6.127-9.2154h1.08v1.08h-1.08v-1.08Zm1.08,11.88h-1.08v-1.08h1.08v1.08Z"/>
+                        </svg>
+                        <span>GET IT ON <strong>Google Play</strong></span>
+                    </a>
+                </div>
+                    
+                    <!-- iOS Button (shown only on iOS) -->
+                <div id="ios-container" style="display: none;">
+                    <a href="#" id="ios-link" class="app-store-btn ios-btn" target="_blank">
+                        <svg width="28" height="28" viewBox="0 0 24 24" fill="currentColor">
+                            <path d="M17.05,20.28c-.98.95-2.05.88-3.08.39-1.09-.5-2.08-.52-3.23,0-1.44.65-2.2.47-3.06-.39-4.06-4.21-3.47-10.67,1.14-10.9,1.25.03,2.13.68,2.86.73.97-.19,1.9-.75,2.91-.82,1.24-.09,2.44.45,3.25,1.19-2.95,1.86-2.42,6.02.56,7.19-.48,1.14-1.07,2.26-1.95,3.01h0Zm-4.01-14.21c-.21,1.92-1.59,3.5-3.35,3.61-.21-1.33.44-2.73,1.61-3.59.29-.23.62-.4.96-.49.02-.16.03-.32.03-.49.02-.84.35-1.64.89-2.27.7-.77,1.72-1.22,2.79-1.22.11.88-.23,1.75-.79,2.42-.45.53-1.06.91-1.74,1.11.04.14.06.29.07.43.01.12.02.24.02.36l-.49.13Z"/>
+                        </svg>
+                        <span>Download on the <strong>App Store</strong></span>
+                    </a>
+                </div>
+                    
+                <!-- <div class="app-popup-footer">
+                    <a href="#" class="app-popup-dont-show">Don't show again</a>
+                </div> -->
+                </div>
+            </div>
+            
+        </div>
+
         <!-- Template JS File -->
         <script src="/assets/default/js/app.js"></script>
         <script src="/assets/default/vendors/feather-icons/dist/feather.min.js"></script>
@@ -285,6 +531,104 @@
         @if(empty($justMobileApp) and checkShowCookieSecurityDialog())
             @include('web.default.includes.cookie-security')
         @endif
+
+        <script>
+            document.addEventListener('DOMContentLoaded', function () {
+
+                const isMobile = /iPhone|iPad|iPod|Android|webOS|BlackBerry|Windows Phone/i.test(navigator.userAgent);
+                const isAndroid = /Android/i.test(navigator.userAgent);
+                const isIOS = /iPhone|iPad|iPod/i.test(navigator.userAgent);
+                const popupDontShow = localStorage.getItem('appPopupDontShow');
+
+                // ─── DEEP LINK CONFIGURATION ──────────────────────────────────────────────
+                const DEEP_LINKS = {
+                    androidScheme: 'kemeticapp://home',        // Opens Home/Dashboard in Android app
+                    iosScheme:     'kemeticapp://home',        // Opens Home/Dashboard in iOS app
+
+                    // Fallback: redirect to store if app is NOT installed
+                    androidStore: 'https://play.google.com/store/apps/details?id=com.app.kemeticapp&pcampaignid=web_share',
+                    iosStore:     'https://apps.apple.com/in/app/kemetic-app/id6479200304',
+                };
+                // ──────────────────────────────────────────────────────────────────────────
+
+                if (isMobile && !popupDontShow && (isAndroid || isIOS)) {
+                    if (isAndroid) {
+                        document.getElementById('android-container').style.display = 'block';
+                    } else if (isIOS) {
+                        document.getElementById('ios-container').style.display = 'block';
+                    }
+
+                    setTimeout(function () {
+                        const popup = document.getElementById('app-popup');
+                        if (popup) popup.style.display = 'flex';
+                    }, 100);
+                }
+
+                // ─── DEEP LINK HANDLER ────────────────────────────────────────────────────
+                function openDeepLink(schemeUrl, storeUrl) {
+                    let appOpened = false;
+
+                    // Cancel fallback if app launches (page loses focus)
+                    function cancelFallback() {
+                        appOpened = true;
+                        clearTimeout(fallbackTimer);
+                    }
+
+                    window.addEventListener('pagehide', cancelFallback, { once: true });
+                    window.addEventListener('blur', cancelFallback, { once: true });
+                    document.addEventListener('visibilitychange', function onVisChange() {
+                        if (document.hidden) {
+                            appOpened = true;
+                            clearTimeout(fallbackTimer);
+                            document.removeEventListener('visibilitychange', onVisChange);
+                        }
+                    });
+
+                    // Step 1: Try opening app via deep link scheme
+                    window.location.href = schemeUrl;
+
+                    // Step 2: If app not installed, redirect to store after 1.5s
+                    var fallbackTimer = setTimeout(function () {
+                        if (!appOpened) {
+                            window.location.href = storeUrl;
+                        }
+                    }, 100);
+                }
+                // ──────────────────────────────────────────────────────────────────────────
+
+                // Android button → deep link
+                const androidLink = document.getElementById('android-link');
+                if (androidLink) {
+                    androidLink.href = '#';
+                    androidLink.addEventListener('click', function (e) {
+                        e.preventDefault();
+                        openDeepLink(DEEP_LINKS.androidScheme, DEEP_LINKS.androidStore);
+                    });
+                }
+
+                // iOS button → deep link
+                const iosLink = document.getElementById('ios-link');
+                if (iosLink) {
+                    iosLink.href = '#';
+                    iosLink.addEventListener('click', function (e) {
+                        e.preventDefault();
+                        openDeepLink(DEEP_LINKS.iosScheme, DEEP_LINKS.iosStore);
+                    });
+                }
+
+                // Don't show again
+                // const dontShowBtn = document.querySelector('.app-popup-dont-show');
+                // if (dontShowBtn) {
+                //     dontShowBtn.addEventListener('click', function (e) {
+                //         e.preventDefault();
+                //         document.getElementById('app-popup').style.display = 'none';
+                //         localStorage.setItem('appPopupDontShow', 'true');
+                //     });
+                // }
+
+            });
+
+        </script>
         <script>
         const notifBtn = document.getElementById('notif-btn');
         const cartBtn = document.getElementById('cart-btn');

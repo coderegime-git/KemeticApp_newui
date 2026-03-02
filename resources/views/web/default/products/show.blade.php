@@ -39,12 +39,29 @@
               $total = $product->like_count + $product->comments_count + $product->gift_count + $product->saved_count + $product->share_count;
             @endphp
             <div class="shopdetail-stars">
-              <div class="shopdetail-star" style="background:var(--red);"><span>{{ $product->like_count}}</span></div>
+                @php
+              $i = 5;
+              $rate = $product->getRate();
+            @endphp
+          
+            @php
+                $rating = $rate ?? 0;
+                $filledStars = min(5, max(0, $rate));
+                $emptyStars = 5 - $filledStars;
+            @endphp
+            
+            @for($i = 0; $i < $filledStars; $i++)
+                ★
+            @endfor
+            @for($i = 0; $i < $emptyStars; $i++)
+                ☆
+            @endfor
+              <!-- <div class="shopdetail-star" style="background:var(--red);"><span>{{ $product->like_count}}</span></div>
               <div class="shopdetail-star" style="background:var(--orange)">{{ $product->comments_count}}</div>
               <div class="shopdetail-star" style="background:var(--yellow)">{{ $product->gift_count}}</div>
               <div class="shopdetail-star" style="background:var(--green)">{{ $product->saved_count}}</div>
-              <div class="shopdetail-star" style="background:var(--blue)">{{ $product->share_count}}</div>
-              <div class="shopdetail-muted" style="margin-left:8px;font-weight:800">{{$total}} total</div>
+              <div class="shopdetail-star" style="background:var(--blue)">{{ $product->share_count}}</div> -->
+              <div class="shopdetail-muted" style="margin-left:8px;font-weight:800">{{$rate}} </div>
             </div>
 
             <div class="shopdetail-about">
@@ -55,7 +72,7 @@
             <div class="shopdetail-vendor">
               <img src="https://images.unsplash.com/photo-1544005313-94ddf0286df2?w=200" alt="">
               <div>@TigerEyeCrystals &nbsp;•&nbsp; <a href="{{ $product->category->getUrl() }}" target="_blank"><span class="shopdetail-muted">{{ $product->category->title }}</span></a></div>
-              <div style="margin-left:auto">❤️ {{ $product->reviews->pluck('creator_id')->count() }}</div>
+              <!-- <div style="margin-left:auto">❤️ {{ $product->reviews->pluck('creator_id')->count() }}</div> -->
             </div>
           </div>
         </div>
@@ -64,23 +81,7 @@
       <!-- right: sticky purchase card -->
       <aside class="shopdetail-purchase">
         <div class="shopdetail-muted" style="font-weight:800">Price</div>
-        @php
-            $i = 5;
-            $rate = $product->getRate();
-          @endphp
         
-          @php
-              $rating = $rate ?? 0;
-              $filledStars = min(5, max(0, $rate));
-              $emptyStars = 5 - $filledStars;
-          @endphp
-          
-          @for($i = 0; $i < $filledStars; $i++)
-              ★
-          @endfor
-          @for($i = 0; $i < $emptyStars; $i++)
-              ☆
-          @endfor
         <div class="shopdetail-price">
           
           @if(!empty($product->price) and $product->price > 0)

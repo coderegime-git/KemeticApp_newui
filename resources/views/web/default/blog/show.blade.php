@@ -141,7 +141,7 @@
         </div>
       </div>
 
-      <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-1112899163288149"
+      <!-- <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-1112899163288149"
      crossorigin="anonymous"></script>
       <ins class="adsbygoogle"
           style="display:block;"
@@ -151,7 +151,7 @@
           data-ad-slot="8812357100"></ins>
       <script>
           (adsbygoogle = window.adsbygoogle || []).push({});
-      </script>
+      </script> -->
 
     </aside>
   </div>

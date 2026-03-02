@@ -101,6 +101,27 @@ class CartController extends Controller
         return apiResponse2(1, 'retrieved', trans('api.public.retrieved'), ["cart" => $cartt]);
     }
 
+    public function cartcount(Request $request)
+    {
+        $user = apiAuth();
+        if(!$user){
+            $user = new \stdClass(); // Create an empty object for guest users
+            $user->id = $request->input('device_id') ?? null;
+            $user_as_a_guest=true;
+            if (!$user->id) {
+                return apiResponse2(0, 'invalid_device_id', 'Device ID is required for guest users.');
+            }
+            $cartCount = Cart::where('creator_guest_id', $user->id)->count();
+       
+        }
+        else{
+            $cartCount = Cart::where('creator_id', $user->id)->count();
+            
+        }
+        
+        return apiResponse2(1, 'retrieved', trans(' api.public.retrieved'), ["cart_count" => $cartCount]);
+    }
+
     public function destroy($id,Request $request)
     {
         

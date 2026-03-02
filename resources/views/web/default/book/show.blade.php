@@ -47,11 +47,11 @@
           @endif
         </div>
 
-        <div class="bookdetail-mini-actions">
-          <button class="bookdetail-like">❤️ {{ number_format($likeCount) }}</button>
+        <!-- <div class="bookdetail-mini-actions"> -->
+          <!-- <button class="bookdetail-like">❤️ {{ number_format($likeCount) }}</button>
           <button class="bookdetail-save">🔖 {{ number_format($savedCount) }}</button>
-          <button>📤 {{ number_format($shareCount) }}</button>
-        </div>
+          <button>📤 {{ number_format($shareCount) }}</button> -->
+        <!-- </div> -->
       </section>
 
       <!-- MIDDLE: info & description -->
@@ -63,13 +63,19 @@
 
         <div class="bookdetail-rating-row">
           <div class="bookdetail-chakra-stars">
-            <span style="color:var(--chakra-red)">★</span>
-            <span style="color:var(--chakra-orange)">★</span>
-            <span style="color:var(--chakra-yellow)">★</span>
-            <span style="color:var(--chakra-green)">★</span>
-            <span style="color:var(--chakra-blue)">★</span>
+              @php
+                $rate = $book->getRate();
+                $i = 5;
+              @endphp
+              @while(--$i >= 5 - $rate)
+                ★
+              @endwhile
+              @while($i-- >= 0)
+                ☆
+              @endwhile
+            
           </div>
-          <div class="bookdetail-stat-text">{{ $ratingDisplay }} • {{ number_format($totalEngagement) }}+ engagements</div>
+          <div class="bookdetail-stat-text">{{$book->reviews->count()}} • {{ number_format($totalEngagement) }}+ engagements</div>
         </div>
 
         <div class="bookdetail-tag-row">
@@ -159,7 +165,7 @@
             <div style="margin-bottom: 12px; padding: 10px; background: rgba(255,255,255,0.05); border-radius: 8px;">
               <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 6px;">
                 @if($comment->user->avatar)
-                  <img src="{{ $comment->user->avatar }}" alt="{{ $comment->user->full_name }}" style="width: 24px; height: 24px; border-radius: 50%;">
+                  <img src="{{ $comment->user->getAvatar(50) }}" alt="{{ $comment->user->full_name }}" style="width: 24px; height: 24px; border-radius: 50%;">
                 @endif
                 <strong>{{ $comment->user->full_name }}</strong>
               </div>

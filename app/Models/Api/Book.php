@@ -220,13 +220,13 @@ class Book extends Model
             ->get();
 
         if (!empty($reviews) and $reviews->count() > 0) {
-            $rate = number_format($reviews->avg('rates'), 2);
+            $rate = number_format($reviews->avg('rating'), 2);
         }
 
         if ($rate > 5) {
             $rate = 5;
         }
-
-        return $rate > 0 ? number_format($rate, 2) : 0;
+        return (int) round($rate);
+        // return $rate > 0 ? number_format($rate, 2) : 0;
     }
 }

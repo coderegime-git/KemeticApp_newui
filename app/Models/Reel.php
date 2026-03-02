@@ -196,4 +196,22 @@ class Reel extends Model
             // Optional: trigger notification to admin here
         }
     }
+
+    public function getRate()
+    {
+        $rate = 0;
+
+        $review = $this->review()
+            ->get();
+
+        if (!empty($review) and $review->count() > 0) {
+            $rate = number_format($review->avg('rating'), 2);
+        }
+
+        if ($rate > 5) {
+            $rate = 5;
+        }
+
+        return $rate > 0 ? number_format($rate, 2) : 0;
+    }
 }

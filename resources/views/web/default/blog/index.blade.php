@@ -48,11 +48,21 @@
         <div class="article-grad"></div>
         <div class="article-meta">
           <div class="article-k-badges">
-            <div class="article-k-star" style="background:var(--red)"></div>
+            @php
+              $rate = $popularPosts[0]->getRate();
+                $i = 5;
+            @endphp
+            @while(--$i >= 5 - $rate)
+              ★
+            @endwhile
+            @while($i-- >= 0)
+              ☆
+            @endwhile
+            <!-- <div class="article-k-star" style="background:var(--red)"></div>
             <div class="article-k-star" style="background:var(--orange)"></div>
             <div class="article-k-star" style="background:var(--yellow)"></div>
             <div class="article-k-star" style="background:var(--green)"></div>
-            <div class="article-k-star" style="background:var(--blue)"></div>
+            <div class="article-k-star" style="background:var(--blue)"></div> -->
           </div>
           <div style="font-size:28px;font-weight:900">{{ $popularPosts[0]->title }}</div>
           <div style="color:#fff;font-weight:800">{{$userStats->user_views}} reads</div>
@@ -60,13 +70,13 @@
          <a href="{{ $popularPosts[0]->getUrl() }}"><button class="article-btn">Read Now</button></a>
 
         <!-- Chakra rail -->
-        <div class="article-rail">
+        <!-- <div class="article-rail">
           <div class="article-circle" style="--clr:var(--red)">❤️</div>
           <div class="article-circle" style="--clr:var(--orange)">💬</div>
           <div class="article-circle" style="--clr:var(--green)">🎁</div>
           <div class="article-circle" style="--clr:var(--blue)">🔖</div>
           <div class="article-circle" style="--clr:var(--violet)">↗</div>
-        </div>
+        </div> -->
       </div>
     </section>
 

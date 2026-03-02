@@ -367,9 +367,21 @@ input[type="file"]::file-selector-button:hover {
         <h1 class="reels-title">{{ $heroreels->title }}</h1>
         <div class="reels-sub">{{ $heroreels->caption }}</div>
         <div class="reels-chakra-stars">
-          <span class="reels-dot reels-bg-red"></span><span class="reels-dot reels-bg-orange"></span>
+            @php
+              $rate = $heroreels->getRate();
+                $i = 5;
+            @endphp
+            @while(--$i >= 5 - $rate)
+              ★
+            @endwhile
+            @while($i-- >= 0)
+              ☆
+            @endwhile
+
+          <!-- <span class="reels-dot reels-bg-red"></span><span class="reels-dot reels-bg-orange"></span>
           <span class="reels-dot reels-bg-yellow"></span><span class="reels-dot reels-bg-green"></span>
-          <span class="reels-dot reels-bg-blue"></span><b style="margin-left:10px">3,255+</b>
+          <span class="reels-dot reels-bg-blue"></span> -->
+          <b style="margin-left:10px">{{ $rate }}+</b>
         </div>
         <button class="reels-btn play-video-btn" data-video-url="{{ $heroreels->video_url }}" data-title="{{ $heroreels->title }}" data-thumbnail="{{ $heroreels->thumbnail_url }}">Watch Portals</button>
         <a class="reels-go-profile" href="/user/1066/profile">→ View profile</a>
@@ -386,7 +398,8 @@ input[type="file"]::file-selector-button:hover {
   <section>
     <div class="d-flex justify-content-between align-items-center mb-4">
       <div>
-          <h2 class="section-title mb-2">🌍 Global Portals</h2>
+        <!-- 🌍 Global -->
+          <h2 class="section-title mb-2"> Portals</h2>
           <p class="section-subtitle"></p>
       </div>
       @if (auth()->check()) 
@@ -419,8 +432,18 @@ input[type="file"]::file-selector-button:hover {
           <span class="reels-circle reels-bg-blue">🎁 {{ $reel->gift_count }}</span>
         </div>
         <div class="reels-meta">
-          <div class="reels-dot reels-bg-red"></div><div class="reels-dot reels-bg-orange"></div><div class="reels-dot reels-bg-yellow"></div>
-          <div class="reels-dot reels-bg-green"></div><div class="reels-dot reels-bg-blue"></div>
+          @php
+              $rate = $heroreels->getRate();
+                $i = 5;
+            @endphp
+            @while(--$i >= 5 - $rate)
+              ★
+            @endwhile
+            @while($i-- >= 0)
+              ☆
+            @endwhile
+          <!-- <div class="reels-dot reels-bg-red"></div><div class="reels-dot reels-bg-orange"></div><div class="reels-dot reels-bg-yellow"></div>
+          <div class="reels-dot reels-bg-green"></div><div class="reels-dot reels-bg-blue"></div> -->
           <span class="reels-count">{{ $reel->review_count }}</span>
         </div>
         <div class="reels-cta">

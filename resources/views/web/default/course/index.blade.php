@@ -112,11 +112,35 @@
     </div>
     <!-- chakra stars + 3,255+ -->
     <div class="coursedetail-chakra">
-      <span class="coursedetail-dot" style="background:#E94560"></span>
+       @php
+        $i = 5;
+        $averageRating = 0;
+        
+        if($course->reviews->count() > 0) {
+            $totalRating = 0;
+            foreach($course->reviews as $review) {
+                $totalRating += $review->rates ?? 0;
+            }
+            $averageRating = round($totalRating / $course->reviews->count());
+        }
+      @endphp
+      <!-- <span class="coursedetail-dot" style="background:#E94560"></span>
       <span class="coursedetail-dot" style="background:#F4A261"></span>
       <span class="coursedetail-dot" style="background:#F1C40F"></span>
       <span class="coursedetail-dot" style="background:#2ECC71"></span>
-      <span class="coursedetail-dot" style="background:#3498DB"></span>
+      <span class="coursedetail-dot" style="background:#3498DB"></span> -->
+      @if($course->reviews->count() > 0)
+        @for($i = 0; $i < $averageRating; $i++)
+            ★
+        @endfor
+        @for($i = 0; $i < (5 - $averageRating); $i++)
+            ☆
+        @endfor
+    @else
+        @for($i = 0; $i < 5; $i++)
+            ☆
+        @endfor
+    @endif
       <b style="color:var(--gold)">{{ $course->getSalesCount() }}+</b>
     </div>
      @php

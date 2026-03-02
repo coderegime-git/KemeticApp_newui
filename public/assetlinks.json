@@ -1,0 +1,12 @@
+[
+  {
+    "relation": ["delegate_permission/common.handle_all_urls"],
+    "target": {
+      "namespace": "android_app",
+      "package_name": "com.app.kemeticapp",
+      "sha256_cert_fingerprints": [
+        "4F:C5:2A:B4:BB:BB:5E:FB:29:AE:EF:59:31:90:02:C8:1B:CE:60:0C:45:C0:DF:8F:E9:9C:FB:78:6A:4E:51:1C"
+      ]
+    }
+  }
+]

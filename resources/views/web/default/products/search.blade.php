@@ -51,7 +51,7 @@
               @endif
             </div>
             
-            <div class="shop-rail">
+            <!-- <div class="shop-rail">
               <div class="shop-circle" style="--clr:var(--red)">❤️</div>
               <div class="shop-tiny" style="--clr:var(--red)">{{ $product->like_count}}</div>
               <div class="shop-circle" style="--clr:var(--orange)">💬</div>
@@ -62,7 +62,7 @@
               <div class="shop-tiny" style="--clr:var(--blue)">{{ $product->saved_count}}</div>
               <div class="shop-circle" style="--clr:var(--violet)">↗</div>
               <div class="shop-tiny" style="--clr:var(--blue)">{{ $product->share_count}}</div>
-            </div>
+            </div> -->
           </div>
         </article>
         @endforeach

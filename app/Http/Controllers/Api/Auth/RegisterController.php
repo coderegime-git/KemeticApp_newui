@@ -289,10 +289,23 @@ class RegisterController extends Controller
     
         $referralSettings = getReferralSettings();
         $usersAffiliateStatus = (!empty($referralSettings) && !empty($referralSettings['users_affiliate_status']));
+
+        $roleName = Role::$user;
+        $roleId = Role::getUserRoleId();
+
+        if (!empty($data['account_type'])) {
+            if ($data['account_type'] == Role::$teacher) {
+                $roleName = Role::$teacher;
+                $roleId = Role::getTeacherRoleId();
+            } else if ($data['account_type'] == Role::$organization) {
+                $roleName = Role::$organization;
+                $roleId = Role::getOrganizationRoleId();
+            }
+        }
     
         $user = User::create([
-            'role_name' => Role::$user,
-            'role_id' => Role::getUserRoleId(),
+            'role_name' => $roleName,
+            'role_id' => $roleId,
             $username => $data[$username],
             'full_name' => $data['full_name'],
             'status' => User::$pending,

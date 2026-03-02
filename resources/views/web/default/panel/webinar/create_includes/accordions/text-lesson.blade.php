@@ -457,6 +457,13 @@
 
 
                         <!-- ATTACHMENTS -->
+                        @php
+                            if (!empty($textLesson)) {
+                                $textLessonAttachmentsFileIds = $textLesson->attachments->pluck('file_id')->toArray();
+                            } else {
+                                $textLessonAttachmentsFileIds = [];
+                            }
+                        @endphp
                         <div class="kemetic-group">
                             <label class="kemetic-label">{{ trans('public.attachments') }}</label>
                             <select class="js-ajax-attachments kemetic-input attachments-select2"

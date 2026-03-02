@@ -10,6 +10,7 @@ use App\Models\Comment;
 use App\Models\Reward;
 use App\Models\ArticleSave;
 use App\Models\RewardAccounting;
+use App\User;
 use App\Models\Translation\BlogTranslation;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -64,7 +65,7 @@ class BlogController extends Controller
 
         $category = $request->query('category');
 
-        $popularPosts = $this->getPopularPosts();
+        $popularPosts = $this->getPopularPosts($userid);
 
         $popularPosts = $popularPosts->map(function ($blog) {
             return $blog->details;
@@ -179,16 +180,19 @@ class BlogController extends Controller
                 
                 \Log::info('CASE SQL:', ['sql' => $caseSql]);
                 
-                $blogQuery->orderByRaw($caseSql);
+                $blogQuery->orderByRaw($caseSql)
+                ->inRandomOrder();
             }
             
             // Secondary ordering
-            $blogQuery->orderBy('updated_at', 'desc')
-                    ->orderBy('created_at', 'desc');
+            $blogQuery->inRandomOrder();
+                // orderBy('updated_at', 'desc')
+                //     ->orderBy('created_at', 'desc');
         } else {
             // Default ordering for non-logged in users
-            $blogQuery->orderBy('updated_at', 'desc')
-                     ->orderBy('created_at', 'desc');
+             $blogQuery->inRandomOrder();
+            // $blogQuery->orderBy('updated_at', 'desc')
+            //          ->orderBy('created_at', 'desc');
         }
 
         $sql = $blogQuery->toSql();
@@ -340,16 +344,19 @@ class BlogController extends Controller
             
             $caseSql = "CASE " . implode(' ', $caseStatements) . " END";
             
-            $blogQuery->orderByRaw($caseSql);
+            $blogQuery->orderByRaw($caseSql)
+            ->inRandomOrder();
         }
         else {
-            $blogQuery->orderBy('updated_at', 'desc')
-                    ->orderBy('created_at', 'desc');
+            $blogQuery->inRandomOrder();
+            // $blogQuery->orderBy('updated_at', 'desc')
+            //         ->orderBy('created_at', 'desc');
         }
         
         // Secondary ordering
-        $blogQuery->orderBy('updated_at', 'desc')
-                  ->orderBy('created_at', 'desc');
+        $blogQuery->inRandomOrder();
+        // $blogQuery->orderBy('updated_at', 'desc')
+        //           ->orderBy('created_at', 'desc');
 
         $total = $blogQuery->count() + 1;
 
@@ -473,12 +480,126 @@ class BlogController extends Controller
         }
     }
 
-    private function getPopularPosts()
+    // private function getPopularPosts()
+    // {
+    //     return Blog::where('status', 'publish')
+    //         ->orderBy('visit_count', 'desc')
+    //         ->limit(5)
+    //         ->get();
+    // }
+
+    private function getPopularPosts($userid = null)
     {
-        return Blog::where('status', 'publish')
-            ->orderBy('visit_count', 'desc')
-            ->limit(5)
-            ->get();
+        $query = Blog::where('blog.status', 'publish')
+            ->with(['category', 'author:id,full_name,avatar'])
+            ->withCount('comments');
+
+        $user = User::find($userid);
+
+        // dd($user->role->caption);
+
+        // Check if user is Wisdom Keeper
+        $isWisdomKeeper = $user && $user->role->caption === 'Wisdom Keeper';
+
+        if ($isWisdomKeeper) {
+            // Get all Wisdom Keeper user IDs for filtering
+            $wisdomKeeperIds = User::whereHas('role', function($q) {
+                $q->where('caption', 'Wisdom Keeper');
+            })->pluck('id')->toArray();
+
+            // Wisdom Keeper logic: show only Wisdom Keeper created articles, sorted by highest reviews first
+            return $query->whereIn('blog.author_id', $wisdomKeeperIds)
+                ->leftJoin('article_reviews', 'blog.id', '=', 'article_reviews.article_id')
+                ->leftJoin('article_like', 'blog.id', '=', 'article_like.article_id')
+                ->select('blog.*',
+                    DB::raw('COUNT(DISTINCT article_like.id) as likes_count'),
+                    DB::raw('AVG(article_reviews.rates) as avg_rating'),
+                    DB::raw('COUNT(DISTINCT article_reviews.id) as review_count'),
+                    DB::raw('COUNT(DISTINCT comments.id) as comments_count')
+                )
+                ->leftJoin('comments', function($join) {
+                    $join->on('blog.id', '=', 'comments.blog_id')
+                        ->where('comments.status', 'active');
+                })
+                ->groupBy('blog.id')
+                ->orderByRaw('
+                    -- First priority: items with reviews (non-NULL ratings)
+                    CASE 
+                        WHEN AVG(article_reviews.rates) IS NOT NULL THEN 0
+                        ELSE 1 
+                    END,
+                    -- Then order by highest rating
+                    AVG(article_reviews.rates) DESC,
+                    -- Then by number of reviews
+                    COUNT(DISTINCT article_reviews.id) DESC,
+                    -- Then by likes
+                    COUNT(DISTINCT article_like.id) DESC,
+                    -- Then by comments
+                    COUNT(DISTINCT comments.id) DESC,
+                    -- Finally by created date
+                    blog.created_at DESC
+                ')
+                ->limit(5)
+                ->get()
+                ->map(function ($article) {
+                    $article->image = !empty($article->image) ? url($article->image) : null;
+                    if ($article->author && !empty($article->author->avatar)) {
+                        $article->author->avatar = url($article->author->avatar);
+                    }
+                    return $article;
+                });
+        } else {
+            // Guest/normal user logic: prioritize by engagement metrics
+            return $query->select('blog.*')
+                ->selectRaw('
+                    (SELECT COUNT(*) FROM article_like 
+                    WHERE article_like.article_id = blog.id
+                    ) as likes_count
+                ')
+                ->selectRaw('
+                    (SELECT COUNT(*) FROM article_reviews 
+                    WHERE article_reviews.article_id = blog.id
+                    ) as reviews_count
+                ')
+                ->selectRaw('
+                    (SELECT COALESCE(AVG(rates), 0) FROM article_reviews 
+                    WHERE article_reviews.article_id = blog.id
+                    ) as avg_rating
+                ')
+                ->selectRaw('
+                    (SELECT COUNT(*) FROM comments 
+                    WHERE comments.blog_id = blog.id 
+                    AND comments.status = "active"
+                    ) as comments_count
+                ')
+                ->orderByRaw('
+                    -- First by average rating
+                    (SELECT COALESCE(AVG(rates), 0) FROM article_reviews 
+                    WHERE article_reviews.article_id = blog.id) DESC,
+                    -- Then by engagement score (likes, reviews, comments, visits)
+                    (
+                        (SELECT COUNT(*) FROM article_like 
+                        WHERE article_like.article_id = blog.id) * 0.3 +
+                        (SELECT COUNT(*) FROM article_reviews 
+                        WHERE article_reviews.article_id = blog.id) * 0.25 +
+                        (SELECT COUNT(*) FROM comments 
+                        WHERE comments.blog_id = blog.id 
+                        AND comments.status = "active") * 0.25 +
+                        blog.visit_count * 0.2
+                    ) DESC,
+                    -- Finally by created date
+                    blog.created_at DESC
+                ')
+                ->limit(5)
+                ->get()
+                ->map(function ($article) {
+                    $article->image = !empty($article->image) ? url($article->image) : null;
+                    if ($article->author && !empty($article->author->avatar)) {
+                        $article->author->avatar = url($article->author->avatar);
+                    }
+                    return $article;
+                });
+        }
     }
 
     public function list(Request $request, $id = null)

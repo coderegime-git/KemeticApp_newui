@@ -50,86 +50,135 @@ class ReelController extends Controller
             return null;
         }
     }
+
+    private function getRandomSeed(Request $request, $userId = null, $forceNew = false)
+    {
+         $today = date('Y-m-d');
+    
+        if ($userId) {
+            // User-specific seed based on user ID and date
+            $seedString = $userId . '_' . $today;
+        } else {
+            // IP-based seed
+            $ip = $request->ip() ?? '0.0.0.0';
+            $seedString = $ip . '_' . $today;
+        }
+        
+        // If force new, modify the seed string
+        if ($forceNew) {
+            $seedString .= '_new_' . time();
+        }
+        
+        // Convert string to a consistent number between 1 and 10000
+        $seed = crc32($seedString);
+        $seed = abs($seed) % 10000 + 1;
+        
+        return $seed;
+    }
     
     public function index(Request $request)
     {
         // $userId = Auth::id();
         $userId = $this->getUserIdFromToken($request);
-
-        $userEngagement = [];
-         
+    
+         $randomSeed = $this->getRandomSeed($request, $userId);
+        
+        // Get ALL viewed reel IDs for this user (permanent tracking)
+        $viewedReelIds = [];
         if ($userId) {
-            // Get user's like statistics by category
-            $userEngagement = $this->getUserEngagementByCategory($userId);
-            
-            // Sort by like count DESC (most liked categories first)
-            uasort($userEngagement, function($a, $b) {
-                return $b['likes'] <=> $a['likes'];
-            });
-            
-            // DEBUG: Check engagement data
-            \Log::info('Sorted User Engagement:', $userEngagement);
+            $viewedReelIds = DB::table('reel_views')
+                ->where('user_id', $userId)
+                ->pluck('reel_id')
+                ->toArray();
         }
 
-        $reelQuery = Reel::with(['likes', 'comments.user','review.user'])
+        // Base query - exclude hidden and reported reels
+        $reelQuery = Reel::with(['likes', 'comments.user', 'review.user', 'savedreel', 'user'])
             ->where('is_hidden', false)
             ->where(function($query) {
                 $query->where('reports_count', '<', 15)
-                      ->orWhereNull('reports_count');
+                    ->orWhereNull('reports_count');
             });
-            // ->latest()
-            // ->paginate(10);
 
-        if ($userId && !empty($userEngagement)) {
-            // Get category IDs sorted by like count (highest first)
-            $sortedCategoryIds = array_keys($userEngagement);
-            
-            // Build CASE statement for ordering
-            $caseStatements = [];
-            foreach ($sortedCategoryIds as $index => $categoryId) {
-                $caseStatements[] = "WHEN category_id = {$categoryId} THEN {$index}";
-            }
-            
-            // Add other categories and null at the end
-            $caseStatements[] = "WHEN category_id IS NOT NULL THEN " . count($sortedCategoryIds);
-            $caseStatements[] = "WHEN category_id IS NULL THEN " . (count($sortedCategoryIds) + 1);
-            
-            $caseSql = "CASE " . implode(' ', $caseStatements) . " END";
-            
-            // Apply ordering
-            $reelQuery->orderByRaw($caseSql)
-                    ->orderBy('created_at', 'desc');
-            
-            // Apply different logic based on highest engagement
-            $highestEngagement = reset($userEngagement); // Get first item (highest likes)
-            $highestLikes = $highestEngagement['likes'];
-            
-            if ($highestLikes >= 9) {
-                // Deep Interest: Show only from top categories
-                $topCategories = array_slice($sortedCategoryIds, 0, 3); // Top 3 categories
-                $reelQuery->whereIn('category_id', $topCategories);
-                
-            } elseif ($highestLikes >= 6) {
-                // High Engagement: Show from all engaged categories
-                $reelQuery->whereIn('category_id', $sortedCategoryIds);
-                
-            } elseif ($highestLikes >= 3) {
-                // Medium Engagement: Inject more from engaged categories
-                // Already handled by CASE ordering
-            }
-            // Low engagement (1-2 likes): Already handled by CASE ordering
-        } else {
-            // Default ordering for non-logged in users
-            $reelQuery->latest();
-        }
+        // Check if user has viewed all reels
+        $totalReelsCount = (clone $reelQuery)->count();
+        $viewedCount = count($viewedReelIds);
         
-        // Paginate results
-        $reels = $reelQuery->paginate(10);
+        // If all reels viewed, reset viewed tracking for fresh start
+        if ($viewedCount >= $totalReelsCount && $totalReelsCount > 0) {
+            if ($userId) {
+                // Delete all view records for this user to start fresh
+                DB::table('reel_views')
+                    ->where('user_id', $userId)
+                    ->delete();
+                $viewedReelIds = [];
+                
+                // Generate new random seed for fresh start
+                $randomSeed = $this->getRandomSeed($request, $userId, true);
+            }
+        }
 
-        // Convert reels to array and add likes/comments arrays
+        // Apply viewed filter
+        if (!empty($viewedReelIds)) {
+            $reelQuery->whereNotIn('id', $viewedReelIds);
+        }
+
+        if ($userId) {
+            // ========== LOGGED-IN USER LOGIC ==========
+            // Get user's liked categories with counts
+            $userLikedCategories = DB::table('reel_likes')
+                ->join('reels', 'reel_likes.reel_id', '=', 'reels.id')
+                ->where('reel_likes.user_id', $userId)
+                ->whereNotNull('reels.category_id')
+                ->select('reels.category_id', DB::raw('COUNT(*) as like_count'))
+                ->groupBy('reels.category_id')
+                ->orderByDesc('like_count')
+                ->get();
+
+            if ($userLikedCategories->isNotEmpty()) {
+                // Build CASE statement for category ordering
+                $caseStatements = [];
+                foreach ($userLikedCategories as $index => $category) {
+                    $caseStatements[] = "WHEN category_id = {$category->category_id} THEN {$index}";
+                }
+                $caseStatements[] = "ELSE " . count($userLikedCategories);
+                
+                // Apply ordering: category preference → unviewed first → most liked → consistent random
+                $reels = $reelQuery
+                    ->select('reels.*')
+                    ->orderByRaw("CASE " . implode(' ', $caseStatements) . " END")
+                    // ->orderBy('views_count', 'asc')  // Unviewed (0) first
+                    // ->orderBy('likes_count', 'desc') // Most liked first
+                    ->inRandomOrder() 
+                    // ->orderByRaw("RAND($randomSeed)") // Consistent random shuffle
+                    ->paginate(10);
+            } else {
+                // No liked categories - show unviewed first, then most liked
+                $reels = $reelQuery
+                    ->select('reels.*')
+                    // ->orderBy('views_count', 'asc')  // Unviewed first
+                    // ->orderBy('likes_count', 'desc') // Most liked first
+                    ->inRandomOrder() 
+                    // ->orderByRaw("RAND($randomSeed)") // Consistent random shuffle
+                    ->paginate(10);
+            }
+        } else {
+            // ========== NON-LOGGED-IN USER LOGIC ==========
+            // Show unviewed first (by views_count=0), then most liked, with shuffle
+            $reels = $reelQuery
+                ->select('reels.*')
+                // ->orderBy('views_count', 'asc')  // Unviewed (0) first
+                // ->orderBy('likes_count', 'desc') // Most liked first
+                ->inRandomOrder() 
+                // ->orderByRaw("RAND($randomSeed)") // Consistent random shuffle
+                ->paginate(10);
+        }
+
+        // Format the response
         $pagination = $reels->toArray();
         $reelModels = $reels->items();
         $reelsArr = [];
+
         foreach ($reelModels as $reel) {
             $reelData = $reel->toArray();
 
@@ -196,79 +245,136 @@ class ReelController extends Controller
     public function details(Request $request, $id)
     {
         $userId = $this->getUserIdFromToken($request);
-
-        $userEngagement = [];
-
+    
+        // Get random seed for consistent pagination
+        $randomSeed = $this->getRandomSeed($request, $userId);
+        
+        // Get ALL viewed reel IDs for this user (excluding current reel)
+        $viewedReelIds = [];
         if ($userId) {
-            $userEngagement = $this->getUserEngagementByCategory($userId);
-            
-            // Sort by like count DESC (most liked categories first)
-            uasort($userEngagement, function($a, $b) {
-                return $b['likes'] <=> $a['likes'];
-            });
+            $viewedReelIds = DB::table('reel_views')
+                ->where('user_id', $userId)
+                ->where('reel_id', '!=', $id)
+                ->pluck('reel_id')
+                ->toArray();
         }
 
+        // Get the selected reel
         $selectedReel = Reel::with(['likes', 'comments.user', 'review.user', 'savedreel', 'user'])
             ->where('id', $id)
             ->where('is_hidden', false)
-        ->where(function ($query) {
-            $query->where('reports_count', '<', 15)
-                ->orWhereNull('reports_count');
-        })
-        ->firstOrFail();
+            ->where(function($query) {
+                $query->where('reports_count', '<', 15)
+                    ->orWhereNull('reports_count');
+            })
+            ->firstOrFail();
 
-        // Other reels paginate
+        // Track selected reel as viewed
+        if ($userId) {
+            $alreadyViewed = DB::table('reel_views')
+                ->where('user_id', $userId)
+                ->where('reel_id', $selectedReel->id)
+                ->exists();
+                
+            if (!$alreadyViewed) {
+                DB::table('reel_views')->insert([
+                    'user_id' => $userId,
+                    'reel_id' => $selectedReel->id,
+                    'created_at' => now()->timestamp
+                ]);
+            }
+        }
+
+        // Build query for other reels
         $reelQuery = Reel::with(['likes', 'comments.user', 'review.user', 'savedreel', 'user'])
             ->where('id', '!=', $id)
             ->where('is_hidden', false)
-            ->where(function ($query) {
+            ->where(function($query) {
                 $query->where('reports_count', '<', 15)
                     ->orWhereNull('reports_count');
-        });
-            // ->latest()
-            // ->paginate(10);
-        if ($userId && !empty($userEngagement)) {
-            // Get sorted category IDs (highest likes first)
-            $sortedCategoryIds = array_keys($userEngagement);
-            
-            // Get selected reel's category
-            $selectedCategoryId = $selectedReel->category_id;
-            
-            // Check if selected category is in user's engaged categories
-            if (in_array($selectedCategoryId, $sortedCategoryIds)) {
-                // Move selected category to the front
-                $selectedIndex = array_search($selectedCategoryId, $sortedCategoryIds);
-                unset($sortedCategoryIds[$selectedIndex]);
-                array_unshift($sortedCategoryIds, $selectedCategoryId);
-                $sortedCategoryIds = array_values($sortedCategoryIds);
-            } else {
-                // Add selected category at the beginning
-                array_unshift($sortedCategoryIds, $selectedCategoryId);
+            });
+
+        // Check if user has viewed all other reels
+        $totalOtherReelsCount = (clone $reelQuery)->count();
+        $viewedOtherCount = count($viewedReelIds);
+        
+        // If all other reels viewed, reset viewed tracking for fresh start
+        if ($viewedOtherCount >= $totalOtherReelsCount && $totalOtherReelsCount > 0) {
+            if ($userId) {
+                // Delete all view records for this user except current reel
+                DB::table('reel_views')
+                    ->where('user_id', $userId)
+                    ->where('reel_id', '!=', $id)
+                    ->delete();
+                $viewedReelIds = [];
+                
+                // Generate new random seed for fresh start
+                $randomSeed = $this->getRandomSeed($request, $userId, true);
             }
-            
-            // Build CASE statement for ordering
-            $caseStatements = [];
-            foreach ($sortedCategoryIds as $index => $categoryId) {
-                $caseStatements[] = "WHEN category_id = {$categoryId} THEN {$index}";
-            }
-            
-            $caseStatements[] = "WHEN category_id IS NOT NULL THEN " . count($sortedCategoryIds);
-            $caseStatements[] = "WHEN category_id IS NULL THEN " . (count($sortedCategoryIds) + 1);
-            
-            $caseSql = "CASE " . implode(' ', $caseStatements) . " END";
-            
-            $reelQuery->orderByRaw($caseSql)
-                    ->orderBy('created_at', 'desc');
-        } else {
-            $reelQuery->latest();
         }
 
-        $reels = $reelQuery->paginate(10);    
+        // Apply viewed filter
+        if (!empty($viewedReelIds)) {
+            $reelQuery->whereNotIn('id', $viewedReelIds);
+        }
 
+        if ($userId) {
+            // Get user's liked categories
+            $userLikedCategories = DB::table('reel_likes')
+                ->join('reels', 'reel_likes.reel_id', '=', 'reels.id')
+                ->where('reel_likes.user_id', $userId)
+                ->whereNotNull('reels.category_id')
+                ->select('reels.category_id', DB::raw('COUNT(*) as like_count'))
+                ->groupBy('reels.category_id')
+                ->orderByDesc('like_count')
+                ->get();
+
+            if ($userLikedCategories->isNotEmpty()) {
+                // Prioritize selected reel's category
+                $selectedCategoryId = $selectedReel->category_id;
+                
+                $caseStatements = [];
+                $index = 0;
+                
+                // Put selected reel's category first
+                if ($selectedCategoryId) {
+                    $caseStatements[] = "WHEN category_id = {$selectedCategoryId} THEN {$index}";
+                    $index++;
+                }
+                
+                // Add other liked categories
+                foreach ($userLikedCategories as $category) {
+                    if ($category->category_id != $selectedCategoryId) {
+                        $caseStatements[] = "WHEN category_id = {$category->category_id} THEN {$index}";
+                        $index++;
+                    }
+                }
+                
+                $caseStatements[] = "ELSE {$index}";
+                
+                $reelQuery->orderByRaw("CASE " . implode(' ', $caseStatements) . " END")
+                        ->orderBy('views_count', 'asc')
+                        ->orderBy('likes_count', 'desc')
+                        ->orderByRaw("RAND($randomSeed)");
+            } else {
+                $reelQuery->orderBy('views_count', 'asc')
+                        ->orderBy('likes_count', 'desc')
+                        ->orderByRaw("RAND($randomSeed)");
+            }
+        } else {
+              $reelQuery->inRandomOrder();
+            // $reelQuery->orderBy('views_count', 'asc')
+            //         ->orderBy('likes_count', 'desc')
+            //         ->orderByRaw("RAND($randomSeed)");
+        }
+
+        $reels = $reelQuery->paginate(10);
+
+        // Build response data
         $pagination = $reels->toArray();
         $reelsArr = [];
 
-        $buildReelData = function ($reel, $isSelected = false) use ($userId, $userEngagement) {
+        $buildReelData = function ($reel, $isSelected = false) use ($userId) {
             return [
                 ...$reel->toArray(),
                 'username'    => $reel->user->full_name ?? '',
@@ -713,10 +819,13 @@ class ReelController extends Controller
             abort(404);
         }
 
-        if (!$reel->isViewedBy(Auth::user())) {
-            $reel->views()->create(['user_id' => Auth::id()]);
-            $reel->increment('views_count');
-        }
+        // if (!$reel->isViewedBy(Auth::user())) {
+        //     $reel->views()->create(['user_id' => Auth::id()]);
+        //     $reel->increment('views_count');
+        // }
+        $now = time();
+        $reel->views()->create(['user_id' => Auth::id(),'created_at' => $now]);
+        $reel->increment('views_count');
 
         return response()->json([
             'status' => 'success',
