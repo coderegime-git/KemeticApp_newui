@@ -21,6 +21,7 @@
 /storage/*.key
 /storage/pail
 /vendor
+/app/Helpers/helper.php
 Homestead.json
 Homestead.yaml
 Thumbs.db
