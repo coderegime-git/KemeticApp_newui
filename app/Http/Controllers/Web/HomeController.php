@@ -961,6 +961,36 @@ class HomeController extends Controller
         return view(getTemplate() . '.pages.membership', $data);
     }
 
+    public function membership1()
+    {
+        $subscribes = Subscribe::all();
+
+        $user = auth()->user();
+        $installmentPlans = new InstallmentPlans($user);
+
+        $activeSubscribe = null;
+
+        if ($user) {
+            $activeSubscribe = Subscribe::getActiveSubscribe($user->id);
+        }
+
+        // dd($activeSubscribe);
+
+        foreach ($subscribes as $subscribe) {
+            if (getInstallmentsSettings('status') and (empty($user) or $user->enable_installments) and $subscribe->price > 0) {
+                $installments = $installmentPlans->getPlans('subscription_packages', $subscribe->id);
+
+                $subscribe->has_installment = (!empty($installments) and count($installments));
+            }
+        }
+        $data = [
+            'subscribes' => $subscribes ?? [],
+            'activeSubscribe' => $activeSubscribe
+        ];
+
+        return view(getTemplate() . '.pages.membership1', $data);
+    }
+
     public function cancelSubscription(Request $request)
     {
         $user = auth()->user();

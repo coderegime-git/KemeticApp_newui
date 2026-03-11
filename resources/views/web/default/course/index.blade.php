@@ -188,11 +188,11 @@
           @endif
         </button>
 
-        @if($canSale and !empty($course->points))
+        <!-- @if($canSale and !empty($course->points))
           <a href="{{ !(auth()->check()) ? '/login' : '#' }}" class="{{ (auth()->check()) ? 'js-buy-with-point' : '' }} coursedetail-btn btn btn-outline-warning mt-10 {{ (!$canSale) ? 'disabled' : '' }}" rel="nofollow">
             {!! trans('update.buy_with_n_points',['points' => $course->points]) !!}
           </a>
-        @endif
+        @endif -->
         
         @if($canSale and !empty(getFeaturesSettings('direct_classes_payment_button_status')))
           <button type="button" class="coursedetail-btn js-course-direct-payment">
@@ -221,7 +221,7 @@
 
     @if($canSale and $course->subscribe and $course->price != 0)
       <a href="/subscribes/apply/{{ $course->slug }}" class="@if(!$canSale) disabled @endif">
-        <button type="button" class="coursedetail-btn">Connect</button></a>
+        <button type="button" class="coursedetail-btn">Subscribe</button></a>
     @endif</div>
   </div>
   </form>

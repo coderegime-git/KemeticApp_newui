@@ -538,6 +538,16 @@
                 settings: ['quality', 'speed'],
                 quality: { default: 576, options: [4320, 2880, 2160, 1440, 1080, 720, 576, 480, 360, 240] }
             });
+
+            players.forEach(function(player) {
+                player.on('play', function() {
+                    players.forEach(function(otherPlayer) {
+                        if (otherPlayer !== player && !otherPlayer.paused) {
+                            otherPlayer.pause();
+                        }
+                    });
+                });
+            });
         });
     </script>
 @endpush

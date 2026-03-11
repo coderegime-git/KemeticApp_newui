@@ -421,13 +421,13 @@ class PaymentsController extends Controller
                 }
 
                 if (!empty($orderItem->gift_id)) {
-                    $gift = $orderItem->gift;
+                    // $gift = $orderItem->gift;
 
-                    $gift->update([
-                        'status' => 'active'
-                    ]);
+                    // $gift->update([
+                    //     'status' => 'active'
+                    // ]);
 
-                    $gift->sendNotificationsWhenActivated($orderItem->total_amount);
+                    //$gift->sendNotificationsWhenActivated($orderItem->total_amount);
                 }
 
                 if (!empty($orderItem->subscribe_id)) {

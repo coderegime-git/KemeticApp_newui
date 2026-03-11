@@ -48,8 +48,6 @@ class ProductController extends Controller
     {
         $user = $this->getUserIdFromToken($request);
         
-        // $user = apiAuth();
-        // $user_id = $user->id;
         if($user)
         {
             $user_id = $user->id;
@@ -549,12 +547,114 @@ class ProductController extends Controller
         return $query;
     }
 
+    // public function show(Request $request, $id)
+    // {
+    //     $user = $this->getUserIdFromToken($request);
+    //     $user_id = $user ? $user->id : null;
+        
+    //     $product = Product::where('status', Product::$active)
+    //         ->where('id', $id)
+    //         ->with([
+    //             'selectedSpecifications' => function ($query) {
+    //                 $query->where('status', ProductSelectedSpecification::$Active);
+    //                 $query->with(['specification']);
+    //             },
+    //             'comments' => function ($query) {
+    //                 $query->where('status', 'active');
+    //                 $query->whereNull('reply_id');
+    //                 $query->with([
+    //                     'replies' => function ($query) {
+    //                         $query->where('status', 'active');
+    //                     }
+    //                 ]);
+    //                 $query->orderBy('created_at', 'desc');
+    //             },
+    //             'files' => function ($query) {
+    //                 $query->where('status', 'active');
+    //                 $query->orderBy('order', 'asc');
+    //             },
+    //             'reviews' => function ($query) {
+    //                 // $query->where('status', 'active');
+    //                 $query->with([
+    //                     'comments' => function ($query) {
+    //                         $query->where('status', 'active');
+    //                     },
+    //                 ]);
+    //             },
+    //         ])
+    //         ->first();
+
+    //     if (empty($product)) {
+    //         abort(404);
+    //     }
+
+    //     // Add user-specific data to the product
+    //     if ($user_id) {
+    //         // Check if user has liked this product
+    //         $product->is_liked = DB::table('product_like')
+    //             ->where('user_id', $user_id)
+    //             ->where('product_id', $product->id)
+    //             ->exists();
+                
+    //         // Check if user has saved this product
+    //         $product->is_saved = DB::table('product_saved')
+    //             ->where('user_id', $user_id)
+    //             ->where('product_id', $product->id)
+    //             ->exists();
+                
+    //         // Check if user has bought this product
+    //         $product->purchaseStatus = $product->checkUserHasBought($user);
+    //     } else {
+    //         $product->is_liked = false;
+    //         $product->is_saved = false;
+    //         $product->purchaseStatus = false;
+    //     }
+
+    //     // Add follower status for the creator
+    //     $seller = $product->creator;
+    //     $followers = $seller->followers();
+        
+    //     $authUserIsFollower = false;
+    //     if ($user) {
+    //         $authUserIsFollower = $followers->where('follower', $user->id)
+    //             ->where('status', Follow::$accepted)
+    //             ->isNotEmpty();
+    //     }
+        
+    //     $product->creator->userFollowerStatus = $authUserIsFollower;
+
+    //     $selectableSpecifications = $product->selectedSpecifications->where('allow_selection', true)
+    //         ->where('type', 'multi_value');
+    //     $selectedSpecifications = $product->selectedSpecifications->where('allow_selection', false);
+    //     $seller = $product->creator;
+
+    //     $cashbackRules = null;
+    //     if (!empty($product->price) and getFeaturesSettings('cashback_active') and (empty($user) or !$user->disable_cashback)) {
+    //         $cashbackRulesMixin = new CashbackRules($user);
+    //         $cashbackRules = $cashbackRulesMixin->getRules('store_products', $product->id, $product->type, $product->category_id, $product->creator_id);
+    //     }
+    //     $product->cashbackRules = $cashbackRules;
+
+    //     $resource = new ProductResource($product);
+    //     $resource->show = true;
+    //     // dd($resource);
+    //     return apiResponse2(
+    //         1,
+    //         'retrieved',
+    //         trans('api.public.retrieved'),
+    //         [
+    //             'product' => $resource,
+    //         ]
+    //     );
+    // }
+    
     public function show(Request $request, $id)
     {
         $user = $this->getUserIdFromToken($request);
         $user_id = $user ? $user->id : null;
         
-        $product = Product::where('status', Product::$active)
+        // Get the selected product
+        $selectedProduct = Product::where('status', Product::$active)
             ->where('id', $id)
             ->with([
                 'selectedSpecifications' => function ($query) {
@@ -576,7 +676,6 @@ class ProductController extends Controller
                     $query->orderBy('order', 'asc');
                 },
                 'reviews' => function ($query) {
-                    // $query->where('status', 'active');
                     $query->with([
                         'comments' => function ($query) {
                             $query->where('status', 'active');
@@ -586,34 +685,34 @@ class ProductController extends Controller
             ])
             ->first();
 
-        if (empty($product)) {
+        if (empty($selectedProduct)) {
             abort(404);
         }
 
-        // Add user-specific data to the product
+        // Add user-specific data to the selected product
         if ($user_id) {
             // Check if user has liked this product
-            $product->is_liked = DB::table('product_like')
+            $selectedProduct->is_liked = DB::table('product_like')
                 ->where('user_id', $user_id)
-                ->where('product_id', $product->id)
+                ->where('product_id', $selectedProduct->id)
                 ->exists();
                 
             // Check if user has saved this product
-            $product->is_saved = DB::table('product_saved')
+            $selectedProduct->is_saved = DB::table('product_saved')
                 ->where('user_id', $user_id)
-                ->where('product_id', $product->id)
+                ->where('product_id', $selectedProduct->id)
                 ->exists();
                 
             // Check if user has bought this product
-            $product->purchaseStatus = $product->checkUserHasBought($user);
+            $selectedProduct->purchaseStatus = $selectedProduct->checkUserHasBought($user);
         } else {
-            $product->is_liked = false;
-            $product->is_saved = false;
-            $product->purchaseStatus = false;
+            $selectedProduct->is_liked = false;
+            $selectedProduct->is_saved = false;
+            $selectedProduct->purchaseStatus = false;
         }
 
         // Add follower status for the creator
-        $seller = $product->creator;
+        $seller = $selectedProduct->creator;
         $followers = $seller->followers();
         
         $authUserIsFollower = false;
@@ -623,33 +722,241 @@ class ProductController extends Controller
                 ->isNotEmpty();
         }
         
-        $product->creator->userFollowerStatus = $authUserIsFollower;
+        $selectedProduct->creator->userFollowerStatus = $authUserIsFollower;
 
-        $selectableSpecifications = $product->selectedSpecifications->where('allow_selection', true)
-            ->where('type', 'multi_value');
-        $selectedSpecifications = $product->selectedSpecifications->where('allow_selection', false);
-        $seller = $product->creator;
-
+        // Get cashback rules for selected product
         $cashbackRules = null;
-        if (!empty($product->price) and getFeaturesSettings('cashback_active') and (empty($user) or !$user->disable_cashback)) {
+        if (!empty($selectedProduct->price) && getFeaturesSettings('cashback_active') && (empty($user) || !$user->disable_cashback)) {
             $cashbackRulesMixin = new CashbackRules($user);
-            $cashbackRules = $cashbackRulesMixin->getRules('store_products', $product->id, $product->type, $product->category_id, $product->creator_id);
+            $cashbackRules = $cashbackRulesMixin->getRules('store_products', $selectedProduct->id, $selectedProduct->type, $selectedProduct->category_id, $selectedProduct->creator_id);
         }
-        $product->cashbackRules = $cashbackRules;
+        $selectedProduct->cashbackRules = $cashbackRules;
 
-        $resource = new ProductResource($product);
-        $resource->show = true;
-        // dd($resource);
+        // Build query for other products (excluding the selected one)
+        $query = Product::where('products.status', Product::$active)
+            ->where('ordering', true)
+            ->where('price', '!=', 0)
+            ->where('id', '!=', $id); // Exclude the selected product
+
+        // Apply any additional filters
+        $query = $this->handleFilters($request, $query);
+
+        if ($user_id) {
+            // Get user's like statistics by category
+            $userCategoryStats = DB::table('product_like')
+                ->join('products', 'product_like.product_id', '=', 'products.id')
+                ->where('product_like.user_id', $user_id)
+                ->whereNotNull('products.category_id')
+                ->select('products.category_id', DB::raw('COUNT(*) as like_count'))
+                ->groupBy('products.category_id')
+                ->orderByDesc('like_count')
+                ->get();
+
+            // Get user's saved products count by category
+            $userSavedStats = DB::table('product_saved')
+                ->join('products', 'product_saved.product_id', '=', 'products.id')
+                ->where('product_saved.user_id', $user_id)
+                ->whereNotNull('products.category_id')
+                ->select('products.category_id', DB::raw('COUNT(*) as saved_count'))
+                ->groupBy('products.category_id')
+                ->get()
+                ->keyBy('category_id');
+
+            // Calculate engagement score for each category
+            $categoryEngagement = [];
+            foreach ($userCategoryStats as $stat) {
+                $engagementScore = $stat->like_count;
+                
+                // Add saved count to engagement score (weighted less than likes)
+                if (isset($userSavedStats[$stat->category_id])) {
+                    $engagementScore += ($userSavedStats[$stat->category_id]->saved_count * 0.5);
+                }
+                
+                $categoryEngagement[$stat->category_id] = [
+                    'likes' => $stat->like_count,
+                    'engagement_score' => $engagementScore,
+                    'level' => $this->getEngagementLevel($stat->like_count)
+                ];
+            }
+
+            // Sort categories by engagement score
+            uasort($categoryEngagement, function($a, $b) {
+                return $b['engagement_score'] <=> $a['engagement_score'];
+            });
+
+            // Create prioritized ordering based on engagement levels
+            $caseOrder = [];
+            $priority = 0;
+            
+            foreach ($categoryEngagement as $categoryId => $stats) {
+                $caseOrder[] = "WHEN category_id = {$categoryId} THEN {$priority}";
+                $priority++;
+            }
+            
+            // Add other categories (no engagement yet)
+            $caseOrder[] = "WHEN category_id IS NOT NULL THEN {$priority}";
+            $priority++;
+            
+            // Add products without category
+            $caseOrder[] = "WHEN category_id IS NULL THEN {$priority}";
+
+            // Apply the CASE ordering
+            if (!empty($caseOrder)) {
+                $caseStatement = "CASE " . implode(' ', $caseOrder) . " END";
+                $query->orderByRaw($caseStatement);
+            }
+
+            // Apply different logic based on highest engagement
+            if (!empty($categoryEngagement)) {
+                $highestEngagement = reset($categoryEngagement); // Get first item (highest likes)
+                $highestLikes = $highestEngagement['likes'];
+                
+                if ($highestLikes >= 9) {
+                    // Deep Interest: Show only from top categories
+                    $topCategories = array_slice(array_keys($categoryEngagement), 0, 3); // Top 3 categories
+                    $query->whereIn('category_id', $topCategories);
+                    
+                } elseif ($highestLikes >= 6) {
+                    // High Engagement: Show from all engaged categories
+                    $engagedCategoryIds = array_keys($categoryEngagement);
+                    $query->whereIn('category_id', $engagedCategoryIds);
+                }
+            }
+
+            // Secondary ordering: by id for consistent results
+            $query->orderBy('id', 'desc');
+
+        } else {
+            // Non-logged in user - default ordering
+            $query->orderBy('id', 'desc');
+        }
+
+        // Get pagination parameters
+        $limit = (int) $request->input('limit', 10);
+        $offset = (int) $request->input('offset', 0);
+        $dbOffset = $offset * $limit;
+
+        // Get total count of other products
+        $totalCount = (clone $query)->count();
+        
+        // Get other products with pagination
+        $otherProducts = $query->skip($dbOffset)->take($limit)->get();
+
+        // Get product IDs for batch operations
+        $productIds = $otherProducts->pluck('id')->toArray();
+
+        // Get user's liked products in a single query
+        $userLikedProductIds = [];
+        if ($user_id && !empty($productIds)) {
+            $userLikedProductIds = DB::table('product_like')
+                ->where('user_id', $user_id)
+                ->whereIn('product_id', $productIds)
+                ->pluck('product_id')
+                ->toArray();
+        }
+
+        // Get user's saved products in a single query
+        $userSavedProductIds = [];
+        if ($user_id && !empty($productIds)) {
+            $userSavedProductIds = DB::table('product_saved')
+                ->where('user_id', $user_id)
+                ->whereIn('product_id', $productIds)
+                ->pluck('product_id')
+                ->toArray();
+        }
+
+        // Enrich other products with user data
+        foreach ($otherProducts as $product) {
+            if ($user && $product->checkUserHasBought($user)) {
+                $product->purchaseStatus = true;
+            }
+
+            $product->is_liked = in_array($product->id, $userLikedProductIds);
+            $product->is_saved = in_array($product->id, $userSavedProductIds);
+
+            $seller = $product->creator;
+            $followers = $seller->followers();
+
+            $authUserIsFollower = false;
+            if ($user) {
+                $authUserIsFollower = $followers->where('follower', $user->id)
+                    ->where('status', Follow::$accepted)
+                    ->isNotEmpty();
+            }
+
+            $product->creator->userFollowerStatus = $authUserIsFollower;
+        }
+
+        // Combine selected product with other products (selected product first)
+        $allProducts = collect([$selectedProduct])->concat($otherProducts);
+
+        // Get trending products
+        $trendingProducts = Product::getTrendingProducts(3, $user);
+
+        if ($trendingProducts->isNotEmpty()) {
+            $trendingProductIds = $trendingProducts->pluck('id')->toArray();
+            
+            // Get user's liked products for trending products
+            $userLikedTrendingIds = [];
+            if ($user_id && !empty($trendingProductIds)) {
+                $userLikedTrendingIds = DB::table('product_like')
+                    ->where('user_id', $user_id)
+                    ->whereIn('product_id', $trendingProductIds)
+                    ->pluck('product_id')
+                    ->toArray();
+            }
+            
+            // Get user's saved products for trending products
+            $userSavedTrendingIds = [];
+            if ($user_id && !empty($trendingProductIds)) {
+                $userSavedTrendingIds = DB::table('product_saved')
+                    ->where('user_id', $user_id)
+                    ->whereIn('product_id', $trendingProductIds)
+                    ->pluck('product_id')
+                    ->toArray();
+            }
+            
+            // Enrich each trending product with user data
+            foreach ($trendingProducts as $product) {
+                // Check if user has bought the product
+                if ($user && $product->checkUserHasBought($user)) {
+                    $product->purchaseStatus = true;
+                }
+                
+                // Set like/save status
+                $product->is_liked = in_array($product->id, $userLikedTrendingIds);
+                $product->is_saved = in_array($product->id, $userSavedTrendingIds);
+                
+                // Set follower status for creator
+                $seller = $product->creator;
+                $followers = $seller->followers();
+                
+                $authUserIsFollower = false;
+                if ($user) {
+                    $authUserIsFollower = $followers->where('follower', $user->id)
+                        ->where('status', Follow::$accepted)
+                        ->isNotEmpty();
+                }
+                
+                $product->creator->userFollowerStatus = $authUserIsFollower;
+            }
+        }
+
         return apiResponse2(
             1,
             'retrieved',
             trans('api.public.retrieved'),
             [
-                'product' => $resource,
+                'products' => ProductResource::collection($allProducts),
+                'trendingProducts' => ProductResource::collection($trendingProducts),
+                'limit' => $limit,
+                'offset' => $offset,
+                'count' => $allProducts->count(),
+                'total_count' => $totalCount + 1, // +1 for the selected product
+                'has_more' => (($dbOffset + $otherProducts->count()) < $totalCount)
             ]
         );
     }
-
 
     public function getSortData()
     {
@@ -713,7 +1020,7 @@ class ProductController extends Controller
 
         $now = time();
 
-        $share = $product->share()->create([
+        $share = $product->shares()->create([
             'user_id' => $userid,
             'product_id' => $product->id,
             'created_at' => $now,
@@ -722,11 +1029,19 @@ class ProductController extends Controller
 
         Product::where('id', $id)->increment('share_count');
         //$product->increment('share_count');
+
+        $shareLink = url('/app/launch') . '?' . http_build_query([
+            'page'         => 'shop',
+            'value'        => $product->id   // or any unique share code
+        ]);
         
         return response()->json([
             'status' => 'success',
             'message' => 'Product Shared successfully',
-            'data' => $share
+            'data' => [
+                'share' => $share,
+                'share_link' => $shareLink,
+            ]
         ], 201);
     }
 
@@ -805,7 +1120,9 @@ class ProductController extends Controller
                 'offline_message' => $comment->user->offline_message,
                 'verified' => $comment->user->verified ?? 0,
                 'rate' => $comment->user->rate ?? 0,
-                'avatar' => $comment->user->avatar ?? 'http://127.0.0.1:8000/getDefaultAvatar?item=' . $comment->user->id . '&name=' . urlencode($comment->user->full_name) . '&size=40',
+                'avatar' => !empty($comment->user->avatar) 
+                    ? url($comment->user->avatar) 
+                    : 'https://kemetic.app/getDefaultAvatar?item=' . $comment->user->id . '&name=' . urlencode($comment->user->full_name) . '&size=40',
                 'meeting_status' => $comment->user->meeting_status ?? 'no',
                 'user_group' => $comment->user->user_group,
                 'address' => $comment->user->address,

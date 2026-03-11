@@ -17,6 +17,7 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Validation\Rule;
 use App\Models\Discount;
 use App\Models\PaymentChannel;
+use App\Models\GiftReel;
 use App\Models\OrderItem;
 use App\Models\Order;
 use Illuminate\Support\Facades\URL;
@@ -599,6 +600,102 @@ class CartController extends Controller
         }
 
         return apiResponse2(0, 'empty_cart', trans('api.payment.empty_cart'));
+    }
+
+    public function giftCheckout(Request $request)
+    {
+        $user = apiAuth();
+
+        if (!$user) {
+            return apiResponse2(0, 'unauthorized', trans('api.public.unauthorized'));
+        }
+
+        validateParam(
+            $request->all(),
+            [
+                'gift_id' => 'required|exists:giftreel,id',
+            ]
+        );
+
+        $giftId = $request->input('gift_id');
+        $giftReel = GiftReel::find($giftId);
+
+        if (!$giftReel) {
+            return apiResponse2(0, 'not_found', 'Gift not found.');
+        }
+
+        $price = $giftReel->price;
+
+        if (empty($price) || $price <= 0) {
+            return apiResponse2(0, 'invalid_price', 'Gift has no valid price.');
+        }
+
+        $financialSettings = getFinancialSettings();
+        $tax = (!empty($financialSettings['tax']) && $financialSettings['tax'] > 0) ? $financialSettings['tax'] : 0;
+        $taxPrice = ($tax > 0) ? round($price * $tax / 100, 2) : 0;
+        $totalAmount = round($price + $taxPrice, 2);
+
+        $paymentChannels = PaymentChannel::where('status', 'active')->get();
+
+        // Create Order
+        $order = Order::create([
+            'user_id'        => $user->id,
+            'status'         => Order::$pending,
+            'amount'         => round($price, 2),
+            'tax'            => $tax,
+            'tax_price'      => $taxPrice,
+            'total_discount' => 0,
+            'total_amount'   => $totalAmount,
+            'created_at'     => time(),
+        ]);
+
+        // Create OrderItem with gift_id
+        OrderItem::create([
+            'user_id'    => $user->id,
+            'order_id'   => $order->id,
+            'gift_id'    => $giftReel->id,
+            'amount'     => round($price, 2),
+            'total_amount' => $totalAmount,
+            'tax'        => $tax,
+            'tax_price'  => $taxPrice,
+            'commission' => 0,
+            'commission_price' => 0,
+            'discount'   => 0,
+            'created_at' => time(),
+        ]);
+
+        if ($order->total_amount > 0) {
+            $razorpay = false;
+            $isMultiCurrency = !empty(getFinancialCurrencySettings('multi_currency'));
+
+            foreach ($paymentChannels as $paymentChannel) {
+                if (
+                    $paymentChannel->class_name == 'Razorpay' &&
+                    (!$isMultiCurrency || in_array(currency(), $paymentChannel->currencies))
+                ) {
+                    $razorpay = true;
+                }
+            }
+
+            $data = [
+                'pageTitle'       => trans('public.checkout_page_title'),
+                'paymentChannels' => $paymentChannels,
+                'gift'            => $giftReel,
+                'subTotal'        => round($price, 2),
+                'totalDiscount'   => 0,
+                'tax'             => $tax,
+                'taxPrice'        => $taxPrice,
+                'total'           => $totalAmount,
+                'order'           => $order,
+                'razorpay'        => $razorpay,
+                'previousUrl'     => url()->previous(),
+            ];
+
+            return apiResponse2(1, 'checkout', trans('api.cart.checkout'), $data);
+        }
+
+        // Handle zero amount (free gift)
+        return $this->handlePaymentOrderWithZeroTotalAmount($order);
     }
 
     public function checkoutOLD(Request $request)

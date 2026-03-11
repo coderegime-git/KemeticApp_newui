@@ -71,7 +71,7 @@ class WebinarResource extends JsonResource
             $this->mergeWhen($this->statistic, function () {
                 return [
                     'students_count' => $this->students_count,
-                    'comments_count' => $this->comments_count,
+                    'comments_count' => $this->comments()->where('status','active')->count() ?? 0,
                     'chapters_count' => $this->chapters->count(),
                     'sessions_count' => $this->sessions->count(),
                     'pending_quizzes_count' => $this->pendingQuizzes->count(),
@@ -83,15 +83,14 @@ class WebinarResource extends JsonResource
                     'assignments_average_grade' => $this->assignments_average_grade,
                     'forums_messages_count' => $this->forums_messages_count,
                     'forums_students_count' => $this->forums_students_count,
-
                     'students_roles' => $this->students_roles,
                     'quizzes_result_status' => $this->quiz_status,
                     'assignments_status' => $this->assignments_status,
                     'monthly_sales' => $this->monthly_sales,
                     'course_progress_line' => $this->course_progress_line,
                     'course_progress' => $this->course_progress,
-                    'students' => $this->getStudents()
-
+                    'students' => $this->getStudents(),
+                    'comments'=>CommentResource::collection($this->comments)
 
                 ];
             }),

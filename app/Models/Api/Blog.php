@@ -96,10 +96,19 @@ class Blog extends Model implements TranslatableContract
                 }),
             'rating' => $this->getRate(),
             'comment_count' => $this->comments()->where('status','active')->count(),
-            'comments' => $this->comments()->where('status','active')
+            'comments' => $this->comments()
+                ->where('status', 'active')
+                ->whereNull('reply_id')  // ✅ Only top-level comments
+                ->with(['replies' => function ($query) {
+                    $query->where('status', 'active');  // ✅ Eager load active replies
+                }, 'user', 'replies.user'])  // ✅ Eager load users to avoid N+1
                 ->get()->map(function ($item) {
                     return $item->details;
                 }),
+            // 'comments' => $this->comments()->where('status','active')
+            //     ->get()->map(function ($item) {
+            //         return $item->details;
+            //     }),
             'category'=>$this->category->title ,
             'badges'=>$this->badges ?? [] ,
         ];

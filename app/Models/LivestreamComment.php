@@ -16,6 +16,7 @@ class LivestreamComment extends Model
         'user_id',
         'livestream_id',
         'content',
+        'reply_id',
         'created_at',
         'updated_at',
     ];
@@ -23,6 +24,11 @@ class LivestreamComment extends Model
     public function user()
     {
         return $this->belongsTo(User::class, 'user_id');
+    }
+
+    public function replies()
+    {
+        return $this->hasMany(LivestreamComment::class, 'reply_id', 'id')->orderBy('created_at', 'asc');
     }
 
     public function livestream()

@@ -8,6 +8,7 @@ use App\Models\Api\Book;
 use App\Models\Api\User;
 use App\Models\BookTranslation;
 use App\Models\Api\BookCategory;
+use App\Models\BookComment;
 use App\Services\PdfResizerService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -132,7 +133,7 @@ class BookController extends Controller
         }
 
         $total = $query->count();
-        $paginatedBooks = $query->with(['translations', 'creator'])
+        $paginatedBooks = $query->with(['translations', 'creator','comments.user', 'comments.replies.user', 'reviews.user'])
             ->skip($actualOffset)
             ->take($perPage)
             ->get()
@@ -175,24 +176,141 @@ class BookController extends Controller
 
         return apiResponse2(1, 'retrieved', trans('api.public.retrieved'), $data);
     }
-    
+
     public function show($id, Request $request)
     {
         $userid = $this->getUserIdFromToken($request);
 
-        $book = Book::with(['translations', 'creator'])->find($id);
-        abort_unless($book, 404);
+        // Get the selected book
+        $selectedBook = Book::with(['translations', 'creator','comments.user', 'comments.replies.user', 'reviews.user'])->find($id);
+        abort_unless($selectedBook, 404);
 
-        return apiResponse2(1, 'retrieved', trans('api.public.retrieved'), [
-            'book' => $this->formatBookDetails($book, $userid)
-        ]);
+        // Build the query for other books (excluding the selected one)
+        $query = Book::query();
+        
+        // Apply search filter if exists (optional - you might want to remove this)
+        $searchQuery = $request->query('title');
+        if (!empty($searchQuery)) {
+            $query->whereHas('translations', function ($subQuery) use ($searchQuery) {
+                $subQuery->where('title', 'like', '%' . $searchQuery . '%')
+                    ->where('locale', 'en');
+            });
+        }
+
+        // Apply other filters
+        $query = $this->handleFilters($request, $query);
+
+        // Exclude the selected book
+        $query->where('id', '!=', $id);
+
+        if ($userid) {
+            // Get user's like statistics by book category
+            $userLikesByCategory = DB::table('book_like')
+                ->join('book', 'book_like.book_id', '=', 'book.id')
+                ->where('book_like.user_id', $userid)
+                ->whereNotNull('book.category_id')
+                ->select(
+                    'book.category_id',
+                    DB::raw('COUNT(*) as likes')
+                )
+                ->groupBy('book.category_id')
+                ->orderByDesc('likes')
+                ->get();
+
+            if ($userLikesByCategory->isNotEmpty()) {
+                // Build CASE statement for ordering
+                $caseStatements = [];
+                foreach ($userLikesByCategory as $index => $category) {
+                    $caseStatements[] = "WHEN category_id = {$category->category_id} THEN {$index}";
+                }
+                
+                // Add other categories
+                $caseStatements[] = "WHEN category_id IS NOT NULL THEN " . count($userLikesByCategory);
+                $caseStatements[] = "WHEN category_id IS NULL THEN " . (count($userLikesByCategory) + 1);
+                
+                $caseSql = "CASE " . implode(' ', $caseStatements) . " END";
+                
+                $query->orderByRaw($caseSql);
+            }
+            
+            // Secondary ordering
+            $query->orderBy('updated_at', 'desc')
+                ->orderBy('created_at', 'desc');
+        } else {
+            // Default ordering for non-logged in users
+            $query->orderBy('updated_at', 'desc')
+                ->orderBy('created_at', 'desc');
+        }
+
+        // Get paginated other books
+        $page = $request->has('offset') ? (int) $request->get('offset') : null;
+        $perPage = $request->has('limit') ? (int) $request->get('limit') : null;
+        
+        $usePagination = !is_null($page) && !is_null($perPage);
+        $actualOffset = $usePagination ? ($page * $perPage) : null;
+
+        $total = $query->count() + 1; // +1 for the selected book
+
+        // Get other books with pagination
+        $otherBooks = $query->with(['translations', 'creator','comments.user', 'comments.replies.user', 'reviews.user'])
+            ->when($usePagination, function ($q) use ($actualOffset, $perPage) {
+                return $q->skip($actualOffset)->take($perPage);
+            })
+            ->get()
+            ->map(function ($book) use ($userid) {
+                return $this->formatBookDetails($book, $userid);
+            });
+
+        // Combine selected book with other books (selected book first)
+        $allBooks = collect([$this->formatBookDetails($selectedBook, $userid)])
+            ->concat($otherBooks);
+
+        $nextPage = null;
+        if ($usePagination && ($actualOffset + $otherBooks->count()) < ($total - 1)) {
+            $nextPage = $page + 1;
+        }
+
+        $user = $userid ? User::find($userid) : null;
+
+        $popularBooks = $this->getPopularBooks($user)
+            ->map(function ($book) use ($userid) {
+                return $this->formatBookDetails($book, $userid);
+            });
+
+        $popularBook = $popularBooks->first();
+
+        $data = [
+            'books' => $allBooks,
+            'popularBook' => $popularBook,
+            'pagination' => [
+                'current_page' => $page,
+                'per_page' => $perPage,
+                'total' => $total,
+                'has_more' => $usePagination ? (($actualOffset + $otherBooks->count()) < ($total - 1)) : false,
+                'next_page' => $nextPage
+            ]
+        ];
+
+        return apiResponse2(1, 'retrieved', trans('api.public.retrieved'), $data);
     }
+    
+    // public function show($id, Request $request)
+    // {
+    //     $userid = $this->getUserIdFromToken($request);
+
+    //     $book = Book::with(['translations', 'creator'])->find($id);
+    //     abort_unless($book, 404);
+
+    //     return apiResponse2(1, 'retrieved', trans('api.public.retrieved'), [
+    //         'book' => $this->formatBookDetails($book, $userid)
+    //     ]);
+    // }
 
     public function list(Request $request, $id = null)
     {
         $userid = $this->getUserIdFromToken($request);
 
-        $query = Book::query()->with(['translations', 'creator'])
+        $query = Book::query()->with(['translations', 'creator','comments.user', 'comments.replies.user', 'reviews.user'])
             ->orderBy('updated_at', 'desc')
             ->orderBy('created_at', 'desc');
 
@@ -314,7 +432,7 @@ class BookController extends Controller
             'like_count' => $book->like_count ?? 0,
             'share_count' => $book->share_count ?? 0,
             'gift_count' => $book->gift_count ?? 0,
-            'comment_count' => $book->comments_count ?? 0,
+            'comment_count' => $book->comments->count() ?? 0,
             'saved_count' => $book->saved_count ?? 0,
             'review_count' => $book->review_count ?? 0,
             'is_liked' => $isLiked,
@@ -334,13 +452,26 @@ class BookController extends Controller
             }) : [],
             'comments' => $book->comments ? $book->comments->map(function ($item) {
                 return [
+                    'id'         => $item->id,
+                    'user_id'    => $item->user_id,
+                    'create_at'  => $item->created_at,
+                    'comment'    => $item->content,
                     'user' => [
                         'full_name' => $item->user->full_name ?? '',
                         'avatar' => $item->user ? url($item->user->getAvatar()) : '',
                         'userid' => $item->user_id,
                     ],
-                    'create_at' => $item->created_at,
-                    'comment' => $item->content,
+                    'replies' => $item->replies ? $item->replies->map(function ($reply) {
+                        return [
+                            'id'         => $reply->id,
+                            'content'    => $reply->content,
+                            'created_at' => $reply->created_at,
+                            'user' => [
+                                'full_name' => $reply->user->full_name ?? '',
+                                'avatar'    => $reply->user ? url($reply->user->getAvatar()) : '',
+                            ],
+                        ];
+                    }) : [],
                 ];
             }) : [],
             'translations' => $book->translations->map(function ($translation) {
@@ -551,12 +682,38 @@ class BookController extends Controller
                 mkdir($videoPath1, 0777, true);
             }
             $video1->move($videoPath1, $filename1);
+
+            $filename2 = '';
+            $video2 = $request->file('cover_pdf');
+            $filename2 = time() . '_' . uniqid() . '.' . $video2->getClientOriginalExtension();
+            $videoPath2 = public_path('store/scrolls');
+            if (!file_exists($videoPath2)) {
+                mkdir($videoPath2, 0777, true);
+            }
+            $video2->move($videoPath2, $filename2);
+
             $image_cover = "/store/scrolls/" . $filename1;
         
             $pdfurl = url("/store/scrolls/" . $filename);
 
+            $coverpdfurl = url("/store/scrolls/" . $filename2);
+
             if($data['type'] == 'Print')
             {
+                $cover = $pdfService->generateCoverFromPdf(
+                    $imageFirstPath, // interior PDF
+                    '1'                // no full bleed
+                );
+                
+                $coverPdfPath = str_replace(public_path(), '', $interior['local_path']);
+                $coverpageCount = $cover['pages'];
+
+                if ($coverpageCount > 1) {
+                    return apiResponse2(0, 'Upload Error', 'Cover PDF must be a single page only. Your file contains ' . $coverpageCount . ' pages.', [
+                        'cover_page_count' => $coverpageCount
+                    ], 500);
+                }
+
                 $interior = $pdfService->resizeForLulu(
                     $pdfurl, // interior PDF
                     false                // no full bleed
@@ -565,17 +722,17 @@ class BookController extends Controller
                 $interiorPdfPath = str_replace(public_path(), '', $interior['local_path']);
                 $pageCount = $interior['page_count'];
 
-                $cover = $pdfService->generateCoverFromPdf(
-                    $pdfurl, // cover PDF
-                    $pageCount
-                );
+                // $cover = $pdfService->generateCoverFromPdf(
+                //     $pdfurl, // cover PDF
+                //     $pageCount
+                // );
 
-                $coverPdfPath = str_replace(public_path(), '', $cover['local_path']);
+                // $coverPdfPath = str_replace(public_path(), '', $cover['local_path']);
             }
             else
             {
                 $interiorPdfPath = "/store/scrolls/" . $filename;
-                $coverPdfPath = "/store/scrolls/" . $filename; // Use same path for cover if no separate cover is generated
+                $coverPdfPath = "/store/scrolls/" . $filename2; // Use same path for cover if no separate cover is generated
                 $pageCount = 0;
             }
             
@@ -902,11 +1059,19 @@ class BookController extends Controller
         ]);
 
         Book::where('id', $id)->increment('share_count');
+
+        $shareLink = url('/app/launch') . '?' . http_build_query([
+            'page'         => 'book',
+            'value'        => $book->id   // or any unique share code
+        ]);
         
         return response()->json([
             'status' => 'success',
             'message' => 'Book Shared successfully',
-            'data' => $share
+            'data' => [
+                'share' => $share,
+                'share_link' => $shareLink,
+            ]
         ], 201);
     }
 
@@ -968,18 +1133,84 @@ class BookController extends Controller
         Book::where('id', $id)->increment('comments_count');
 
         $responseData = [
+            
+            'id' => $comment->id,
+            'user_id' => $userid,
+            'book_id' => $id,
+            "create_at" => $now,
+            "comment" => $request->get('content'),
             "user" => [
                 "full_name" => $user->full_name,
                 "avatar" => url($user->getAvatar())
             ],
-            "create_at" => $now,
-            "comment" => $request->get('content')
+            'replies' => [] // Initialize empty replies array for the new comment
         ];
 
         return response()->json([
             'status' => 'success',
             'message' => 'Comment added successfully',
             'data' => $responseData
+        ], 201);
+    }
+
+    public function bookreply(Request $request, $id)
+    {
+        $user = auth('api')->user();
+        $userid = $user->id;
+
+        $comment = BookComment::where('id', $id)->first();
+
+        if (!$comment) {
+            abort(404);
+        }
+
+        $now = time();
+        $reply = BookComment::create([
+            'user_id' => $userid,
+            'book_id' => $comment->book_id,
+            'content' => $request->get('content'),
+            'reply_id' => $comment->id,
+            'created_at' => $now,
+            'updated_at' => $now
+        ]);
+
+        $replies = BookComment::where('reply_id', $comment->id)
+        ->with('user')
+        ->orderBy('created_at', 'asc')
+        ->get();
+
+        // Format all replies
+        $formattedReplies = [];
+        foreach ($replies as $existingReply) {
+            $formattedReplies[] = [
+                'id' => $existingReply->id,
+                'content' => $existingReply->content,
+                'created_at' => $existingReply->created_at,
+                // 'comment_user_type' => 'student',
+                'user' => [
+                    // 'id' => $existingReply->user->id,
+                    'full_name' => $existingReply->user->full_name,
+                    'avatar' => url($existingReply->user->getAvatar()),
+                ]
+            ];
+        }
+
+        return response()->json([
+            'status' => 'success',
+            'message' => 'Reply added successfully',
+            'data' => [
+                'id' => $comment->id,
+                'user_id' => $comment->user_id,
+                'book_id' => $comment->book_id,
+                'content' => $comment->content,
+                'created_at' => $comment->created_at, // Convert to timestamp
+                "user" => [
+                    "full_name" => $comment->user->full_name,
+                    "avatar" => url($comment->user->getAvatar())
+                ],
+                'replies' => $formattedReplies
+            ]
+            // 'data' => $comment->load('user')
         ], 201);
     }
 

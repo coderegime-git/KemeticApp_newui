@@ -88,7 +88,7 @@
                                         </div>
 
                                         <div class="form-group mt-15">
-                                            <label class="input-label">{{ trans('public.cover_image') }}</label>
+                                            <label class="input-label">{{ trans('public.thumbnail_image') }} Image</label>
                                             <div class="input-group">
                                                 <div class="input-group-prepend">
                                                     <button type="button" class="input-group-text admin-file-manager" data-input="cover_image" data-preview="holder">
@@ -102,6 +102,28 @@
                                                     </button>
                                                 </div>
                                                 @error('image_cover')
+                                                <div class="invalid-feedback">
+                                                    {{ $message }}
+                                                </div>
+                                                @enderror
+                                            </div>
+                                        </div>
+
+                                        <div class="form-group mt-15">
+                                            <label class="input-label">Cover PDF</label>
+                                            <div class="input-group">
+                                                <div class="input-group-prepend">
+                                                    <button type="button" class="input-group-text admin-file-manager" data-input="pdf_cover" data-preview="holder">
+                                                        <i class="fa fa-upload"></i>
+                                                    </button>
+                                                </div>
+                                                <input type="text" name="cover_pdf" id="pdf_cover" value="{{ !empty($book) ? $book->cover_pdf : old('cover_pdf') }}" class="form-control @error('cover_pdf')  is-invalid @enderror" required/>
+                                                <div class="input-group-append">
+                                                    <button type="button" class="input-group-text admin-file-view" data-input="pdf_cover">
+                                                        <i class="fa fa-eye"></i>
+                                                    </button>
+                                                </div>
+                                                @error('cover_pdf')
                                                 <div class="invalid-feedback">
                                                     {{ $message }}
                                                 </div>

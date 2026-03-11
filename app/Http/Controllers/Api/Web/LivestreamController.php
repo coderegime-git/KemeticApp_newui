@@ -10,6 +10,7 @@ use App\Models\Livestream;
 use App\Models\BookTranslation;
 use App\Models\Region;
 use App\Models\Country;
+use App\Models\LivestreamComment;
 use App\Services\IvsService;
 use App\Models\IvsChatToken;
 use App\Services\IvsChatService;
@@ -376,28 +377,84 @@ class LivestreamController extends Controller
         $usePagination = !is_null($page) && !is_null($perPage);
         $dbOffset = $usePagination ? ($page * $perPage) : null;
 
-        $comments = DB::table('livestream_comment')
-            ->where('livestream_id', $id)
-            ->join('users', 'livestream_comment.user_id', '=', 'users.id')
+        // $comments = DB::table('livestream_comment')
+        //     ->where('livestream_id', $id)
+        //     ->join('users', 'livestream_comment.user_id', '=', 'users.id')
+        //     ->select(
+        //         'livestream_comment.id',
+        //         'livestream_comment.content',
+        //         'livestream_comment.created_at',
+        //         'users.full_name',
+        //         'users.avatar'
+        //     )
+        //     ->orderBy('livestream_comment.created_at', 'desc')
+        //     ->limit(50)
+        //     ->get()
+        //     ->map(function ($comment) {
+        //     return [
+        //         'id' => $comment->id,
+        //         'content' => $comment->content,
+        //         'created_at' => $comment->created_at,
+        //         'user' => [
+        //             'full_name' => $comment->full_name,
+        //             'avatar' => !empty($comment->avatar) ? url($comment->avatar) : null
+        //         ]
+        //     ];
+        // });
+
+        $comments = DB::table('livestream_comment as lc')
+            ->where('lc.livestream_id', $id)
+            ->where('lc.reply_id', '0') // Only parent comments, no replies
+            ->join('users', 'lc.user_id', '=', 'users.id')
             ->select(
-                'livestream_comment.id',
-                'livestream_comment.content',
-                'livestream_comment.created_at',
+                'lc.id',
+                'lc.user_id',
+                'lc.livestream_id',
+                'lc.content',
+                'lc.created_at',
                 'users.full_name',
                 'users.avatar'
             )
-            ->orderBy('livestream_comment.created_at', 'desc')
+            ->orderBy('lc.created_at', 'desc')
             ->limit(50)
             ->get()
-            ->map(function ($comment) {
+        ->map(function ($comment) {
+            // Get replies for each comment
+            $replies = DB::table('livestream_comment as lc')
+                ->where('lc.reply_id', $comment->id)
+                ->join('users', 'lc.user_id', '=', 'users.id')
+                ->select(
+                    'lc.id',
+                    'lc.content',
+                    'lc.created_at',
+                    'users.full_name',
+                    'users.avatar'
+                )
+                ->orderBy('lc.created_at', 'asc')
+                ->get()
+                ->map(function ($reply) {
+                    return [
+                        'id'         => $reply->id,
+                        'content'    => $reply->content,
+                        'created_at' => $reply->created_at,
+                        'user' => [
+                            'full_name' => $reply->full_name,
+                            'avatar'    => !empty($reply->avatar) ? url($reply->avatar) : null,
+                        ],
+                    ];
+                });
+
             return [
-                'id' => $comment->id,
-                'content' => $comment->content,
+                'id'         => $comment->id,
+                'user_id' => $comment->user_id,
+                'livestream_id' => $comment->livestream_id,
+                'content'    => $comment->content,
                 'created_at' => $comment->created_at,
                 'user' => [
                     'full_name' => $comment->full_name,
-                    'avatar' => !empty($comment->avatar) ? url($comment->avatar) : null
-                ]
+                    'avatar'    => !empty($comment->avatar) ? url($comment->avatar) : null,
+                ],
+                'replies' => $replies,
             ];
         });
 
@@ -704,18 +761,83 @@ class LivestreamController extends Controller
         Livestream::where('id', $id)->increment('comments_count');
 
         $responseData = [
+            'id' => $comment->id,
+            'user_id' => $userid,
+            'livestream_id' => $id,
+            "created_at" => $now,
+            "content" => $request->get('content'),
             "user" => [
                 "full_name" => $user->full_name,
                 "avatar" => url($user->getAvatar())
             ],
-            "created_at" => $now,
-            "content" => $request->get('content')
+            'replies' => []
         ];
 
         return response()->json([
             'status' => 'success',
             'message' => 'Comment added successfully',
             'data' => $responseData
+        ], 201);
+    }
+
+    public function livestreamreply(Request $request, $id)
+    {
+        $user = auth('api')->user();
+        $userid = $user->id;
+
+        $comment = LivestreamComment::where('id', $id)->first();
+
+        if (!$comment) {
+            abort(404);
+        }
+
+        $now = time();
+        $reply = LivestreamComment::create([
+            'user_id' => $userid,
+            'livestream_id' => $comment->livestream_id,
+            'content' => $request->get('content'),
+            'reply_id' => $comment->id,
+            'created_at' => $now,
+            'updated_at' => $now
+        ]);
+
+        $replies = LivestreamComment::where('reply_id', $comment->id)
+        ->with('user')
+        ->orderBy('created_at', 'asc')
+        ->get();
+
+        // Format all replies
+        $formattedReplies = [];
+        foreach ($replies as $existingReply) {
+            $formattedReplies[] = [
+                'id' => $existingReply->id,
+                'content' => $existingReply->content,
+                'created_at' => $existingReply->created_at,
+                // 'comment_user_type' => 'student',
+                'user' => [
+                    // 'id' => $existingReply->user->id,
+                    'full_name' => $existingReply->user->full_name,
+                    'avatar' => url($existingReply->user->getAvatar()),
+                ]
+            ];
+        }
+
+        return response()->json([
+            'status' => 'success',
+            'message' => 'Reply added successfully',
+            'data' => [
+                'id' => $comment->id,
+                'user_id' => $comment->user_id,
+                'livestream_id' => $comment->livestream_id,
+                'content' => $comment->content,
+                'created_at' => $comment->created_at, // Convert to timestamp
+                "user" => [
+                    "full_name" => $comment->user->full_name,
+                    "avatar" => url($comment->user->getAvatar())
+                ],
+                'replies' => $formattedReplies
+            ]
+            // 'data' => $comment->load('user')
         ], 201);
     }
 
@@ -737,10 +859,19 @@ class LivestreamController extends Controller
 
         Livestream::where('id', $id)->increment('share_count');
         //$livestream->increment('share_count');
+
+        $shareLink = url('/app/launch') . '?' . http_build_query([
+            'page'         => 'livestream',
+            'value'        => $livestream->id   // or any unique share code
+        ]);
+
         return response()->json([
             'status' => 'success',
             'message' => 'Livestream Shared successfully',
-            'data' => $share
+            'data' => [
+                'share' => $share,
+                'share_link' => $shareLink,
+            ]
         ], 201);
     }
 

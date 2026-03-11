@@ -77,7 +77,7 @@ class Livestream extends Model
 
     public function comments()
     {
-        return $this->hasMany(LivestreamComment::class, 'livestream_id');
+        return $this->hasMany(LivestreamComment::class, 'livestream_id')->where('reply_id','0');
     }
 
     public function author()

@@ -233,6 +233,8 @@
     <script src="//code.tidio.co/upn4h71nbeh0x6rgvilseh6g1ztchf35.js" async></script>
     <body class="@if(isset($isMembershipPage) && $isMembershipPage) membership-body @endif @if($isRtl) rtl @endif">
 
+        <noscript><iframe src="https://www.googletagmanager.com/ns.html?id=GTM-XXXXXXX"
+            height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
         <div id="app" class="app {{ (!empty($floatingBar) and $floatingBar->position == 'top' and $floatingBar->fixed) ? 'has-fixed-top-floating-bar' : '' }}">
             
 
@@ -248,7 +250,7 @@
                                     @endif
                             </div>
                             <div class="topheader-kemetic-title">
-                                <span class="topheader-name">Kemetic App</span>
+                                <span class="topheader-name"><img src="/store/kem_logo1.png"  width="200" alt="site logo"></span>
                                 <!-- <span class="topheader-tagline">@mythoughtsoneverything</span> -->
                             </div>
                         </div>
@@ -476,6 +478,8 @@
                         </div>
                     </header>
                     @yield('content')
+
+                    @include('web.default.includes.footer_bar') 
                 </div>
             </main>
             
@@ -539,6 +543,10 @@
                 const isAndroid = /Android/i.test(navigator.userAgent);
                 const isIOS = /iPhone|iPad|iPod/i.test(navigator.userAgent);
                 const popupDontShow = localStorage.getItem('appPopupDontShow');
+                const isNewsletterPage = window.location.pathname === '/pages/newsletter';
+                const isPanelMembershipPage = window.location.pathname === '/panel_membership';
+                const isMembershipPage = window.location.pathname === '/membership';
+                const isLoginPage = window.location.pathname === '/login';
 
                 // ─── DEEP LINK CONFIGURATION ──────────────────────────────────────────────
                 const DEEP_LINKS = {
@@ -551,7 +559,8 @@
                 };
                 // ──────────────────────────────────────────────────────────────────────────
 
-                if (isMobile && !popupDontShow && (isAndroid || isIOS)) {
+                if (isMobile && !popupDontShow && (isAndroid || isIOS) && !isNewsletterPage && !isPanelMembershipPage 
+                    && !isMembershipPage && !isLoginPage) {
                     if (isAndroid) {
                         document.getElementById('android-container').style.display = 'block';
                     } else if (isIOS) {

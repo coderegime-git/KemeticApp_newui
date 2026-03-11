@@ -8,7 +8,7 @@
       <img src="{{ $generalSettings['logo'] }}" class="header-logo" alt="site logo">
     @endif
     <div class="header-brand-meta">
-      <div class="header-appname">Kemetic app</div>
+      <div class="header-appname"><img src="/store/kem_logo1.png"  width="150" alt="site logo"></div>
         @if(!empty($authUser))
         <div class="header-user">
           <!-- TODO: replace with your actual profile image path -->

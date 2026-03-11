@@ -15,6 +15,7 @@ class GiftReel extends Model
     protected $fillable = [
         'title',
         'thumbnail',
+        'price',
         'created_at',
         'updated_at'
     ];

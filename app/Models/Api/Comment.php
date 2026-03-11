@@ -24,7 +24,11 @@ class Comment extends Model
                 return [
                     'id' => $reply->id,
                     'comment_user_type' => $reply->comment_user_type,
-                    'user' => $reply->user->brief,
+                    // 'user' => $reply->user->brief,
+                    'user' => [          // ✅ Only name and avatar
+                        'full_name' => $reply->user->full_name ?? null,
+                        'avatar' => $reply->user ? url($reply->user->getAvatar()) : null,
+                    ],
                     'create_at' => $reply->created_at,
                     'comment' => $reply->comment,
                 ];

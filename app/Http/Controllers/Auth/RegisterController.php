@@ -328,13 +328,44 @@ class RegisterController extends Controller
 
             // Flag to differ the codes to dashboard controller
             session()->put('user_just_registered', $user->id);
+
+            if (session()->has('membership1_after_login')) {
+                $redirectUrl = session()->pull('membership1_after_login');
+                return redirect($redirectUrl);
+            }
+
+            if (session()->has('membership_after_login')) {
+                $redirectUrl = session()->pull('membership_after_login');
+                return redirect($redirectUrl);
+            }
+            
             // dd($data);
             if ($response = $this->registered($request, $user)) {
                 // return $response;
                 if ($request->wantsJson())
                     return $response;
                 else
+                    if (session()->has('membership1_after_login')) {
+                        $redirectUrl = session()->pull('membership1_after_login');
+                        return redirect($redirectUrl);
+                    }
+
+                    if (session()->has('membership_after_login')) {
+                        $redirectUrl = session()->pull('membership_after_login');
+                        return redirect($redirectUrl);
+                    }
+
                     redirect()->route('homepage');
+            }
+
+            if (session()->has('membership1_after_login')) {
+                $redirectUrl = session()->pull('membership1_after_login');
+                return redirect($redirectUrl);
+            }
+
+            if (session()->has('membership_after_login')) {
+                $redirectUrl = session()->pull('membership_after_login');
+                return redirect($redirectUrl);
             }
 
             return $request->wantsJson()
@@ -349,6 +380,17 @@ class RegisterController extends Controller
 
         $cartManagerController = new CartManagerController();
         $cartManagerController->storeCookieCartsToDB();
+
+        if (session()->has('membership1_after_login')) {
+            $redirectUrl = session()->pull('membership1_after_login');
+            return redirect($redirectUrl);
+        }
+
+        if (session()->has('membership_after_login')) {
+            $redirectUrl = session()->pull('membership_after_login');
+            return redirect($redirectUrl);
+        }
+
         //new add 05-02
         if (session()->has('redirect_to_checkout')) {
             $checkoutData = session('redirect_to_checkout');

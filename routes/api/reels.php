@@ -5,6 +5,8 @@ use App\Http\Controllers\Api\AdminReelController;
 
  Route::prefix('reels')->group(function () {
         Route::get('/', [ReelController::class, 'index']);
+        Route::get('/trending', [ReelController::class, 'trending']);
+        Route::get('/global', [ReelController::class, 'global']);
         Route::get('/{reel}', [ReelController::class, 'details']);
         Route::get('/categories/list', [ReelController::class, 'categories']);
      });
@@ -30,6 +32,7 @@ Route::middleware(['auth:api'])->group(function () {
         Route::post('/{reel}/review', [ReelController::class, 'review']);
         Route::post('/{reel}/report', [ReelController::class, 'report']);
         Route::post('/{reel}/view', [ReelController::class, 'view']);
+        Route::post('/{reel}/reply', [ReelController::class, 'reply']);
     });
 
     // Admin Reel Routes

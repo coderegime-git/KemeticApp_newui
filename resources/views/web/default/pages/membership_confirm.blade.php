@@ -278,8 +278,9 @@
   document.getElementById('exploreBtn').onclick = () => location.href = '/';
   document.getElementById('manageLink').onclick = (e) => {
     e.preventDefault();
-    location.href = '/panel/subscribes';
+    location.href = '/panel/financial/subscribes';
   };
+  
   document.getElementById('invoiceLink').onclick = (e) => {
     e.preventDefault();
     location.href = `/panel/store/purchases/{{ $order->id }}/invoice`;

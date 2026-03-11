@@ -890,7 +890,7 @@ main.home-container {
        @if(auth()->check())
       <button class="btn" onclick="location.href='/membership'">UPGRADE</button>
       @else
-      <button class="btn" onclick="location.href='/login'">BECOME A MEMBER</button>
+      <button class="btn" onclick="storeRedirectThenLogin()">BECOME A MEMBER</button>
       @endif
       <div class="price">€1 / €10 / €33 • Unlimited access</div>
     </div>
@@ -941,10 +941,34 @@ main.home-container {
             <h1 class="home-hero-title">{{ clean($bestRateWebinar->title,'title') }}</h1>
             <p class="home-hero-sub">{{ convertMinutesToHourAndMinute($bestRateWebinar->duration) }} {{ trans('home.hours') }} · <a href="{{ $bestRateWebinar->teacher->getProfileUrl() }}" target="_blank" class="user-name ml-5 font-14">{{ $bestRateWebinar->teacher->full_name }}</p>
             <div class="home-stars">
-              <span class="home-star home-s1"></span><span class="home-star home-s2"></span>
+              @php
+                $i = 5;
+                $averageRating = 0;
+                
+                if($bestRateWebinar->reviews->count() > 0) {
+                    $totalRating = 0;
+                    foreach($bestRateWebinar->reviews as $review) {
+                        $totalRating += $review->rates ?? 0;
+                    }
+                    $averageRating = round($totalRating / $bestRateWebinar->reviews->count());
+                }
+              @endphp
+              @if($bestRateWebinar->reviews->count() > 0)
+                  @for($i = 0; $i < $averageRating; $i++)
+                      ★
+                  @endfor
+                  @for($i = 0; $i < (5 - $averageRating); $i++)
+                      ☆
+                  @endfor
+              @else
+                  @for($i = 0; $i < 5; $i++)
+                      ☆
+                  @endfor
+              @endif <b>{{ $bestRateWebinar->getSalesCount() }} students</b>
+              <!-- <span class="home-star home-s1"></span><span class="home-star home-s2"></span>
               <span class="home-star home-s3"></span><span class="home-star home-s4"></span>
               <span class="home-star home-s5"></span>
-              <span style="margin-left:10px;opacity:.85;font-weight:800;margin-top: -4px;">{{ $totalStats->total_likes ?? 0 }}+</span>
+              <span style="margin-left:10px;opacity:.85;font-weight:800;margin-top: -4px;">{{ $totalStats->total_likes ?? 0 }}+</span> -->
             </div>
             <a href="{{ $bestRateWebinar->getUrl() }}" ><button class="home-btn">{{ trans('Join Course') }}</button></a>
           </div>
@@ -1124,12 +1148,12 @@ main.home-container {
       @endif
 
       <!-- Footer -->
-      <section>
+      <!-- <section>
         <div class="home-row-head">
           <span class="home-chip">© Kemetic.app</span>
           <span class="home-chip">{{ trans('membership') }} €1/mo or €10/yr</span>
         </div>
-      </section>
+      </section> -->
 
       <div class="modal fade" id="videoPlayerModal" tabindex="-1"
        aria-labelledby="videoPlayerModalLabel" aria-hidden="true">
@@ -1343,6 +1367,17 @@ main.home-container {
 
 <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 <script>
+  function storeRedirectThenLogin() {
+    fetch('/membership/store-redirect', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRF-TOKEN': '{{ csrf_token() }}'
+        }
+    }).finally(function () {
+        window.location.href = '/login'; // ← redirect directly
+    });
+  }
 
 document.addEventListener('DOMContentLoaded', function () {
 
@@ -1662,9 +1697,22 @@ document.addEventListener('DOMContentLoaded', function() {
     kmClose.addEventListener('click', hidePopup);
     laterBtn.addEventListener('click', hidePopup);
 
-    joinBtn.addEventListener('click', async () => {
-      window.location.href = '/login';
+    // joinBtn.addEventListener('click', async () => {
+    //   window.location.href = '/login';
+    // });
+
+    joinBtn.addEventListener('click', function () {
+      fetch('/membership/store-redirect', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRF-TOKEN': '{{ csrf_token() }}'
+            }
+        }).finally(function () {
+            window.location.href = '/login';
+        });
     });
+
 
     upgrade.addEventListener('click', async () => {
       window.location.href = '/membership';

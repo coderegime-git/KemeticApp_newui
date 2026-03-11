@@ -29,6 +29,8 @@ Route::group([], function () {
 
     Route::group(['prefix' => 'subscribe'], function () {
         Route::get('/', ['uses' => 'SubscribesController@index']);
+        
+        Route::post('/verifyiap', ['uses' => 'SubscribesController@verifyIAPPurchase']);
         Route::post('/pay', ['uses' => 'SubscribesController@pay']);
         Route::post('/cancel', ['uses' => 'SubscribesController@cancelSubscription']);
         Route::post('/recurringPay', ['uses' => 'SubscribesController@recurringPay']);
@@ -71,6 +73,7 @@ Route::group([], function () {
     Route::group(['prefix' => 'notifications'], function () {
         Route::get('/', ['uses' => 'NotificationsController@list']);
         Route::post('/{id}/seen', ['uses' => 'NotificationsController@seen']);
+        Route::get('/markallasread', 'NotificationsController@markAllAsRead');
         Route::post('/settings/update', 'NotificationsController@updateSettings'); 
     });
     /***** Favorites ******/
@@ -146,6 +149,7 @@ Route::group([], function () {
         // Route::post('coupon/validate', ['uses' => 'CartController@validateCoupon']); 
         Route::post('coupon/validate', [App\Http\Controllers\Web\CartController::class, 'couponValidate']);
         Route::post('checkout', ['uses' => 'CartController@checkout']); 
+        Route::post('giftCheckout', ['uses' => 'CartController@giftCheckout']); 
         Route::post('store', ['uses' => 'CartController@store']);
         Route::post('/', ['uses' => 'AddCartController@store']);
         Route::post('web_checkout', ['uses' => 'CartController@webCheckoutGenerator']);

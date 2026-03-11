@@ -22,6 +22,7 @@ Route::get('/', function () {
 });
 
 Route::get('/apihome', 'App\Http\Controllers\Api\ApiHomeController@index');
+Route::get('/app/launch', 'App\Http\Controllers\Web\ShareRedirectController@launch');
 
 Route::get('getPurchaseInvocie/{id}/productOrder/{order_id}/invoice/{user_id}', [ProductOrderController::class, 'purchaseInvoice']);
 Route::get('getSalesInvocie/{id}/productOrder/{order_id}/invoice/{user_id}', [ProductOrderController::class, 'salesInvocie']);
@@ -115,6 +116,29 @@ Route::group(['namespace' => 'Web', 'middleware' => ['check_mobile_app', 'impers
 
     Route::get('/', 'HomeController@index')->name('homepage');
     Route::get('/membership', 'HomeController@membership');
+    Route::post('/membership/store-redirect', function () {
+        if (!auth()->check()) {
+            session(['membership_after_login' => url('/membership')]);
+        }
+        return response()->json(['ok' => true]);
+    });
+
+    Route::get('/panel_membership', 'HomeController@membership1');
+    
+    // Route::post('/membership1/store-redirect1', function () {
+    //     if (!auth()->check()) {
+    //         session(['membership1_after_login' => url('/panel_membership')]);
+    //     }
+    //     return response()->json(['ok' => true]);
+    // });
+    Route::post('/membership1/store-redirect1', function () {
+        if (!auth()->check()) {
+            session(['membership1_after_login' => url('/panel_membership')]);
+            return response()->json(['ok' => true, 'guest' => true]);
+        }
+        return response()->json(['ok' => true, 'guest' => false]);
+    });
+
     Route::post('/membership/cancel', 'HomeController@cancelSubscription');
 
     Route::get('/getDefaultAvatar', 'DefaultAvatarController@make');

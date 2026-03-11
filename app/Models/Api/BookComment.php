@@ -17,6 +17,7 @@ class BookComment extends Model
         'user_id',
         'book_id',
         'content',
+        'reply_id',
         'created_at',
         'updated_at',
         'deleted_at',
@@ -34,6 +35,6 @@ class BookComment extends Model
 
     public function replies()
     {
-        return $this->hasMany(BookCommentReply::class, 'comment_id'); // If you have reply functionality
+        return $this->hasMany(BookComment::class, 'reply_id', 'id')->orderBy('created_at', 'asc');
     }
 }

@@ -102,8 +102,14 @@ class Sale extends Model
 
     public function gift()
     {
-        return $this->belongsTo('App\Models\Gift', 'gift_id', 'id');
+        return $this->belongsTo('App\Models\GiftReel', 'gift_id', 'id');
+        // return $this->belongsTo('App\Models\Gift', 'gift_id', 'id');
     }
+
+    public function giftReel()
+    {
+        return $this->belongsTo('App\Models\GiftReel', 'gift_id', 'id');
+    }   
 
     public function installmentOrderPayment()
     {
@@ -212,7 +218,8 @@ class Sale extends Model
         }
        
         if (!empty($orderItem->gift_id) and !empty($orderItem->gift)) {
-            $title .= ' (' . trans('update.a_gift_for_name_on_date_without_bold', ['name' => $orderItem->gift->name, 'date' => dateTimeFormat($orderItem->gift->date, 'j M Y H:i')]) . ')';
+            $title .= ' (' . trans('update.a_gift_for_name_on_date_without_bold', ['name' => $orderItem->gift->title, 'date' => dateTimeFormat($orderItem->gift->date, 'j M Y H:i')]) . ')';
+            // $title .= ' (' . trans('update.a_gift_for_name_on_date_without_bold', ['name' => $orderItem->gift->name, 'date' => dateTimeFormat($orderItem->gift->date, 'j M Y H:i')]) . ')';
         }
         if(!is_numeric($orderItem->user_id)){
             $fullname = $orderItem->full_name;

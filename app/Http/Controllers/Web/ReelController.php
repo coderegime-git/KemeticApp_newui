@@ -179,7 +179,7 @@ class ReelController extends Controller
             'video' => 'required|mimes:mp4,mov,ogg,webm|max:256000',
             'category_id' => 'required|integer|exists:reel_categories,id',
             'title' => 'required|string|max:255',
-            'caption' => 'required|string|max:1000',
+            'caption' => 'required|string',
         ]);
 
         $video = $request->file('video');

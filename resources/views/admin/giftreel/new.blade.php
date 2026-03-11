@@ -3,10 +3,10 @@
 @section('content')
     <section class="section">
         <div class="section-header">
-            <h1>{{ !empty($giftReel) ? 'Edit Gift Reel' : 'Create New Gift Reel' }}</h1>
+            <h1>{{ !empty($giftReel) ? 'Edit Gifts' : 'Create New Gifts' }}</h1>
             <div class="section-header-breadcrumb">
                 <div class="breadcrumb-item active"><a href="{{ getAdminPanelUrl() }}">Dashboard</a></div>
-                <div class="breadcrumb-item"><a href="{{ getAdminPanelUrl() }}/gift-reels">Gift Reels</a></div>
+                <div class="breadcrumb-item"><a href="{{ getAdminPanelUrl() }}/gift-reels">Gifts</a></div>
                 <div class="breadcrumb-item">{{ !empty($giftReel) ? 'Edit' : 'Create' }}</div>
             </div>
         </div>
@@ -23,7 +23,7 @@
                                 <input type="text" name="title"
                                        class="form-control  @error('title') is-invalid @enderror"
                                        value="{{ !empty($giftReel) ? $giftReel->title : old('title') }}"
-                                       placeholder="Enter gift reel title"
+                                       placeholder="Enter gift title"
                                        required/>
                                 @error('title')
                                 <div class="invalid-feedback">
@@ -52,6 +52,20 @@
                                     </div>
                                     @enderror
                                 </div>
+                            </div>
+
+                            <div class="form-group">
+                                <label>Price *</label>
+                                <input type="text" name="price"
+                                       class="form-control  @error('price') is-invalid @enderror"
+                                       value="{{ !empty($giftReel) ? $giftReel->price : old('price') }}"
+                                       placeholder="Enter gift price"
+                                       required/>
+                                @error('price')
+                                <div class="invalid-feedback">
+                                    {{ $message }}
+                                </div>
+                                @enderror
                             </div>
 
                             <div class=" mt-4">

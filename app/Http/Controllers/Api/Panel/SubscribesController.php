@@ -56,9 +56,143 @@ class SubscribesController extends Controller
         return apiResponse2(1, 'retrieved', trans('public.retrieved'), $data);
     }
 
+    public function verifyIAPPurchase(Request $request)
+    {
+        validateParam($request->all(), [
+            'receipt' => 'required|string',
+            'platform' => 'required|in:ios,android',
+            'subscribe' => 'required',
+        ]);
+
+        $user = apiAuth();
+        $platform = $request->input('platform');
+        $receipt = $request->input('receipt');
+        $subscribe = $request->input('subscribe');
+
+        // Verify with Apple or Google
+        if ($platform === 'ios') {
+            $isValid = $this->verifyAppleReceipt($receipt,$subscribe);
+        } else {
+            $isValid = $this->verifyGoogleReceipt($receipt, $subscribe);
+        }
+
+        if (!$isValid) {
+            return apiResponse2(0, 'invalid_receipt', 'Purchase verification failed');
+        }
+
+        // Check if already subscribed
+        $activeSubscribe = Subscribe::getActiveSubscribe($user->id);
+        if ($activeSubscribe) {
+            return apiResponse2(1, 'already_subscribed', 'Already have active subscription');
+        }
+        else
+        {
+            return apiResponse2(1, 'success', 'No Active Subscription, you can subscribe now');
+        }
+    }
+
+    private function verifyGoogleReceipt(string $purchaseToken, string $subscribe): bool
+    {
+        try {
+            $client = new \Google_Client();
+            $client->setAuthConfig(storage_path('app/google-service-account.json'));
+            $client->addScope(\Google_Service_AndroidPublisher::ANDROIDPUBLISHER);
+            $service = new \Google_Service_AndroidPublisher($client);
+
+            $subscription = $service->purchases_subscriptions->get(
+                env('GOOGLE_PACKAGE_NAME'),
+                $subscribe,
+                $purchaseToken
+            );
+
+            $paymentState  = $subscription->getPaymentState();
+            $expiryMillis  = $subscription->getExpiryTimeMillis();
+            $purchaseType  = $subscription->getPurchaseType(); // 0=test, null=real
+            $isTestPurchase = $purchaseType === 0;
+
+            \Log::info('Google IAP check', [
+                'paymentState'  => $paymentState,
+                'expiryMillis'  => $expiryMillis,
+                'purchaseType'  => $purchaseType,
+                'isTest'        => $isTestPurchase,
+                'currentTime'   => time() * 1000,
+                'isExpired'     => $expiryMillis <= (time() * 1000),
+            ]);
+
+            // Validate
+            if ($isTestPurchase) {
+                $isValid = $expiryMillis > (time() * 1000);
+            } else {
+                $isValid = $paymentState === 1 
+                    && $expiryMillis > (time() * 1000);
+            }
+
+            // Acknowledge if valid and not yet acknowledged
+            if ($isValid && $subscription->getAcknowledgementState() === 0) {
+                $ackRequest = new \Google_Service_AndroidPublisher_SubscriptionPurchasesAcknowledgeRequest();
+                $service->purchases_subscriptions->acknowledge(
+                    env('GOOGLE_PACKAGE_NAME'),
+                    $googleProductId,
+                    $purchaseToken,
+                    $ackRequest
+                );
+                \Log::info('Purchase acknowledged successfully');
+            }
+
+            return $isValid;
+
+        } catch (\Exception $e) {
+            \Log::error('Google IAP verification failed: ' . $e->getMessage());
+            return false;
+        }
+    }
+
+
+    private function verifyAppleReceipt(string $receipt, string $subscribe): bool
+    {
+        // $productIdMap = [
+        //     3 => env('APPLE_MONTHLY_PRODUCT_ID'),
+        //     5 => env('APPLE_YEARLY_PRODUCT_ID'),
+        // ];
+
+        // $appleProductId = $productIdMap[$subscribe_id] ?? null;
+
+        $urls = [
+            'https://buy.itunes.apple.com/verifyReceipt',
+            'https://sandbox.itunes.apple.com/verifyReceipt',
+        ];
+
+        $payload = [
+            'receipt-data' => $receipt,
+            'password' => env('APPLE_SHARED_SECRET'),
+            'exclude-old-transactions' => true,
+        ];
+
+        foreach ($urls as $url) {
+            $response = \Illuminate\Support\Facades\Http::post($url, $payload);
+            $data = $response->json();
+
+            if ($data['status'] === 0) {
+                $latestReceipts = $data['latest_receipt_info'] ?? [];
+                foreach ($latestReceipts as $receiptInfo) {
+                    // Check correct product AND not expired
+                    if ($receiptInfo['product_id'] === $subscribe) {
+                        $expiresAt = ($receiptInfo['expires_date_ms'] ?? 0) / 1000;
+                        if ($expiresAt > time()) {
+                            return true;
+                        }
+                    }
+                }
+            }
+
+            if ($data['status'] !== 21007) break;
+        }
+
+        return false;
+    }
+
     public function webPayGenerator(Request $request)
     {
-
         validateParam($request->all(), [
             'subscribe_id' => ['required', Rule::exists('subscribes', 'id')]
         ]);
@@ -370,7 +504,7 @@ class SubscribesController extends Controller
                         'total' => $order->total_amount,
                         'order' => $order,
                         'count' => 1,
-                        'userCharge' => $user->getAccountingCharge(),
+                        'userCharge' => (int) $user->getAccountingCharge(),
                         'razorpay' => $razorpay
                     ]
                 ], 200);
@@ -387,7 +521,7 @@ class SubscribesController extends Controller
                     'total' => $order->total_amount,
                     'order' => $order,
                     'count' => 1,
-                    'userCharge' => $user->getAccountingCharge(),
+                    'userCharge' => (int) $user->getAccountingCharge(),
                     'razorpay' => $razorpay
                 ]
             ], 200);

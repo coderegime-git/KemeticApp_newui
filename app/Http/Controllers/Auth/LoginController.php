@@ -343,6 +343,16 @@ class LoginController extends Controller
             return redirect(getAdminPanelUrl());
         } else {
 
+            if (session()->has('membership1_after_login')) {
+                $redirectUrl = session()->pull('membership1_after_login');
+                return redirect($redirectUrl);
+            }
+
+            if (session()->has('membership_after_login')) {
+                $redirectUrl = session()->pull('membership_after_login');
+                return redirect($redirectUrl);
+            }
+
             //new add 05-02
             if (session()->has('redirect_to_checkout')) {
                 $checkoutData = session('redirect_to_checkout');

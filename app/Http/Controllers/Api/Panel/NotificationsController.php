@@ -126,6 +126,34 @@ class NotificationsController extends Controller
         return $this->all()->diff($this->unRead());
     }
 
+    public function markAllAsRead()
+    {
+        $user = apiAuth();
+
+        if (!empty($user)) {
+            $unReadNotifications = $user->getUnReadNotifications();
+
+            if (!empty($unReadNotifications) and !$unReadNotifications->isEmpty()) {
+                foreach ($unReadNotifications as $notification) {
+                    $status = NotificationStatus::where('user_id', $user->id)
+                        ->where('notification_id', $notification->id)
+                        ->first();
+
+                    if (empty($status)) {
+                        NotificationStatus::create([
+                            'user_id' => $user->id,
+                            'notification_id' => $notification->id,
+                            'seen_at' => time()
+                        ]);
+                    }
+                }
+            }
+        }
+
+        return apiResponse2(1, trans('public.request_success'), trans('update.all_your_notifications_have_been_marked_as_read'));
+
+    }
+
     public function all()
     {
         $user = apiAuth();

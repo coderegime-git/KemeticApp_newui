@@ -20,8 +20,21 @@
             </div>
         </div>
     </section>
+
+    @if(str_contains($page->link, 'newsletter'))
+      <div style="max-width:480px;margin:30px auto;text-align:center;">
+        <getresponse-form form-id="3172832d-314b-4dc0-9bf2-efd30abc46b1" e="0"></getresponse-form>
+        <script async src="https://rnlpq.gr-cdn.com/getresponse-plugin-loader/v1/loader.js"></script>
+      </div>
+    @endif
 @endsection
 
 @push('scripts_bottom')
-
+@if(str_contains($page->link, 'newsletter'))
+<script>
+  if (typeof fbq !== 'undefined') {
+    fbq('track', 'Lead', { content_name: 'Newsletter Signup' });
+  }
+</script>
+@endif
 @endpush

@@ -22,4 +22,9 @@ class ReelComment extends Model
     {
         return $this->belongsTo(Reel::class);
     }
+
+    public function replies()
+    {
+        return $this->hasMany(ReelComment::class, 'reply_id', 'id')->orderBy('created_at', 'asc');
+    }
 }

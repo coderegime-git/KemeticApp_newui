@@ -67,18 +67,36 @@ class CommentResource extends JsonResource
             //     'webinar' => $this->when($this->webinar, $this->webinar),
             //    'product' => $this->when($this->product, $this->product),
             //   'replies'=>
-            'replies' => $this->replies->where('status', 'active')->map(function ($reply) {
+            // 'replies' => $this->replies->where('status', 'active')->map(function ($reply) {
+            //     return [
+            //         'id' => $reply->id,
+            //         'comment_user_type' => $reply->comment_user_type,
+            //         'user' => [
+            //             'full_name' => $this->user->full_name,
+            //             'avatar' => url($this->user->getAvatar()),
+            //         ],
+            //         'create_at' => $reply->created_at,
+            //         'comment' => $reply->comment,
+            //     ];
+            // })
+            $this->mergeWhen(!$this->reply_id, function () {
                 return [
-                    'id' => $reply->id,
-                    'comment_user_type' => $reply->comment_user_type,
-                    'user' => [
-                        'full_name' => $this->user->full_name,
-                        'avatar' => url($this->user->getAvatar()),
-                    ],
-                    'create_at' => $reply->created_at,
-                    'comment' => $reply->comment,
+                    'replies' => $this->replies
+                        ->where('status', 'active')
+                        ->map(function ($reply) {
+                            return [
+                                'id' => $reply->id,
+                                'comment_user_type' => $reply->comment_user_type,
+                                'user' => [
+                                    'full_name' => $reply->user->full_name,   // ✅ Fixed: was $this->user
+                                    'avatar' => url($reply->user->getAvatar()), // ✅ Fixed: was $this->user
+                                ],
+                                'create_at' => $reply->created_at,
+                                'comment' => $reply->comment,
+                            ];
+                        })->values()
                 ];
-            })
+            }),
         ];
     }
 

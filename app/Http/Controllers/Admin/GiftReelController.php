@@ -40,11 +40,13 @@ class GiftReelController extends Controller
         $this->validate($request, [
             'title' => 'required|string|max:556',
             'thumbnail' => 'required|string|max:556',
+            'price' => 'required',
         ]);
 
         GiftReel::create([
             'title' => $request->input('title'),
             'thumbnail' => $request->input('thumbnail'),
+            'price' => $request->input('price'),
             'created_at' => time(),
             'updated_at' => time(),
         ]);
@@ -73,6 +75,7 @@ class GiftReelController extends Controller
         $this->validate($request, [
             'title' => 'required|string|max:556',
             'thumbnail' => 'required|string|max:556',
+            'price' => 'required',
         ]);
 
         $giftReel = GiftReel::findOrFail($id);
@@ -80,6 +83,7 @@ class GiftReelController extends Controller
         $giftReel->update([
             'title' => $request->input('title'),
             'thumbnail' => $request->input('thumbnail'),
+            'price' => $request->input('price'),
             'updated_at' => time(),
         ]);
 

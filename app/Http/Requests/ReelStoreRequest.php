@@ -15,7 +15,7 @@ class ReelStoreRequest extends FormRequest
     {
         return [
             'title' => 'nullable|string|max:255',
-            'caption' => 'nullable|string|max:300',
+            'caption' => 'nullable|string',
             'video' => [
                 'required',
                 'file',

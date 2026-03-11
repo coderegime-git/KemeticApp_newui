@@ -122,6 +122,7 @@ class BookController extends Controller
             'title' => 'required|string|max:255',
             'category_id' => 'required|numeric',
             'image_cover' => 'required|string',
+            'cover_pdf' => 'required|string',
             'image_path' => 'required|string',
             'type' => 'required|string',
             'price' => 'nullable|integer',
@@ -134,9 +135,25 @@ class BookController extends Controller
         $pdfService = new PdfResizerService();
         
         $pdfurl = url($data['image_path']);
+        $imageFirstPath = url($data['cover_pdf']);
 
         if($data['type'] == 'Print')
         {
+            $cover = $pdfService->generateCoverFromPdf(
+                $imageFirstPath, // interior PDF
+                '1'                // no full bleed
+            );
+            $coverPdfPath = str_replace(public_path(), '', $cover['local_path']);
+            $coverpageCount = $cover['pages'];
+
+            // dd($coverpageCount);
+
+            if ($coverpageCount > 1) {
+                 return redirect()->back()
+                ->withInput()
+                ->withErrors(['cover_pdf' => 'Cover PDF must be a single page only. Your cover PDF contains ' . $coverpageCount . ' pages.']);
+            }
+
             $interior = $pdfService->resizeForLulu(
                 $pdfurl, // interior PDF
                 false                // no full bleed
@@ -145,18 +162,18 @@ class BookController extends Controller
             $interiorPdfPath = str_replace(public_path(), '', $interior['local_path']);
             $pageCount = $interior['page_count'];
 
-            $cover = $pdfService->generateCoverFromPdf(
-                $pdfurl, // cover PDF
-                $pageCount
-            );
+            // $cover = $pdfService->generateCoverFromPdf(
+            //     $pdfurl, // cover PDF
+            //     $pageCount
+            // );
 
-            $coverPdfPath = str_replace(public_path(), '', $cover['local_path']);
+            // $coverPdfPath = str_replace(public_path(), '', $cover['local_path']);
         }
         else
         {
             // For non-print books, just use the original PDF path
-            $interiorPdfPath = $data['image_cover'];
-            $coverPdfPath = $data['image_cover'];
+            $interiorPdfPath = $data['image_path'];
+            $coverPdfPath = $data['cover_pdf'];
             $pageCount = 0;
         }
 
@@ -222,6 +239,7 @@ class BookController extends Controller
             'category_id' => 'required|numeric',
             'image_cover' => 'required|string',
             'image_path' => 'required|string',
+            'cover_pdf' => 'required|string',
             'type' => 'required|string',
             'price' => 'nullable',
             'description' => 'required|string',
@@ -234,9 +252,25 @@ class BookController extends Controller
         $pdfService = new PdfResizerService();
         
         $pdfurl = url($data['image_path']);
+        $imageFirstPath = url($data['cover_pdf']);
 
         if($data['type'] == 'Print')
         {
+            $cover = $pdfService->generateCoverFromPdf(
+                $imageFirstPath, // interior PDF
+                '1'                // no full bleed
+            );
+            $coverPdfPath = str_replace(public_path(), '', $cover['local_path']);
+            $coverpageCount = $cover['pages'];
+
+            // dd($coverpageCount);
+
+            if ($coverpageCount > 1) {
+                 return redirect()->back()
+                ->withInput()
+                ->withErrors(['cover_pdf' => 'Cover PDF must be a single page only. Your cover PDF contains ' . $coverpageCount . ' pages.']);
+            }
+
             $interior = $pdfService->resizeForLulu(
                 $pdfurl, // interior PDF
                 false                // no full bleed
@@ -245,18 +279,18 @@ class BookController extends Controller
             $interiorPdfPath = str_replace(public_path(), '', $interior['local_path']);
             $pageCount = $interior['page_count'];
 
-            $cover = $pdfService->generateCoverFromPdf(
-                $pdfurl, // cover PDF
-                $pageCount
-            );
+            // $cover = $pdfService->generateCoverFromPdf(
+            //     $pdfurl, // cover PDF
+            //     $pageCount
+            // );
 
-            $coverPdfPath = str_replace(public_path(), '', $cover['local_path']);
+            // $coverPdfPath = str_replace(public_path(), '', $cover['local_path']);
         }
         else
         {
             // For non-print books, just use the original PDF path
-            $interiorPdfPath = $data['image_cover'];
-            $coverPdfPath = $data['image_cover'];
+            $interiorPdfPath = $data['image_path'];
+            $coverPdfPath = $data['cover_pdf'];
             $pageCount = 0;
         }
 

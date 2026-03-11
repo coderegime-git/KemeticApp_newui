@@ -21,6 +21,7 @@
         "fideloper/proxy": "^4.4",
         "fruitcake/laravel-cors": "^3.0",
         "gizemsever/laravel-paytr": "^2.1",
+        "google/apiclient": "^2.19",
         "google/apiclient-services": "^0.416.0",
         "guysolamour/laravel-cinetpay": "^2.0",
         "guzzlehttp/guzzle": "^7.2",

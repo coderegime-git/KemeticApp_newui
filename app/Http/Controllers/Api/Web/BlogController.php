@@ -121,6 +121,9 @@ class BlogController extends Controller
                         }
                     ]);
             },
+            "reviews" => function ($query) {
+                $query->with('creator'); 
+            },
         ])
         ->where('status', 'publish')
         ->when(!empty($category), function ($q) use ($category) {
@@ -277,7 +280,7 @@ class BlogController extends Controller
                     ]);
             },
             "reviews" => function ($query) {
-                $query->with('user'); 
+                $query->with('creator'); 
             },
         ])
         ->where('status', 'publish')
@@ -852,10 +855,19 @@ class BlogController extends Controller
 
         Blog::where('id', $id)->increment('share_count');
         //$blog->increment('share_count');
+
+        $shareLink = url('/app/launch') . '?' . http_build_query([
+            'page'         => 'article',
+            'value'        => $blog->id   // or any unique share code
+        ]);
+
         return response()->json([
             'status' => 'success',
             'message' => 'Blog Shared successfully',
-            'data' => $share
+            'data' => [
+                'share' => $share,
+                'share_link' => $shareLink,
+            ]
         ], 201);
     }
 
@@ -1033,7 +1045,7 @@ class BlogController extends Controller
             'blog' => [
                 'id' => $blog->id,
                 'title' => $blog->title,
-                'image' => $blog->image,
+                'image' => url($blog->image),
                 'description' => $blog->description,
                 'created_at' => $blog->created_at,
                 'author' => [
@@ -1047,7 +1059,7 @@ class BlogController extends Controller
                     'offline_message' => $blog->author->offline_message,
                     'verified' => $blog->author->verified,
                     'rate' => $blog->author->rate,
-                    'avatar' => $blog->author->avatar,
+                    'avatar' => url($blog->author->avatar),
                     'meeting_status' => $blog->author->meeting_status,
                     'user_group' => $blog->author->user_group,
                     'address' => $blog->author->address,
@@ -1067,7 +1079,9 @@ class BlogController extends Controller
                 'offline_message' => $comment->user->offline_message,
                 'verified' => $comment->user->verified,
                 'rate' => $comment->user->rate,
-                'avatar' => $comment->user->avatar,
+                'avatar' => !empty($comment->user->avatar) 
+                        ? url($comment->user->avatar) 
+                        : 'https://kemetic.app/getDefaultAvatar?item=' . $comment->user->id . '&name=' . urlencode($comment->user->full_name) . '&size=40',
                 'meeting_status' => $comment->user->meeting_status,
                 'user_group' => $comment->user->user_group,
                 'address' => $comment->user->address,

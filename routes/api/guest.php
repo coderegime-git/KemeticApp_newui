@@ -5,6 +5,7 @@ use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Api\Panel\ProductController;
 use App\Http\Controllers\Panel\Store\ProductFilterController;
 use App\Http\Controllers\Api\Panel\CartController;
+use App\Http\Controllers\Api\Web\VersionCheckController;
 
 Route::group([], function () {
 
@@ -16,6 +17,7 @@ Route::group([], function () {
     Route::get('/getCountry', [CartController::class, 'getCountry']);
     Route::get('/country', ['uses' => 'WebinarController@country']);
     Route::get('/home', ['uses' => 'WebinarController@home']);
+    Route::get('/version/check', [VersionCheckController::class, 'check']);
    
     Route::group(['prefix' => 'courses'], function () {
 
@@ -35,6 +37,7 @@ Route::group([], function () {
         Route::post('/{course}/save', ['uses' => 'WebinarController@coursesave','middleware' => 'api.auth']);
         Route::post('/{course}/comment', ['uses' => 'WebinarController@coursecomment','middleware' => 'api.auth']);
         Route::post('/{course}/review', ['uses' => 'WebinarController@coursereview','middleware' => 'api.auth']);
+        Route::post('/{course}/reply', ['uses' => 'WebinarController@replyComment','middleware' => 'api.auth']);
         // Route::post('/{course}/report', ['uses' => 'WebinarController@coursereport','middleware' => 'api.auth']);
 
         Route::get('reports/reasons', ['uses' => 'ReportsController@index']);
@@ -126,7 +129,7 @@ Route::group([], function () {
 
         Route::get('/', ['uses' => 'BookController@index']);
         Route::get('/categories', ['uses' => 'BookCategoryController@index']);
-        Route::get('/{id}', ['uses' => 'BookController@show','middleware' => 'api.auth']);
+        Route::get('/{id}', ['uses' => 'BookController@show']);
 
         Route::post('/store', ['uses' => 'BookController@store']);
         Route::post('/category', ['uses' => 'BookController@bookcategory']);
@@ -139,6 +142,7 @@ Route::group([], function () {
         Route::post('/{book}/save', ['uses' => 'BookController@booksave','middleware' => 'api.auth']);
         Route::post('/{book}/report', ['uses' => 'BookController@bookreport','middleware' => 'api.auth']);
         Route::post('/{book}/review', ['uses' => 'BookController@bookreview','middleware' => 'api.auth']);
+        Route::post('/{book}/reply', ['uses' => 'BookController@bookreply','middleware' => 'api.auth']);
         
     });
 
@@ -157,6 +161,7 @@ Route::group([], function () {
         Route::post('/{livestream}/gift', ['uses' => 'LivestreamController@livestreamgift','middleware' => 'api.auth']);
         Route::post('/{livestream}/report', ['uses' => 'LivestreamController@livestreamreport','middleware' => 'api.auth']);
         Route::post('/{livestream}/review', ['uses' => 'LivestreamController@livestreamreview','middleware' => 'api.auth']);
+        Route::post('/{livestream}/reply', ['uses' => 'LivestreamController@livestreamreply','middleware' => 'api.auth']);
     });
 
     Route::group(['prefix' => 'notification'], function () {

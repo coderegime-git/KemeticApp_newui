@@ -1191,6 +1191,14 @@ Route::group(['prefix' => $prefix, 'namespace' => 'Admin', 'middleware' => ['web
             Route::get('/{id}/delete', 'GiftReelController@delete');
         });
 
+        Route::prefix('app_version')->group(function () {
+            Route::get('/','AppVersionController@index');
+            Route::post('/store','AppVersionController@store');
+            Route::get('/{id}/edit',    'AppVersionController@edit');
+            Route::post('/{id}/update', 'AppVersionController@update');
+            Route::get('/{id}/delete',  'AppVersionController@delete');
+        });
+
 
         /* Forms */
         Route::group(['prefix' => 'forms'], function () {

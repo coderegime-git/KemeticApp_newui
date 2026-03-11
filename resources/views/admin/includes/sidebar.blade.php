@@ -987,17 +987,14 @@
                 </a>
 
                 <ul class="dropdown-menu">
-                    <!-- @can('admin_reel_list')
+                   
                         <li class="{{ (request()->is(getAdminPanelUrl('/reel', false))) ? 'active' : '' }}">
                             <a class="nav-link" href="{{ getAdminPanelUrl() }}/reel">{{ trans('admin/main.lists') }}</a>
                         </li>
-                    @endcan()
 
-                    @can('admin_reel_create')
                         <li class="{{ (request()->is(getAdminPanelUrl('/reel/create', false))) ? 'active' : '' }}">
                             <a class="nav-link" href="{{ getAdminPanelUrl() }}/reel/create">New Portals</a>
                         </li>
-                    @endcan() -->
 
                         <li class="{{ (request()->is(getAdminPanelUrl('/reel/categories', false))) ? 'active' : '' }}">
                             <a class="nav-link" href="{{ getAdminPanelUrl() }}/reel/categories">Portal Categories</a>
@@ -1839,6 +1836,13 @@
                     <a href="{{ getAdminPanelUrl() }}/settings" class="nav-link">
                         <i class="fas fa-cogs"></i>
                         <span>{{ trans('admin/main.settings') }}</span>
+                    </a>
+                </li>
+
+                <li class="nav-item {{ $settingClass ?? '' }}">
+                    <a href="{{ getAdminPanelUrl() }}/app_version" class="nav-link">
+                        <i class="fas fa-mobile-alt"></i>
+                        <span>App Version</span>
                     </a>
                 </li>
             @endcan()

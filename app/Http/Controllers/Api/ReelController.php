@@ -10,6 +10,7 @@ use App\Jobs\ProcessReelVideo;
 use App\Models\Reel;
 use App\Models\GiftReel;
 use App\Models\ReelCategory;
+use App\Models\ReelComment;
 use App\Http\Resources\ReelResourceCollection;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -93,7 +94,7 @@ class ReelController extends Controller
         }
 
         // Base query - exclude hidden and reported reels
-        $reelQuery = Reel::with(['likes', 'comments.user', 'review.user', 'savedreel', 'user'])
+        $reelQuery = Reel::with(['likes', 'comments.user', 'comments.replies.user', 'review.user', 'savedreel', 'user'])
             ->where('is_hidden', false)
             ->where(function($query) {
                 $query->where('reports_count', '<', 15)
@@ -147,19 +148,19 @@ class ReelController extends Controller
                 $reels = $reelQuery
                     ->select('reels.*')
                     ->orderByRaw("CASE " . implode(' ', $caseStatements) . " END")
-                    // ->orderBy('views_count', 'asc')  // Unviewed (0) first
-                    // ->orderBy('likes_count', 'desc') // Most liked first
-                    ->inRandomOrder() 
-                    // ->orderByRaw("RAND($randomSeed)") // Consistent random shuffle
+                    ->orderBy('views_count', 'asc')  // Unviewed (0) first
+                    ->orderBy('likes_count', 'desc') // Most liked first
+                    // ->inRandomOrder() 
+                    ->orderByRaw("RAND($randomSeed)") // Consistent random shuffle
                     ->paginate(10);
             } else {
                 // No liked categories - show unviewed first, then most liked
                 $reels = $reelQuery
                     ->select('reels.*')
-                    // ->orderBy('views_count', 'asc')  // Unviewed first
-                    // ->orderBy('likes_count', 'desc') // Most liked first
+                    ->orderBy('views_count', 'asc')  // Unviewed first
+                    ->orderBy('likes_count', 'desc') // Most liked first
                     ->inRandomOrder() 
-                    // ->orderByRaw("RAND($randomSeed)") // Consistent random shuffle
+                    ->orderByRaw("RAND($randomSeed)") // Consistent random shuffle
                     ->paginate(10);
             }
         } else {
@@ -167,10 +168,10 @@ class ReelController extends Controller
             // Show unviewed first (by views_count=0), then most liked, with shuffle
             $reels = $reelQuery
                 ->select('reels.*')
-                // ->orderBy('views_count', 'asc')  // Unviewed (0) first
-                // ->orderBy('likes_count', 'desc') // Most liked first
+                ->orderBy('views_count', 'asc')  // Unviewed (0) first
+                ->orderBy('likes_count', 'desc') // Most liked first
                 ->inRandomOrder() 
-                // ->orderByRaw("RAND($randomSeed)") // Consistent random shuffle
+                ->orderByRaw("RAND($randomSeed)") // Consistent random shuffle
                 ->paginate(10);
         }
 
@@ -199,6 +200,19 @@ class ReelController extends Controller
             // Comments array
             $commentsArr = [];
             foreach ($reel->comments as $comment) {
+
+                $formattedReplies = [];
+                foreach ($comment->replies as $reply) {
+                    $formattedReplies[] = [
+                        'id'         => $reply->id,
+                        'content'    => $reply->content,
+                        'created_at' => $reply->created_at,
+                        'user'       => [
+                            'full_name' => $reply->user?->full_name ?? '',
+                            'avatar'    => $reply->user ? url($reply->user->getAvatar()) : '',
+                        ],
+                    ];
+                }
                 $commentsArr[] = [
                     'id' => $comment->id,
                     'user_id' => $comment->user_id,
@@ -207,6 +221,7 @@ class ReelController extends Controller
                     'created_at' => $comment->created_at,
                     'username' => $comment->user ? $comment->user->full_name : '',
                     'avatar' => $comment->user ? url($comment->user->getAvatar()) : '',
+                    'replies'    => $formattedReplies,
                 ];
             }
 
@@ -260,7 +275,7 @@ class ReelController extends Controller
         }
 
         // Get the selected reel
-        $selectedReel = Reel::with(['likes', 'comments.user', 'review.user', 'savedreel', 'user'])
+        $selectedReel = Reel::with(['likes', 'comments.user', 'comments.replies.user', 'review.user', 'savedreel', 'user'])
             ->where('id', $id)
             ->where('is_hidden', false)
             ->where(function($query) {
@@ -286,7 +301,7 @@ class ReelController extends Controller
         }
 
         // Build query for other reels
-        $reelQuery = Reel::with(['likes', 'comments.user', 'review.user', 'savedreel', 'user'])
+        $reelQuery = Reel::with(['likes', 'comments.user','comments.replies.user', 'review.user', 'savedreel', 'user'])
             ->where('id', '!=', $id)
             ->where('is_hidden', false)
             ->where(function($query) {
@@ -362,10 +377,10 @@ class ReelController extends Controller
                         ->orderByRaw("RAND($randomSeed)");
             }
         } else {
-              $reelQuery->inRandomOrder();
-            // $reelQuery->orderBy('views_count', 'asc')
-            //         ->orderBy('likes_count', 'desc')
-            //         ->orderByRaw("RAND($randomSeed)");
+            //   $reelQuery->inRandomOrder();
+            $reelQuery->orderBy('views_count', 'asc')
+                    ->orderBy('likes_count', 'desc')
+                    ->orderByRaw("RAND($randomSeed)");
         }
 
         $reels = $reelQuery->paginate(10);
@@ -397,6 +412,15 @@ class ReelController extends Controller
                     'created_at' => $comment->created_at,
                     'username' => $comment->user?->full_name ?? '',
                     'avatar' => $comment->user ? url($comment->user->getAvatar()) : '',
+                    'replies'    => $comment->replies->map(fn ($reply) => [  // ← added
+                        'id'         => $reply->id,
+                        'content'    => $reply->content,
+                        'created_at' => $reply->created_at,
+                        'user'       => [
+                            'full_name' => $reply->user?->full_name ?? '',
+                            'avatar'    => $reply->user ? url($reply->user->getAvatar()) : '',
+                        ],
+                    ]),
                 ]),
 
                 'reviews' => $reel->review->map(fn ($review) => [
@@ -429,6 +453,231 @@ class ReelController extends Controller
         return response()->json([
             'status' => 'success',
             'data' => $pagination
+        ]);
+    }
+
+    public function trending(Request $request)
+    {
+        $userId = $this->getUserIdFromToken($request);
+
+        // Base query - exclude hidden and reported reels
+        $reelQuery = Reel::with(['likes', 'comments.user', 'comments.replies.user', 'review.user', 'savedreel', 'user'])
+            ->where('is_hidden', false)
+            ->where(function ($query) {
+                $query->where('reports_count', '<', 15)
+                    ->orWhereNull('reports_count');
+            });
+
+        // All users same logic - most liked reels first
+        $reels = $reelQuery
+            ->leftJoin('reel_review', 'reels.id', '=', 'reel_review.reel_id')
+            ->leftJoin('reel_likes',  'reels.id', '=', 'reel_likes.reel_id')
+            ->select(
+                'reels.*',
+                DB::raw('COUNT(DISTINCT reel_likes.id) as computed_likes_count'),
+                DB::raw('COALESCE(AVG(reel_review.rating), 0) as avg_rating'),
+                DB::raw('COUNT(DISTINCT reel_review.id) as computed_review_count')
+            )
+            ->groupBy('reels.id')
+            ->orderByRaw('
+                COUNT(DISTINCT reel_likes.id) DESC,
+                (COUNT(DISTINCT reel_likes.id)  * 0.5 +
+                 COUNT(DISTINCT reel_review.id) * 0.3 +
+                 reels.views_count              * 0.2) DESC,
+                reels.id DESC
+            ')
+            ->paginate(10);
+
+        // Format the response (same as index)
+        $pagination = $reels->toArray();
+        $reelModels = $reels->items();
+        $reelsArr   = [];
+
+        foreach ($reelModels as $reel) {
+            $reelData = $reel->toArray();
+
+            $isLiked  = $reel->likes->contains('user_id', $userId);
+            $isSaved  = $reel->savedreel->contains('user_id', $userId);
+            $username = $reel->user ? $reel->user->full_name : '';
+
+            $likesArr = [];
+            foreach ($reel->likes as $like) {
+                $likesArr[] = [
+                    'id'         => $like->id,
+                    'user_id'    => $like->user_id,
+                    'reel_id'    => $like->reel_id,
+                    'created_at' => $like->created_at,
+                ];
+            }
+
+            $commentsArr = [];
+            foreach ($reel->comments as $comment) {
+                $formattedReplies = [];
+                foreach ($comment->replies as $reply) {
+                    $formattedReplies[] = [
+                        'id'         => $reply->id,
+                        'content'    => $reply->content,
+                        'created_at' => $reply->created_at,
+                        'user'       => [
+                            'full_name' => $reply->user?->full_name ?? '',
+                            'avatar'    => $reply->user ? url($reply->user->getAvatar()) : '',
+                        ],
+                    ];
+                }
+
+                $commentsArr[] = [
+                    'id'         => $comment->id,
+                    'user_id'    => $comment->user_id,
+                    'reel_id'    => $comment->reel_id,
+                    'content'    => $comment->content,
+                    'created_at' => $comment->created_at,
+                    'username'   => $comment->user ? $comment->user->full_name : '',
+                    'avatar'     => $comment->user ? url($comment->user->getAvatar()) : '',
+                ];
+            }
+
+            $reviewsArr = [];
+            foreach ($reel->review as $reviews) {
+                $reviewsArr[] = [
+                    'id'         => $reviews->id,
+                    'user_id'    => $reviews->user_id,
+                    'reel_id'    => $reviews->reel_id,
+                    'review'     => $reviews->review,
+                    'rating'     => $reviews->rating,
+                    'created_at' => $reviews->created_at,
+                    'username'   => $reviews->user ? $reviews->user->full_name : '',
+                    'avatar'     => $reviews->user ? url($reviews->user->getAvatar()) : '',
+                    'replies'    => $formattedReplies,
+                ];
+            }
+
+            $reelData['username'] = $username;
+            $reelData['is_liked'] = $isLiked;
+            $reelData['is_saved'] = $isSaved;
+            $reelData['likes']    = $likesArr;
+            $reelData['comments'] = $commentsArr;
+            $reelData['reviews']  = $reviewsArr;
+            $reelsArr[] = $reelData;
+        }
+
+        $pagination['reels'] = $reelsArr;
+        unset($pagination['data']);
+
+        return response()->json([
+            'status' => 'success',
+            'data'   => $pagination,
+        ]);
+    }
+
+    public function global(Request $request)
+    {
+        $userId = $this->getUserIdFromToken($request);
+
+        // Base query - exclude hidden and reported reels
+        $reelQuery = Reel::with(['likes', 'comments.user', 'comments.replies.user', 'review.user', 'savedreel', 'user'])
+            ->where('is_hidden', false)
+            ->where(function ($query) {
+                $query->where('reports_count', '<', 15)
+                    ->orWhereNull('reports_count');
+            });
+
+        // All users same logic - highest rated + most engaged reels first
+        $reels = $reelQuery
+            ->leftJoin('reel_review', 'reels.id', '=', 'reel_review.reel_id')
+            ->leftJoin('reel_likes',  'reels.id', '=', 'reel_likes.reel_id')
+            ->select(
+                'reels.*',
+                DB::raw('COUNT(DISTINCT reel_likes.id) as computed_likes_count'),
+                DB::raw('COALESCE(AVG(reel_review.rating), 0) as avg_rating'),
+                DB::raw('COUNT(DISTINCT reel_review.id) as computed_review_count')
+            )
+            ->groupBy('reels.id')
+            ->orderByRaw('
+                COALESCE(AVG(reel_review.rating), 0) DESC,
+                (COUNT(DISTINCT reel_likes.id)  * 0.4 +
+                 COUNT(DISTINCT reel_review.id) * 0.3) DESC,
+                reels.id DESC
+            ')
+            ->paginate(10);
+
+        // Format the response (same as index)
+        $pagination = $reels->toArray();
+        $reelModels = $reels->items();
+        $reelsArr   = [];
+
+        foreach ($reelModels as $reel) {
+            $reelData = $reel->toArray();
+
+            $isLiked  = $reel->likes->contains('user_id', $userId);
+            $isSaved  = $reel->savedreel->contains('user_id', $userId);
+            $username = $reel->user ? $reel->user->full_name : '';
+
+            $likesArr = [];
+            foreach ($reel->likes as $like) {
+                $likesArr[] = [
+                    'id'         => $like->id,
+                    'user_id'    => $like->user_id,
+                    'reel_id'    => $like->reel_id,
+                    'created_at' => $like->created_at,
+                ];
+            }
+
+            $commentsArr = [];
+            foreach ($reel->comments as $comment) {
+                $formattedReplies = [];
+                foreach ($comment->replies as $reply) {
+                    $formattedReplies[] = [
+                        'id'         => $reply->id,
+                        'content'    => $reply->content,
+                        'created_at' => $reply->created_at,
+                        'user'       => [
+                            'full_name' => $reply->user?->full_name ?? '',
+                            'avatar'    => $reply->user ? url($reply->user->getAvatar()) : '',
+                        ],
+                    ];
+                }
+
+                $commentsArr[] = [
+                    'id'         => $comment->id,
+                    'user_id'    => $comment->user_id,
+                    'reel_id'    => $comment->reel_id,
+                    'content'    => $comment->content,
+                    'created_at' => $comment->created_at,
+                    'username'   => $comment->user ? $comment->user->full_name : '',
+                    'avatar'     => $comment->user ? url($comment->user->getAvatar()) : '',
+                    'replies'    => $formattedReplies,
+                ];
+            }
+
+            $reviewsArr = [];
+            foreach ($reel->review as $reviews) {
+                $reviewsArr[] = [
+                    'id'         => $reviews->id,
+                    'user_id'    => $reviews->user_id,
+                    'reel_id'    => $reviews->reel_id,
+                    'review'     => $reviews->review,
+                    'rating'     => $reviews->rating,
+                    'created_at' => $reviews->created_at,
+                    'username'   => $reviews->user ? $reviews->user->full_name : '',
+                    'avatar'     => $reviews->user ? url($reviews->user->getAvatar()) : '',
+                ];
+            }
+
+            $reelData['username'] = $username;
+            $reelData['is_liked'] = $isLiked;
+            $reelData['is_saved'] = $isSaved;
+            $reelData['likes']    = $likesArr;
+            $reelData['comments'] = $commentsArr;
+            $reelData['reviews']  = $reviewsArr;
+            $reelsArr[] = $reelData;
+        }
+
+        $pagination['reels'] = $reelsArr;
+        unset($pagination['data']);
+
+        return response()->json([
+            'status' => 'success',
+            'data'   => $pagination,
         ]);
     }
 
@@ -626,7 +875,7 @@ class ReelController extends Controller
 
         $now = time();
 
-        $share = $reel->share()->create([
+        $share = $reel->shares()->create([
             'user_id' => Auth::id(),
             'reel_id' => $reel->id,
             'created_at' => $now,
@@ -634,10 +883,19 @@ class ReelController extends Controller
         ]);
 
         $reel->increment('share_count');
-         return response()->json([
+
+        $shareLink = url('/app/launch') . '?' . http_build_query([
+            'page'         => 'portals',
+            'value'        => $reel->id   // or any unique share code
+        ]);
+    
+        return response()->json([
             'status' => 'success',
             'message' => 'Reel Shared successfully',
-            'data' => $share
+            'data' => [
+                'share' => $share,
+                'share_link' => $shareLink,
+            ]
         ], 201);
     }
 
@@ -739,6 +997,63 @@ class ReelController extends Controller
                 'created_at' => $comment->created_at, // Convert to timestamp
                 'username' => $comment->user->full_name,
                 'avatar' => $comment->user ? url($comment->user->getAvatar()) : '',
+                'replies' => [] 
+            ]
+            // 'data' => $comment->load('user')
+        ], 201);
+    }
+
+    public function reply(ReelCommentRequest $request, $id)
+    {
+        $comment = ReelComment::where('id', $id)->first();
+
+        if (!$comment) {
+            abort(404);
+        }
+
+        $now = time();
+        $reply = ReelComment::create([
+            'user_id' => Auth::id(),
+            'reel_id' => $comment->reel_id,
+            'content' => $request->get('content'),
+            'reply_id' => $comment->id,
+            'created_at' => $now,
+            'updated_at' => $now
+        ]);
+
+        $replies = ReelComment::where('reply_id', $comment->id)
+        ->with('user')
+        ->orderBy('created_at', 'asc')
+        ->get();
+
+        // Format all replies
+        $formattedReplies = [];
+        foreach ($replies as $existingReply) {
+            $formattedReplies[] = [
+                'id' => $existingReply->id,
+                'content' => $existingReply->content,
+                'created_at' => $existingReply->created_at,
+                // 'comment_user_type' => 'student',
+                'user' => [
+                    // 'id' => $existingReply->user->id,
+                    'full_name' => $existingReply->user->full_name,
+                    'avatar' => url($existingReply->user->getAvatar()),
+                ]
+            ];
+        }
+
+        return response()->json([
+            'status' => 'success',
+            'message' => 'Reply added successfully',
+            'data' => [
+                'id' => $comment->id,
+                'user_id' => $comment->user_id,
+                'reel_id' => $comment->reel_id,
+                'content' => $comment->content,
+                'created_at' => $comment->created_at, // Convert to timestamp
+                'username' => $comment->user->full_name,
+                'avatar' => $comment->user ? url($comment->user->getAvatar()) : '',
+                'replies' => $formattedReplies
             ]
             // 'data' => $comment->load('user')
         ], 201);

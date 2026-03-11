@@ -50,15 +50,15 @@
         </div>
       </div>
       <div style="display:flex; gap:12px; align-items:center; justify-content:flex-end; flex-wrap:wrap">
-        <button class="membership-cta" data-join="monthly">Join €1/mo</button>
-        <button class="membership-cta secondary" data-join="yearly">or €10/year</button>
+        <button type="button" class="membership-cta" onclick="chooseplan()">Join €1/mo</button>
+        <button type="button" class="membership-cta secondary" onclick="chooseplan()">or €10/year</button>
       </div>
     </div>
   </div>
 </section>
 
 <!-- Pricing -->
-<section class="membership-section">
+<section class="membership-section" id="choose-plan">
   <div class="membership-wrap">
     <h2>Choose your plan</h2>
     <div class="membership-pricing-grid">
@@ -94,7 +94,7 @@
             @if($isActive)
               @if($subscribe->days == 100000)
                 <button type="button" class="membership-cta" disabled style="opacity:.5;cursor:not-allowed;">
-                  Lifetime
+                  Lifetime Activated
                 </button>
               @else
                 <button type="button" class="membership-cta danger" onclick="openCancelPopup({{ $subscribe->id }})">
@@ -103,12 +103,13 @@
               @endif
             @elseif($hasLifetime)
               <button type="button" class="membership-cta" disabled style="opacity:.5;cursor:not-allowed;">
-                Join Now
+                Already Lifetime
               </button>
             @elseif($hasAnySubscription)
               <button type='button' class="membership-cta" onclick="openUpgradePopup({{ $subscribe->id }}, {{ $activeSubscribe->id }})">Upgrade</button>
             @else  
-              <button type='submit' class="membership-cta" data-join="monthly">Join Now</button>
+              <button type='submit' class="membership-cta" data-join="monthly" 
+              onclick="storeRedirectThenLogin(this.closest('form'))">Join Now</button>
             @endif
           </article>
         </form>
@@ -173,8 +174,8 @@
   <div class="membership-bar">
       <div class="membership-left">Ready to unlock everything?</div>
       <div style="display:flex; gap:10px;">
-        <button class="membership-cta secondary" data-join="monthly">€1/mo</button>
-        <button class="membership-cta" data-join="yearly">Join Membership</button>
+        <button type="button" class="membership-cta secondary" onclick="chooseplan()">€1/mo</button>
+        <button type="button" class="membership-cta" onclick="chooseplan()">Join Membership</button>
       </div>
   </div>
 </div>
@@ -193,8 +194,20 @@
 </div>
 @endsection
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/jquery-toast-plugin/1.3.2/jquery.toast.min.css">
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery-toast-plugin/1.3.2/jquery.toast.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jquery-toast-plugin/1.3.2/jquery.toast.min.js"></script>
 <script>
+
+  function storeRedirectThenLogin(formEl) {
+      fetch('/membership/store-redirect', {
+          method: 'POST',
+          headers: {
+              'Content-Type': 'application/json',
+              'X-CSRF-TOKEN': '{{ csrf_token() }}'
+          }
+      }).finally(function () {
+          formEl.submit();
+      });
+  }
   
   // Currency Toggle
   const currencyButtons = document.querySelectorAll('.pill button');
@@ -246,9 +259,33 @@
     
     // alert(`Join ${plan} (${currency}) — hook this to your checkout`);
   }
+
   document.querySelectorAll('[data-join]').forEach(el=>{
     el.addEventListener('click', ()=>handleJoin(el.dataset.join));
   });
+
+  function chooseplan() {
+      const section = document.getElementById('choose-plan');
+      if (section) {
+          const offset = 80; // adjust for sticky header height
+          const top = section.getBoundingClientRect().top + window.pageYOffset - offset;
+          window.scrollTo({ top: top, behavior: 'smooth' });
+      }
+
+      // Optionally highlight the matching plan card after scroll
+      setTimeout(function() {
+          const planMap = { monthly: 'plan-monthly', yearly: 'plan-yearly', lifetime: 'plan-lifetime' };
+          const cardId = planMap[plan];
+          if (cardId) {
+              const card = document.getElementById(cardId);
+              if (card) {
+                  card.style.transition = 'box-shadow 0.3s ease';
+                  card.style.boxShadow = '0 0 0 2px #ffc107';
+                  setTimeout(() => card.style.boxShadow = '', 2000);
+              }
+          }
+      }, 600);
+  }
 
   // Optional: deep-link when arriving with ?currency=USD or ?plan=yearly
   const params = new URLSearchParams(location.search);

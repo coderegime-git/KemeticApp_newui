@@ -41,7 +41,7 @@ class ProductResource extends JsonResource
             'is_saved' => isset($this->is_saved) ? (bool)$this->is_saved : false,
             'share_count' => (string)$this->share_count ?? 0,
             'gift_count' => (string)$this->gift_count ?? 0,
-            'comments_count' => (string)$this->comments_count ?? 0,
+            'comments_count' => (string)$this->comments()->where('status','active')->count() ?? 0,
             'saved_count' => (string)$this->saved_count ?? 0,
             'shipping_cost' => (string)convertPriceToUserCurrency($this->delivery_fee) ?? null,
             'delivery_estimated_time' => (string)$this->delivery_estimated_time ?? null,
@@ -72,7 +72,14 @@ class ProductResource extends JsonResource
                         ];
                     }),
                     'reviews' => ReviewResource::collection($this->reviews),
-                    'comments'=>CommentResource::collection($this->comments)
+                    'comments' => CommentResource::collection(
+                        $this->comments
+                            ->whereNull('reply_id')
+                            ->where('status', 'active')
+                            ->sortByDesc('created_at')
+                            ->values()
+                    ),
+                    // 'comments' => CommentResource::collection($this->comments->whereNull('reply_id')->where('status', 'active')->orderBy('created_at', 'desc'))
                 ];
             })
         ];

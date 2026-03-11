@@ -69,7 +69,7 @@ class Reel extends Model
 
     public function comments()
     {
-        return $this->hasMany(ReelComment::class);
+        return $this->hasMany(ReelComment::class)->where('reply_id','0');
     }
 
     public function review()

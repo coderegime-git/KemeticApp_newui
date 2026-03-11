@@ -3,10 +3,10 @@
 @section('content')
     <section class="section">
         <div class="section-header">
-            <h1>Gift Reels</h1>
+            <h1>Gifts</h1>
             <div class="section-header-breadcrumb">
                 <div class="breadcrumb-item active"><a href="{{ getAdminPanelUrl() }}">Dashboard</a></div>
-                <div class="breadcrumb-item">Gift Reels</div>
+                <div class="breadcrumb-item">Gifts</div>
             </div>
         </div>
 
@@ -17,7 +17,7 @@
                         <div class="card-header">
                             
                                 <a href="{{ getAdminPanelUrl() }}/giftreel/create" class="btn btn-primary">
-                                    <i class="fa fa-plus"></i> Create New Gift Reel
+                                    <i class="fa fa-plus"></i> Create New Gifts
                                 </a>
                                 <!-- @can('admin_gift_reel_create') -->
                             <!-- @endcan -->
@@ -30,6 +30,7 @@
                                         <th>#</th>
                                         <!-- <th class="text-left">Thumbnail</th> -->
                                         <th class="text-left">Title</th>
+                                        <th class="text-center">Price</th>
                                         <th class="text-center">Created At</th>
                                         <th class="text-center">Updated At</th>
                                         <th>Actions</th>
@@ -46,6 +47,7 @@
                                                 @endif
                                             </td> -->
                                             <td class="text-left">{{ $giftReel->title }}</td>
+                                            <td class="text-center">{{ $giftReel->price }}</td>
                                             <td class="text-center">{{ dateTimeFormat($giftReel->created_at, 'Y M j | H:i') }}</td>
                                             <td class="text-center">{{ dateTimeFormat($giftReel->updated_at, 'Y M j | H:i') }}</td>
                                             <td>
@@ -68,7 +70,7 @@
                                     @if($giftReels->count() == 0)
                                         <tr>
                                             <td colspan="6" class="text-center">
-                                                <div class="text-muted">No gift reels found.</div>
+                                                <div class="text-muted">No gifts found.</div>
                                             </td>
                                         </tr>
                                     @endif

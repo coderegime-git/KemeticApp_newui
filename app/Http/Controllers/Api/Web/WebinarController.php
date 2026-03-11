@@ -1180,6 +1180,8 @@ class WebinarController extends Controller
             return $bestSaleWebinars;
         });
 
+       
+
         $bestRateWebinars = Webinar::join('webinar_reviews', 'webinars.id', '=', 'webinar_reviews.webinar_id')
         ->select('webinars.*', 'webinar_reviews.rates', 'webinar_reviews.status', DB::raw('avg(rates) as avg_rates'))
         ->where('webinars.status', 'active')
@@ -1861,7 +1863,7 @@ class WebinarController extends Controller
 
                     ];
                 }),
-                'comments' => $webinar->webinarcomments->map(function ($item) {
+                'comments' => $webinar->comments->map(function ($item) {
                     return [
                         'user' => [
                             'full_name' => $item->user->full_name,
@@ -1869,18 +1871,17 @@ class WebinarController extends Controller
                         ],
                         'create_at' => $item->created_at,
                         'comment' => $item->content,
-                        'replies' => []
-                        // 'replies' => $item->replies->map(function ($reply) {
-                        //     return [
-                        //         'user' => [
-                        //             'full_name' => $reply->user->full_name,
-                        //             'avatar' => $reply->user->getAvatar(),
-                        //         ],
-                        //         'create_at' => $reply->created_at,
-                        //         'comment' => $reply->comment,
-                        //     ];
+                        'replies' => $item->replies->map(function ($reply) {
+                            return [
+                                'user' => [
+                                    'full_name' => $reply->user->full_name,
+                                    'avatar' => $reply->user->getAvatar(),
+                                ],
+                                'create_at' => $reply->created_at,
+                                'comment' => $reply->comment,
+                            ];
 
-                        // })
+                        })
                     ];
                 }),
                 'discount' => $webinar->getDiscount(),
@@ -2197,10 +2198,19 @@ class WebinarController extends Controller
 
         Webinar::where('id', $id)->increment('share_count');
         //$webinar->increment('share_count');
+
+        $shareLink = url('/app/launch') . '?' . http_build_query([
+            'page'         => 'course',
+            'value'        => $webinar->id   // or any unique share code
+        ]);
+
         return response()->json([
             'status' => 'success',
             'message' => 'Webinar Shared successfully',
-            'data' => $share
+            'data' => [
+                'share' => $share,
+                'share_link' => $shareLink,
+            ]
         ], 201);
     }
 
@@ -2300,6 +2310,7 @@ class WebinarController extends Controller
         ]);
 
         $formattedComment = [
+            'id' => $comment->id,
             'status' => 'active',
             'comment_user_type' => 'student',
             'create_at' => now()->timestamp, // or $comment->created_at->timestamp
@@ -2397,6 +2408,269 @@ class WebinarController extends Controller
             'product' => null,
             'replies' => []
         ];
+
+
+        return response()->json([
+            'status' => 'success',
+            'message' => 'Comment added successfully',
+            'data' => $formattedComment
+        ], 201);
+    }
+
+    public function replyComment(Request $request,$id)
+    {
+        $user = auth('api')->user();
+        $userid = $user->id;
+        
+        $now = time();
+
+        $comment = Comment::where('id', $id)->first();
+        if ($comment->webinar_id) {
+            $item_name = 'webinar_id';
+        } elseif ($comment->blog_id) {
+            $item_name = 'blog_id';
+        } elseif ($comment->bundle_id) {
+            $item_name = 'bundle_id';
+        } elseif ($comment->product_id) {
+            $item_name = 'product_id';
+        }
+
+        if (!$comment) {
+            abort(404);
+        }
+
+        $reply = Comment::create([
+            'user_id' => $user->id,
+            $item_name => $id,
+            'comment' => $request->input('reply'),
+            'webinar_id' => $comment->webinar_id,
+            'product_id' => $comment->product_id,
+            'blog_id' => $comment->blog_id,
+            'bundle_id' => $comment->bundle_id,
+            'reply_id' => $comment->id,
+            'status' => 'active',
+            'created_at' => time()
+        ]);
+
+        $replies = Comment::where('reply_id', $comment->id)
+        ->with('user')
+        ->orderBy('created_at', 'asc')
+        ->get();
+
+        // Format all replies
+        $formattedReplies = [];
+        foreach ($replies as $existingReply) {
+            $formattedReplies[] = [
+                'id' => $existingReply->id,
+                'comment' => $existingReply->comment,
+                'created_at' => $existingReply->created_at,
+                // 'comment_user_type' => 'student',
+                'user' => [
+                    // 'id' => $existingReply->user->id,
+                    'full_name' => $existingReply->user->full_name,
+                    'avatar' => url($existingReply->user->getAvatar()),
+                ]
+            ];
+        }
+                
+        if($comment->webinar_id)
+        {
+            $formattedComment = [
+                'id' => $comment->id,
+                'status' => 'active',
+                'comment_user_type' => 'student',
+                'create_at' => now()->timestamp, // or $comment->created_at->timestamp
+                'comment' => $comment->comment,
+                'blog' => null,
+                'user' => [
+                    'id' => $comment->user->id,
+                    'full_name' => $comment->user->full_name,
+                    'role_name' => 'user',
+                    'bio' => $comment->user->bio,
+                    'email' => $comment->user->email,
+                    'mobile' => $comment->user->mobile,
+                    'offline' => $comment->user->offline ?? 0,
+                    'offline_message' => $comment->user->offline_message,
+                    'verified' => $comment->user->verified ?? 0,
+                    'rate' => $comment->user->rate ?? 0,
+                    'avatar' => url($comment->user->getAvatar()),
+                    'meeting_status' => $comment->user->meeting_status ?? 'no',
+                    'user_group' => $comment->user->user_group,
+                    'address' => $comment->user->address,
+                    'status' => $comment->user->status ?? 'active'
+                ],
+                'webinar' => [
+                    'image' => $comment->webinar->image,
+                    'auth' => $comment->webinar->auth ?? false,
+                    'can' => [
+                        'view' => $comment->webinar->can['view'] ?? true
+                    ],
+                    'can_view_error' => '',
+                    'id' => $comment->webinar->id,
+                    'status' => $comment->webinar->status,
+                    'label' => $comment->webinar->label,
+                    'title' => $comment->webinar->title,
+                    'type' => $comment->webinar->type,
+                    'link' => $comment->webinar->link,
+                    'access_days' => $comment->webinar->access_days,
+                    'live_webinar_status' => $comment->webinar->live_webinar_status,
+                    'auth_has_bought' => $comment->webinar->auth_has_bought ?? false,
+                    'sales' => [
+                        'count' => $comment->webinar->sales['count'] ?? 0,
+                        'amount' => $comment->webinar->sales['amount'] ?? '0'
+                    ],
+                    'sales_count_number' => $comment->webinar->sales_count_number ?? 0,
+                    'is_favorite' => $comment->webinar->is_favorite ?? false,
+                    'price_string' => $comment->webinar->price_string,
+                    'best_ticket_string' => $comment->webinar->best_ticket_string,
+                    'price' => $comment->webinar->price,
+                    'tax' => $comment->webinar->tax ?? 0,
+                    'tax_with_discount' => $comment->webinar->tax_with_discount ?? 0,
+                    'best_ticket_price' => $comment->webinar->best_ticket_price,
+                    'discount_percent' => $comment->webinar->discount_percent ?? 0,
+                    'course_page_tax' => $comment->webinar->course_page_tax ?? 0,
+                    'price_with_discount' => $comment->webinar->price_with_discount,
+                    'discount_amount' => $comment->webinar->discount_amount ?? 0,
+                    'active_special_offer' => $comment->webinar->active_special_offer,
+                    'duration' => $comment->webinar->duration,
+                    'teacher' => [
+                        'id' => $comment->webinar->teacher->id,
+                        'full_name' => $comment->webinar->teacher->full_name,
+                        'role_name' => $comment->webinar->teacher->role_name,
+                        'bio' => $comment->webinar->teacher->bio,
+                        'email' => $comment->webinar->teacher->email,
+                        'mobile' => $comment->webinar->teacher->mobile,
+                        'offline' => $comment->webinar->teacher->offline ?? 0,
+                        'offline_message' => $comment->webinar->teacher->offline_message,
+                        'verified' => $comment->webinar->teacher->verified ?? 0,
+                        'rate' => $comment->webinar->teacher->rate ?? 0,
+                        'avatar' => $comment->webinar->teacher->avatar,
+                        'meeting_status' => $comment->webinar->teacher->meeting_status ?? 'no',
+                        'user_group' => $comment->webinar->teacher->user_group,
+                        'address' => $comment->webinar->teacher->address,
+                        'status' => $comment->webinar->teacher->status ?? 'active'
+                    ],
+                    'students_count' => $comment->webinar->students_count ?? 0,
+                    'rate' => $comment->webinar->rate ?? 0,
+                    'rate_type' => [
+                        'content_quality' => $comment->webinar->rate_type['content_quality'] ?? 0,
+                        'instructor_skills' => $comment->webinar->rate_type['instructor_skills'] ?? 0,
+                        'purchase_worth' => $comment->webinar->rate_type['purchase_worth'] ?? 0,
+                        'support_quality' => $comment->webinar->rate_type['support_quality'] ?? 0
+                    ],
+                    'created_at' => $comment->webinar->created_at,
+                    'start_date' => $comment->webinar->start_date,
+                    'purchased_at' => $comment->webinar->purchased_at,
+                    'reviews_count' => $comment->webinar->reviews_count ?? 0,
+                    'points' => $comment->webinar->points,
+                    'progress' => '',
+                    'progress_percent' => '',
+                    'category' => $comment->webinar->category,
+                    'capacity' => $comment->webinar->capacity,
+                    'isPrivate' => $comment->webinar->isPrivate ?? 0,
+                    'forum' => $comment->webinar->forum ?? 1,
+                    'badges' => $comment->webinar->badges ?? []
+                ],
+                'product' => null,
+                'replies' => $formattedReplies
+            ];
+        }
+        elseif ($comment->blog_id) {
+            $formattedComment = [
+                'id' => $comment->id,
+                'status' => $comment->status,
+                'comment_user_type' => 'student', // You might want to get this from user role
+                'create_at' => $comment->created_at,
+                'comment' => $comment->comment,
+                'blog' => [
+                    'id' => $comment->blog->id,
+                    'title' => $comment->blog->title,
+                    'image' => url($comment->blog->image),
+                    'description' => $comment->blog->description,
+                    'created_at' => $comment->blog->created_at,
+                    'author' => [
+                        'id' => $comment->blog->author->id,
+                        'full_name' => $comment->blog->author->full_name,
+                        'role_name' => $comment->blog->author->role_name,
+                        'bio' => $comment->blog->author->bio,
+                        'email' => $comment->blog->author->email,
+                        'mobile' => $comment->blog->author->mobile,
+                        'offline' => $comment->blog->author->offline,
+                        'offline_message' => $comment->blog->author->offline_message,
+                        'verified' => $comment->blog->author->verified,
+                        'rate' => $comment->blog->author->rate,
+                        'avatar' => url($comment->blog->author->avatar),
+                        'meeting_status' => $comment->blog->author->meeting_status,
+                        'user_group' => $comment->blog->author->user_group,
+                        'address' => $comment->blog->author->address,
+                        'status' => $comment->blog->author->status,
+                    ],
+                    'comment_count' => $comment->blog->comments_count,
+                    'category' => $comment->blog->category->name ?? 'Articles' // Adjust based on your category relationship
+                ],
+                'user' => [
+                    'id' => $comment->user->id,
+                    'full_name' => $comment->user->full_name,
+                    'role_name' => $comment->user->role_name,
+                    'bio' => $comment->user->bio,
+                    'email' => $comment->user->email,
+                    'mobile' => $comment->user->mobile,
+                    'offline' => $comment->user->offline,
+                    'offline_message' => $comment->user->offline_message,
+                    'verified' => $comment->user->verified,
+                    'rate' => $comment->user->rate,
+                    'avatar' => !empty($comment->user->avatar) 
+                        ? url($comment->user->avatar) 
+                        : 'https://kemetic.app/getDefaultAvatar?item=' . $comment->user->id . '&name=' . urlencode($comment->user->full_name) . '&size=40',
+                    'meeting_status' => $comment->user->meeting_status,
+                    'user_group' => $comment->user->user_group,
+                    'address' => $comment->user->address,
+                    'status' => $comment->user->status,
+                ],
+                'webinar' => null,
+                'product' => null,
+                'replies' => $formattedReplies
+            ];
+        } elseif ($comment->bundle_id) {
+            $formattedComment = [];
+        } elseif ($comment->product_id) {
+            $formattedComment = [
+                'id' => $comment->id,
+                'status' => $comment->status,
+                'comment_user_type' => $comment->comment_user_type,
+                'create_at' => $comment->created_at,
+                'content' => $comment->comment,
+                'can' => [
+                    'delete' => true, // You'll need to implement your logic here
+                    'report' => true,
+                    'reply' => true
+                ],
+                'product' => [
+                    'id' => $comment->product->id,
+                    'title' => $comment->product->title
+                ],
+                'user' => [
+                    'id' => $comment->user->id,
+                    'full_name' => $comment->user->full_name,
+                    'role_name' => $comment->user->role_name ?? 'user',
+                    'bio' => $comment->user->bio,
+                    'email' => $comment->user->email,
+                    'mobile' => $comment->user->mobile,
+                    'offline' => $comment->user->offline ?? 0,
+                    'offline_message' => $comment->user->offline_message,
+                    'verified' => $comment->user->verified ?? 0,
+                    'rate' => $comment->user->rate ?? 0,
+                    'avatar' => !empty($comment->user->avatar) 
+                        ? url($comment->user->avatar) 
+                        : 'https://kemetic.app/getDefaultAvatar?item=' . $comment->user->id . '&name=' . urlencode($comment->user->full_name) . '&size=40',
+                    'meeting_status' => $comment->user->meeting_status ?? 'no',
+                    'user_group' => $comment->user->user_group,
+                    'address' => $comment->user->address,
+                    'status' => $comment->user->status ?? 'active'
+                ],
+                'replies' => $formattedReplies // Empty array for replies
+            ];
+        }
 
 
         return response()->json([

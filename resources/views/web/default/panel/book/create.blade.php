@@ -154,7 +154,7 @@
 
                     {{-- COVER IMAGE --}}
                     <div class="form-group">
-                        <label class="input-label">{{ trans('public.cover_image') }}</label>
+                        <label class="input-label">{{ trans('public.thumbnail_image') }} Image</label>
                         <div class="input-group">
                             <div class="input-group-prepend">
                                 <button type="button"
@@ -170,6 +170,27 @@
                                    placeholder="{{ trans('update.blog_cover_image_placeholder') }}" required>
                         </div>
                         @error('image')
+                        <div class="invalid-feedback">{{ $message }}</div>
+                        @enderror
+                    </div>
+
+                    <div class="form-group">
+                        <label class="input-label">Cover PDF</label>
+                        <div class="input-group">
+                            <div class="input-group-prepend">
+                                <button type="button"
+                                        class="input-group-text panel-file-manager"
+                                        data-input="cover_pdf"
+                                        data-preview="holder">
+                                    <i data-feather="upload" width="18"></i>
+                                </button>
+                            </div>
+                            <input type="text" name="cover_pdf" id="cover_pdf"
+                                   value="{{ !empty($book) ? $book->cover_pdf : old('cover_pdf') }}"
+                                   class="form-control @error('cover_pdf') is-invalid @enderror"
+                                   placeholder="{{ trans('update.blog_cover_image_placeholder') }}" required>
+                        </div>
+                        @error('cover_pdf')
                         <div class="invalid-feedback">{{ $message }}</div>
                         @enderror
                     </div>
@@ -209,7 +230,7 @@
                     @enderror
                 </div>
 
-                <div class="form-group" 
+                <div class="form-group">
                     <label class="input-label">Shipping Price ({{ $currency }})</label>
                     <input type="text" id="shipping_price" name="shipping_price"
                             class="form-control @error('shipping_price') is-invalid @enderror"

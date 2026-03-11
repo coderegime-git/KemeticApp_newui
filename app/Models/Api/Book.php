@@ -89,7 +89,7 @@ class Book extends Model
 
     public function comments()
     {
-        return $this->hasMany(BookComment::class, 'book_id');
+        return $this->hasMany(BookComment::class, 'book_id')->where('reply_id','0');
     }
 
     public function share()
