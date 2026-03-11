@@ -700,17 +700,18 @@ class BookController extends Controller
 
             if($data['type'] == 'Print')
             {
-                $cover = $pdfService->generateCoverFromPdf(
-                    $imageFirstPath, // interior PDF
-                    '1'                // no full bleed
+                $cover = $pdfService->resizeForLulu(
+                    $coverpdfurl, // interior PDF
+                    false                // no full bleed
                 );
                 
-                $coverPdfPath = str_replace(public_path(), '', $interior['local_path']);
-                $coverpageCount = $cover['pages'];
+                $coverPdfPath = str_replace(public_path(), '', $cover['local_path']);
+                $coverpageCount = $cover['page_count'];
 
                 if ($coverpageCount > 1) {
-                    return apiResponse2(0, 'Upload Error', 'Cover PDF must be a single page only. Your file contains ' . $coverpageCount . ' pages.', [
-                        'cover_page_count' => $coverpageCount
+                    return apiResponse2(0, 'Upload Error', 'Cover PDF must be a single page only. Your file contains ' . $coverpageCount . ' pages.', 
+                    [
+                        'message' => $coverpageCount
                     ], 500);
                 }
 
@@ -973,6 +974,22 @@ class BookController extends Controller
             \Log::error('Lulu API Unexpected Response Structure', [
                 'response_data' => $responseData
             ]);
+
+            if (isset($responseData['line_items'])) {
+                $errors = [];
+                foreach ($responseData['line_items'] as $lineItemErrors) {
+                    foreach ($lineItemErrors as $field => $messages) {
+                        $errors = array_merge($errors, (array) $messages);
+                    }
+                }
+
+                return [
+                    'success' => false,
+                    'message' => str_replace('Line item 0: ', '', implode(', ', $errors)),
+                    'print_price' => 0,
+                    'raw_response' => $responseData
+                ];
+            }
             
             return [
                 'success' => false,

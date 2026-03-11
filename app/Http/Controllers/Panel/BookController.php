@@ -141,12 +141,12 @@ class BookController extends Controller
 
         if($data['type'] == 'Print')
         {
-            $cover = $pdfService->generateCoverFromPdf(
-                $imageFirstPath, // interior PDF
-                '1'                // no full bleed
+            $cover = $pdfService->resizeForLulu(
+                $imageFirstPath,
+                false
             );
             $coverPdfPath = str_replace(public_path(), '', $cover['local_path']);
-            $coverpageCount = $cover['pages'];
+            $coverpageCount = $cover['page_count'];
 
             // dd($coverpageCount);
 
@@ -260,14 +260,12 @@ class BookController extends Controller
 
         if($data['type'] == 'Print')
         {
-            $cover = $pdfService->generateCoverFromPdf(
-                $imageFirstPath, // interior PDF
-                '1'                // no full bleed
+            $cover = $pdfService->resizeForLulu(
+                $imageFirstPath,
+                false
             );
             $coverPdfPath = str_replace(public_path(), '', $cover['local_path']);
-            $coverpageCount = $cover['pages'];
-
-            // dd($coverpageCount);
+            $coverpageCount = $cover['page_count'];
 
             if ($coverpageCount > 1) {
                  return redirect()->back()
