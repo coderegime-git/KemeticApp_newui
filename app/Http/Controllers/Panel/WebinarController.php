@@ -625,6 +625,7 @@ class WebinarController extends Controller
         }
 
         if ($currentStep == 2) {
+            //   dd($data['start_date']);
 
             // Check Capacity
             $userPackage = new UserPackage($webinar->creator);
@@ -646,6 +647,8 @@ class WebinarController extends Controller
 
                 $data['start_date'] = $startDate->getTimestamp();
             }
+
+            // dd($data['start_date']);
 
             $data['forum'] = !empty($data['forum']) ? true : false;
             $data['support'] = !empty($data['support']) ? true : false;

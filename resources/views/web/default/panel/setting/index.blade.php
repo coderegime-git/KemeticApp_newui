@@ -248,16 +248,26 @@
             <!-- Basic Information Tab -->
             <div class="settings-tab-content settings-active" id="basic-content">
                 <section class="settings-grid">
-                    <div class="settings-field-group">
-                        <label class="settings-field-label">Full Name</label>
-                        <input type="text" name="full_name" value="{{ (!empty($user) and empty($new_user)) ? $user->full_name : old('full_name') }}" class="settings-field-input @error('full_name') settings-field-error @enderror" placeholder="Enter your full name"/>
-                        @error('full_name')
-                        <div class="settings-field-error-message">{{ $message }}</div>
-                        @enderror
+                    <div class="settings-two-col-row">
+                        <div class="settings-field-group">
+                            <label class="settings-field-label">First Name</label>
+                            <input type="text" name="first_name" value="{{ $user->first_name ?? old('first_name') }}" class="settings-field-input" placeholder="Enter a First name"/>
+                            @error('first_name')
+                            <div class="settings-field-error-message">{{ $message }}</div>
+                            @enderror
+                        </div>
+                        <div class="settings-field-group">
+                            <label class="settings-field-label">Last Name</label>
+                            <input type="text" name="last_name" value="{{ $user->last_name ?? old('last_name') }}" class="settings-field-input" placeholder="Enter a Last name"/>
+                            @error('last_name')
+                            <div class="settings-field-error-message">{{ $message }}</div>
+                            @enderror
+                        </div>
                     </div>
+
                     <div class="settings-field-group">
                         <label class="settings-field-label">Display Name</label>
-                         <input type="text" name="display_name" value="{{ $user->display_name ?? old('display_name') }}" class="settings-field-input" placeholder="Enter a display name"/>
+                        <input type="text" name="full_name" value="{{ $user->full_name ?? old('full_name') }}" class="settings-field-input" placeholder="Enter a display name"/>
                     </div>
 
                     <!-- <div class="settings-field-group">

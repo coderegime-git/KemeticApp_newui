@@ -26,6 +26,7 @@
     color:#eaeaea;
     border:1px solid #2a2a2a;
     border-radius:12px;
+    width: fit-content !important;
 }
 
 .k-card .form-control:focus,
@@ -258,7 +259,8 @@
     outline: none;
     border-color: #F2C94C;
     box-shadow: 0 0 0 2px rgba(242,201,76,.15);
-    background: #fff;
+    background: #1a1a1a;
+    color: #fff;
 }
 
 /* Spacing */
@@ -351,21 +353,75 @@
     <div class="col-12 col-md-6 mt-15">
         <div class="k-card">
 
+            @if(!empty($cjProduct))
+                @php
+                    $cjPriceRaw = $cjProduct['sellPrice'] ?? 0;
+                    // Clean price string from commas or currency symbols if any
+                    $cjPrice = (float) filter_var($cjPriceRaw, FILTER_SANITIZE_NUMBER_FLOAT, FILTER_FLAG_ALLOW_FRACTION);
+                    $defaultShipping = 0;
+                    $initialTotal = ($cjPrice + $defaultShipping) * 1.10;
+                @endphp
+                <div class="kemetic-card mb-20 shadow-sm" style="background: rgba(212,175,55,0.05); border: 1px dashed #d4af37;">
+                    <h5 class="k-section-title font-16 mb-15">CJ Dropshipping Pricing</h5>
+                    
+                    <div class="row">
+                        <div class="col-12 mb-15">
+                            <span class="d-block text-gray font-12">CJ Base Price</span>
+                            <span class="font-18 font-weight-bold text-white">{{ $currency }}{{ number_format($cjPrice, 2) }}</span>
+                        </div>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-6">
+                            <div class="form-group">
+                                <label class="kemetic-label">Shipping Price</label>
+                                <input type="number" id="cjShippingPrice" step="0.01" class="kemetic-input" placeholder="0.00" value="0">
+                            </div>
+                        </div>
+                        <div class="col-6">
+                            <div class="form-group">
+                                <label class="kemetic-label">Your Earning</label>
+                                <input type="number" id="userMargin" step="0.01" class="kemetic-input" placeholder="0.00" value="0">
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="row mt-10">
+                        <div class="col-6">
+                            <span class="d-block text-gray font-11">Subtotal (P+S+E)</span>
+                            <span class="text-white font-weight-bold" id="pricingSubtotal">{{ $currency }}{{ number_format($cjPrice, 2) }}</span>
+                        </div>
+                        <div class="col-6">
+                            <span class="d-block text-gray font-11">Platform Fee (10%)</span>
+                            <span class="text-white font-weight-bold" id="pricingPlatformFee">{{ $currency }}{{ number_format($cjPrice * 0.1, 2) }}</span>
+                        </div>
+                    </div>
+
+                    <div class="mt-20 p-10 rounded-lg text-center" style="background: #1a1a1a; border: 1px solid #262626;">
+                        <span class="text-gray font-12 d-block">Final Selling Price (Rounded)</span>
+                        <span class="font-24 font-weight-bold text-gold" id="calculatedTotalPriceText">{{ $currency }}{{ ceil($initialTotal) }}</span>
+                    </div>
+
+                    <input type="hidden" name="cj_vid" value="{{ $cjProduct['vid'] ?? '' }}">
+                    <input type="hidden" name="cj_price" value="{{ $cjPrice }}">
+                </div>
+            @endif
+
             <div class="form-group">
                 <label class="input-label">{{ trans('public.price') }} ({{ $currency }})</label>
-                <input type="number" name="price"
-                       value="{{ (!empty($product) && !empty($product->price)) ? convertPriceToUserCurrency($product->price) : old('price') }}"
+                <input type="number" name="price" id="finalPriceInput"
+                       value="{{ (!empty($product) && !empty($product->price)) ? convertPriceToUserCurrency($product->price) : (!empty($cjProduct) ? ceil($cjPrice * 1.10) : old('price')) }}"
                        class="form-control @error('price') is-invalid @enderror">
                 @error('price')<div class="invalid-feedback">{{ $message }}</div>@enderror
             </div>
 
             @if($product->isPhysical())
-                <div class="form-group">
-                    <label class="input-label">{{ trans('update.delivery_fee') }}</label>
-                    <input type="number" name="delivery_fee"
-                           value="{{ (!empty($product) && !empty($product->delivery_fee)) ? convertPriceToUserCurrency($product->delivery_fee) : old('delivery_fee') }}"
-                           class="form-control @error('delivery_fee') is-invalid @enderror">
-                </div>
+                    <div class="form-group">
+                        <label class="input-label">{{ trans('update.delivery_fee') }}</label>
+                        <input type="number" name="delivery_fee"
+                            value="{{ (!empty($product) && !empty($product->delivery_fee)) ? convertPriceToUserCurrency($product->delivery_fee) : old('delivery_fee') }}"
+                            class="form-control @error('delivery_fee') is-invalid @enderror">
+                    </div>
 
                 <div class="form-group">
                     <label class="input-label">{{ trans('update.delivery_estimated_time') }}</label>
@@ -541,7 +597,133 @@
 
 @push('scripts_bottom')
     <script src="/assets/default/vendors/select2/select2.min.js"></script>
-    <script src="/assets/default/vendors/sortable/jquery-ui.min.js"></script>
+    <script>
+        $(document).ready(function() {
+            @if(!empty($cjProduct))
+                const cjPrice = {{ $cjProduct['sellPrice'] ?? 0 }};
+                const currency = '{{ $currency }}';
 
-    
+                function updateCjPricing() {
+                    const shipping = parseFloat($('#cjShippingPrice').val()) || 0;
+                    const margin = parseFloat($('#userMargin').val()) || 0;
+                    
+                    const subtotal = cjPrice + shipping + margin;
+                    const platformFee = subtotal * 0.10;
+                    const total = subtotal + platformFee;
+                    const roundedTotal = Math.ceil(total);
+
+                    $('#pricingSubtotal').text(currency + subtotal.toFixed(2));
+                    $('#pricingPlatformFee').text(currency + platformFee.toFixed(2));
+                    $('#calculatedTotalPriceText').text(currency + roundedTotal);
+                    $('#finalPriceInput').val(roundedTotal);
+                }
+
+                $('#userMargin, #cjShippingPrice').on('input', function() {
+                    updateCjPricing();
+                });
+            @endif
+
+            // Related Courses functionality for Products
+            function kemeticRandomString() {
+                var text = "";
+                var possible = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz";
+                for (var i = 0; i < 4; i++) text += possible.charAt(Math.floor(Math.random() * possible.length));
+                return text;
+            }
+
+            $('body').off('click', '#webinarAddRelatedCourses'); // prevent duplicates
+            $('body').on('click', '#webinarAddRelatedCourses', function (e) {
+                e.preventDefault();
+                var key = kemeticRandomString();
+                var add = $('#newRelatedCourseForm').html();
+                add = add.replaceAll('record', key);
+                // Dynamically replace the select class so we can target it 
+                add = add.replaceAll('relatedCourses-select2', 'panel-search-webinar-select2-' + key);
+                $('#relatedCoursesAccordion').prepend(add);
+
+                // Initialize Select2 specifically for the cloned block
+                initWebinarSelect($('.panel-search-webinar-select2-' + key));
+
+                if (typeof feather !== 'undefined') feather.replace();
+            });
+
+            function initWebinarSelect($elements) {
+                if ($elements.length) {
+                    $elements.select2({
+                        minimumInputLength: 3,
+                        allowClear: true,
+                        ajax: {
+                            url: '/panel/webinars/search',
+                            dataType: 'json',
+                            type: "POST",
+                            quietMillis: 50,
+                            data: function (params) {
+                                return {
+                                    term: params.term,
+                                };
+                            },
+                            processResults: function (data) {
+                                return {
+                                    results: $.map(data, function (item) {
+                                        return {
+                                            text: item.title,
+                                            id: item.id
+                                        }
+                                    })
+                                };
+                            }
+                        }
+                    });
+                }
+            }
+
+            // Initialize existing elements on page load
+            initWebinarSelect($('.panel-search-webinar-select2'));
+
+            $('body').off('click', '.js-save-related-course'); // prevent duplicates
+            $('body').on('click', '.js-save-related-course', function (e) {
+                e.preventDefault();
+                var $this = $(this);
+                var form = $this.closest('.related-course-form');
+                
+                // .related-course-form is a div, not a form tag, so standard .serialize() fails.
+                // We need to target the actual input/select elements inside it.
+                var data = form.find(':input').serialize();
+                var action = form.attr('data-action');
+                
+                $this.addClass('loadingbar primary').prop('disabled', true);
+                
+                $.post(action, data, function (result) {
+                    if (result && result.code === 200) {
+                        Swal.fire({
+                            icon: 'success',
+                            html: '<h3 class="font-20 text-center text-dark-blue py-25">Saved successfully!</h3>',
+                            showConfirmButton: false,
+                            width: '25rem'
+                        });
+                        setTimeout(function () {
+                            window.location.reload();
+                        }, 500);
+                    }
+                }).fail(function (err) {
+                    $this.removeClass('loadingbar primary').prop('disabled', false);
+                    var errors = err.responseJSON;
+                    if (errors && errors.errors) {
+                        Object.keys(errors.errors).forEach(function (key) {
+                            $.toast({
+                                heading: 'Validation Error',
+                                text: errors.errors[key][0],
+                                bgColor: '#f63c3c',
+                                textColor: 'white',
+                                hideAfter: 5000,
+                                position: 'bottom-right',
+                                icon: 'error'
+                            });
+                        });
+                    }
+                });
+            });
+
+        });
+    </script>
 @endpush

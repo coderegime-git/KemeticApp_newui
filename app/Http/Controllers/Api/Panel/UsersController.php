@@ -96,7 +96,7 @@ class UsersController extends Controller
         );
     }
 
-     public function getUserStories($id)
+    public function getUserStories($id)
     {
         $authUser = apiAuth();
         $user = User::findOrFail($id);
@@ -479,6 +479,8 @@ class UsersController extends Controller
     public function update(Request $request)
     {
         $available_inputs = [
+            'first_name',
+            'last_name',
             'full_name',
             'language',
             'email',
@@ -506,6 +508,8 @@ class UsersController extends Controller
 
         validateParam($request->all(), [
             'full_name' => 'string',
+            'first_name' => 'string',
+            'last_name' => 'string',
             'language' => 'string',
             'email' => 'email|unique:users,email,' . $user->id,
             // 'mobile' => 'numeric|unique:users,mobile,' . $user->id,
@@ -825,7 +829,9 @@ class UsersController extends Controller
                     'house_no'      => $data['house_no'] ?? null,
                     'address'       => $data['address'] ?? null,
                     'district_name' => $data['district_name'] ?? null,
-                    'full_name'     => $name ?? null,
+                    // 'full_name'     => $data['full_name'] ?? null,
+                    'first_name'    => $data['first_name'] ?? null,
+                    'last_name'     => $data['last_name'] ?? null,
                     'email'         => $data['email'] ?? null,
                     'mobile'        => $data['mobile'] ?? null,
                     'role_id'       => 1,
@@ -858,7 +864,9 @@ class UsersController extends Controller
                     'house_no' => $data['house_no'] ?? $user->house_no,
                     'address' => $data['address'] ?? $user->address,
                     'district_name' => $data['district_name'] ?? $user->district_name,
-                    'full_name'     => $name ?? null,
+                    // 'full_name'     => $data['full_name'] ?? null,
+                    'first_name'    => $data['first_name'] ?? null,
+                    'last_name'     => $data['last_name'] ?? null,
                     'email'         => $data['email'] ?? null,
                     'mobile'        => $data['mobile'] ?? null,
                     'updated_at'    => Carbon::now()->timestamp

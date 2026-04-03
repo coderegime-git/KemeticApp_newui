@@ -61,7 +61,7 @@
 <script src="/vendor/laravel-filemanager/js/stand-alone-button.js"></script>
 <script src="/assets/default/vendors/sweetalert2/dist/sweetalert2.min.js"></script>
 <script src="/assets/default/vendors/toast/jquery.toast.min.js"></script>
-<script type="text/javascript" src="/assets/default/vendors/simplebar/simplebar.min.js"></script>
+<!-- <script type="text/javascript" src="/assets/default/vendors/simplebar/simplebar.min.js"></script> -->
 
 <script>
     var deleteAlertTitle = '{{ trans('public.are_you_sure') }}';
@@ -201,7 +201,7 @@ document.addEventListener('DOMContentLoaded', function() {
 @stack('scripts_bottom')
 
 <script src="/assets/default/js//parts/main.min.js"></script>
-<script src="/assets/default/js/panel/public.min.js"></script>
+<!-- <script src="/assets/default/js/panel/public.min.js"></script> -->
 <script src="/assets/default/js/parts/content_delete.min.js"></script>
 <script src="/assets/default/js/panel/ai-content-generator.min.js"></script>
 <script src="/assets/default/js/panel/webinar.min.js"></script>

@@ -72,16 +72,10 @@ class PdfResizerService
             $tpl  = $pdf->importPage($i);
             $size = $pdf->getTemplateSize($tpl);
 
-            if ($size['width'] > $size['height']) {
-                throw new Exception(
-                    "Landscape or spread page detected on page {$i}. Lulu requires portrait single pages."
-                );
-            }
-
             $pdf->AddPage('P', [$widthPt, $heightPt]);
 
             $scale = min(
-                $widthPt / $size['width'],
+                $widthPt  / $size['width'],
                 $heightPt / $size['height']
             );
 
@@ -177,14 +171,27 @@ class PdfResizerService
 
     private function loadPdf(string $pathOrUrl): string
     {
-        if (!filter_var($pathOrUrl, FILTER_VALIDATE_URL)) {
+        $pathOrUrl = preg_replace_callback('/https?:\/\/[^\s]+/', function($m) {
+            return str_replace(' ', '%20', $m[0]);
+        }, $pathOrUrl);
+
+        // dd($pathOrUrl);
+        $encoded = str_replace(' ', '%20', $pathOrUrl);
+
+        if (!filter_var($encoded, FILTER_VALIDATE_URL)) {
             if (!file_exists($pathOrUrl)) {
                 throw new \Exception("Local PDF not found: {$pathOrUrl}");
             }
             return file_get_contents($pathOrUrl);
         }
+        // if (!filter_var($pathOrUrl, FILTER_VALIDATE_URL)) {
+        //     if (!file_exists($pathOrUrl)) {
+        //         throw new \Exception("Local PDF not found: {$pathOrUrl}");
+        //     }
+        //     return file_get_contents($pathOrUrl);
+        // }
 
-        $ch = curl_init($pathOrUrl);
+        $ch = curl_init($encoded);
         curl_setopt_array($ch, [
             CURLOPT_RETURNTRANSFER => true,
             CURLOPT_FOLLOWLOCATION => true,

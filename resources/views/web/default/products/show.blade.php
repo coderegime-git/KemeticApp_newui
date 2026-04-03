@@ -103,6 +103,163 @@
             @endif
         @endif
       </div>
+
+      {{-- CJ Variants Section --}}
+      @if(isset($product->is_cj_product) && $product->is_cj_product && $product->cjVariants->count() > 0)
+      @php
+        $cjVariants = $product->cjVariants;
+        $firstVid = $cjVariants->first()->vid;
+        $variantKeys = [];
+        foreach ($cjVariants as $v) {
+          if (!empty($v->variant_key)) {
+            $parts = explode('-', $v->variant_key);
+            foreach ($parts as $i => $part) {
+              $variantKeys[$i][] = trim($part);
+            }
+          }
+        }
+        foreach ($variantKeys as &$arr) { $arr = array_values(array_unique($arr)); }
+        unset($arr);
+      @endphp
+      <div id="cjVariantSelectors" style="margin:14px 0">
+        @if(!empty($variantKeys))
+          @foreach($variantKeys as $idx => $options)
+          <div style="margin-bottom:10px">
+            <div class="shopdetail-muted" style="font-size:12px;font-weight:700;margin-bottom:6px">
+              Option {{ $idx + 1 }}
+            </div>
+            <div class="cj-swatch-row" data-key-index="{{ $idx }}">
+              @foreach($options as $opt)
+              <button type="button" class="cj-swatch {{ $loop->first ? 'active' : '' }}"
+                      data-value="{{ $opt }}" data-key-index="{{ $idx }}">
+                {{ $opt }}
+              </button>
+              @endforeach
+            </div>
+          </div>
+          @endforeach
+        @else
+          <div class="shopdetail-muted" style="font-size:12px;font-weight:700;margin-bottom:6px">Variant</div>
+          <select id="cjVariantSelect" class="cj-select" style="width:100%" name="cj_variant_id">
+            @foreach($cjVariants as $v)
+            <option value="{{ $v->vid }}" data-price="{{ $v->sell_price }}"
+                    data-sku="{{ $v->variant_sku }}" data-image="{{ $v->variant_image }}">
+              {{ $v->variant_name }} — ${{ number_format((float)($v->sell_price), 2) }}
+            </option>
+            @endforeach
+          </select>
+        @endif
+        <input type="hidden" name="cj_variant_id" id="cjSelectedVid" value="{{ $firstVid }}">
+      </div>
+      
+      <style>
+      .cj-swatch-row { display: flex; flex-wrap: wrap; gap: 8px; }
+      .cj-swatch {
+        padding: 5px 12px; border-radius: 8px; font-size: 12px; cursor: pointer;
+        border: 1.5px solid var(--edge,#444); background: transparent; color: inherit;
+        transition: all .2s;
+      }
+      .cj-swatch.active, .cj-swatch:hover {
+        border-color: var(--gold,#FFD700);
+        color: var(--gold,#FFD700);
+        background: rgba(255,215,0,.06);
+      }
+      .cj-select {
+        background: var(--panel,#1a1a1a); border: 1px solid var(--edge,#333);
+        color: var(--text,#eee); border-radius: 8px; padding: 8px 10px;
+        font-size: 13px; cursor: pointer;
+      }
+      </style>
+      
+      <script>
+      document.addEventListener('DOMContentLoaded', function() {
+          const variants = @json($cjVariants);
+          const selectedOptions = {};
+
+          document.querySelectorAll('.cj-swatch').forEach(function(swatch) {
+              // Pre-select first options
+              if (swatch.classList.contains('active')) {
+                  selectedOptions[swatch.dataset.keyIndex] = swatch.dataset.value;
+              }
+              
+              swatch.addEventListener('click', function(e) {
+                  e.preventDefault();
+                  const idx = this.dataset.keyIndex;
+                  selectedOptions[idx] = this.dataset.value;
+
+                  document.querySelectorAll('.cj-swatch[data-key-index="' + idx + '"]')
+                      .forEach(s => s.classList.remove('active'));
+                  this.classList.add('active');
+
+                  updateSelectedVariant();
+              });
+          });
+
+          // Run once on load to ensure right price is shown
+          updateSelectedVariant();
+
+          function updateSelectedVariant() {
+              if (!variants.length) return;
+              const selParts = Object.values(selectedOptions);
+              const match = variants.find(function(v) {
+                  if (!v.variant_key) return false;
+                  const parts = v.variant_key.split('-').map(s => s.trim());
+                  return selParts.every(function(sp, i) { return parts[i] === sp; });
+              }) || variants[0];
+
+              if (match) {
+                  const hiddenInput = document.getElementById('cjSelectedVid');
+                  if (hiddenInput) hiddenInput.value = match.vid;
+                  
+                  const priceNode = document.querySelector('.shopdetail-price .real');
+                  if (priceNode) priceNode.textContent = '$' + parseFloat(match.sell_price).toFixed(2);
+                  
+                  const buyBarPriceNode = document.querySelector('.shopdetail-buybar div:nth-child(3) span');
+                  if (buyBarPriceNode) {
+                    buyBarPriceNode.textContent = '$' + parseFloat(match.sell_price).toFixed(2);
+                  } else {
+                    const fallbackBuyBarPriceNode = document.querySelector('.shopdetail-buybar div:nth-child(3)');
+                    if (fallbackBuyBarPriceNode) fallbackBuyBarPriceNode.innerHTML = '<span>$' + parseFloat(match.sell_price).toFixed(2) + '</span>';
+                  }
+
+                  const mainImageNode = document.querySelector('.main-s-image');
+                  if (mainImageNode && match.variant_image) {
+                      mainImageNode.src = match.variant_image;
+                  }
+              }
+          }
+
+          const varSelect = document.getElementById('cjVariantSelect');
+          if (varSelect) {
+              varSelect.addEventListener('change', function() {
+                  const opt = this.options[this.selectedIndex];
+                  const price = parseFloat(opt.dataset.price || 0).toFixed(2);
+                  
+                  const priceNode = document.querySelector('.shopdetail-price .real');
+                  if (priceNode) priceNode.textContent = '$' + price;
+                  
+                  const buyBarPriceNode = document.querySelector('.shopdetail-buybar div:nth-child(3) span');
+                  if (buyBarPriceNode) {
+                    buyBarPriceNode.textContent = '$' + price;
+                  } else {
+                    const fallbackBuyBarPriceNode = document.querySelector('.shopdetail-buybar div:nth-child(3)');
+                    if (fallbackBuyBarPriceNode) fallbackBuyBarPriceNode.innerHTML = '<span>$' + price + '</span>';
+                  }
+
+                  const vImg = opt.dataset.image;
+                  const mainImageNode = document.querySelector('.main-s-image');
+                  if (mainImageNode && vImg) {
+                      mainImageNode.src = vImg;
+                  }
+              });
+              
+              // Run once on load for select dropdown
+              varSelect.dispatchEvent(new Event('change'));
+          }
+      });
+      </script>
+      @endif
+
       @php
         $productAvailability = $product->getAvailability();
         $productType = $product->type ?? 'physical';

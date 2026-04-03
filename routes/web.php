@@ -4,6 +4,7 @@ use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Api\Panel\PaymentsController;
 use App\Http\Controllers\Api\Panel\ProductOrderController;
 use App\Http\Controllers\Api\ApiHomeController;
+use App\Http\Controllers\Web\CJProductController;
 use Illuminate\Support\Facades\Mail;
 
 /*
@@ -43,6 +44,9 @@ Route::group(['prefix' => 'api_sessions'], function () {
 Route::get('/mobile-app', 'Web\MobileAppController@index')->middleware(['share'])->name('mobileAppRoute');
 Route::get('/maintenance', 'Web\MaintenanceController@index')->middleware(['share'])->name('maintenanceRoute');
 Route::get('/restriction', 'Web\RestrictionController@index')->middleware(['share'])->name('restrictionRoute');
+
+// dropshipping auto login
+Route::get('/dropshipping/login', 'Web\WebAutoLoginController@loginWithToken');
 
 Route::group(['prefix' => 'cookie-security'], function () {
     Route::post('/all', 'Web\CookieSecurityController@setAll');
@@ -416,6 +420,20 @@ Route::group(['namespace' => 'Web', 'middleware' => ['check_mobile_app', 'impers
             Route::get('/{slug}/installments', 'ProductController@getInstallmentsByProduct');
             Route::post('/direct-payment', 'ProductController@directPayment');
         });
+    });
+
+    Route::get('/cj-products',           [CJProductController::class, 'index'])->name('cj.products.index');
+    Route::get('/cj-products/{pid}',     [CJProductController::class, 'show'])->name('cj.products.show');
+    
+    // ── CJ JSON API (used by Blade views via AJAX) ───────────────
+    Route::prefix('api/cj')->group(function () {
+        Route::get('/products',          [CJProductController::class, 'apiList']);
+        Route::get('/products/{pid}',    [CJProductController::class, 'apiDetail']);
+        Route::get('/variants/{pid}',    [CJProductController::class, 'apiVariants']);
+        Route::get('/inventory/{pid}',   [CJProductController::class, 'apiInventory']);
+        Route::get('/reviews/{pid}',     [CJProductController::class, 'apiReviews']);
+        Route::get('/categories',        [CJProductController::class, 'apiCategories']);
+        Route::post('/add-to-mine',      [CJProductController::class, 'addToMyProducts'])->middleware('auth');
     });
 
     Route::get('/reward-products', 'RewardProductsController@index');

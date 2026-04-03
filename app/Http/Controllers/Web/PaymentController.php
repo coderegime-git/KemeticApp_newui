@@ -29,6 +29,7 @@ use Aws\S3\S3Client;
 use App\Mail\SubscriptionRenewal;
 use Aws\S3\Exception\S3Exception;
 use App\Services\PdfResizerService;
+use App\Services\CJDropshippingService;
 use App\PaymentChannels\ChannelManager;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Http\Request;
@@ -45,11 +46,14 @@ class PaymentController extends Controller
 {
     protected $laragonCertPath;
     protected $pdfResizer;
+    protected $cjService;
+    protected CJDropshippingService $cj;
 
     public function __construct()
     {
         $pdfResizer = new PdfResizerService();
         $this->pdfResizer = $pdfResizer;
+        $this->cj         = new CJDropshippingService();
         // Laragon certificate path - adjust if different
         $this->laragonCertPath = "C:/laragon/etc/ssl/cert.pem";
         
@@ -69,6 +73,8 @@ class PaymentController extends Controller
                 break;
             }
         }
+
+        // $this->cjService = new CJDropshippingService();
     }
 
     public function handleWebhook(Request $request)
@@ -165,251 +171,13 @@ class PaymentController extends Controller
             return response()->json(['error' => 'Internal server error'], 500);
         }
     }
-
-    //  public function handleWebhook(Request $request)
-    // {
-    //     try {
-    //         // Set Stripe API key from .env file
-    //         Stripe::setApiKey(env('STRIPE_KEY'));
-
-    //         // Retrieve webhook payload
-    //         $payload = $request->all();
-    //         Log::info('Stripe Webhook Received', $payload);
-
-    //         // Ensure the 'type' key exists
-    //         if (!isset($payload['type'])) {
-    //             return response()->json(['error' => 'Invalid webhook payload'], 400);
-    //         }
-
-    //         // Handle successful payment event
-    //         if ($payload['type'] === 'invoice.payment_succeeded') {
-    //             $invoice = $payload['data']['object'];
-
-    //             // Ensure necessary keys exist in the payload
-    //             if (!isset($invoice['customer'], $invoice['subscription'])) {
-    //                 return response()->json(['error' => 'Missing customer or subscription ID'], 400);
-    //             }
-
-    //             $customerId = $invoice['customer'];
-    //             $subscriptionId = $invoice['subscription'];
-
-    //             // Find the user based on Stripe Customer ID
-    //             $user = User::where('stripe_customer_id', $customerId)->first();
-
-    //             if ($user) {
-    //                 // Update subscription status in the database
-    //                 $user->update([
-    //                     'subscription_status' => 'active',
-    //                     'subscription_id' => $subscriptionId,
-    //                 ]);
-
-    //                 // Find the latest subscription sale
-    //                 $lastSubscribeSale = Sale::where('buyer_id', $user->id)
-    //                     ->where('type', Sale::$subscribe)
-    //                     ->whereNull('refund_at')
-    //                     ->latest('created_at')
-    //                     ->first();
-
-    //                 if ($lastSubscribeSale) {
-    //                     $subscribe = $lastSubscribeSale->subscribe;
-
-    //                     // Update the subscription end date
-    //                     // $newEndDate = now()->addDays($subscribe->days)->timestamp; // Assuming `duration` is in days
-    //                     $newEndDate = $invoice['lines']['data'][0]['period']['end'];
-
-    //                     $lastSubscribeSale->update(['created_at' => $newEndDate]);
-
-    //                     Log::info("Subscription extended to: " . $newEndDate);
-    //                 } else {
-    //                     Log::warning("No previous subscription sale found for user: " . $user->id);
-    //                 }
-                    
-    //                 // Handle subscription cancellation
-    //                 if ($event->type === 'customer.subscription.deleted') {
-    //                     $subscription = $event->data->object;
-    //                     $customerId = $subscription->customer;
-            
-    //                     $user = User::where('stripe_customer_id', $customerId)->first();
-    //                     if (!$user) {
-    //                         Log::warning("User not found for Stripe customer ID: " . $customerId);
-    //                         return response()->json(['error' => 'User not found'], 404);
-    //                     }
-            
-    //                     // Delete subscription record from the sales table
-    //                     Sale::where('buyer_id', $user->id)
-    //                         ->where('type', Sale::$subscribe)
-    //                         ->delete();
-            
-    //                     // Update user subscription status
-    //                     $user->update([
-    //                         'subscription_status' => 'canceled',
-    //                         'subscription_id' => null,
-    //                     ]);
-            
-    //                     Log::info("Subscription cancelled for user {$user->id}. Sales record deleted.");
-    //                     return response()->json(['status' => 'success', 'message' => 'Subscription cancelled and sales record deleted'], 200);
-    //                 }
-
-
-    //                 return response()->json(['status' => 'success', 'message' => 'Subscription updated'], 200);
-    //             } else {
-    //                 Log::warning("User not found for Stripe customer ID: " . $customerId);
-    //             }
-    //         }
-
-    //         return response()->json([
-    //             'status' => 'success',
-    //             'received_payload' => $payload
-    //         ], 200);
-    //     } catch (\Throwable $e) {
-    //         Log::error('Webhook Handling Error: ' . $e->getMessage());
-    //         return response()->json(['error' => 'Internal server error'], 500);
-    //     }
-    // }
-    
-    // public function handleWebhook(Request $request)
-    // {
-    //     try {
-    //         // Set Stripe API key
-    //         Stripe::setApiKey(env('STRIPE_SECRET'));
-    
-    //         // Retrieve webhook payload
-    //         $payload = $request->all();
-    //         Log::info('Stripe Webhook Received', $payload);
-    
-    //         // Check event type
-    //         if (!isset($payload['type']) || $payload['type'] !== 'invoice.payment_succeeded') {
-    //             return response()->json(['error' => 'Invalid webhook payload'], 400);
-    //         }
-    
-    //         // Extract invoice details
-    //         $invoice = $payload['data']['object'] ?? null;
-    //         if (!$invoice || !isset($invoice['customer'], $invoice['subscription'], $invoice['lines']['data'][0]['period']['end'])) {
-    //             Log::error("Missing required fields in invoice");
-    //             return response()->json(['error' => 'Missing required invoice fields'], 400);
-    //         }
-    
-    //         $customerId = $invoice['customer'];
-    //         $subscriptionId = $invoice['subscription'];
-    //         $newEndDate = $invoice['lines']['data'][0]['period']['end']; // Correct way to get new expiry
-    
-    //         // Find user by Stripe customer ID
-    //         $user = User::where('stripe_customer_id', $customerId)->first();
-    //         if (!$user) {
-    //             Log::warning("User not found for Stripe customer ID: " . $customerId);
-    //             return response()->json(['error' => 'User not found'], 404);
-    //         }
-    
-    //         // Update subscription status
-    //         $user->update([
-    //             'subscription_status' => 'active',
-    //             'subscription_id' => $subscriptionId,
-    //         ]);
-    
-    //         // Find last subscription sale
-    //         $lastSubscribeSale = Sale::where('buyer_id', $user->id)
-    //             ->where('type', Sale::$subscribe)
-    //             ->whereNull('refund_at')
-    //             ->latest('created_at')
-    //             ->first();
-    
-    //         if ($lastSubscribeSale) {
-    //             $lastSubscribeSale->update(['created_at' => date('Y-m-d H:i:s', $newEndDate)]);
-    
-    //             Log::info("Subscription extended to: " . date('Y-m-d H:i:s', $newEndDate));
-    //         } else {
-    //             Log::warning("No previous subscription sale found for user: " . $user->id);
-    //         }
-            
-    //         Log::info("Subscription updated for user {$user->id}. New expiry: " . date('Y-m-d H:i:s', $newEndDate));
-    //         return response()->json(['status' => 'success', 'message' => 'Subscription updated'], 200);
-    //     } catch (\Throwable $e) {
-    //         Log::error('Webhook Handling Error: ' . $e->getMessage());
-    //         return response()->json(['error' => 'Internal server error'], 500);
-    //     }
-    // }
-    
-    // public function handleWebhook(Request $request)
-    // {
-    //     try {
-    //         Stripe::setApiKey(env('STRIPE_SECRET'));
-    
-    //         $endpointSecret = env('STRIPE_WEBHOOK_SECRET'); // Add this to .env
-    //         $sigHeader = $request->header('Stripe-Signature');
-    //         $payload = $request->getContent();
-    
-    //         try {
-    //             $event = Webhook::constructEvent($payload, $sigHeader, $endpointSecret);
-    //         } catch (\UnexpectedValueException $e) {
-    //             Log::error('Invalid payload: ' . $e->getMessage());
-    //             return response()->json(['error' => 'Invalid payload'], 400);
-    //         } catch (\Stripe\Exception\SignatureVerificationException $e) {
-    //             Log::error('Invalid signature: ' . $e->getMessage());
-    //             return response()->json(['error' => 'Invalid signature'], 400);
-    //         }
-    
-    //         Log::info('Stripe Webhook Received', ['type' => $event->type]);
-    
-    //         if ($event->type !== 'invoice.payment_succeeded') {
-    //             return response()->json(['error' => 'Unhandled event type'], 400);
-    //         }
-    
-    //         $invoice = $event->data->object;
-            
-    //         if (!$invoice || !isset($invoice->customer, $invoice->subscription, $invoice->lines->data[0]->period->end)) {
-    //             Log::error("Missing required fields in invoice");
-    //             return response()->json(['error' => 'Missing required invoice fields'], 400);
-    //         }
-    
-    //         $customerId = $invoice->customer;
-    //         $subscriptionId = $invoice->subscription;
-    //         $newEndDate = $invoice->lines->data[0]->period->end; // Correct way to get expiry date
-    
-    //         $user = User::where('stripe_customer_id', $customerId)->first();
-    //         if (!$user) {
-    //             Log::warning("User not found for Stripe customer ID: " . $customerId);
-    //             return response()->json(['error' => 'User not found'], 404);
-    //         }
-    
-    //         // Update user's subscription
-    //         $user->update([
-    //             'subscription_status' => 'active',
-    //             'subscription_id' => $subscriptionId,
-    //         ]);
-    
-    //         // Find last subscription sale
-    //         $lastSubscribeSale = Sale::where('buyer_id', $user->id)
-    //             ->where('type', Sale::$subscribe)
-    //             ->whereNull('refund_at')
-    //             ->latest('created_at')
-    //             ->first();
-    
-    //         if ($lastSubscribeSale) {
-    //             $lastSubscribeSale->update(['created_at' => date('Y-m-d H:i:s', $newEndDate)]);
-    //             Log::info("Subscription extended to: " . date('Y-m-d H:i:s', $newEndDate));
-    //         } else {
-    //             Log::warning("No previous subscription sale found for user: " . $user->id);
-    //         }
-    
-    //         Log::info("Subscription updated for user {$user->id}. New expiry: " . date('Y-m-d H:i:s', $newEndDate));
-    //         return response()->json(['status' => 'success', 'message' => 'Subscription updated'], 200);
-    
-    //     } catch (\Throwable $e) {
-    //         Log::error('Webhook Handling Error: ' . $e->getMessage());
-    //         return response()->json(['error' => 'Internal server error'], 500);
-    //     }
-    // }
     
     public function recurringPaymentRequest(Request $request)
     {
-    //   echo "<pre>";
-    //     var_dump($request); die;
         $this->validate($request, [
             'gateway' => 'required'
         ]);
-
-        //dd('check1');
-
+        
         $user = auth()->user();
 
         $gateway = $request->input('gateway');
@@ -424,8 +192,6 @@ class PaymentController extends Controller
             $reserveMeeting = ReserveMeeting::where('id', $orderItem->reserve_meeting_id)->first();
             $reserveMeeting->update(['locked_at' => time()]);
         }
-
-        
 
         if ($gateway === 'credit') {
 
@@ -492,127 +258,6 @@ class PaymentController extends Controller
     }
     
     protected $order_session_key = 'payment.order_id';
-
-    // public function paymentRequest(Request $request)
-    // {
-    //     //echo "<pre>"; print_r($request->all()); die;
-    //     $this->validate($request, [
-    //         'gateway' => 'required'
-    //     ]);
-        
-
-    //     $user = auth()->user();
-    //     $user_as_a_guest=false;
-        
-    //     if(!$user){
-    //         if (session()->has('device_id')) {
-    //            // dd('check');
-    //             $guestuser = new \stdClass(); // Create an empty object for guest users
-    //             $guestuser->id = session('device_id');
-    //             $user_as_a_guest=true;
-    //             $userid = $guestuser->id;
-                
-    //         }
-    //         else{
-    //             return redirect('/cart');
-    //         }
-    //     }
-    //     else{
-    //         $userid = $user->id;
-    //     }
-        
-    //     $gateway = $request->input('gateway');
-    //     $orderId = $request->input('order_id');
-       
-    //     $order = Order::where('id', $orderId)
-    //         ->where('user_id', $userid)
-    //         ->first();
-
-    //     session()->put($this->order_session_key, $orderId);
-        
-    //     if ($order->type === Order::$meeting) {
-    //         $orderItem = OrderItem::where('order_id', $order->id)->first();
-    //         $reserveMeeting = ReserveMeeting::where('id', $orderItem->reserve_meeting_id)->first();
-    //         $reserveMeeting->update(['locked_at' => time()]);
-    //     }
-        
-    //     if ($gateway === 'credit') {
-
-    //         if ($user->getAccountingCharge() < $order->total_amount) {
-    //             $order->update(['status' => Order::$fail]);
-
-    //             session()->put($this->order_session_key, $order->id);
-
-    //             return redirect('/payments/status');
-    //         }
-
-    //         $order->update([
-    //             'payment_method' => Order::$credit
-    //         ]);
-
-    //         $this->setPaymentAccounting($order, 'credit');
-
-    //         $order->update([
-    //             'status' => Order::$paid
-    //         ]);
-
-    //         session()->put($this->order_session_key, $order->id);
-
-    //         return redirect('/payments/status');
-    //     }
-
-    //     $paymentChannel = PaymentChannel::where('id', $gateway)
-    //         ->where('status', 'active')
-    //         ->first();
-
-    //     if (!$paymentChannel) {
-    //         $toastData = [
-    //             'title' => trans('cart.fail_purchase'),
-    //             'msg' => trans('public.channel_payment_disabled'),
-    //             'status' => 'error'
-    //         ];
-    //         return back()->with(['toast' => $toastData]);
-    //     }
-       
-
-    //     $order->payment_method = Order::$paymentChannel;
-    //     $order->save();
-    //     //print_r($order);
-    //     try {
-    //         $channelManager = ChannelManager::makeChannel($paymentChannel);
-    //         //print_r($channelManager);
-             
-    //         $redirect_url = $channelManager->paymentRequest($order);
-
-    //         if ($redirect_url instanceof \Illuminate\Http\Response) {
-    //             return $redirect_url;
-    //         }
-
-    //         if (is_string($redirect_url)) {
-    //             return response($redirect_url);
-    //         }
-
-    //           //print_r($redirect_url);
-    //          // exit();
-    //         if (in_array($paymentChannel->class_name, PaymentChannel::$gatewayIgnoreRedirect)) {
-    //             return $redirect_url;
-    //         }
-
-    //         if ($paymentChannel->class_name === 'Stripe') {
-    //             return response($redirect_url); // Return the HTML as response
-    //         }
-
-    //         return Redirect::away($redirect_url);
-    //     } catch (\Exception $exception) {   
-          
-    //         $toastData = [
-    //             'title' => trans('cart.fail_purchase'),
-    //             'msg' => trans('cart.gateway_error'),
-    //             'status' => 'error'
-    //         ];
-    //         return back()->with(['toast' => $toastData]);
-    //     }
-    // }
 
     public function paymentRequest(Request $request)
     {
@@ -751,7 +396,6 @@ class PaymentController extends Controller
 
     public function paymentVerify(Request $request, $gateway)
     {
-        //echo 1;die;
         Log::info('paymentVerify CONTROLLER : ', $request->all());
         Log::info('gateway NAME : ', [$gateway]);
         $paymentChannel = PaymentChannel::where('class_name', $gateway)
@@ -760,13 +404,15 @@ class PaymentController extends Controller
 
         try {
             $channelManager = ChannelManager::makeChannel($paymentChannel);
-            // echo "<pre>"; print_r($channelManager); 
-            // die('ghjgh');
             $order = $channelManager->verify($request);
-            //echo "<pre>"; print_r($order); die;
             return $this->paymentOrderAfterVerify($order);
 
         } catch (\Exception $exception) {
+                \Log::error('Payment verification error: ' . $exception->getMessage(), [
+                    'exception' => $exception,
+                    'gateway' => $gateway,
+                    'trace' => $exception->getTraceAsString()
+                ]);
             $toastData = [
                 'title' => trans('cart.fail_purchase'),
                 'msg' => trans('cart.gateway_error'),
@@ -778,18 +424,16 @@ class PaymentController extends Controller
     
     public function recurringPaymentVerify(Request $request, $gateway)
     {
-        // echo 1;die;
         Log::info('paymentVerify CONTROLLER : ', $request->all());
         Log::info('gateway NAME : ', [$gateway]);
+
         $paymentChannel = PaymentChannel::where('class_name', $gateway)
             ->where('status', 'active')
             ->first();
 
         try {
             $channelManager = ChannelManager::makeChannel($paymentChannel);
-            // die('ghjgh');
             $order = $channelManager->recurringVerify($request);
-            //  print_r($order);die;
             return $this->paymentOrderAfterVerify($order);
 
         } catch (\Exception $exception) {
@@ -802,10 +446,7 @@ class PaymentController extends Controller
             return redirect('cart')->with(['toast' => $toastData]);
         }
     }
-
-    /*
-     * | this methode only run for payku.result
-     * */
+    
     public function paykuPaymentVerify(Request $request, $id)
     {
         $paymentChannel = PaymentChannel::where('class_name', PaymentChannel::$payku)
@@ -833,7 +474,6 @@ class PaymentController extends Controller
 
     private function paymentOrderAfterVerify($order)
     {
-        //echo "<pre>"; print_r($order); die;
         if (!empty($order)) {
 
             if ($order->status == Order::$paying) {
@@ -874,15 +514,14 @@ class PaymentController extends Controller
 
     public function setPaymentAccounting($order, $type = null)
     {
-        
         $cashbackAccounting = new CashbackAccounting();
 
         if ($order->is_charge_account) {
             Accounting::charge($order);
 
             $cashbackAccounting->rechargeWallet($order);
+            
         } else {
-            //echo "<pre>"; print_r($order->orderItems); die;
             foreach ($order->orderItems as $orderItem) {
                 $sale = Sale::createSales($orderItem, $order->payment_method);
 
@@ -934,7 +573,7 @@ class PaymentController extends Controller
                     TicketUser::useTicket($orderItem);
 
                     if (!empty($orderItem->product_id)) {
-                        $this->updateProductOrder($sale, $orderItem);
+                        $this->updateProductOrder($sale, $orderItem, $order);
                     }
 
                     if(!empty($orderItem->book_id))
@@ -970,13 +609,9 @@ class PaymentController extends Controller
 
     private function getLuluPriceUsingCurl($bookid, $userid, $token = null)
     {
-        // dd('getLuluPriceUsingCurl', $bookid, $userid, $token);
         if (!$token) {
-            // dd('toekn');
             $token = $this->getLuluAccessTokenUsingCurl();
         }
-        // dd($token);
-        // dd($token);
         
         // $url = env('LULU_BASE_URL', 'https://api.sandbox.lulu.com') . $endpoint;
         // $url = "https://api.sandbox.lulu.com/print-job-cost-calculations/";
@@ -1021,41 +656,17 @@ class PaymentController extends Controller
         //     Log::error("S3 Upload failed: " . $e->getMessage());
         // } 
 
-        
-
-        // $pdfurl = "https://studiocaribbean.com/400page.pdf";
-        // $pdfpathurl = "https://kemetic.app/store/1/Where-the-Crawdads-Sing.pdf";
-        // // $pdfpathurl = "https://kemetic.app/store/1/pdf/traffic_pub_gen19.pdf";
-
-        // // dd('hi');
-        // $result = $this->pdfResizer->resizeForLulu($pdfpathurl, false);
-
-        // $cover    = $this->pdfResizer->generateCoverFromPdf($pdfpathurl, $result['page_count']);
-        // $coverurl = $cover['local_path'];
-        // dd($coverurl);
-
-        // Simulate your API call structure
-        // dd($pdfpathurl);
-        // $pdfurl = $result['lulu_pdf_url'];
-
-        // $sourcePdfUrl = "https://kemetic.app/store/1/pdf/400page.pdf";
-        // $title = "Test Print Job via Curl";
-        // $pdfurl = "https://kemetic.app/store/lulu/interior/interior_1768311771.pdf";
-        // $coverurl = "https://kemetic.app/store/lulu/cover/cover_1768311014.pdf";
-        // dd($bookid);
         $book = Book::where('id', $bookid)->where('type', 'Print')->first();
 
        
         if (!$book) {
             throw new \Exception("Book not found with ID: $bookid");
         }
-        // dd($book);
         
-        // 2. FETCH USER/BUYER DATA
         $user = User::select('id', 'full_name', 'email', 'mobile', 'country_id', 'province_name', 
                             'city_name', 'address', 'zip_code')
-                    ->find($userid);
-        // dd($user);
+        ->find($userid);
+                    
         if (!$user) {
             throw new \Exception("User not found with ID: $userid");
         }
@@ -1072,7 +683,6 @@ class PaymentController extends Controller
         }
 
         $countrycode = Country::where('country_name', $countryName)->value('country_code');
-        // 4. FORMAT PHONE
         $phone = $user->mobile ?: '+1 206 555 0100';
         if (!str_starts_with($phone, '+')) {
             $phone = '+1' . preg_replace('/[^0-9]/', '', $phone);
@@ -1258,14 +868,6 @@ class PaymentController extends Controller
 
         $data = json_decode($response, true);
 
-        // dd($data);
-      
-        // if ($httpCode !== 200) {
-        //     throw new \Exception("Failed to get access token: " . ($data['error_description'] ?? 'Unknown error'));
-        // }
-
-        // dd($authorization, $response, $httpCode, $error, $data, curl_getinfo($curl), $curl);
-
         return $data['access_token'] ?? null;
     }
 
@@ -1294,9 +896,7 @@ class PaymentController extends Controller
             $userId = $user->id;
         }
 
-        
-
-         $order = Order::where('id', $orderId)
+        $order = Order::where('id', $orderId)
             ->where('user_id', $userId)
             ->with(['orderItems' => function($query) {
                 $query->with(['subscribe', 'webinar', 'bundle', 'product']);
@@ -1316,26 +916,6 @@ class PaymentController extends Controller
 
         // Handle regular order confirmation
         return $this->handleRegularOrderConfirmation($order);
-        
-        
-        // $order = Order::where('id', $orderId)
-        //     ->where('user_id', auth()->id())
-        //     ->first();
-        
-        // $order = Order::where('id', $orderId)
-        //      ->where('user_id', $userid)
-        //      ->first();
-        
-        // if (!empty($order)) {
-        //     $data = [
-        //         'pageTitle' => trans('public.cart_page_title'),
-        //         'order' => $order,
-        //     ];
-
-        //     return view('web.default.cart.status_pay', $data);
-        // }
-
-        // return redirect('/panel');
     }
 
     private function handleSubscriptionConfirmation($order, $userId)
@@ -1440,7 +1020,7 @@ class PaymentController extends Controller
         ]);
     }
 
-    private function updateProductOrder($sale, $orderItem)
+    private function updateProductOrder($sale, $orderItem, $order)
     {
         $product = $orderItem->product;
 
@@ -1467,11 +1047,206 @@ class PaymentController extends Controller
                 'status' => $status,
             ]);
 
+        $productOrder = ProductOrder::find($orderItem->product_order_id);
+        if ($productOrder) {
+            $this->fulfilCJProductIfNeeded($productOrder, $orderItem, $order);
+        }
+
+        // if ($product and $product->is_cj_product) {
+        //     $this->handleCJOrderAfterPayment($orderItem);
+        // }
+
         if ($product and $product->getAvailability() < 1) {
             $notifyOptions = [
                 '[p.title]' => $product->title,
             ];
             sendNotification('product_out_of_stock', $notifyOptions, $product->creator_id);
+        }
+    }
+
+    private function fulfilCJProductIfNeeded(
+        ProductOrder $productOrder,
+        OrderItem    $orderItem,
+        Order        $order
+    ): void {
+        $product = $orderItem->product;
+ 
+        // ── Path A: CJ proxy product (item_name=cj_product_id) ────
+        $specs = json_decode($productOrder->specifications ?? '{}', true);
+        $isCJProxy = ($specs['source'] ?? '') === 'cj_dropship';
+ 
+        // ── Path B: Product has cj_vid column set ─────────────────
+        $isCJDirect = !empty($product) && !empty($product->cj_vid);
+ 
+        if (!$isCJProxy && !$isCJDirect) {
+            return; // Not a CJ product — nothing to do
+        }
+ 
+        try {
+            // ── Build buyer address ────────────────────────────────
+            $buyer = $order->user ?? User::find($orderItem->user_id);
+ 
+            if (!$buyer) {
+                Log::error("CJ Fulfil: no buyer for order #{$order->id}");
+                return;
+            }
+ 
+            // Resolve country name & code
+            $countryCode = 'US';
+            $countryName = 'United States';
+            if (!empty($buyer->country_id)) {
+                $region = Region::find($buyer->country_id);
+                if ($region) {
+                    $countryCode = $region->code ?? $countryCode;
+                    $countryName = $region->title ?? $region->name ?? $countryName;
+                }
+            }
+ 
+            // ── Build product list for CJ ──────────────────────────
+            if ($isCJProxy) {
+                $cjVid      = $specs['cj_vid']      ?? null;
+                $cjSku      = $specs['cj_sku']      ?? null;
+                $cjLogistic = $specs['cj_logistic'] ?? env('CJ_DEFAULT_LOGISTIC', 'PostNL');
+                $shopAmount = (string) ($specs['cj_price'] ?? 0);
+            } else {
+                // Direct cj_vid on Product model
+                $cjVid      = $product->cj_vid;
+                $cjSku      = $product->cj_sku ?? null;
+                $cjLogistic = env('CJ_DEFAULT_LOGISTIC', 'PostNL');
+                $shopAmount = (string) $product->price;
+            }
+ 
+            $cjProducts = [[
+                'vid'             => $cjVid,
+                'sku'             => $cjSku,
+                'quantity'        => $productOrder->quantity ?? 1,
+                'storeLineItemId' => 'oi_' . $orderItem->id . '_po_' . $productOrder->id,
+            ]];
+ 
+            // ── Build CJ order payload ─────────────────────────────
+            $orderData = [
+                'orderNumber'         => 'ORD-' . $order->id . '-OI-' . $orderItem->id . '-' . time(),
+                'shippingCountryCode' => $countryCode,
+                'shippingCountry'     => $countryName,
+                'shippingProvince'    => $buyer->province_name ?? '',
+                'shippingCity'        => $buyer->city_name     ?? '',
+                'shippingAddress'     => $buyer->address       ?? '',
+                'shippingAddress2'    => '',
+                'shippingZip'         => $buyer->zip_code      ?? '',
+                'shippingPhone'       => $buyer->mobile        ?? '',
+                'houseNumber'         => $buyer->house_no      ?? '',
+                'shippingCustomerName'=> $buyer->full_name     ?? '',
+                'email'               => $buyer->email         ?? '',
+                'logisticName'        => $cjLogistic,
+                'fromCountryCode'     => env('CJ_FROM_COUNTRY', 'CN'),
+                'platform'            => env('CJ_PLATFORM', 'Api'),
+                'shopAmount'          => $shopAmount,
+                'remark'              => 'Order #' . $order->id,
+                'payType'             => 2, // balance payment
+                'products'            => $cjProducts,
+            ];
+ 
+            Log::info('CJ Fulfil: Starting for orderItem #' . $orderItem->id, [
+                'cj_vid'  => $cjVid,
+                'country' => $countryCode,
+            ]);
+ 
+            // ── Step 1: Create order ───────────────────────────────
+            $created = $this->cj->createOrder($orderData);
+ 
+            if (empty($created['orderId'])) {
+                Log::error('CJ Fulfil Step 1 failed: no orderId returned', [
+                    'orderItem' => $orderItem->id,
+                    'response'  => $created,
+                ]);
+                return;
+            }
+ 
+            $cjOrderId = $created['orderId'];
+ 
+            // ── Step 2: Add to CJ cart ─────────────────────────────
+            $this->cj->addOrderToCart([$cjOrderId]);
+ 
+            // ── Step 3: Confirm cart → shipmentOrderId ─────────────
+            $confirmed       = $this->cj->confirmCart([$cjOrderId]);
+            $shipmentOrderId = $confirmed['shipmentsId'] ?? $confirmed['shipmentOrderId'] ?? null;
+ 
+            if (empty($shipmentOrderId)) {
+                Log::error('CJ Fulfil Step 3 failed: no shipmentOrderId', [
+                    'orderItem'  => $orderItem->id,
+                    'cjOrderId'  => $cjOrderId,
+                    'confirmed'  => $confirmed,
+                ]);
+                // Save partial progress so you can resume
+                $productOrder->update([
+                    'cj_order_id' => $cjOrderId,
+                    'cj_status'   => 'cart_failed',
+                ]);
+                return;
+            }
+ 
+            // ── Step 4: Save/generate parent order → payId ─────────
+            $saved = $this->cj->saveGenerateParentOrder($shipmentOrderId);
+            $payId = $saved['payId'] ?? null;
+ 
+            if (empty($payId)) {
+                Log::error('CJ Fulfil Step 4 failed: no payId', [
+                    'orderItem'       => $orderItem->id,
+                    'cjOrderId'       => $cjOrderId,
+                    'shipmentOrderId' => $shipmentOrderId,
+                    'saved'           => $saved,
+                ]);
+                $productOrder->update([
+                    'cj_order_id'    => $cjOrderId,
+                    'cj_shipment_id' => $shipmentOrderId,
+                    'cj_status'      => 'payment_pending',
+                ]);
+                return;
+            }
+ 
+            // ── Step 5: Pay with CJ balance ────────────────────────
+            $paid = $this->cj->payBalance($shipmentOrderId, $payId);
+ 
+            if ($paid === null) {
+                Log::error('CJ Fulfil Step 5 failed: balance payment failed', [
+                    'orderItem'       => $orderItem->id,
+                    'cjOrderId'       => $cjOrderId,
+                    'shipmentOrderId' => $shipmentOrderId,
+                    'payId'           => $payId,
+                ]);
+                $productOrder->update([
+                    'cj_order_id'    => $cjOrderId,
+                    'cj_shipment_id' => $shipmentOrderId,
+                    'cj_status'      => 'payment_failed',
+                ]);
+                return;
+            }
+ 
+            // ── Success: save all CJ data ──────────────────────────
+            $productOrder->update([
+                'cj_order_id'    => $cjOrderId,
+                'cj_shipment_id' => $shipmentOrderId,
+                'cj_status'      => 'submitted',
+                'status'         => ProductOrder::$waitingDelivery,
+            ]);
+ 
+            Log::info('CJ Fulfil: SUCCESS for orderItem #' . $orderItem->id, [
+                'cj_order_id'     => $cjOrderId,
+                'shipment_order'  => $shipmentOrderId,
+            ]);
+ 
+            // ── Notify admin / seller ──────────────────────────────
+            sendNotification('new_store_order', [
+                '[p.title]' => $product->title ?? ($specs['cj_name'] ?? 'CJ Product'),
+                '[amount]'  => handlePrice($orderItem->total_amount),
+                '[u.name]'  => $buyer->full_name ?? '',
+            ], 1);
+ 
+        } catch (\Throwable $e) {
+            // Never let CJ failure break the local payment confirmation
+            Log::error('CJ Fulfil exception for orderItem #' . $orderItem->id . ': ' . $e->getMessage(), [
+                'trace' => $e->getTraceAsString(),
+            ]);
         }
     }
 
@@ -1545,4 +1320,11 @@ class PaymentController extends Controller
         }
     }
 
+    private function handlePaymentOrderWithZeroTotalAmount($order)
+    {
+        $order->update(['payment_method' => Order::$paymentChannel]);
+        $this->setPaymentAccounting($order);
+        $order->update(['status' => Order::$paid]);
+        return redirect('/payments/status?order_id=' . $order->id);
+    }
 }

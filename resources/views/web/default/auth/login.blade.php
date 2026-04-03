@@ -1,5 +1,10 @@
 @extends('web.default.layouts.app')
-
+<style>
+@keyframes slideInToast {
+  from { opacity: 0; transform: translateX(40px); }
+  to   { opacity: 1; transform: translateX(0); }
+}
+</style>
 @section('content')
 <div class="auth-page">
   <div class="login-shell">
@@ -100,15 +105,36 @@
         </div>
       @endif
 </div>
-        <div>
-          <label class="login-label">Full name</label>
-          <div class="login-inp"><input type="text" name="full_name" placeholder="Full name" value="{{ old('full_name') }}" required></div>
-          @error('full_name')
-          <div class="invalid-feedback">
-              {{ $message }}
+      <div class="login-row">
+        <div style="flex:1">
+          <label class="login-label">First name</label>
+          <div class="login-inp">
+            <input type="text" name="first_name" placeholder="First name" value="{{ old('first_name') }}" required>
           </div>
+          @error('first_name')
+          <div class="invalid-feedback">{{ $message }}</div>
           @enderror
         </div>
+        <div style="flex:1">
+          <label class="login-label">Last name</label>
+          <div class="login-inp">
+            <input type="text" name="last_name" placeholder="Last name" value="{{ old('last_name') }}" required>
+          </div>
+          @error('last_name')
+          <div class="invalid-feedback">{{ $message }}</div>
+          @enderror
+        </div>
+      </div>
+
+      <div>
+        <label class="login-label">Display Name</label>
+        <div class="login-inp"><input type="text" name="full_name" placeholder="Full name" value="{{ old('full_name') }}" required></div>
+        @error('full_name')
+        <div class="invalid-feedback">
+            {{ $message }}
+        </div>
+        @enderror
+      </div>
       
       <div>
         <label class="login-label">Email</label>
@@ -260,9 +286,73 @@
 
   // Auto-switch to signup if there are signup errors
   document.addEventListener('DOMContentLoaded', function() {
-    @if($errors->has('first_name') || $errors->has('last_name') || $errors->has('terms'))
+
+    // Auto-switch to signup tab if any signup field has an error
+    @if(
+      $errors->has('first_name') || $errors->has('last_name') ||
+      $errors->has('full_name')  || $errors->has('email')     ||
+      $errors->has('password')   || $errors->has('password_confirmation') ||
+      $errors->has('country_id') || $errors->has('timezone')  ||
+      $errors->has('term')       || $errors->has('account_type')
+    )
       switchTab('signup');
+
+      // Collect all error messages and show as toast
+      const allErrors = [
+        @foreach($errors->all() as $error)
+          "{{ $error }}",
+        @endforeach
+      ];
+      if (allErrors.length > 0) {
+        showToast(allErrors.join('<br>'), 'error');
+      }
+    @endif
+
+    // Show success toast if session has a success message
+    @if(session('success'))
+      showToast("{{ session('success') }}", 'success');
     @endif
   });
+
+  function showToast(message, type) {
+    // Remove any existing toast
+    const existing = document.getElementById('login-toast');
+    if (existing) existing.remove();
+
+    const colors = {
+      error:   { bg: '#2a1a1a', border: '#e53e3e', icon: '✕', iconColor: '#e53e3e' },
+      success: { bg: '#1a2a1a', border: '#38a169', icon: '✓', iconColor: '#38a169' },
+    };
+    const c = colors[type] || colors.error;
+
+    const toast = document.createElement('div');
+    toast.id = 'login-toast';
+    toast.innerHTML = `
+      <span style="font-size:16px;color:${c.iconColor};font-weight:bold">${c.icon}</span>
+      <span style="flex:1;font-size:13px;line-height:1.5">${message}</span>
+      <button onclick="this.parentElement.remove()" style="background:none;border:none;color:#aaa;font-size:16px;cursor:pointer;padding:0 0 0 8px;line-height:1">✕</button>
+    `;
+    toast.style.cssText = `
+      position: fixed;
+      top: 20px;
+      right: 20px;
+      z-index: 9999;
+      display: flex;
+      align-items: flex-start;
+      gap: 10px;
+      padding: 14px 16px;
+      background: ${c.bg};
+      border: 1px solid ${c.border};
+      border-radius: 10px;
+      box-shadow: 0 4px 24px rgba(0,0,0,0.4);
+      max-width: 360px;
+      color: #f0f0f0;
+      animation: slideInToast 0.3s ease;
+    `;
+    document.body.appendChild(toast);
+
+    // Auto-dismiss after 5 seconds
+    setTimeout(() => { if (toast.parentElement) toast.remove(); }, 5000);
+  }
 </script>
 @endpush

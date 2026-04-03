@@ -189,7 +189,7 @@
                     <input type="text"
                            name="thumbnail"
                            id="thumbnail"
-                           value="{{ !empty($product) ? $product->thumbnail : old('thumbnail') }}"
+                           value="{{ (!empty($product) && !empty($product->thumbnail)) ? $product->thumbnail : (!empty($cjProduct) ? (is_array($cjProduct['productImage']) ? reset($cjProduct['productImage']) : $cjProduct['productImage']) : old('thumbnail')) }}"
                            class="kemetic-input @error('thumbnail') is-invalid @enderror"
                            placeholder="{{ trans('update.thumbnail_images_size') }}">
 
@@ -206,32 +206,42 @@
                 <label class="kemetic-label mb-0">{{ trans('update.images') }}</label>
 
                 <div class="main-row input-group product-images-input-group kemetic-input-group mt-10" style="margin-bottom:10px;">
-                    <!-- <div class="kemetic-input-group"> -->
-                        <button type="button" class="kemetic-upload-btn panel-file-manager" data-input="images_record" data-preview="holder">
-                            <i data-feather="upload" width="18"></i>
-                        </button>
-                    <!-- </div> -->
-                    <input type="text" name="images[]" id="images_record" value="" class="form-control" placeholder="{{ trans('update.product_images_size') }}"/>
-
+                    <button type="button" class="kemetic-upload-btn panel-file-manager" data-input="images_record" data-preview="holder">
+                        <i data-feather="upload" width="18"></i>
+                    </button>
+                    <input type="text" name="images[]" id="images_record" value="{{ (!empty($cjProduct) && !empty($cjProduct['productImageSet']) && (empty($product->images) || count($product->images) == 0)) ? (is_array($cjProduct['productImageSet'][0]) ? reset($cjProduct['productImageSet'][0]) : $cjProduct['productImageSet'][0]) : '' }}" class="form-control" placeholder="{{ trans('update.product_images_size') }}"/>
                     <button type="button" class="kemetic-btn-primary kemetic-icon-btn add-btn">
                         <i data-feather="plus" width="16"></i>
                     </button>
                 </div>
 
-                @if(!empty($product->images) and count($product->images))
-                    @foreach($product->images as $productImage)
-                        <div class="input-group product-images-input-group kemetic-input-group mt-10" style="margin-top:10px;">
-                            <!-- <div class="kemetic-input-group"> -->
-                                <button type="button" class="kemetic-upload-btn panel-file-manager" data-input="images_{{ $productImage->id }}" data-preview="holder">
+                @if(!empty($cjProduct) && !empty($cjProduct['productImageSet']) && count($cjProduct['productImageSet']) > 1 && (empty($product->images) || count($product->images) == 0))
+                    @foreach($cjProduct['productImageSet'] as $index => $imagePath)
+                        @if($index > 0)
+                            <div class="input-group product-images-input-group kemetic-input-group mt-10 cj-prefilled">
+                                <button type="button" class="kemetic-upload-btn panel-file-manager" data-input="cj_images_{{ $index }}" data-preview="holder">
                                     <i data-feather="upload" width="18"></i>
                                 </button>
+                                <input type="text" name="images[]" id="cj_images_{{ $index }}" value="{{ is_array($imagePath) ? reset($imagePath) : $imagePath }}" class="form-control" placeholder="{{ trans('update.product_images_size') }}"/>
+                                <button type="button" class="kemetic-btn-danger kemetic-icon-btn remove-btn">
+                                    <i data-feather="x" width="16"></i>
+                                </button>
                             </div>
-                            <input type="text" name="images[]" id="images_{{ $productImage->id }}" value="{{ $productImage->path }}" class="form-control" placeholder="{{ trans('update.product_images_size') }}"/>
+                        @endif
+                    @endforeach
+                @endif
 
-                             <button type="button" class="kemetic-btn-danger kemetic-icon-btn remove-btn">
+                @if(!empty($product->images) && count($product->images))
+                    @foreach($product->images as $productImage)
+                        <div class="input-group product-images-input-group kemetic-input-group mt-10">
+                            <button type="button" class="kemetic-upload-btn panel-file-manager" data-input="images_{{ $productImage->id }}" data-preview="holder">
+                                <i data-feather="upload" width="18"></i>
+                            </button>
+                            <input type="text" name="images[]" id="images_{{ $productImage->id }}" value="{{ $productImage->path }}" class="form-control" placeholder="{{ trans('update.product_images_size') }}"/>
+                            <button type="button" class="kemetic-btn-danger kemetic-icon-btn remove-btn">
                                 <i data-feather="x" width="16"></i>
                             </button>
-                        <!-- </div> -->
+                        </div>
                     @endforeach
                 @endif
 
@@ -276,4 +286,42 @@
 
 @push('scripts_bottom')
 <script src="/assets/default/vendors/sortable/jquery-ui.min.js"></script>
+@if(!empty($cjProduct))
+<script>
+(function ($) {
+    // For CJ products: override the add-btn so it counts only user-added rows
+    // (not the pre-filled CJ image rows) against the max-4 limit.
+    function cjRandomString() {
+        var text = "", possible = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz";
+        for (var i = 0; i < 4; i++) text += possible.charAt(Math.floor(Math.random() * possible.length));
+        return text;
+    }
+
+    // Remove the global add-btn handler and replace with a CJ-aware one
+    $('body').off('click', '.add-btn');
+    $('body').on('click', '.add-btn', function (e) {
+        e.preventDefault();
+        // Allow unlimited images for CJ products
+        var icon = feather.icons['x'].toSvg({ width: 18, height: 18 });
+        var newKey = cjRandomString();
+        var mainRow = $('.main-row');
+        var copy = mainRow.clone();
+        copy.removeClass('main-row').removeClass('d-none');
+        var addBtn = copy.find('.add-btn');
+        if (addBtn.length) {
+            addBtn.removeClass('add-btn kemetic-btn-primary').addClass('kemetic-btn-danger remove-btn').html(icon);
+        }
+        var copyHtml = copy.prop('innerHTML');
+        copyHtml = copyHtml.replaceAll('record', newKey);
+        copyHtml = copyHtml.replaceAll('btn-primary', 'btn-danger');
+        copyHtml = copyHtml.replaceAll('add-btn', 'remove-btn');
+        copy.html(copyHtml);
+        // Clear the value so the new row is always EMPTY
+        copy.find('input[type="text"]').val('');
+        $('#productImagesInputs').append(copy);
+        if (typeof feather !== 'undefined') feather.replace();
+    });
+})(jQuery);
+</script>
+@endif
 @endpush

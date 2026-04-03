@@ -124,8 +124,10 @@ class LoginController extends Controller
     {
         $user = auth()->user();
 
-        $userLoginHistoryMixin = new UserLoginHistoryMixin();
-        $userLoginHistoryMixin->storeUserLogoutHistory($user->id);
+        if (!empty($user)) {
+            $userLoginHistoryMixin = new UserLoginHistoryMixin();
+            $userLoginHistoryMixin->storeUserLogoutHistory($user->id);
+        }
 
         Auth::logout();
         return redirect(getAdminPanelUrl() . '/login');

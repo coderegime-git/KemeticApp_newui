@@ -463,7 +463,8 @@
         const totalPriceInput = document.getElementById('total_price');
         
         const totalPrice = shippingPrice + printPrice + bookPriceInput + platformFee;
-        totalPriceInput.value = totalPrice.toFixed(2);
+        totalPriceInput.value = Math.round(totalPrice);
+        // totalPriceInput.value = totalPrice.toFixed(2);
     }
 
     // Add event listeners for manual triggers

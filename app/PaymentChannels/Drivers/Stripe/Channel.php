@@ -118,7 +118,6 @@ class Channel extends BasePaymentChannel implements IChannel
             ]);
             throw $e; // allow upstream to catch and show friendly toast
         }
-        //dd('order2');
         session()->put($this->order_session_key, $order->id);
 
         if (session()->get('mobileHeader') == 1) {

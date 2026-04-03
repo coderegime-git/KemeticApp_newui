@@ -336,19 +336,23 @@
                 <label class="kemetic-label">{{ trans('public.type') }}</label>
 
                 <select name="type"
-                        class="kemetic-select @error('type') is-invalid @enderror">
+                        class="kemetic-select @error('type') is-invalid @enderror" {{ !empty($cjProduct) ? 'disabled' : '' }}>
                     @if(!empty(getStoreSettings('possibility_create_physical_product')))
-                        <option value="physical" @if(!empty($product) && $product->isPhysical()) selected @endif>
+                        <option value="physical" @if((!empty($product) && $product->isPhysical()) || !empty($cjProduct)) selected @endif>
                             {{ trans('update.physical') }}
                         </option>
                     @endif
 
                     @if(!empty(getStoreSettings('possibility_create_virtual_product')))
-                        <option value="virtual" @if(!empty($product) && $product->isVirtual()) selected @endif>
+                        <option value="virtual" @if(!empty($product) && $product->isVirtual() && empty($cjProduct)) selected @endif>
                             {{ trans('update.virtual') }}
                         </option>
                     @endif
                 </select>
+
+                @if(!empty($cjProduct))
+                    <input type="hidden" name="type" value="physical">
+                @endif
 
                 @error('type')
                 <div class="invalid-feedback d-block">{{ $message }}</div>
@@ -361,7 +365,7 @@
 
                 <input type="text"
                        name="title"
-                       value="{{ (!empty($product) && !empty($product->translate($locale))) ? $product->translate($locale)->title : old('title') }}"
+                       value="{{ (!empty($product) && !empty($product->translate($locale))) ? $product->translate($locale)->title : (!empty($cjProduct) ? $cjProduct['productNameEn'] : old('title')) }}"
                        class="kemetic-input @error('title') is-invalid @enderror">
 
                 @error('title')
@@ -391,7 +395,7 @@
                 <textarea name="summary"
                           rows="5"
                           class="kemetic-textarea @error('summary') is-invalid @enderror"
-                          placeholder="{{ trans('update.product_summary_placeholder') }}">{{ (!empty($product) && !empty($product->translate($locale))) ? $product->translate($locale)->summary : old('summary') }}</textarea>
+                          placeholder="{{ trans('update.product_summary_placeholder') }}">{{ (!empty($product) && !empty($product->translate($locale))) ? $product->translate($locale)->summary : (!empty($cjProduct) ? ($cjProduct['productNameEn'] ?? '') : old('summary')) }}</textarea>
 
                 @error('summary')
                 <div class="invalid-feedback d-block">{{ $message }}</div>
@@ -410,7 +414,7 @@
             <label class="input-label">{{ trans('public.description') }}</label>
             <textarea id="summernote" name="description"
                       class="form-control @error('description') is-invalid @enderror">
-                {!! (!empty($product) && !empty($product->translate($locale))) ? $product->translate($locale)->description : old('description') !!}
+                {!! (!empty($product) && !empty($product->translate($locale))) ? $product->translate($locale)->description : (!empty($cjProduct) ? ($cjProduct['description'] ?? '') : old('description')) !!}
             </textarea>
             @error('description')<div class="invalid-feedback">{{ $message }}</div>@enderror
         </div>

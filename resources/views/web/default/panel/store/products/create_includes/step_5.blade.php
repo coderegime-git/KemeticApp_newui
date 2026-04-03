@@ -196,7 +196,7 @@
 
 <section class="mt-20 k-card">
 
-    <h2 class="k-title">{{ trans('public.message_to_reviewer') }}</h2>
+    <h2 class="k-title">Message to Admin</h2>
 
     <div class="row">
         <div class="col-12">

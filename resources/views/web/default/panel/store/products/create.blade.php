@@ -92,6 +92,9 @@
             <input type="hidden" name="draft" value="no" id="forDraft"/>
             <input type="hidden" name="get_next" value="no" id="getNext"/>
             <input type="hidden" name="get_step" value="0" id="getStep"/>
+            @if(!empty(request()->get('cj_vid')))
+                <input type="hidden" name="cj_vid" value="{{ request()->get('cj_vid') }}">
+            @endif
 
 
             <div class="k-create-card k-step-content">

@@ -143,15 +143,7 @@
                        
 
                         <!-- Address 1 -->
-                        <div class="field-single">
-                            <label for="address1">House No.</label>
-                            <input type="text" name="house_no" id="house_no" required value="{{ !empty($user) ? $user->house_no : '' }}" class="form-control @error('house_no')  is-invalid @enderror" />
-                            @error('house_no')
-                            <div class="invalid-feedback">
-                                {{ $message }}
-                            </div>
-                            @enderror
-                        </div>
+                        
 
                         <!-- Address 2 -->
                         
@@ -166,11 +158,42 @@
                     <!-- </div> -->
 
                 @endif
+
+                <div class="field-single">
+                    <label for="firstName">{{ trans('update.first_name') }}</label>
+                    <input id="firstName" name="first_name" type="text" class="form-control @error('first_name') is-invalid @enderror" required value="{{ !empty($user) ? $user->first_name : '' }}" />
+                    @error('first_name')
+                    <div class="invalid-feedback">
+                        {{ $message }}
+                    </div>
+                    @enderror
+                </div>
+                <div class="field-single">
+                    <label for="lastName">{{ trans('update.last_name') }}</label>
+                    <input id="lastName" name="last_name" class="form-control @error('last_name') is-invalid @enderror" type="text" required  value="{{ !empty($user) ? $user->last_name : '' }}" />
+                    @error('last_name')
+                    <div class="invalid-feedback">
+                        {{ $message }}
+                    </div>
+                    @enderror
+                </div>
+
                 <div class="field-single">
                     <label for="phone">Phone Number</label>
                     <input type="number" name="phone"  id="phone" class="form-control @error('phone') is-invalid @enderror" 
                     required value="{{ !empty($user) ? $user->mobile : '' }}" min-length="6"/>
                     @error('phone')
+                    <div class="invalid-feedback">
+                        {{ $message }}
+                    </div>
+                    @enderror
+                </div>
+
+                <div class="field-single">
+                    <label for="email">{{ trans('update.email') }}</label>
+                    <input id="email" name="email" class="form-control @error('email') is-invalid @enderror" 
+                    value="{{ !empty($user) ? $user->email : '' }}" type="email" required />
+                    @error('email')
                     <div class="invalid-feedback">
                         {{ $message }}
                     </div>
@@ -229,6 +252,16 @@
                             value="{{ !empty($user) ? $user->city_name : '' }}" required />
 
                         @error('city_name')
+                        <div class="invalid-feedback">
+                            {{ $message }}
+                        </div>
+                        @enderror
+                    </div>
+
+                    <div class="field-single">
+                        <label for="address1">House No.</label>
+                        <input type="text" name="house_no" id="house_no" required value="{{ !empty($user) ? $user->house_no : '' }}" class="form-control @error('house_no')  is-invalid @enderror" />
+                        @error('house_no')
                         <div class="invalid-feedback">
                             {{ $message }}
                         </div>

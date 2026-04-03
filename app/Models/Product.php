@@ -159,6 +159,11 @@ class Product extends Model implements TranslatableContract
         return $this->morphMany(ProductBadgeContent::class, 'targetable');
     }
 
+    public function cjVariants()
+    {
+        return $this->hasMany(ProductCjVariant::class, 'product_id', 'id');
+    }
+
     public function relatedCourses()
     {
         return $this->morphMany('App\Models\RelatedCourse', 'targetable');

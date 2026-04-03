@@ -8,7 +8,7 @@
         {{ trans('membership') ?? 'Membership' }} — Upgrade
       </a>
     @else
-      <a href="javascript:void(0)" onclick="storeRedirectThenLogin()" class="home-chip home-chip-gold">
+      <a href="javascript:void(0)" onclick="footerstoreRedirectThenLogin()" class="home-chip home-chip-gold">
         <span class="topheader-material-symbols-outlined" style="font-size:13px;">workspace_premium</span>
         {{ trans('membership') ?? 'Membership' }} €1/mo or €10/yr
       </a>
@@ -107,7 +107,7 @@
 </style>
 <script>
 
-  function storeRedirectThenLogin() {
+  function footerstoreRedirectThenLogin() {
     fetch('/membership/store-redirect', {
         method: 'POST',
         headers: {

@@ -16,6 +16,7 @@ class Sale extends Model
     public static $registrationPackage = 'registration_package';
     public static $product = 'product';
     public static $book = 'book';
+    public static $fmd = 'fmd';
     public static $bundle = 'bundle';
     public static $gift = 'gift';
     public static $installmentPayment = 'installment_payment';
@@ -132,6 +133,9 @@ class Sale extends Model
         } elseif (!empty($orderItem->book_id)) {
             $orderType = Order::$book;
         } 
+        elseif (!empty($orderItem->fmd_id)) {
+            $orderType = Order::$fmd;
+        } 
         elseif (!empty($orderItem->bundle_id)) {
             $orderType = Order::$bundle;
         } elseif (!empty($orderItem->installment_payment_id)) {
@@ -158,6 +162,7 @@ class Sale extends Model
             'product_order_id' => (!empty($orderItem->product_order_id)) ? $orderItem->product_order_id : null,
             'book_order_id' => (!empty($orderItem->book_order_id)) ? $orderItem->book_order_id : null,
             'installment_payment_id' => $orderItem->installment_payment_id ?? null,
+            'fmd_id' => $orderItem->fmd_id ?? null,
             'gift_id' => $orderItem->gift_id ?? null,
             'type' => $orderType,
             'payment_method' => $payment_method,

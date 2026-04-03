@@ -12,12 +12,20 @@ use App\Models\ProductSelectedFilterOption;
 use App\Models\ProductSpecification;
 use App\Models\ProductSpecificationCategory;
 use App\Models\Translation\ProductTranslation;
+use App\Services\CJDropshippingService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Validator;
 
 class ProductController extends Controller
 {
+    protected $cjService;
+
+    public function __construct(CJDropshippingService $cjService)
+    {
+        $this->cjService = $cjService;
+    }
+
     public function index()
     {
         $this->authorize("panel_products_lists");
@@ -30,7 +38,8 @@ class ProductController extends Controller
 
         $query = Product::where('creator_id', $user->id);
 
-        $physicalProducts = deepClone($query)->where('type', Product::$physical)->count();;
+        $physicalProducts = deepClone($query)->where('type', Product::$physical)->count();
+        ;
         $virtualProducts = deepClone($query)->where('type', Product::$virtual)->count();
 
         $totalPhysicalSales = deepClone($query)->where('products.type', Product::$physical)
@@ -98,9 +107,16 @@ class ProductController extends Controller
             return redirect()->back();
         }
 
+        $cjProduct = null;
+        $cjVid = request()->get('cj_vid');
+        if ($cjVid) {
+            $cjProduct = $this->cjService->getProductDetail($cjVid);
+        }
+
         $data = [
             'pageTitle' => trans('update.new_product_page_title'),
             'currentStep' => 1,
+            'cjProduct' => $cjProduct
         ];
 
         return view('web.default.panel.store.products.create', $data);
@@ -158,6 +174,8 @@ class ProductController extends Controller
             'status' => ((!empty($data['draft']) and $data['draft'] == 1) or (!empty($data['get_next']) and $data['get_next'] == 1)) ? Product::$draft : Product::$pending,
             'updated_at' => time(),
             'created_at' => time(),
+            'is_cj_product' => !empty($data['cj_vid']),
+            'cj_vid' => $data['cj_vid'] ?? null,
         ]);
 
         if ($product) {
@@ -170,6 +188,28 @@ class ProductController extends Controller
                 'summary' => $data['summary'],
                 'description' => $data['description'],
             ]);
+
+            // Auto-save CJ variants if it's a CJ product
+            if ($product->is_cj_product && !empty($product->cj_vid)) {
+                $cjProductDetails = $this->cjService->getProductDetail($product->cj_vid);
+                if (!empty($cjProductDetails) && !empty($cjProductDetails['variants'])) {
+                    foreach ($cjProductDetails['variants'] as $v) {
+                        \App\Models\ProductCjVariant::create([
+                            'product_id' => $product->id,
+                            'cj_pid' => $product->cj_vid,
+                            'vid' => $v['vid'],
+                            'variant_name' => $v['variantNameEn'] ?? $v['variantKey'] ?? 'Variant',
+                            'variant_key' => $v['variantKey'] ?? '',
+                            'variant_sku' => $v['variantSku'] ?? '',
+                            'sell_price' => $v['variantSellPrice'] ?? $v['sellPrice'] ?? $cjProductDetails['sellPrice'] ?? 0,
+                            'variant_image' => $v['variantImage'] ?? null,
+                            'is_selected' => true,
+                            'created_at' => time(),
+                            'updated_at' => time(),
+                        ]);
+                    }
+                }
+            }
         }
 
         $notifyOptions = [
@@ -232,6 +272,11 @@ class ProductController extends Controller
 
         $product = $query->first();
 
+        $cjProduct = null;
+        if (!empty($product) && $product->is_cj_product && !empty($product->cj_vid)) {
+            $cjProduct = $this->cjService->getProductDetail($product->cj_vid);
+        }
+
         if (empty($product)) {
             abort(404);
         }
@@ -242,6 +287,7 @@ class ProductController extends Controller
             'currentStep' => $step,
             'locale' => mb_strtolower($locale),
             'defaultLocale' => getDefaultLocale(),
+            'cjProduct' => $cjProduct,
         ];
 
         if ($step == 2) {
@@ -324,9 +370,10 @@ class ProductController extends Controller
                 'images' => $data['images']
             ]);
 
+            $maxImages = $product->is_cj_product ? 50 : 4;
             $rules = [
                 'thumbnail' => 'required',
-                'images' => 'required|array|min:1|max:4',
+                'images' => 'required|array|min:1|max:' . $maxImages,
             ];
         }
 
@@ -378,7 +425,8 @@ class ProductController extends Controller
             $this->handleProductImages($product, $data);
         }
 
-        unset($data['_token'],
+        unset(
+            $data['_token'],
             $data['current_step'],
             $data['draft'],
             $data['get_next'],
@@ -393,6 +441,8 @@ class ProductController extends Controller
             $data['images'],
             $data['video_demo'],
             $data['filters'],
+            $data['cj_vid'],
+            $data['cj_price'],
         );
 
         if (isset($product->salesCountCache)) {
@@ -434,15 +484,39 @@ class ProductController extends Controller
     {
         $user = auth()->user();
 
+        $getSinglePath = function ($path) {
+            if (empty($path))
+                return null;
+
+            // If it's still a JSON string of an array, decode it
+            if (is_string($path) && strpos($path, '[') === 0) {
+                $decoded = json_decode($path, true);
+                if (is_array($decoded)) {
+                    $path = $decoded;
+                }
+            }
+
+            // If it's an array, take the first element
+            while (is_array($path)) {
+                $path = reset($path);
+            }
+
+            return is_string($path) ? $path : null;
+        };
+
         if (!empty($data['thumbnail'])) {
-            ProductMedia::updateOrCreate([
-                'creator_id' => $user->id,
-                'product_id' => $product->id,
-                'type' => ProductMedia::$thumbnail,
-            ], [
-                'path' => $data['thumbnail'],
-                'created_at' => time(),
-            ]);
+            $thumbnail = $getSinglePath($data['thumbnail']);
+
+            if (!empty($thumbnail)) {
+                ProductMedia::updateOrCreate([
+                    'creator_id' => $user->id,
+                    'product_id' => $product->id,
+                    'type' => ProductMedia::$thumbnail,
+                ], [
+                    'path' => $thumbnail,
+                    'created_at' => time(),
+                ]);
+            }
         }
 
         if (!empty($data['images']) and count($data['images'])) {
@@ -452,12 +526,14 @@ class ProductController extends Controller
                 ->delete();
 
             foreach ($data['images'] as $image) {
-                if (!empty($image)) {
+                $imagePath = $getSinglePath($image);
+
+                if (!empty($imagePath)) {
                     ProductMedia::create([
                         'creator_id' => $user->id,
                         'product_id' => $product->id,
                         'type' => ProductMedia::$image,
-                        'path' => $image,
+                        'path' => $imagePath,
                         'created_at' => time(),
                     ]);
                 }
@@ -465,14 +541,18 @@ class ProductController extends Controller
         }
 
         if (!empty($data['video_demo'])) {
-            ProductMedia::updateOrCreate([
-                'creator_id' => $user->id,
-                'product_id' => $product->id,
-                'type' => ProductMedia::$video,
-            ], [
-                'path' => $data['video_demo'],
-                'created_at' => time(),
-            ]);
+            $videoDemo = $getSinglePath($data['video_demo']);
+
+            if (!empty($videoDemo)) {
+                ProductMedia::updateOrCreate([
+                    'creator_id' => $user->id,
+                    'product_id' => $product->id,
+                    'type' => ProductMedia::$video,
+                ], [
+                    'path' => $videoDemo,
+                    'created_at' => time(),
+                ]);
+            }
         }
     }
 
@@ -572,7 +652,7 @@ class ProductController extends Controller
 
     public function getFilesModal($id)
     {
-        $user = auth()->user()??apiAuth();
+        $user = auth()->user() ?? apiAuth();
 
         $product = Product::where('id', $id)->first();
 

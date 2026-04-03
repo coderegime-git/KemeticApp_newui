@@ -229,6 +229,14 @@
             display: block;
         }
 
+        .nav-collapsible:not(.open) > .nav-collapsible-content {
+            display: none !important;
+        }
+
+        .nav-collapsible.open > .nav-collapsible-content {
+            display: block !important;
+        }
+
         .nav-collapsible-content a {
             padding: 10px 14px;
             font-size: 14px;
@@ -244,6 +252,12 @@
         .nav-collapsible-content a.active {
             background: rgba(99,102,241,.25);
             color: white;
+        }
+
+        /* Sub-collapsible nested inside another collapsible */
+        .nav-collapsible-content .nav-collapsible-content {
+            margin-left: 8px;
+            background: rgba(255,255,255,0.03);
         }
 
         /* Badge for notifications */
@@ -671,12 +685,31 @@
                 <span class="nav-arrow">›</span>
             </a>
             <div class="nav-collapsible-content">
-                @if($authUser->isOrganization() || $authUser->isTeacher())
-                    @can('panel_products_create')
-                        <a href="/panel/store/products/new" class="{{ Request::is('panel/store/products/new') ? 'active' : '' }}">
-                            <span class="dashboard-ms">add_circle</span> {{ trans('update.new_product') }}
+                @can('panel_products_create')
+                    <a href="/panel/store/products/new" class="{{ Request::is('panel/store/products/new') ? 'active' : '' }}">
+                        <span class="dashboard-ms">add_circle</span>Own Product
+                    </a>
+                @endcan
+                @if($authUser->isTeacher())
+                    <div class="nav-collapsible nav-sub-collapsible {{ (request()->is('panel/cj-products') or request()->is('panel/cj/*')) ? 'open' : '' }}" data-sub="true">
+                        <a class="nav-collapsible-toggle {{ (request()->is('panel/cj-products') or request()->is('panel/cj/*')) ? 'active' : '' }}">
+                            <span class="dashboard-ms">store</span>Dropshipping
+                            <span class="nav-arrow">›</span>
                         </a>
-                    @endcan
+                        <div class="nav-collapsible-content">
+                            
+                            <a href="/panel/cj-products" class="{{ (request()->is('panel/cj-products')) ? 'active' : '' }}">
+                                <span class="dashboard-ms">shopping_cart</span> CJ Products
+                            </a>
+                            <!-- <a href="/panel/book/" class="{{ (request()->is('panel/book/')) ? 'active' : '' }}">
+                                <span class="dashboard-ms">library_books</span> My Scrolls
+                            </a> -->
+                        </div>
+                    </div>
+                @endif
+
+                @if($authUser->isOrganization() || $authUser->isTeacher())
+                    
                     @can('panel_products_lists')
                         <a href="/panel/store/products" class="{{ Request::is('panel/store/products') && !Request::is('panel/store/products/*') ? 'active' : '' }}">
                             <span class="dashboard-ms">list</span> {{ trans('update.products') }}
@@ -714,6 +747,8 @@
             </div>
         </div>
         @endcan
+
+        
 
         <!-- ========== FINANCIAL ========== -->
         @can('panel_financial')
@@ -1129,3 +1164,51 @@
         </div>
     </div>
 </aside>
+<script>
+(function() {
+    function initSidebar() {
+        // Remove ALL previous click handlers on toggles by cloning
+        document.querySelectorAll('.nav-collapsible-toggle').forEach(function(toggle) {
+            var fresh = toggle.cloneNode(true);
+            toggle.parentNode.replaceChild(fresh, toggle);
+        });
+
+        // Re-attach clean handlers, innermost first
+        var all = Array.from(document.querySelectorAll('.nav-collapsible'));
+        all.reverse(); // reverse DOM order = deepest last in HTML = process children first
+
+        all.forEach(function(col) {
+            var toggle = col.querySelector(':scope > .nav-collapsible-toggle');
+            if (!toggle) return;
+
+            toggle.addEventListener('click', function(e) {
+                e.preventDefault();
+                e.stopPropagation();
+                e.stopImmediatePropagation();
+                col.classList.toggle('open');
+                console.log('Toggled:', toggle.textContent.trim().substring(0,20), col.classList.contains('open') ? 'now OPEN' : 'now CLOSED');
+            }, false);
+        });
+
+        // Mobile
+        var mobileBtn = document.querySelector('.mobile-menu-toggle');
+        var side = document.querySelector('.dashboard-side');
+        var ov = document.querySelector('.mobile-overlay');
+        if (mobileBtn && side && ov) {
+            mobileBtn.addEventListener('click', function() {
+                side.classList.toggle('mobile-open');
+                ov.classList.toggle('active');
+            });
+            ov.addEventListener('click', function() {
+                side.classList.remove('mobile-open');
+                ov.classList.remove('active');
+            });
+        }
+    }
+
+    // Run after ALL other scripts finish
+    window.addEventListener('load', function() {
+        setTimeout(initSidebar, 300);
+    });
+})();
+</script>

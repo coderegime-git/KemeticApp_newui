@@ -265,6 +265,8 @@ class RegisterController extends Controller
             // 'country_code' => ($username == 'mobile') ? 'required' : 'nullable',
             $username => ($username == 'mobile') ? 'required|numeric' : 'required|string|email|max:255',
             'full_name' => 'required|string|min:3',
+            'first_name' => 'required|string|min:3',
+            'last_name' => 'required|string|min:3',
             'password' => 'required|string|min:6|confirmed',
             'password_confirmation' => 'required|same:password',
         ];
@@ -308,6 +310,8 @@ class RegisterController extends Controller
             'role_id' => $roleId,
             $username => $data[$username],
             'full_name' => $data['full_name'],
+            'first_name' => $data['first_name'],
+            'last_name' => $data['last_name'],
             'status' => User::$pending,
             'password' => Hash::make($data['password']),
             // 'country_id' => $data['country_id'],
@@ -381,12 +385,16 @@ class RegisterController extends Controller
         validateParam($data, [
             'user_id' => 'required|exists:users,id',
             'full_name' => 'required|string|min:3',
+            'first_name' => 'required|string|min:3',
+            'last_name' => 'required|string|min:3',
             'referral_code' => 'nullable|exists:affiliates_codes,code'
         ]);
     
         $user = User::find($data['user_id']);
         $user->update([
-            'full_name' => $data['full_name']
+            'full_name' => $data['full_name'],
+            'first_name' => $data['first_name'],
+            'last_name' => $data['last_name'],
         ]);
     
         $enableRegistrationBonus = false;

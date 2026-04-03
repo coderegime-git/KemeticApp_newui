@@ -1,5 +1,7 @@
 <?php
 
+use App\Http\Controllers\Panel\CJProductController;
+use App\Http\Controllers\Panel\CJFulfillmentController;
 use Illuminate\Support\Facades\Route;
 
 /*
@@ -385,6 +387,7 @@ Route::group(['namespace' => 'Panel', 'prefix' => 'panel', 'middleware' => ['imp
             Route::group(['prefix' => 'products'], function () {
                 Route::get('/', 'ProductController@index');
                 Route::get('/new', 'ProductController@create');
+                Route::get('/create', 'ProductController@create'); // Alias for /new
                 Route::post('/store', 'ProductController@store');
                 Route::get('/{id}/step/{step?}', 'ProductController@edit');
                 Route::get('/{id}/edit', 'ProductController@edit');
@@ -557,11 +560,28 @@ Route::group(['namespace' => 'Panel', 'prefix' => 'panel', 'middleware' => ['imp
         Route::get('/', 'AiContentController@index');
         Route::post('/generate', 'AiContentController@generate');
     });
-
+    
     // Reels management
     Route::resources([
         'reels' => 'ReelController'
     ]);
+
+    // CJ Dropshipping
+    Route::group(['prefix' => 'cj-products'], function () {
+        Route::get('/', [CJProductController::class, 'index'])->name('panel.cj.products.index');
+        Route::get('/{pid}', [CJProductController::class, 'show'])->name('panel.cj.products.show');
+        Route::post('/{pid}/save-variants', [CJProductController::class, 'saveVariants'])->name('panel.cj.products.save-variants');
+        
+        // Fulfillment & Tracking
+        Route::post('/fulfil/{orderId}', [CJFulfillmentController::class, 'fulfilCJOrders'])->name('panel.cj.products.fulfil');
+        Route::get('/orders/{orderId}/track', [CJFulfillmentController::class, 'trackingPage'])->name('panel.cj.track');
+        
+        // AJAX endpoints
+        Route::post('/shipping-rates',  [CJFulfillmentController::class, 'getShippingRates']);
+        Route::get('/tracking/{cjOrderId}', [CJFulfillmentController::class, 'getTracking']);
+        Route::get('/storages',         [CJFulfillmentController::class, 'getStorageList']);
+        Route::get('/balance',          [CJFulfillmentController::class, 'getBalance']);
+    });
 
 });
 

@@ -112,6 +112,101 @@ class PaymentsController extends Controller
 
     }
 
+    public function fmdpayment(Request $request)
+    {
+        try {
+            $paymentChannels = PaymentChannel::where('status', 'active')->get();
+
+            $fmd = AdReel::where('id', $request->input('fmd_id'))->first();
+
+            if (empty($fmd)) {
+                return response()->json([
+                    'status' => 'error',
+                    'message' => trans('site.fmd_not_valid'),
+                    'data' => null
+                ], 404);
+            }
+
+            $user = apiAuth();
+
+            $financialSettings = getFinancialSettings();
+            $tax = $financialSettings['tax'] ?? 0;
+
+            //$amount = $fmd->getPrice();
+            $amount = 1;
+            $amount = $amount > 0 ? $amount : 0;
+
+            $taxPrice = $tax ? $amount * $tax / 100 : 0;
+
+            $order = Order::create([
+                "user_id" => $user->id,
+                "status" => Order::$pending,
+                'tax' => $taxPrice,
+                'commission' => 0,
+                "amount" => $amount,
+                "total_amount" => $amount + $taxPrice,
+                "created_at" => time(),
+            ]);
+
+            $orderItem = OrderItem::updateOrCreate([
+                'user_id' => $user->id,
+                'order_id' => $order->id,
+                'fmd_id' => $fmd->id,
+            ], [
+                'amount' => $order->amount,
+                'total_amount' => $amount + $taxPrice,
+                'tax' => $tax,
+                'tax_price' => $taxPrice,
+                'commission' => 0,
+                'commission_price' => 0,
+                'created_at' => time(),
+            ]);
+
+            if ($amount > 0) {
+                $razorpay = false;
+                foreach ($paymentChannels as $paymentChannel) {
+                    if ($paymentChannel->class_name == 'Razorpay') {
+                        $razorpay = true;
+                    }
+                }
+
+                return response()->json([
+                    'status' => 'success',
+                    'message' => 'Order created successfully',
+                    'data' => [
+                        'paymentChannels' => $paymentChannels,
+                        'total' => $order->total_amount,
+                        'order' => $order,
+                        'count' => 1,
+                        'userCharge' => (int) $user->getAccountingCharge(),
+                        'razorpay' => $razorpay
+                    ]
+                ], 200);
+            }
+            
+            $sale = Sale::createSales($orderItem, Sale::$credit);
+
+            return response()->json([
+                'status' => 'success',
+                'message' => trans('update.success_pay_msg_for_free_subscribe'),
+                'data' => [
+                    'paymentChannels' => $paymentChannels,
+                    'total' => $order->total_amount,
+                    'order' => $order,
+                    'count' => 1,
+                    'userCharge' => (int) $user->getAccountingCharge(),
+                    'razorpay' => $razorpay
+                ]
+            ], 200);
+
+        } catch (\Exception $e) {
+            return response()->json([
+                'status' => 'error',
+                'message' => 'An error occurred while processing your request',
+                'error' => config('app.debug') ? $e->getMessage() : null
+            ], 500);
+        }
+    }
 
     public function paymentRequest(Request $request)
     {

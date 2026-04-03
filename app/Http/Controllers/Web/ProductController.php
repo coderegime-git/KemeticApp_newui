@@ -199,6 +199,7 @@ class ProductController extends Controller
                     ->orderBy('rates', 'desc');
             }
         }
+        $query->orderBy('products.created_at', 'desc');
 
         return $query;
     }

@@ -722,6 +722,9 @@ class CartController extends Controller
 
         if(!$user_as_a_guest){
             $user->update([
+                'first_name' => $data['first_name'] ?? $user->first_name,
+                'last_name' => $data['last_name'] ?? $user->last_name,
+                'mobile' => $data['phone'] ?? $user->mobile,
                 'country_id' => $data['country_id'] ?? $user->country_id,
                 'province_name' => $data['province_name'] ?? $user->province_name,
                 'city_name' => $data['city_name'] ?? $user->city_name,
@@ -741,9 +744,12 @@ class CartController extends Controller
                 'zip_code'      => $data['zip_code'] ?? null,
                 'house_no'      => $data['house_no'] ?? null,
                 'address'       => $data['address'] ?? null,
-                'full_name'     => $name ?? null,
+                // 'full_name'     => $name ?? null,
+                'first_name'    => $data['first_name'] ?? null,
+                'last_name'     => $data['last_name'] ?? null,
                 'email'         => $data['email'] ?? null,
                 'mobile'        => $data['mobile'] ?? null,
+                'house_no'      => $data['house_no'] ?? null,
                 'role_id'       => 1,
                 'role_name'     => 'user',
                 'created_at'    => Carbon::now()->timestamp,
@@ -770,6 +776,8 @@ class CartController extends Controller
         if(!$user_as_a_guest){
             $user->update([
                 'mobile' => $data['phone'] ?? $user->mobile,
+                'first_name' => $data['first_name'] ?? $user->first_name,
+                'last_name' => $data['last_name'] ?? $user->last_name,
                 'country_id' => $data['country_id'] ?? $user->country_id,
                 'province_name' => $data['province_name'] ?? $user->province_name,
                 'city_name' => $data['city_name'] ?? $user->city_name,
@@ -789,9 +797,12 @@ class CartController extends Controller
                 'zip_code'      => $data['zip_code'] ?? null,
                 'house_no'      => $data['house_no'] ?? null,
                 'address'       => $data['address'] ?? null,
-                'full_name'     => $name ?? null,
+                // 'full_name'     => $name ?? null,
+                'first_name'    => $data['first_name'] ?? null,
+                'last_name'     => $data['last_name'] ?? null,
                 'email'         => $data['email'] ?? null,
                 'mobile'        => $data['mobile'] ?? null,
+                'house_no'      => $data['house_no'] ?? null,
                 'role_id'       => 1,
                 'role_name'     => 'user',
                 'created_at'    => Carbon::now()->timestamp,

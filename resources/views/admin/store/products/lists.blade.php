@@ -226,6 +226,7 @@
                                         <th class="text-left">{{trans('admin/main.title')}}</th>
                                         <th class="text-left">{{trans('admin/main.creator')}}</th>
                                         <th>{{trans('admin/main.type')}}</th>
+                                        <th>Dropshipping</th>
                                         <th>{{trans('update.inventory')}}</th>
                                         <th>{{trans('admin/main.price')}}</th>
                                         <th>{{trans('update.delivery_fee')}}</th>
@@ -253,6 +254,14 @@
 
                                             <td>
                                                 {{ trans('update.'.$product->type) }}
+                                            </td>
+
+                                            <td>
+                                                @if($product->is_cj_product)
+                                                    <span class="text-success">CJ Products</span>
+                                                @else
+                                                    <span class="text-danger">Own Products</span>
+                                                @endif
                                             </td>
 
                                             <td>

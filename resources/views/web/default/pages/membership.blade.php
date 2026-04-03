@@ -18,7 +18,16 @@
     max-width: 420px;
   }
   .danger { background:#d9534f; }
-
+  .membership-hero .membership-pill {
+    width: fit-content !important;
+    margin-left: auto;
+  }
+  @media (max-width: 820px) {
+    .membership-hero .membership-pill {
+        width: fit-content !important;
+        margin-right: 0 !important;
+    }
+  }
 </style>
 @section('content')
 <!-- Header -->
@@ -36,8 +45,13 @@
 </header> -->
 
 
-<!-- Hero -->
 <section class="membership-hero">
+  <div style="display:flex; justify-content:flex-end; width:100%; margin-bottom: 15px; padding-right: 20px;">
+    <div class="membership-pill" role="tablist" aria-label="Currency" id="currencyToggle">
+      <button class="active" data-currency="EUR" aria-selected="true">EUR</button>
+      <button data-currency="USD" aria-selected="false">USD</button>
+    </div>
+  </div>
   <div class="membership-wrap">
     <div class="membership-hero-card">
       <div>
@@ -84,10 +98,17 @@
         @endphp
         <form action="/panel/financial/recurringPay-subscribes?auto_redirect=1" method="post" class="membership-w-100" id="upgradeform">
           {{ csrf_field() }}
-          <input name="amount" value="{{ $subscribe->price }}" type="hidden">
+          <!-- <input name="amount" value="{{ $subscribe->price }}" type="hidden"> -->
+           <input name="currency" class="js-currency-input" value="EUR" type="hidden">
+            <input name="amount" 
+           class="js-amount-input"
+           value="{{ $subscribe->price }}" 
+           data-eur-amount="{{ $subscribe->price }}"
+           data-usd-amount="{{ $subscribe->days == 31 ? '2' : ($subscribe->days == 365 ? '11' : '33') }}"
+           type="hidden">
           <input name="id" id="upgradeid" value="{{ $subscribe->id }}" type="hidden">
 
-          <article class="membership-card" id="plan-monthly" data-eur="€{{ $subscribe->price }}" data-usd="${{ $subscribe->price }}">
+          <article class="membership-card" id="plan-{{ $subscribe->id }}" data-base-price="{{ $subscribe->price }}" data-eur="€{{ $subscribe->price }}" data-usd="{{ $subscribe->days == 31 ? '$2' : ($subscribe->days == 365 ? '$11' : '$33') }}">
             <div class="membership-small">{{ $subscribe->title }}</div>
             <div class="membership-price js-price">€{{ $subscribe->price }}</div>
             <div class="membership-small">{{ $membershipType }}</div>
@@ -208,167 +229,87 @@
           formEl.submit();
       });
   }
-  
-  // Currency Toggle
-  const currencyButtons = document.querySelectorAll('.pill button');
-  const plans = document.querySelectorAll('.card[id^="plan-"]');
-  const stickyMonthly = document.querySelector('.sticky [data-join="monthly"]');
-  const stickyYearly = document.querySelector('.sticky [data-join="yearly"]');
-  const heroJoin = document.querySelector('.hero-card .cta');
-  const heroAlt  = document.querySelector('.hero-card .cta.secondary');
 
-  let currency = 'EUR';
-  function applyCurrency(cur){
-    currency = cur;
-    currencyButtons.forEach(b=>{
-      const isActive = b.dataset.currency === cur;
-      b.classList.toggle('active', isActive);
-      b.setAttribute('aria-selected', isActive);
+  const usdMap = { 1: '$2', 10: '$11', 33: '$33' };
+  let currentCurrency = 'EUR';
+
+  function applyGlobalCurrency(cur) {
+    currentCurrency = cur;
+
+    document.querySelectorAll('#currencyToggle button').forEach(b => {
+        const isActive = b.dataset.currency === cur;
+        b.classList.toggle('active', isActive);
+        b.setAttribute('aria-selected', String(isActive));
     });
-    plans.forEach(card=>{
-      const price = card.dataset[cur.toLowerCase()];
-      card.querySelector('.js-price').textContent = price;
+
+    document.querySelectorAll('.membership-card').forEach(card => {
+        const el = card.querySelector('.js-price');
+        if (!el) return;
+        if (cur === 'USD') {
+            el.textContent = card.dataset.usd;
+        } else {
+            el.textContent = card.dataset.eur;
+        }
     });
-    // Update sticky/hero labels (simple mapping from the plan cards)
-    const pMonthly = document.querySelector('#plan-monthly .js-price').textContent;
-    const pYearly  = document.querySelector('#plan-yearly .js-price').textContent;
-    stickyMonthly.textContent = `${pMonthly}/mo`;
-    stickyYearly.textContent  = `Join ${pYearly}/yr`;
-    if (heroJoin) heroJoin.textContent = `Join ${pMonthly}/mo`;
-    if (heroAlt)  heroAlt.textContent  = `or ${pYearly}/year`;
-  }
-  currencyButtons.forEach(btn => btn.addEventListener('click',()=>applyCurrency(btn.dataset.currency)));
-  applyCurrency('EUR');
 
-  // Join actions (wire these to your checkout / app bridge)
-  function handleJoin(plan){
-    // Example: window.location.href = `/checkout?plan=${plan}&currency=${currency}`;
-    console.log('JOIN:', plan, 'currency:', currency);
-    (function() {
+    // ← ADD THIS: update hidden amount inputs so Stripe gets correct value
+    document.querySelectorAll('.js-amount-input').forEach(input => {
+        if (cur === 'USD') {
+            input.value = input.dataset.usdAmount;
+        } else {
+            input.value = input.dataset.eurAmount;
+        }
+    });
 
-        $.toast({
-            heading: 'Success',
-            text: 'Join ${plan} (${currency}) — hook this to your checkout',
-            bgColor: '#43d477',
-            textColor: 'white',
-            hideAfter: 10000,
-            position: 'bottom-right',
-            icon: 'success'
-        });
-    })();
-    
-    // alert(`Join ${plan} (${currency}) — hook this to your checkout`);
-  }
+    document.querySelectorAll('.js-currency-input').forEach(input => {
+        input.value = cur;
+    });
 
-  document.querySelectorAll('[data-join]').forEach(el=>{
-    el.addEventListener('click', ()=>handleJoin(el.dataset.join));
+    // Update sticky CTA button label
+    const stickyBtn = document.querySelector('.membership-sticky .membership-cta.secondary');
+    if (stickyBtn) {
+        stickyBtn.textContent = cur === 'USD' ? '$2/mo' : '€1/mo';
+    }
+
+    // Update hero CTA button labels
+    const heroBtns = document.querySelectorAll('.membership-hero-card .membership-cta');
+    if (heroBtns[0]) heroBtns[0].textContent = cur === 'USD' ? 'Join $2/mo' : 'Join €1/mo';
+    if (heroBtns[1]) heroBtns[1].textContent = cur === 'USD' ? 'or $11/year' : 'or €10/year';
+
+    // Update Join Now button text in cards (if needed)
+    document.querySelectorAll('.membership-card').forEach(card => {
+        const btn = card.querySelector('button[data-join]');
+        if (btn) {
+           const isMonthly = card.querySelector('.membership-small').textContent.toLowerCase().includes('monthly');
+           const isYearly = card.querySelector('.membership-small').textContent.toLowerCase().includes('yearly');
+           // Logic to update button text if desired, but user didn't explicitly ask for it
+        }
+    });
+}
+
+  document.addEventListener('DOMContentLoaded', function () {
+      document.querySelectorAll('#currencyToggle button').forEach(btn => {
+          btn.addEventListener('click', () => applyGlobalCurrency(btn.dataset.currency));
+      });
+
+      // Init default
+      applyGlobalCurrency('EUR');
+
+      // Deep-link support: ?currency=USD
+      const qCur = new URLSearchParams(location.search).get('currency');
+      if (qCur) applyGlobalCurrency(qCur.toUpperCase());
   });
+
+  
 
   function chooseplan() {
       const section = document.getElementById('choose-plan');
       if (section) {
-          const offset = 80; // adjust for sticky header height
+          const offset = 80;
           const top = section.getBoundingClientRect().top + window.pageYOffset - offset;
           window.scrollTo({ top: top, behavior: 'smooth' });
       }
-
-      // Optionally highlight the matching plan card after scroll
-      setTimeout(function() {
-          const planMap = { monthly: 'plan-monthly', yearly: 'plan-yearly', lifetime: 'plan-lifetime' };
-          const cardId = planMap[plan];
-          if (cardId) {
-              const card = document.getElementById(cardId);
-              if (card) {
-                  card.style.transition = 'box-shadow 0.3s ease';
-                  card.style.boxShadow = '0 0 0 2px #ffc107';
-                  setTimeout(() => card.style.boxShadow = '', 2000);
-              }
-          }
-      }, 600);
   }
-
-  // Optional: deep-link when arriving with ?currency=USD or ?plan=yearly
-  const params = new URLSearchParams(location.search);
-  if (params.get('currency')) applyCurrency(params.get('currency').toUpperCase());
-  const qp = params.get('plan');
-  if (qp) handleJoin(qp);
-
-
-  document.addEventListener('DOMContentLoaded', function() {
-        // Currency Toggle for membership pages
-        const currencyButtons = document.querySelectorAll('.pill button');
-        const plans = document.querySelectorAll('.membership-card');
-        const stickyMonthly = document.querySelector('.sticky [data-join="monthly"]');
-        const stickyYearly = document.querySelector('.sticky [data-join="yearly"]');
-        const heroJoin = document.querySelector('.hero [data-join="monthly"]');
-        const heroAlt = document.querySelector('.hero [data-join="yearly"]');
-
-        if (currencyButtons.length > 0) {
-            let currency = 'EUR';
-            
-            function applyCurrency(cur){
-                currency = cur;
-                currencyButtons.forEach(b=>{
-                    const isActive = b.dataset.currency === cur;
-                    b.classList.toggle('active', isActive);
-                    b.setAttribute('aria-selected', isActive);
-                });
-                
-                // Update pricing display based on currency
-                plans.forEach(card=>{
-                    const priceElement = card.querySelector('.js-price');
-                    if (priceElement) {
-                        const basePrice = card.dataset.basePrice;
-                        if (basePrice) {
-                            const convertedPrice = cur === 'USD' ? (parseFloat(basePrice) * 1.1).toFixed(2) : basePrice;
-                            priceElement.textContent = cur === 'USD' ? `$${convertedPrice}` : `€${convertedPrice}`;
-                        }
-                    }
-                });
-                
-                // Update sticky/hero labels
-                const monthlyPlan = document.querySelector('#plan-monthly');
-                const yearlyPlan = document.querySelector('#plan-yearly');
-                
-                if (monthlyPlan && stickyMonthly) {
-                    const monthlyPrice = monthlyPlan.querySelector('.js-price')?.textContent || '€1';
-                    stickyMonthly.textContent = `${monthlyPrice}/mo`;
-                }
-                
-                if (yearlyPlan && stickyYearly) {
-                    const yearlyPrice = yearlyPlan.querySelector('.js-price')?.textContent || '€10';
-                    stickyYearly.textContent = `Join ${yearlyPrice}/yr`;
-                }
-                
-                if (heroJoin) heroJoin.textContent = `Join ${monthlyPlan?.querySelector('.js-price')?.textContent || '€1'}/mo`;
-                if (heroAlt) heroAlt.textContent = `or ${yearlyPlan?.querySelector('.js-price')?.textContent || '€10'}/year`;
-            }
-            
-            currencyButtons.forEach(btn => {
-                btn.addEventListener('click', () => applyCurrency(btn.dataset.currency));
-            });
-            
-            // Initialize with EUR
-            applyCurrency('EUR');
-
-            // Join actions
-            function handleJoin(plan){
-                // Redirect to appropriate plan
-                const planElement = document.querySelector(`#plan-${plan}`);
-                if (planElement) {
-                    planElement.closest('form').submit();
-                }
-            }
-            
-            document.querySelectorAll('[data-join]').forEach(el=>{
-                el.addEventListener('click', ()=>handleJoin(el.dataset.join));
-            });
-
-            // Optional: deep-link when arriving with ?currency=USD or ?plan=yearly
-            const params = new URLSearchParams(location.search);
-            if (params.get('currency')) applyCurrency(params.get('currency').toUpperCase());
-        }
-    });
 </script>
 <script>
   let selectedSubscribeId = null;

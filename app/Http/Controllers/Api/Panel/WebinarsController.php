@@ -11,31 +11,60 @@ use App\Models\Api\Sale;
 use App\Models\Api\Webinar;
 use App\Models\Api\Gift;
 use App\Models\WebinarPartnerTeacher;
-use Illuminate\Database\Eloquent\Builder;
-use Illuminate\Http\Request;
-use Illuminate\Support\Facades\DB;
 use App\Models\WebinarChapter;
 use App\Models\WebinarChapterItem;
 use App\Models\WebinarExtraDescription;
-use App\Models\Translation\WebinarTranslation;
 use App\Models\WebinarFilterOption;
 use App\Models\Ticket;
 use App\Models\Tag;
 use App\Models\Faq;
-use App\User;
+use App\Models\Session;
+use App\Models\WebinarAssignment;
+use App\Models\WebinarQuiz;
+use App\Models\WebinarQuizQuestion;
+use App\Models\File;
+use App\Models\Quiz;
 use App\Models\Prerequisite;
 use App\Models\RelatedCourse;
 use App\Models\TextLesson;
+use App\Models\WebinarFile;
+use App\Models\QuizzesQuestion;
+use App\Models\QuizzesQuestionsAnswer;
+use App\Models\TextLessonAttachment;
+use App\Models\WebinarAssignmentAttachment;
+use App\User;
+use App\Models\Translation\GiftTranslation;
+use App\Models\Translation\SaleTranslation;
+use App\Models\Translation\UserTranslation;
+use App\Models\Translation\QuizzesQuestionTranslation;
+use App\Models\Translation\QuizzesQuestionsAnswerTranslation;
+use App\Models\Translation\WebinarTranslation;
+use App\Models\Translation\SessionTranslation;
+use App\Models\Translation\FileTranslation;
+use App\Models\Translation\RelatedCourseTranslation;
+use App\Models\Translation\PrerequisiteTranslation;
+use App\Models\Translation\WebinarFileTranslation;
+use App\Models\Translation\WebinarAssignmentTranslation;
+use App\Models\Translation\WebinarQuizQuestionTranslation;
+use App\Models\Translation\WebinarQuizTranslation;
+use App\Models\Translation\TextLessonTranslation;
 use App\Models\Translation\WebinarChapterTranslation;
 use App\Models\Translation\FaqTranslation;
 use App\Models\Translation\TicketTranslation;
 use App\Models\Translation\WebinarExtraDescriptionTranslation;
-use App\Models\Quiz;
 use App\Models\Translation\QuizTranslation;
+use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
+use App\Sessions\Zoom;
+use App\Sessions\ZoomOAuth;
+use Illuminate\Support\Carbon;
+use Validator;
 
 
 class WebinarsController extends Controller
 {
+    use VideoDemoTrait;
     public function show($id)
     {
         $user = apiAuth();
@@ -412,7 +441,7 @@ class WebinarsController extends Controller
         );
     }
 
-    public function store(Request $request)
+     public function store(Request $request)
     {
 
         $user = apiAuth();
@@ -675,6 +704,272 @@ class WebinarsController extends Controller
                     // if (!empty($webinar)) {
                     //     $webinar->sendNotificationToAllStudentsForNewQuizPublished($quiz);
                     // }
+
+                    foreach ($chapterData['sessions'] ?? [] as $sessionData) {
+ 
+                        // Skip empty placeholder objects (e.g. from Postman template)
+                        if (empty($sessionData['title']) || empty($sessionData['date'])) {
+                            continue;
+                        }
+ 
+                        $checkPreviousParts = false;
+                        $accessAfterDay     = null;
+                        if (!empty($sessionData['sequence_content']) && $sessionData['sequence_content'] == 'on') {
+                            $checkPreviousParts = (!empty($sessionData['check_previous_parts']) && $sessionData['check_previous_parts'] == 'on');
+                            $accessAfterDay     = !empty($sessionData['access_after_day']) ? $sessionData['access_after_day'] : null;
+                        }
+ 
+                        $sessionDate = convertTimeToUTCzone($sessionData['date'], $webinar->timezone ?? getTimezone());
+ 
+                        $session = Session::create([
+                            'creator_id'          => $user->id,
+                            'webinar_id'          => $webinar->id,
+                            'chapter_id'          => $chapter->id,
+                            'date'                => $sessionDate->getTimestamp(),
+                            'duration'            => $sessionData['duration'],
+                            'link'                => $sessionData['link'] ?? null,
+                            'session_api'         => $sessionData['session_api'],
+                            'api_secret'          => $sessionData['api_secret'] ?? null,
+                            'moderator_secret'    => $sessionData['moderator_secret'] ?? null,
+                            'check_previous_parts' => $checkPreviousParts,
+                            'access_after_day'    => $accessAfterDay,
+                            'extra_time_to_join'  => $sessionData['extra_time_to_join'] ?? null,
+                            'status'              => (!empty($sessionData['status']) && $sessionData['status'] == 'on')
+                                                         ? Session::$Active
+                                                         : Session::$Inactive,
+                            'created_at'          => time(),
+                        ]);
+ 
+                        if ($session) {
+                            SessionTranslation::updateOrCreate([
+                                'session_id' => $session->id,
+                                'locale'     => mb_strtolower($locale),
+                            ], [
+                                'title'       => $sessionData['title'],
+                                'description' => $sessionData['description'] ?? null,
+                            ]);
+ 
+                            // if ($sessionData['session_api'] == 'big_blue_button') {
+                            //     $this->handleBigBlueButtonApi($session, $user);
+                            // } elseif ($sessionData['session_api'] == 'zoom') {
+                            //     $zoomResult = $this->handleZoomApi($session, $user);
+                            //     if ($zoomResult != 'ok') {
+                            //         \Log::warning('Zoom API error for session ' . $session->id . ' during course store.');
+                            //     }
+                            // } 
+                            // elseif ($sessionData['session_api'] == 'agora') {
+                            //     $session->agora_settings = json_encode([
+                            //         'chat'       => (!empty($sessionData['agora_chat']) && $sessionData['agora_chat'] == 'on'),
+                            //         'record'     => (!empty($sessionData['agora_record']) && $sessionData['agora_record'] == 'on'),
+                            //         'users_join' => true,
+                            //     ]);
+                            //     $session->save();
+                            // }
+ 
+                            WebinarChapterItem::makeItem(
+                                $session->creator_id,
+                                $session->chapter_id,
+                                $session->id,
+                                WebinarChapterItem::$chapterSession
+                            );
+                        }
+                    }
+ 
+                    // ----------------------------------------------------------
+                    // FILES inside chapter  →  chapters[].files[]
+                    // ----------------------------------------------------------
+                    foreach ($chapterData['files'] ?? [] as $fileData) {
+ 
+                        // Skip empty placeholder objects
+                        if (empty($fileData['title']) || empty($fileData['file_path'])) {
+                            continue;
+                        }
+ 
+                        $storage = $fileData['storage'] ?? 'upload';
+ 
+                        // Auto-set for embed types
+                        $sourceDefaultFileTypeAndVolume = ['youtube', 'vimeo', 'iframe', 'secure_host'];
+                        if (in_array($storage, $sourceDefaultFileTypeAndVolume)) {
+                            $fileData['file_type'] = 'video';
+                            $fileData['volume']    = !empty($fileData['volume']) ? $fileData['volume'] : 0;
+                        }
+ 
+                        // Downloadable logic mirrors the original file store
+                        $downloadable = !empty($fileData['downloadable']);
+                        if (in_array($storage, ['youtube', 'vimeo', 'iframe', 'google_drive', 'upload_archive'])) {
+                            $downloadable = false;
+                        } elseif (in_array($storage, ['external_link', 's3']) && ($fileData['file_type'] ?? '') != 'video') {
+                            $downloadable = true;
+                        }
+ 
+                        // Sequence-content flags
+                        $checkPreviousParts = false;
+                        $accessAfterDay     = null;
+                        if (!empty($fileData['sequence_content']) && $fileData['sequence_content'] == 'on') {
+                            $checkPreviousParts = (!empty($fileData['check_previous_parts']) && $fileData['check_previous_parts'] == 'on');
+                            $accessAfterDay     = !empty($fileData['access_after_day']) ? $fileData['access_after_day'] : null;
+                        }
+ 
+                        $file = File::create([
+                            'creator_id'              => $user->id,
+                            'webinar_id'              => $webinar->id,
+                            'chapter_id'              => $chapter->id,
+                            'file'                    => $fileData['file_path'],
+                            'volume'                  => $fileData['volume'] ?? 0,
+                            'file_type'               => $fileData['file_type'] ?? null,
+                            'accessibility'           => $fileData['accessibility'] ?? 'paid',
+                            'storage'                 => $storage,
+                            'secure_host_upload_type' => $fileData['secure_host_upload_type'] ?? null,
+                            // 'interactive_type'        => $fileData['interactive_type'] ?? null,
+                            'interactive_file_name'   => $fileData['interactive_file_name'] ?? null,
+                            'interactive_file_path'   => $fileData['interactive_file_path'] ?? null,
+                            'online_viewer'           => (!empty($fileData['online_viewer']) && $fileData['online_viewer'] == 'on'),
+                            'downloadable'            => $downloadable,
+                            'check_previous_parts'    => $checkPreviousParts,
+                            'access_after_day'        => $accessAfterDay,
+                            'status'                  => (!empty($fileData['status']) && $fileData['status'] == 'on')
+                                                              ? File::$Active
+                                                              : File::$Inactive,
+                            'created_at'              => time(),
+                        ]);
+ 
+                        if ($file) {
+                            FileTranslation::updateOrCreate([
+                                'file_id' => $file->id,
+                                'locale'  => mb_strtolower($locale),
+                            ], [
+                                'title'       => $fileData['title'],
+                                'description' => $fileData['description'] ?? null,
+                            ]);
+ 
+                            WebinarChapterItem::makeItem(
+                                $file->creator_id,
+                                $file->chapter_id,
+                                $file->id,
+                                WebinarChapterItem::$chapterFile
+                            );
+                        }
+                    }
+ 
+                    // ----------------------------------------------------------
+                    // TEXT LESSONS inside chapter
+                    // Accepts keys: text_lessons | text-lessons | test-lesson | test_lesson
+                    // ----------------------------------------------------------
+                    $textLessonsData = $chapterData['text_lessons']
+                        ?? $chapterData['text-lessons']
+                        ?? $chapterData['test-lesson']
+                        ?? $chapterData['test_lesson']
+                        ?? [];
+ 
+                    foreach ($textLessonsData as $lessonData) {
+ 
+                        // Skip empty placeholder objects
+                        if (empty($lessonData['title'])) {
+                            continue;
+                        }
+ 
+                        $checkPreviousParts = false;
+                        $accessAfterDay     = null;
+                        if (!empty($lessonData['sequence_content']) && $lessonData['sequence_content'] == 'on') {
+                            $checkPreviousParts = (!empty($lessonData['check_previous_parts']) && $lessonData['check_previous_parts'] == 'on');
+                            $accessAfterDay     = !empty($lessonData['access_after_day']) ? $lessonData['access_after_day'] : null;
+                        }
+ 
+                        $lessonsCount = TextLesson::where('webinar_id', $webinar->id)->count();
+ 
+                        $textLesson = TextLesson::create([
+                            'creator_id'          => $user->id,
+                            'webinar_id'          => $webinar->id,
+                            'chapter_id'          => $chapter->id,
+                            'image'               => $lessonData['image'] ?? null,
+                            'study_time'          => $lessonData['study_time'] ?? 0,
+                            'accessibility'       => $lessonData['accessibility'] ?? 'paid',
+                            'order'               => $lessonsCount + 1,
+                            'check_previous_parts' => $checkPreviousParts,
+                            'access_after_day'    => $accessAfterDay,
+                            'status'              => (!empty($lessonData['status']) && $lessonData['status'] == 'on')
+                                                          ? TextLesson::$Active
+                                                          : TextLesson::$Inactive,
+                            'created_at'          => time(),
+                        ]);
+ 
+                        if ($textLesson) {
+                            TextLessonTranslation::updateOrCreate([
+                                'text_lesson_id' => $textLesson->id,
+                                'locale'         => mb_strtolower($locale),
+                            ], [
+                                'title'   => $lessonData['title'],
+                                'summary' => $lessonData['summary'] ?? null,
+                                'content' => $lessonData['content'] ?? null,
+                            ]);
+ 
+                            if (!empty($lessonData['attachments'])) {
+                                $this->saveAttachments($textLesson, $lessonData['attachments']);
+                            }
+ 
+                            WebinarChapterItem::makeItem(
+                                $textLesson->creator_id,
+                                $textLesson->chapter_id,
+                                $textLesson->id,
+                                WebinarChapterItem::$chapterTextLesson
+                            );
+                        }
+                    }
+ 
+                    // ----------------------------------------------------------
+                    // ASSIGNMENTS inside chapter  →  chapters[].assignments[]
+                    // ----------------------------------------------------------
+                    foreach ($chapterData['assignments'] ?? [] as $assignmentData) {
+ 
+                        // Skip empty placeholder objects
+                        if (empty($assignmentData['title'])) {
+                            continue;
+                        }
+ 
+                        $checkPreviousParts = false;
+                        $accessAfterDay     = null;
+                        if (!empty($assignmentData['sequence_content']) && $assignmentData['sequence_content'] == 'on') {
+                            $checkPreviousParts = (!empty($assignmentData['check_previous_parts']) && $assignmentData['check_previous_parts'] == 'on');
+                            $accessAfterDay     = !empty($assignmentData['access_after_day']) ? $assignmentData['access_after_day'] : null;
+                        }
+ 
+                        $assignment = WebinarAssignment::create([
+                            'creator_id'          => $user->id,
+                            'webinar_id'          => $webinar->id,
+                            'chapter_id'          => $chapter->id,
+                            'grade'               => $assignmentData['grade'] ?? null,
+                            'pass_grade'          => $assignmentData['pass_grade'] ?? null,
+                            'deadline'            => $assignmentData['deadline'] ?? null,
+                            'attempts'            => $assignmentData['attempts'] ?? null,
+                            'check_previous_parts' => $checkPreviousParts,
+                            'access_after_day'    => $accessAfterDay,
+                            'status'              => (!empty($assignmentData['status']) && $assignmentData['status'] == 'on')
+                                                          ? File::$Active
+                                                          : File::$Inactive,
+                            'created_at'          => time(),
+                        ]);
+ 
+                        if ($assignment) {
+                            WebinarAssignmentTranslation::updateOrCreate([
+                                'webinar_assignment_id' => $assignment->id,
+                                'locale'                => mb_strtolower($locale),
+                            ], [
+                                'title'       => $assignmentData['title'],
+                                'description' => $assignmentData['description'] ?? null,
+                            ]);
+ 
+                            if (!empty($assignmentData['attachments'])) {
+                                $this->handleAttachments($assignmentData['attachments'], $user->id, $assignment->id);
+                            }
+ 
+                            WebinarChapterItem::makeItem(
+                                $assignment->creator_id,
+                                $assignment->chapter_id,
+                                $assignment->id,
+                                WebinarChapterItem::$chapterAssignment
+                            );
+                        }
+                    }
                 }
 
                 //new pricing plan (ticket store)
@@ -916,6 +1211,153 @@ class WebinarsController extends Controller
                     'order' => null,
                 ]);
             }
+
+            foreach ($request->get('quizzes', []) as $quizData) {
+ 
+                if (empty($quizData['title']) || !isset($quizData['pass_mark'])) {
+                    continue;
+                }
+ 
+                // Optional: link to a chapter if chapter_id supplied
+                $standaloneChapterId = null;
+                if (!empty($quizData['chapter_id'])) {
+                    $matchedChapter = WebinarChapter::where('id', $quizData['chapter_id'])
+                        ->where('webinar_id', $webinar->id)
+                        ->first();
+                    $standaloneChapterId = $matchedChapter ? $matchedChapter->id : null;
+                }
+ 
+                $quiz = Quiz::create([
+                    'webinar_id'                 => $webinar->id,
+                    'chapter_id'                 => $standaloneChapterId,
+                    'creator_id'                 => $user->id,
+                    'pass_mark'                  => $quizData['pass_mark'],
+                    'attempt'                    => $quizData['attempt'] ?? null,
+                    'time'                       => $quizData['time'] ?? null,
+                    'status'                     => (!empty($quizData['status']) && $quizData['status'] == 'on')
+                                                        ? Quiz::ACTIVE
+                                                        : Quiz::INACTIVE,
+                    'certificate'                => (!empty($quizData['certificate']) && $quizData['certificate'] == 'on'),
+                    'display_questions_randomly' => (!empty($quizData['display_questions_randomly']) && $quizData['display_questions_randomly'] == 'on'),
+                    'expiry_days'                => (!empty($quizData['expiry_days']) && $quizData['expiry_days'] > 0)
+                                                        ? $quizData['expiry_days']
+                                                        : null,
+                    'created_at'                 => time(),
+                ]);
+ 
+                if (!$quiz) {
+                    continue;
+                }
+ 
+                QuizTranslation::updateOrCreate([
+                    'quiz_id' => $quiz->id,
+                    'locale'  => mb_strtolower($locale),
+                ], [
+                    'title' => $quizData['title'],
+                ]);
+ 
+                if ($quiz->chapter_id) {
+                    WebinarChapterItem::makeItem(
+                        $quiz->creator_id,
+                        $quiz->chapter_id,
+                        $quiz->id,
+                        WebinarChapterItem::$chapterQuiz
+                    );
+                }
+ 
+                $webinar->sendNotificationToAllStudentsForNewQuizPublished($quiz);
+ 
+                // --------------------------------------------------------------
+                // QUESTIONS  →  quizzes[].questions[]
+                // --------------------------------------------------------------
+                foreach ($quizData['questions'] ?? [] as $questionData) {
+ 
+                    if (empty($questionData['title'])) {
+                        continue;
+                    }
+ 
+                    // image and video are mutually exclusive
+                    if (!empty($questionData['image']) && !empty($questionData['video'])) {
+                        \Log::warning("Question skipped (both image+video) on quiz {$quiz->id}");
+                        continue;
+                    }
+ 
+                    // For multiple-choice, require at least one correct answer
+                    $qType = $questionData['type'] ?? QuizzesQuestion::$multiple;
+                    if ($qType == QuizzesQuestion::$multiple && !empty($questionData['answers'])) {
+                        $hasCorrect = false;
+                        foreach ($questionData['answers'] as $ans) {
+                            if (isset($ans['correct'])) {
+                                $hasCorrect = true;
+                                break;
+                            }
+                        }
+                        if (!$hasCorrect) {
+                            \Log::warning("Question skipped (no correct answer) on quiz {$quiz->id}");
+                            continue;
+                        }
+                    }
+ 
+                    $order = QuizzesQuestion::where('quiz_id', $quiz->id)->count() + 1;
+ 
+                    $quizQuestion = QuizzesQuestion::create([
+                        'quiz_id'    => $quiz->id,
+                        'creator_id' => $user->id,
+                        'grade'      => $questionData['grade'] ?? 1,
+                        'type'       => $qType,
+                        'image'      => $questionData['image'] ?? null,
+                        'video'      => $questionData['video'] ?? null,
+                        'order'      => $order,
+                        'created_at' => time(),
+                    ]);
+ 
+                    if (!$quizQuestion) {
+                        continue;
+                    }
+ 
+                    QuizzesQuestionTranslation::updateOrCreate([
+                        'quizzes_question_id' => $quizQuestion->id,
+                        'locale'              => mb_strtolower($locale),
+                    ], [
+                        'title'   => $questionData['title'],
+                        'correct' => $questionData['correct'] ?? null,
+                    ]);
+ 
+                    // Increment quiz total mark
+                    $quiz->increaseTotalMark($quizQuestion->grade);
+ 
+                    // ----------------------------------------------------------
+                    // ANSWERS  →  quizzes[].questions[].answers[]
+                    // Only for multiple-choice type questions
+                    // ----------------------------------------------------------
+                    if ($quizQuestion->type == QuizzesQuestion::$multiple && !empty($questionData['answers'])) {
+ 
+                        foreach ($questionData['answers'] as $answer) {
+ 
+                            if (empty($answer['title']) && empty($answer['file'])) {
+                                continue;
+                            }
+ 
+                            $questionAnswer = QuizzesQuestionsAnswer::create([
+                                'question_id' => $quizQuestion->id,
+                                'creator_id'  => $user->id,
+                                'image'       => $answer['file'] ?? null,
+                                'correct'     => isset($answer['correct']) ? true : false,
+                                'created_at'  => time(),
+                            ]);
+ 
+                            if ($questionAnswer) {
+                                QuizzesQuestionsAnswerTranslation::updateOrCreate([
+                                    'quizzes_questions_answer_id' => $questionAnswer->id,
+                                    'locale'                      => mb_strtolower($locale),
+                                ], [
+                                    'title' => $answer['title'],
+                                ]);
+                            }
+                        }
+                    }
+                }
+            } 
 
         }
 

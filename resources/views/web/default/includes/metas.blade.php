@@ -59,6 +59,11 @@
 <meta property='og:type' content='website'>
 
 
+{!! getSeoMetas('extra_meta_tags') !!}
+
+<!-- SCHEMA.ORG JSON-LD MARKUP -->
+@include('web.default.includes.schema-org')
+
 <script async src="https://www.googletagmanager.com/gtag/js?id=G-NN39N0EP49"></script>
 
 <script>
@@ -66,13 +71,6 @@
   function gtag(){ dataLayer.push(arguments); }
   gtag('js', new Date());
   gtag('config', 'G-NN39N0EP49');
-</script>
-
-<!-- Meta Pixel -->
-<script>
-  !function(f,b,e,v,n,t,s)...
-  fbq('init', '878039774311472');
-  fbq('track', 'PageView');
 </script>
 
 <!-- GetResponse Web Connect -->
@@ -89,7 +87,7 @@
     })(window, document, 'script', 'https://an.gr-wcon.com/script/1cdaabfc-c3d4-4352-b44d-19a6253fb7c9/ga.js', 'GrTracking');
 </script>
 
-<script>
+<!-- <script>
 !function(f,b,e,v,n,t,s)
 {if(f.fbq)return;n=f.fbq=function(){n.callMethod?
 n.callMethod.apply(n,arguments):n.queue.push(arguments)};
@@ -109,7 +107,7 @@ new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],
 j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;
 j.src='https://www.googletagmanager.com/gtm.js?id='+i+dl;
 f.parentNode.insertBefore(j,f);
-})(window,document,'script','dataLayer','GTM-XXXXXXX');</script>
+})(window,document,'script','dataLayer','GTM-XXXXXXX');</script> -->
 
 <!-- <script>
 !function (w, d, t) {
@@ -146,14 +144,3 @@ r.parentNode.insertBefore(t,r)}}("https://s.pinimg.com/ct/core.js");
 pintrk('load', 'YOUR_PINTEREST_TAG_ID');  // ← replace this
 pintrk('page');
 </script> -->
-
-<script>
-  fbq('init', '878039774311472');
-  fbq('track', 'PageView');
-</script>
-
-
-{!! getSeoMetas('extra_meta_tags') !!}
-<!-- SCHEMA.ORG JSON-LD MARKUP -->
-@include('web.default.includes.schema-org')
-
