@@ -240,6 +240,7 @@ return [
         'Kavenegar' => Kavenegar\Laravel\Facade::class,
         'Msegat' => MoemenGaballah\Msegat\Msegat::class,
         'Msg91' => Craftsys\Msg91\Facade\Msg91::class,
+        'Geo' => App\Helpers\Geo::class, 
     ])->toArray(),
 
 ];

@@ -884,7 +884,7 @@ class ReelController extends Controller
 
         $reel->increment('share_count');
 
-        $shareLink = url('/app/launch') . '?' . http_build_query([
+        $shareLink = url('/launch') . '?' . http_build_query([
             'page'         => 'portals',
             'value'        => $reel->id   // or any unique share code
         ]);

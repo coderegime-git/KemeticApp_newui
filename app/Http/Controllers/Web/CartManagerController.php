@@ -14,6 +14,7 @@ use App\Services\CJDropshippingService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Cookie;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 
 class CartManagerController extends Controller
 {
@@ -230,16 +231,32 @@ class CartManagerController extends Controller
 
             $activeDiscount = $product->getActiveDiscount();
 
+            $specifications = !empty($data['specifications']) ? $data['specifications'] : [];
+            if (!is_array($specifications)) {
+                $specifications = json_decode($specifications, true) ?? [];
+            }
+
+            if (!empty($data['cj_variant_id'])) {
+                $specifications['cj_vid'] = $data['cj_variant_id'];
+            }
+
+            $matchConditions = [
+                'product_id' => $product->id,
+                'seller_id'  => $product->creator_id,
+                'buyer_id'   => $user->id,
+                'sale_id'    => null,
+                'status'     => 'pending',
+            ];
+
+            // ✅ If a variant is present, scope the match to that specific variant
+            if (!empty($data['cj_variant_id'])) {
+                $matchConditions['specifications->cj_vid'] = $data['cj_variant_id'];
+            }
+
             $productOrder = ProductOrder::updateOrCreate(
+                $matchConditions,
                 [
-                    'product_id' => $product->id,
-                    'seller_id'  => $product->creator_id,
-                    'buyer_id'   => $user->id,
-                    'sale_id'    => null,
-                    'status'     => 'pending',
-                ],
-                [
-                    'specifications' => !empty($data['specifications']) ? json_encode($data['specifications']) : null,
+                    'specifications' => !empty($specifications) ? json_encode($specifications) : null,
                     'quantity'       => $data['quantity'] ?? 1,
                     'discount_id'    => $activeDiscount->id ?? null,
                     'created_at'     => time(),
@@ -448,19 +465,41 @@ class CartManagerController extends Controller
 
         } elseif ($item_name === 'product_id') {
             // Prevent duplicate in local products
-            $productOrder = ProductOrder::where('product_id', $request->input('item_id'))
+            $cjVariantId = $request->input('cj_variant_id');
+
+            $productOrderQuery  = ProductOrder::where('product_id', $request->input('item_id'))
                 ->where('buyer_id', $user->id)
-                ->first();
+                ->where('status', 'pending')
+                ->whereNull('sale_id');
+
+            if (!empty($cjVariantId)) {
+                $productOrderQuery->where('specifications->cj_vid', $cjVariantId);
+            }
+
+            $productOrder = $productOrderQuery->first();
 
             if (!empty($productOrder)) {
+
                 $exists = $user_as_a_guest
-                    ? Cart::where('product_order_id', $productOrder->id)->where('creator_guest_id', $user->id)->count()
-                    : Cart::where('product_order_id', $productOrder->id)->where('creator_id', $user->id)->count();
+                ? Cart::where('product_order_id', $productOrder->id)
+                    ->where('creator_guest_id', $user->id)
+                    ->where('creator_id', 0)
+                    ->exists()
+                : Cart::where('product_order_id', $productOrder->id)
+                    ->where('creator_id', $user->id)
+                    ->exists();
+
+                // $exists = $user_as_a_guest
+                //     ? Cart::where('product_order_id', $productOrder->id)->where('creator_guest_id', $user->id)->count()
+                //     : Cart::where('product_order_id', $productOrder->id)->where('creator_id', $user->id)->count();
 
                 if ($exists) {
                     return back()->with(['toast' => [
                         'title'  => 'Already in Cart',
-                        'msg'    => 'This product is already in your cart.',
+                        'msg'    => !empty($cjVariantId)
+                                ? trans('This product variant is already in your cart.')  // same variant
+                                : trans('This product is already in your cart.'),   
+                        // 'msg'    => 'This product is already in your cart.',
                         'status' => 'error',
                     ]]);
                 }

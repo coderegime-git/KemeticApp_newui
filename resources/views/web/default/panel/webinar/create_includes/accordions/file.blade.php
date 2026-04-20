@@ -412,11 +412,11 @@ select.kemetic-control option {
 
         {{-- Left: icon + title --}}
         <div class="kemetic-header-left"
-             href="#collapseFile{{ !empty($file) ? $file->id : 'record' }}"
+             data-bs-target="#collapseFile{{ !empty($file) ? $file->id : 'record' }}"
              aria-controls="collapseFile{{ !empty($file) ? $file->id : 'record' }}"
-             data-parent="#chapterContentAccordion{{ !empty($chapter) ? $chapter->id : '' }}"
+             data-bs-parent="#chapterContentAccordion{{ !empty($chapter) ? $chapter->id : '' }}"
              role="button"
-             data-toggle="collapse"
+             data-bs-toggle="collapse"
              aria-expanded="true">
 
             <span class="kemetic-icon-wrap">
@@ -462,11 +462,11 @@ select.kemetic-control option {
 
             <button type="button"
                     class="kemetic-action-btn collapse-chevron-icon"
-                    href="#collapseFile{{ !empty($file) ? $file->id : 'record' }}"
+                    data-bs-target="#collapseFile{{ !empty($file) ? $file->id : 'record' }}"
                     aria-controls="collapseFile{{ !empty($file) ? $file->id : 'record' }}"
-                    data-parent="#chapterContentAccordion{{ !empty($chapter) ? $chapter->id : '' }}"
+                    data-bs-parent="#chapterContentAccordion{{ !empty($chapter) ? $chapter->id : '' }}"
                     role="button"
-                    data-toggle="collapse"
+                    data-bs-toggle="collapse"
                     aria-expanded="true">
                 <i data-feather="chevron-down" height="18"></i>
             </button>

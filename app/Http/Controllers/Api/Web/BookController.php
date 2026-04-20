@@ -1077,7 +1077,7 @@ class BookController extends Controller
 
         Book::where('id', $id)->increment('share_count');
 
-        $shareLink = url('/app/launch') . '?' . http_build_query([
+        $shareLink = url('/launch') . '?' . http_build_query([
             'page'         => 'book',
             'value'        => $book->id   // or any unique share code
         ]);

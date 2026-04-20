@@ -141,11 +141,11 @@
 
         <!-- Title -->
         <div class="kemetic-acc-title"
-             href="#collapseExtraDescription{{ !empty($extraDescription) ? $extraDescription->id :'record' }}"
+             data-bs-target="#collapseExtraDescription{{ !empty($extraDescription) ? $extraDescription->id :'record' }}"
              aria-controls="collapseExtraDescription{{ !empty($extraDescription) ? $extraDescription->id :'record' }}"
-             data-parent="#{{ $extraDescriptionParentAccordion }}"
+             data-bs-parent="#{{ $extraDescriptionParentAccordion }}"
              role="button"
-             data-toggle="collapse"
+             data-bs-toggle="collapse"
              aria-expanded="true">
             @if(!empty($extraDescription) and !empty($extraDescription->value))
                 @if($extraDescriptionType == \App\Models\WebinarExtraDescription::$COMPANY_LOGOS)
@@ -169,7 +169,7 @@
                 <div class="btn-group dropdown kemetic-dropdown table-actions mr-15">
                     <button type="button"
                             class="kemetic-dot-btn dropdown-toggle d-flex align-items-center justify-content-center"
-                            data-toggle="dropdown"
+                            data-bs-toggle="dropdown"
                             aria-haspopup="true"
                             aria-expanded="false">
                         <i data-feather="more-vertical" height="20"></i>
@@ -185,15 +185,16 @@
             @endif
 
             {{-- Chevron toggle — needs same data-toggle/data-parent as the title so accordion works correctly --}}
-            <i data-feather="chevron-down"
-               class="kemetic-icon chevron-icon collapse-chevron-icon"
+            <div class="kemetic-icon chevron-icon collapse-chevron-icon"
                height="20"
-               href="#collapseExtraDescription{{ !empty($extraDescription) ? $extraDescription->id :'record' }}"
+               data-bs-target="#collapseExtraDescription{{ !empty($extraDescription) ? $extraDescription->id :'record' }}"
                aria-controls="collapseExtraDescription{{ !empty($extraDescription) ? $extraDescription->id :'record' }}"
-               data-parent="#{{ $extraDescriptionParentAccordion }}"
+               data-bs-parent="#{{ $extraDescriptionParentAccordion }}"
                role="button"
-               data-toggle="collapse"
-               aria-expanded="true"></i>
+               data-bs-toggle="collapse"
+               aria-expanded="true">
+                <i data-feather="chevron-down"></i>
+            </div>
         </div>
     </div>
 

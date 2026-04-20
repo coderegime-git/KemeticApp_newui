@@ -258,7 +258,7 @@
                     <label class="input-label">{{ trans('public.link') }}</label>
                     <div class="input-group">
                         <div class="input-group-prepend">
-                            <button type="button" class="input-group-text js-copy" data-input="ajax[new][link]" data-toggle="tooltip" data-placement="top" title="{{ trans('public.copy') }}" data-copy-text="{{ trans('public.copy') }}" data-done-text="{{ trans('public.copied') }}">
+                            <button type="button" class="input-group-text js-copy" data-input="ajax[new][link]" data-bs-toggle="tooltip" data-placement="top" title="{{ trans('public.copy') }}" data-copy-text="{{ trans('public.copy') }}" data-done-text="{{ trans('public.copied') }}">
                                 <i data-feather="copy" width="18" height="18" class="text-white"></i>
                             </button>
                         </div>

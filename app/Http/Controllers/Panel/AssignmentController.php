@@ -369,7 +369,7 @@ class AssignmentController extends Controller
                 'chapter_id' => $data['chapter_id'],
                 'grade' => $data['grade'] ?? null,
                 'pass_grade' => $data['pass_grade'] ?? null,
-                'deadline' => $data['deadline'] ?? null,
+                'deadline' => !empty($assignmentData['deadline']) ? strtotime($assignmentData['deadline']) : null,
                 'attempts' => $data['attempts'] ?? null,
                 'check_previous_parts' => $data['check_previous_parts'],
                 'access_after_day' => $data['access_after_day'],

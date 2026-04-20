@@ -116,8 +116,8 @@
     <div class="kemetic-faq-header"
          role="tab"
          id="faq_{{ !empty($faq) ? $faq->id :'record' }}"
-         data-toggle="collapse"
-         href="#collapseFaq{{ !empty($faq) ? $faq->id :'record' }}"
+         data-bs-toggle="collapse"
+         data-bs-target="#collapseFaq{{ !empty($faq) ? $faq->id :'record' }}"
          aria-expanded="true">
 
         <div class="kemetic-faq-title">
@@ -130,7 +130,7 @@
 
             @if(!empty($faq))
                 <div class="dropdown kemetic-dropdown">
-                    <button class="kemetic-dot-btn" data-toggle="dropdown">
+                    <button class="kemetic-dot-btn" data-bs-toggle="dropdown">
                         <i data-feather="more-vertical"></i>
                     </button>
 
@@ -143,8 +143,12 @@
                 </div>
             @endif
 
-            <i data-feather="chevron-down"
-               class="kemetic-icon chevron-icon"></i>
+            <div class="kemetic-icon chevron-icon"
+                 data-bs-toggle="collapse"
+                 data-bs-target="#collapseFaq{{ !empty($faq) ? $faq->id :'record' }}"
+                 role="button">
+                <i data-feather="chevron-down"></i>
+            </div>
         </div>
     </div>
 

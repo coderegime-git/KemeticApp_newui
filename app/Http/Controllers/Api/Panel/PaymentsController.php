@@ -13,6 +13,7 @@ use App\Models\Sale;
 use App\Models\TicketUser;
 use App\PaymentChannels\ChannelManager;
 use App\User;
+use App\Models\AdReel;
 use App\Models\Country;
 use App\Models\Book;
 use App\Models\BookOrder;
@@ -20,9 +21,19 @@ use App\Models\ProductOrder;
 use App\Mixins\Cashback\CashbackAccounting;
 use App\Models\BecomeInstructor;
 use App\Models\Region;
+use App\Models\Product;
+use App\Models\Reward;
+use App\Models\RewardAccounting;
+use App\Models\Subscribe;
+use Stripe\Stripe;
+use Stripe\Webhook;
+
 use Aws\S3\S3Client;
 use Aws\S3\Exception\S3Exception;
 use App\Services\PdfResizerService;
+use App\Services\CJDropshippingService;
+use App\Mail\SubscriptionRenewal;
+use Illuminate\Support\Facades\Mail;
 use Illuminate\Http\Request;
 use Illuminate\Validation\Rule;
 use Illuminate\Support\Facades\Http;
@@ -34,11 +45,14 @@ use Illuminate\Support\Facades\Redirect;
 use Illuminate\Support\Facades\URL;
 
 
+
 class PaymentsController extends Controller
 {
     protected $order_session_key;
     protected $laragonCertPath;
     protected $pdfResizer;
+    protected $cjService;
+    protected CJDropshippingService $cj;
 
     public function __construct()
     {
@@ -46,9 +60,10 @@ class PaymentsController extends Controller
 
         $pdfResizer = new PdfResizerService();
         $this->pdfResizer = $pdfResizer;
+        $this->cj = new CJDropshippingService();
         // Laragon certificate path - adjust if different
         $this->laragonCertPath = "C:/laragon/etc/ssl/cert.pem";
-        
+
         // Alternative paths to check
         $alternativePaths = [
             "C:/laragon/etc/ssl/cert.pem",
@@ -57,7 +72,7 @@ class PaymentsController extends Controller
             base_path("cacert.pem"), // If you want to store in your project
             storage_path("app/certs/cacert.pem"), // Custom storage path
         ];
-        
+
         // Find the first existing certificate file
         foreach ($alternativePaths as $path) {
             if (file_exists($path)) {
@@ -70,7 +85,8 @@ class PaymentsController extends Controller
     public function paymentByCredit(Request $request)
     {
         validateParam($request->all(), [
-            'order_id' => ['required',
+            'order_id' => [
+                'required',
                 Rule::exists('orders', 'id')->where('status', Order::$pending),
 
             ],
@@ -162,14 +178,14 @@ class PaymentsController extends Controller
                 'created_at' => time(),
             ]);
 
-            if ($amount > 0) {
-                $razorpay = false;
-                foreach ($paymentChannels as $paymentChannel) {
-                    if ($paymentChannel->class_name == 'Razorpay') {
-                        $razorpay = true;
-                    }
+            $razorpay = false;
+            foreach ($paymentChannels as $paymentChannel) {
+                if ($paymentChannel->class_name == 'Razorpay') {
+                    $razorpay = true;
                 }
+            }
 
+            if ($amount > 0) {
                 return response()->json([
                     'status' => 'success',
                     'message' => 'Order created successfully',
@@ -183,7 +199,7 @@ class PaymentsController extends Controller
                     ]
                 ], 200);
             }
-            
+
             $sale = Sale::createSales($orderItem, Sale::$credit);
 
             return response()->json([
@@ -195,7 +211,7 @@ class PaymentsController extends Controller
                     'order' => $order,
                     'count' => 1,
                     'userCharge' => (int) $user->getAccountingCharge(),
-                    'razorpay' => $razorpay
+                    'razorpay' => $razorpay,
                 ]
             ], 200);
 
@@ -211,24 +227,25 @@ class PaymentsController extends Controller
     public function paymentRequest(Request $request)
     {
         $user = apiAuth();
-        $user_as_a_guest=false;
-        if(!$user){
+        $user_as_a_guest = false;
+        if (!$user) {
             $guestuser = new \stdClass(); // Create an empty object for guest users
             $guestuser->id = $request->input('device_id') ?? null;
-            $user_as_a_guest=true;
+            $user_as_a_guest = true;
             if (!$guestuser->id) {
                 return apiResponse2(0, 'invalid_device_id', 'Device ID is required for guest users.');
             }
             $userid = $guestuser->id;
-        }
-        else{
+        } else {
             $userid = $user->id;
         }
         validateParam($request->all(), [
-            'gateway_id' => ['required',
+            'gateway_id' => [
+                'required',
                 Rule::exists('payment_channels', 'id')
             ],
-            'order_id' => ['required',
+            'order_id' => [
+                'required',
                 Rule::exists('orders', 'id')->where('status', Order::$pending)
                     ->where('user_id', $userid),
 
@@ -244,7 +261,7 @@ class PaymentsController extends Controller
             ->first();
 
         session()->put($this->order_session_key, $orderId);
-        
+
         if ($order->type === Order::$meeting) {
             $orderItem = OrderItem::where('order_id', $order->id)->first();
             $reserveMeeting = ReserveMeeting::where('id', $orderItem->reserve_meeting_id)->first();
@@ -290,24 +307,25 @@ class PaymentsController extends Controller
     public function paymentsubscribeRequest(Request $request)
     {
         $user = apiAuth();
-        $user_as_a_guest=false;
-        if(!$user){
+        $user_as_a_guest = false;
+        if (!$user) {
             $guestuser = new \stdClass(); // Create an empty object for guest users
             $guestuser->id = $request->input('device_id') ?? null;
-            $user_as_a_guest=true;
+            $user_as_a_guest = true;
             if (!$guestuser->id) {
                 return apiResponse2(0, 'invalid_device_id', 'Device ID is required for guest users.');
             }
             $userid = $guestuser->id;
-        }
-        else{
+        } else {
             $userid = $user->id;
         }
         validateParam($request->all(), [
-            'gateway_id' => ['required',
+            'gateway_id' => [
+                'required',
                 Rule::exists('payment_channels', 'id')
             ],
-            'order_id' => ['required',
+            'order_id' => [
+                'required',
                 Rule::exists('orders', 'id')->where('status', Order::$pending)
                     ->where('user_id', $userid),
 
@@ -323,7 +341,7 @@ class PaymentsController extends Controller
             ->first();
 
         session()->put($this->order_session_key, $orderId);
-        
+
         if ($order->type === Order::$meeting) {
             $orderItem = OrderItem::where('order_id', $order->id)->first();
             $reserveMeeting = ReserveMeeting::where('id', $orderItem->reserve_meeting_id)->first();
@@ -372,7 +390,7 @@ class PaymentsController extends Controller
         $paymentChannel = PaymentChannel::where('class_name', $gateway)
             ->where('status', 'active')
             ->first();
-            
+
         try {
             $channelManager = ChannelManager::makeChannel($paymentChannel);
             //dd($channelManager);
@@ -389,7 +407,7 @@ class PaymentsController extends Controller
             //     'status' => 'error'
             // ];
             // return redirect('cart')->with(['toast' => $toastData]);
-            
+
             return apiResponse2(0, 'gateway_error', trans('api.payment.gateway_error'));
         }
     }
@@ -423,9 +441,9 @@ class PaymentsController extends Controller
 
     private function paymentOrderAfterVerify($order)
     {
-        
+
         if (!empty($order)) {
-        //    dd($order);
+            //    dd($order);
             // Log::info('paymentOrderAfterVerify: ', [$order]);
             if ($order->status == Order::$paying) {
                 // Log::info('paymentOrderAfterVerify paying: ', [$order]);
@@ -486,21 +504,21 @@ class PaymentsController extends Controller
     {
         // dd('setPaymentAccounting');
         $cashbackAccounting = new CashbackAccounting();
-        
+
         if ($order->is_charge_account) {
             Accounting::charge($order);
             $cashbackAccounting->rechargeWallet($order);
         } else {
             foreach ($order->orderItems as $orderItem) {
-                
-                if(!is_numeric($order->user_id)){
+
+                if (!is_numeric($order->user_id)) {
                     $guestname = User::where('device_id_or_ip_address', $order->user_id)->first();
                     $orderItem->full_name = $guestname->full_name;
                 }
                 // dd($orderItem, $order->payment_method);
                 $sale = Sale::createSales($orderItem, $order->payment_method);
                 // dd('after createSales');
-                
+
                 if (!empty($orderItem->reserve_meeting_id)) {
                     $reserveMeeting = ReserveMeeting::where('id', $orderItem->reserve_meeting_id)->first();
                     $reserveMeeting->update([
@@ -543,31 +561,31 @@ class PaymentsController extends Controller
 
                     $this->updateInstallmentOrder($orderItem, $sale);
                 } else {
-                    
+
                     // webinar and meeting and product and bundle
 
                     Accounting::createAccounting($orderItem, $type);
                     TicketUser::useTicket($orderItem);
-                    
+
                     if (!empty($orderItem->product_id)) {
-                        $this->updateProductOrder($sale, $orderItem);
+                        $this->updateProductOrder($sale, $orderItem, $order);
                     }
 
-                    if(!empty($orderItem->book_id))
-                    {
+                    if (!empty($orderItem->book_id)) {
                         $this->updateBookOrder($sale, $orderItem);
                     }
                 }
-                
+
+            }
+
+            if (!is_numeric($order->user_id)) {
+                Cart::emptyWithoutLoginCart($order->user_id);
+            } else {
+                Cart::emptyCart($order->user_id);
             }
         }
-        if(!is_numeric($order->user_id)){
-            Cart::emptyWithoutLoginCart($order->user_id);
-        }
-        else{
-            Cart::emptyCart($order->user_id);
-        }
         
+
     }
 
     private function handleLuluPrintJobAfterPayment($order)
@@ -596,18 +614,18 @@ class PaymentsController extends Controller
         }
         // dd($token);
         // dd($token);
-        
+
         // $url = env('LULU_BASE_URL', 'https://api.sandbox.lulu.com') . $endpoint;
         // $url = "https://api.sandbox.lulu.com/print-job-cost-calculations/";
 
         // try {    // Use NEW credentials after revoking the compromised ones!
 
         //     $pdfContent = file_get_contents($sourcePdfUrl);
-            
+
         //     if ($pdfContent === false) {
         //         throw new Exception("Failed to download PDF from URL: $sourcePdfUrl");
         //     }
-            
+
         //     $s3Client = new \Aws\S3\S3Client([
         //         'version' => 'latest',
         //         'region'  => env('AWS_DEFAULT_REGION', 'us-east-1'),
@@ -619,7 +637,7 @@ class PaymentsController extends Controller
 
         //     $bucket = env('AWS_BUCKET', 'lulu-pdfs-01');
         //     $fileName = 'lulu-uploads/' . uniqid() . '_' . time() . '.pdf';
-            
+
         //     // Upload to S3 with public read access
         //     $result = $s3Client->putObject([
         //         'Bucket' => $bucket,
@@ -640,7 +658,7 @@ class PaymentsController extends Controller
         //     Log::error("S3 Upload failed: " . $e->getMessage());
         // } 
 
-        
+
 
         // $pdfurl = "https://studiocaribbean.com/400page.pdf";
         // $pdfpathurl = "https://kemetic.app/store/1/Where-the-Crawdads-Sing.pdf";
@@ -669,11 +687,20 @@ class PaymentsController extends Controller
             throw new \Exception("Book not found with ID: $bookid");
         }
         // dd($book);
-        
+
         // 2. FETCH USER/BUYER DATA
-        $user = User::select('id', 'full_name', 'email', 'mobile', 'country_id', 'province_name', 
-                            'city_name', 'address', 'zip_code')
-                    ->find($userid);
+        $user = User::select(
+            'id',
+            'full_name',
+            'email',
+            'mobile',
+            'country_id',
+            'province_name',
+            'city_name',
+            'address',
+            'zip_code'
+        )
+            ->find($userid);
         // dd($user);
         if (!$user) {
             throw new \Exception("User not found with ID: $userid");
@@ -681,10 +708,10 @@ class PaymentsController extends Controller
 
         if ($user->country_id) {
             $country = Region::select('title')
-                            ->where('id', $user->country_id)
-                            ->where('type', Region::$country)
-                            ->first();
-            
+                ->where('id', $user->country_id)
+                ->where('type', Region::$country)
+                ->first();
+
             if ($country) {
                 $countryName = $country->title;
             }
@@ -698,7 +725,7 @@ class PaymentsController extends Controller
         }
 
         $printurl = 'https://api.lulu.com/print-jobs/';
-        
+
         $quantity = 1;
 
         $address = $user->address;
@@ -707,10 +734,10 @@ class PaymentsController extends Controller
         if (strlen($address) > 30) {
             // Find the last space before position 30
             $splitPos = strrpos(substr($address, 0, 31), ' ');
-            
+
             // If no space found, force split at 30
             $splitPos = $splitPos ?: 30;
-            
+
             $street1 = substr($address, 0, $splitPos);
             $street2 = trim(substr($address, $splitPos));
         } else {
@@ -724,7 +751,7 @@ class PaymentsController extends Controller
             "line_items" => [
                 [
                     "external_id" => "item-reference-1",
-                    "printable_normalization" =>[
+                    "printable_normalization" => [
                         "cover" => [
                             "source_url" => url($book->cover_pdf),
                         ],
@@ -735,12 +762,12 @@ class PaymentsController extends Controller
                         "pod_package_id" => "0600X0900BWSTDPB060UW444MXX"
                     ],
                     "title" => $book->title,
-                    "quantity" => 1, 
+                    "quantity" => 1,
                 ]
             ],
             "production_delay" => 120,
             "shipping_address" => [
-                "city" =>  $user->city_name,
+                "city" => $user->city_name,
                 "country_code" => $countrycode,
                 "name" => $user->full_name,
                 "phone_number" => $phone,
@@ -761,7 +788,7 @@ class PaymentsController extends Controller
         ];
 
         // dd($data);
-        
+
         $printcurl = curl_init();
         curl_setopt_array($printcurl, [
             CURLOPT_URL => $printurl,
@@ -810,7 +837,7 @@ class PaymentsController extends Controller
         // dd($response);
 
         $responseData = json_decode($response, true);
-       
+
         return $responseData;
     }
 
@@ -825,9 +852,9 @@ class PaymentsController extends Controller
         $laragonCertPath = "C:/laragon/etc/ssl/cert.pem";
         $verifyOption = file_exists($laragonCertPath) ? $laragonCertPath : false;
 
-        
+
         $curl = curl_init();
-         $authorization = "OWY2MDViMTUtNmMzYy00OWU1LTkxOWItODRmNzM0MWEyMjgzOk50cVpOa2N2aE1nNlJpb25FaEVSbWpyZW5EQTJYU3dW";
+        $authorization = "OWY2MDViMTUtNmMzYy00OWU1LTkxOWItODRmNzM0MWEyMjgzOk50cVpOa2N2aE1nNlJpb25FaEVSbWpyZW5EQTJYU3dW";
         curl_setopt_array($curl, [
             CURLOPT_URL => 'https://api.lulu.com/auth/realms/glasstree/protocol/openid-connect/token',
             CURLOPT_RETURNTRANSFER => true,
@@ -843,8 +870,8 @@ class PaymentsController extends Controller
                 'Authorization: Basic ' . $authorization
             ],
         ]);
-        
-        
+
+
         if ($this->laragonCertPath && file_exists($this->laragonCertPath)) {
             // Use Laragon certificate
             $options[CURLOPT_CAINFO] = $this->laragonCertPath;
@@ -855,29 +882,29 @@ class PaymentsController extends Controller
             // Disable SSL verification if no certificate found (NOT RECOMMENDED for production)
             $options[CURLOPT_SSL_VERIFYPEER] = false;
             $options[CURLOPT_SSL_VERIFYHOST] = false;
-            
+
             \Log::warning('SSL certificate verification disabled. Certificate file not found.');
         }
-        
+
         curl_setopt_array($curl, $options);
 
         $response = curl_exec($curl);
         $httpCode = curl_getinfo($curl, CURLINFO_HTTP_CODE);
         $error = curl_error($curl);
-          
+
         if ($error) {
             $errorNo = curl_errno($curl);
             \Log::error("cURL Error #{$errorNo}: {$error}");
             \Log::error("Certificate path used: " . ($this->laragonCertPath ?? 'none'));
             \Log::error("File exists: " . (file_exists($this->laragonCertPath) ? 'Yes' : 'No'));
         }
-        
+
         curl_close($curl);
 
         $data = json_decode($response, true);
 
         // dd($data);
-      
+
         // if ($httpCode !== 200) {
         //     throw new \Exception("Failed to get access token: " . ($data['error_description'] ?? 'Unknown error'));
         // }
@@ -911,16 +938,16 @@ class PaymentsController extends Controller
                     });
                 }
             })
-        ->update([
-            'sale_id' => $sale->id,
-            'status' => $status,
-        ]);
+            ->update([
+                'sale_id' => $sale->id,
+                'status' => $status,
+            ]);
     }
 
-    private function updateProductOrder($sale, $orderItem)
+    private function updateProductOrder($sale, $orderItem, $order)
     {
         $product = $orderItem->product;
-       
+
         $status = ProductOrder::$waitingDelivery;
 
         if ($product and $product->isVirtual()) {
@@ -944,11 +971,244 @@ class PaymentsController extends Controller
                 'status' => $status,
             ]);
 
+        $productOrder = ProductOrder::find($orderItem->product_order_id);
+        if ($productOrder) {
+
+            $this->fulfilCJProductIfNeeded($productOrder, $orderItem, $order);
+        }
+
         if ($product and $product->getAvailability() < 1) {
             $notifyOptions = [
                 '[p.title]' => $product->title,
             ];
             sendNotification('product_out_of_stock', $notifyOptions, $product->creator_id);
+        }
+    }
+
+    private function fulfilCJProductIfNeeded(
+        ProductOrder $productOrder,
+        OrderItem $orderItem,
+        Order $order
+    ): void {
+        $product = $orderItem->product;
+
+        // ── Path A: CJ proxy product (item_name=cj_product_id) ────
+        $specs = json_decode($productOrder->specifications ?? '{}', true);
+        $isCJProxy = ($specs['source'] ?? '') === 'cj_dropship';
+
+        // ── Path B: Product has cj_vid column set ─────────────────
+        $isCJDirect = !empty($product) && !empty($product->cj_vid);
+
+        if (!$isCJProxy && !$isCJDirect) {
+            return; // Not a CJ product — nothing to do
+        }
+
+        try {
+            // ── Build buyer address ────────────────────────────────
+            $buyer = $order->user ?? User::find($orderItem->user_id);
+
+            if (!$buyer) {
+                Log::error("CJ Fulfil: no buyer for order #{$order->id}");
+                return;
+            }
+
+            // Resolve country name & code
+            $countryCode = '';
+            $countryName = '';
+            if (!empty($buyer->country_id)) {
+                $country = Region::select('title')
+                    ->where('id', $buyer->country_id)
+                    ->where('type', Region::$country)
+                    ->first();
+
+                if ($country) {
+                    $countryName = $country->title;
+                }
+            }
+            $countryCode = Country::where('country_name', $countryName)->value('country_code');
+            // if (!empty($buyer->country_id)) {
+            //     $region = Region::find($buyer->country_id);
+            //     if ($region) {
+            //         $countryCode = $region->code ?? $countryCode;
+            //         $countryName = $region->title ?? $region->name ?? $countryName;
+            //     }
+            // }
+
+            // ── Build product list for CJ ──────────────────────────
+            if ($isCJProxy) {
+                $cjVid = $specs['cj_vid'] ?? null;
+                $cjSku = $specs['cj_sku'] ?? null;
+                $cjLogistic = $specs['cj_logistic'] ?? env('CJ_DEFAULT_LOGISTIC', 'PostNL');
+                $shopAmount = (string) ($specs['cj_price'] ?? 0);
+            } else {
+                $cjVidFromOrder = $specs['cj_vid'] ?? null;
+                $cjVariant = null;
+
+                if ($cjVidFromOrder) {
+                    $cjVariant = \App\Models\ProductCjVariant::where('product_id', $product->id)
+                        ->where('vid', $cjVidFromOrder)
+                        ->first();
+                }
+
+                if (!$cjVariant) {
+                    $cjVariant = \App\Models\ProductCjVariant::where('product_id', $product->id)
+                        ->where('is_selected', 1)
+                        ->first();
+                }
+
+                // Fallback: get any variant for this product
+                if (!$cjVariant) {
+                    $cjVariant = \App\Models\ProductCjVariant::where('product_id', $product->id)
+                        ->first();
+                }
+
+                if (!$cjVariant) {
+                    Log::error('CJ Fulfil: no variant found in product_cj_variants', [
+                        'product_id' => $product->id,
+                    ]);
+                    return;
+                }
+
+                $cjVid = $cjVariant->vid;           // the real UUID vid
+                $cjSku = $cjVariant->variant_sku ?? null;
+                $cjLogistic = env('CJ_DEFAULT_LOGISTIC', 'PostNL');
+                $shopAmount = (string) $product->price;
+            }
+
+            $cjProducts = [
+                [
+                    'vid' => $cjVid,
+                    'sku' => $cjSku,
+                    'quantity' => $productOrder->quantity ?? 1,
+                    'storeLineItemId' => 'oi_' . $orderItem->id . '_po_' . $productOrder->id,
+                ]
+            ];
+
+            // ── Build CJ order payload ─────────────────────────────
+            $orderData = [
+                'orderNumber' => 'ORD-' . $order->id . '-OI-' . $orderItem->id . '-' . time(),
+                'shippingCountryCode' => $countryCode,
+                'shippingCountry' => $countryName,
+                'shippingProvince' => $buyer->province_name ?? '',
+                'shippingCity' => $buyer->city_name ?? '',
+                'shippingAddress' => $buyer->address ?? '',
+                'shippingAddress2' => '',
+                'shippingZip' => $buyer->zip_code ?? '',
+                'shippingPhone' => $buyer->mobile ?? '',
+                'houseNumber' => $buyer->house_no ?? '',
+                'shippingCustomerName' => $buyer->full_name ?? '',
+                'email' => $buyer->email ?? '',
+                'logisticName' => $cjLogistic,
+                'fromCountryCode' => env('CJ_FROM_COUNTRY', 'CN'),
+                'platform' => env('CJ_PLATFORM', 'Api'),
+                'shopAmount' => $shopAmount,
+                'remark' => 'Order #' . $order->id,
+                'payType' => 2, // balance payment
+                'products' => $cjProducts,
+            ];
+
+            Log::info('CJ Fulfil: Starting for orderItem #' . $orderItem->id, [
+                'cj_vid' => $cjVid,
+                'country' => $countryCode,
+            ]);
+
+            // ── Step 1: Create order ───────────────────────────────
+            $created = $this->cj->createOrder($orderData);
+
+            if (empty($created['orderId'])) {
+                Log::error('CJ Fulfil Step 1 failed: no orderId returned', [
+                    'orderItem' => $orderItem->id,
+                    'response' => $created,
+                ]);
+                return;
+            }
+
+            $cjOrderId = $created['orderId'];
+
+            // ── Step 2: Add to CJ cart ─────────────────────────────
+            $this->cj->addOrderToCart([$cjOrderId]);
+
+            // ── Step 3: Confirm cart → shipmentOrderId ─────────────
+            $confirmed = $this->cj->confirmCart([$cjOrderId]);
+            $shipmentOrderId = $cjOrderId;
+            // $shipmentOrderId = $confirmed['shipmentsId'] ?? $confirmed['shipmentOrderId'] ?? null;
+
+            if (empty($shipmentOrderId)) {
+                Log::error('CJ Fulfil Step 3 failed: no shipmentOrderId', [
+                    'orderItem' => $orderItem->id,
+                    'cjOrderId' => $cjOrderId,
+                    'confirmed' => $confirmed,
+                ]);
+                // Save partial progress so you can resume
+                $productOrder->update([
+                    'cj_order_id' => $cjOrderId,
+                    'cj_status' => 'cart_failed',
+                ]);
+                return;
+            }
+
+            // ── Step 4: Save/generate parent order → payId ─────────
+            $saved = $this->cj->saveGenerateParentOrder($shipmentOrderId);
+            $payId = $saved['payId'] ?? null;
+
+            if (empty($payId)) {
+                Log::error('CJ Fulfil Step 4 failed: no payId', [
+                    'orderItem' => $orderItem->id,
+                    'cjOrderId' => $cjOrderId,
+                    'shipmentOrderId' => $shipmentOrderId,
+                    'saved' => $saved,
+                ]);
+                $productOrder->update([
+                    'cj_order_id' => $cjOrderId,
+                    'cj_shipment_id' => $shipmentOrderId,
+                    'cj_status' => 'payment_pending',
+                ]);
+                return;
+            }
+
+            // ── Step 5: Pay with CJ balance ────────────────────────
+            $paid = $this->cj->payBalance($shipmentOrderId, $payId);
+
+            if ($paid === null) {
+                Log::error('CJ Fulfil Step 5 failed: balance payment failed', [
+                    'orderItem' => $orderItem->id,
+                    'cjOrderId' => $cjOrderId,
+                    'shipmentOrderId' => $shipmentOrderId,
+                    'payId' => $payId,
+                ]);
+                $productOrder->update([
+                    'cj_order_id' => $cjOrderId,
+                    'cj_shipment_id' => $shipmentOrderId,
+                    'cj_status' => 'payment_failed',
+                ]);
+                return;
+            }
+
+            // ── Success: save all CJ data ──────────────────────────
+            $productOrder->update([
+                'cj_order_id' => $cjOrderId,
+                'cj_shipment_id' => $shipmentOrderId,
+                'cj_status' => 'submitted',
+                'status' => ProductOrder::$waitingDelivery,
+            ]);
+
+            Log::info('CJ Fulfil: SUCCESS for orderItem #' . $orderItem->id, [
+                'cj_order_id' => $cjOrderId,
+                'shipment_order' => $shipmentOrderId,
+            ]);
+
+            // ── Notify admin / seller ──────────────────────────────
+            sendNotification('new_store_order', [
+                '[p.title]' => $product->title ?? ($specs['cj_name'] ?? 'CJ Product'),
+                '[amount]' => handlePrice($orderItem->total_amount),
+                '[u.name]' => $buyer->full_name ?? '',
+            ], 1);
+
+        } catch (\Throwable $e) {
+            // Never let CJ failure break the local payment confirmation
+            Log::error('CJ Fulfil exception for orderItem #' . $orderItem->id . ': ' . $e->getMessage(), [
+                'trace' => $e->getTraceAsString(),
+            ]);
         }
     }
 
@@ -1050,9 +1310,11 @@ class PaymentsController extends Controller
                     TicketUser::useTicket($orderItem);
                 }
             }
+
+            Cart::emptyCart($order->user_id);
         }
 
-        Cart::emptyCart($order->user_id);
+        
     }
 
     public function paymentVerifyOLD(Request $request, $gateway)
@@ -1139,7 +1401,10 @@ class PaymentsController extends Controller
 
     public function webChargeGenerator(Request $request)
     {
-        return apiResponse2(1, 'generated', trans('api.link.generated'),
+        return apiResponse2(
+            1,
+            'generated',
+            trans('api.link.generated'),
             [
                 'link' => URL::signedRoute('my_api.web.charge', [apiAuth()->id])
             ]
@@ -1159,7 +1424,8 @@ class PaymentsController extends Controller
     {
         validateParam($request->all(), [
             'amount' => 'required|numeric',
-            'gateway_id' => ['required',
+            'gateway_id' => [
+                'required',
                 Rule::exists('payment_channels', 'id')->where('status', 'active')
             ]
             ,
@@ -1225,7 +1491,7 @@ class PaymentsController extends Controller
             <script src="/assets/default/js/app.js"></script>
             <script src="https://checkout.razorpay.com/v1/checkout.js"
                     data-key="' . env('RAZORPAY_API_KEY') . '"
-                    data-amount="' . (int)($order->total_amount * 100) . '"
+                    data-amount="' . (int) ($order->total_amount * 100) . '"
                     data-buttontext="product_price"
                     data-description="Rozerpay"
                     data-currency="' . currency() . '"

@@ -267,7 +267,7 @@
        $downloadurl = $product->files->first()->path ?? null;
       @endphp
         <!-- <div class="shopdetail-subnote">Get with €1/mo membership</div> -->
-      @if($hasBought or $product->price == 0 or $activeSubscribe and $productType == 'virtual')
+      @if($hasBought && $product->price == 0 && $activeSubscribe && $productType == 'virtual')
         <button type="button" data-product-type="{{ $productType }}" data-product-title="{{ $product->title }}" class="shopdetail-btn-buy" onclick="previewPdf('{{ url($downloadurl) ?? '#' }}')">Download</button>
       @else
         <button type="button" data-product-type="{{ $productType }}" data-product-title="{{ $product->title }}" class="shopdetail-btn-buy js-product-direct-payment" {{ ($productAvailability < 1) || ($product->price == 0) ? 'disabled' : '' }}>Buy Now</button>
@@ -302,15 +302,15 @@
             <span>{{ trans('public.free') }}</span>
         @endif
 
-        @if($product->isPhysical())
-            @if(!empty($product->delivery_fee) and $product->delivery_fee > 0)
-                <span">+ {{ handlePrice($product->delivery_fee) }} {{ trans('update.shipping') }}</span>
-            @else
-                <span>{{ trans('update.free_shipping') }}</span>
-            @endif
+        @if($product->isPhysical() && $product->is_cj_product == '0')
+          @if(!empty($product->delivery_fee) and $product->delivery_fee > 0)
+              <span">+ {{ handlePrice($product->delivery_fee) }} {{ trans('update.shipping') }}</span>
+          @else
+              <span>{{ trans('update.free_shipping') }}</span>
+          @endif
         @endif</div>
     <!-- <a href="/cart"> -->
-       @if($hasBought or $product->price == 0 or $activeSubscribe and $productType == 'virtual')
+      @if($hasBought && $product->price == 0 && $activeSubscribe && $productType == 'virtual')
         <button type="button" data-product-type="{{ $productType }}" data-product-title="{{ $product->title }}" class="shopdetail-btn" onclick="previewPdf('{{ url($downloadurl) ?? '#' }}')">Download</button>
       @else
       <button type="button" data-product-type="{{ $productType }}" data-product-title="{{ $product->title }}" class="shopdetail-btn js-product-direct-payment-buybar" {{ ($productAvailability < 1) || ($product->price == 0) ? 'disabled' : '' }}>Buy Now</button>

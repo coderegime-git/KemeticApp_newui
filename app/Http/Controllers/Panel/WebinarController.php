@@ -414,15 +414,19 @@ class WebinarController extends Controller
         } elseif ($step == 2) {
             $query->with([
                 'category' => function ($query) {
-                    $query->with(['filters' => function ($query) {
-                        $query->with('options');
-                    }]);
+                    $query->with([
+                        'filters' => function ($query) {
+                            $query->with('options');
+                        }
+                    ]);
                 },
                 'filterOptions',
                 'webinarPartnerTeacher' => function ($query) {
-                    $query->with(['teacher' => function ($query) {
-                        $query->select('id', 'full_name');
-                    }]);
+                    $query->with([
+                        'teacher' => function ($query) {
+                            $query->select('id', 'full_name');
+                        }
+                    ]);
                 },
                 'tags',
             ]);
@@ -462,12 +466,27 @@ class WebinarController extends Controller
         } elseif ($step == 5) {
             $query->with([
                 'prerequisites' => function ($query) {
-                    $query->with(['prerequisiteWebinar' => function ($qu) {
-                        $qu->with(['teacher' => function ($q) {
-                            $q->select('id', 'full_name');
-                        }]);
-                    }])->orderBy('order', 'asc');
-                }
+                    $query->with([
+                        'prerequisiteWebinar' => function ($qu) {
+                            $qu->with([
+                                'teacher' => function ($q) {
+                                    $q->select('id', 'full_name');
+                                }
+                            ]);
+                        }
+                    ])->orderBy('order', 'asc');
+                },
+                'relatedCourses' => function ($query) {
+                    $query->with([
+                        'course' => function ($qu) {
+                            $qu->with([
+                                'teacher' => function ($q) {
+                                    $q->select('id', 'full_name');
+                                }
+                            ]);
+                        }
+                    ]);
+                },
             ]);
         } elseif ($step == 6) {
             $query->with([
@@ -668,6 +687,7 @@ class WebinarController extends Controller
 
         if ($currentStep == 3) {
             $data['subscribe'] = !empty($data['subscribe']) ? true : false;
+            $data['access_days'] = !empty($data['access_days']) ?? 0;
             $data['price'] = !empty($data['price']) ? convertPriceToDefaultCurrency($data['price']) : null;
             $data['organization_price'] = !empty($data['organization_price']) ? convertPriceToDefaultCurrency($data['organization_price']) : null;
         }
@@ -717,7 +737,8 @@ class WebinarController extends Controller
             ]);
         }
 
-        unset($data['_token'],
+        unset(
+            $data['_token'],
             $data['current_step'],
             $data['draft'],
             $data['get_next'],
@@ -963,9 +984,11 @@ class WebinarController extends Controller
             $query = Webinar::query()->select('id', 'teacher_id')
                 ->whereTranslationLike('title', '%' . $term . '%')
                 ->where('id', '<>', $webinarId)
-                ->with(['teacher' => function ($query) {
-                    $query->select('id', 'full_name');
-                }]);
+                ->with([
+                    'teacher' => function ($query) {
+                        $query->select('id', 'full_name');
+                    }
+                ]);
             //->where('creator_id', $user->id)
             //->get();
 
@@ -1175,7 +1198,8 @@ class WebinarController extends Controller
 
                 $sale->gift_recipient = !empty($gift->receipt) ? $gift->receipt->full_name : $gift->name;
                 $sale->gift_sender = $sale->buyer->full_name;
-                $sale->gift_date = $gift->date;;
+                $sale->gift_date = $gift->date;
+                ;
 
                 $giftPurchasedCount += 1;
 

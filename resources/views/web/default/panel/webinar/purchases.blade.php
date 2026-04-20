@@ -414,7 +414,7 @@
                                                 @if(!empty($sale->gift_id) and $sale->buyer_id == $authUser->id)
                                                     {{--  --}}
                                                 @else
-                                                    <div class="progress cursor-pointer" data-toggle="tooltip" data-placement="top" title="{{ $progressTitle }}">
+                                                    <div class="progress cursor-pointer" data-bs-toggle="tooltip" data-placement="top" title="{{ $progressTitle }}">
                                                         <span class="progress-bar" style="width: {{ $percent }}%"></span>
                                                     </div>
                                                 @endif
@@ -456,7 +456,7 @@
                                                 <div class="btn-group dropdown table-actions kemetic-actions">
                                                     <button type="button"
                                                             class="btn-transparent kemetic-action-btn dropdown-toggle"
-                                                            data-toggle="dropdown"
+                                                            data-bs-toggle="dropdown"
                                                             aria-haspopup="true"
                                                             aria-expanded="false">
                                                         <i data-feather="more-vertical" height="20"></i>

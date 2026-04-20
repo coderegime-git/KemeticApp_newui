@@ -89,7 +89,7 @@
                                 @if(!empty($countries))
                                     @foreach($countries as $country)
                                         @php
-                                            $country->geo_center = \Geo::get_geo_array($country->geo_center);
+                                            $country->geo_center = \App\Helpers\Geo::get_geo_array($country->geo_center);
                                         @endphp
 
                                         <option value="{{ $country->id }}" data-center="{{ implode(',', $country->geo_center) }}" {{ (($user->country_id == $country->id) or old('country_id') == $country->id) ? 'selected' : '' }}>{{ $country->title }}</option>
@@ -107,7 +107,7 @@
                                 @if(!empty($provinces))
                                     @foreach($provinces as $province)
                                         @php
-                                            $province->geo_center = \Geo::get_geo_array($province->geo_center);
+                                            $province->geo_center = \App\Helpers\Geo::get_geo_array($province->geo_center);
                                         @endphp
 
                                         <option value="{{ $province->id }}" data-center="{{ implode(',', $province->geo_center) }}" {{ (($user->province_id == $province->id) or old('province_id') == $province->id) ? 'selected' : '' }}>{{ $province->title }}</option>
@@ -125,7 +125,7 @@
                                 @if(!empty($cities))
                                     @foreach($cities as $city)
                                         @php
-                                            $city->geo_center = \Geo::get_geo_array($city->geo_center);
+                                            $city->geo_center = \App\Helpers\Geo::get_geo_array($city->geo_center);
                                         @endphp
 
                                         <option value="{{ $city->id }}" data-center="{{ implode(',', $city->geo_center) }}" {{ (($user->city_id == $city->id) or old('city_id') == $city->id) ? 'selected' : '' }}>{{ $city->title }}</option>
@@ -143,7 +143,7 @@
                                 @if(!empty($districts))
                                     @foreach($districts as $district)
                                         @php
-                                            $district->geo_center = \Geo::get_geo_array($district->geo_center);
+                                            $district->geo_center = \App\Helpers\Geo::get_geo_array($district->geo_center);
                                         @endphp
 
                                         <option value="{{ $district->id }}" data-center="{{ implode(',', $district->geo_center) }}" {{ (($user->district_id == $district->id) or old('district_id') == $district->id) ? 'selected' : '' }}>{{ $district->title }}</option>

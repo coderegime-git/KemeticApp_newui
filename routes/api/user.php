@@ -140,7 +140,7 @@ Route::group([], function () {
     Route::post('/users/{id}/follow', ['uses' => 'UsersController@followToggle']);
 
     // dropshipping auto login
-    Route::POST('/dropshipping/login-token', ['uses' => 'MobileAutoLoginController@generateToken']);
+    Route::post('/dropshipping/login-token', ['uses' => 'MobileAutoLoginController@generateToken']);
 
 
     Route::group(['prefix' => '/cart'], function () {

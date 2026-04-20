@@ -221,8 +221,8 @@
     <div class="kemetic-accordion-header" 
          role="tab"
          id="prerequisite_{{ !empty($prerequisite) ? $prerequisite->id :'record' }}"
-         data-toggle="collapse"
-         href="#collapsePrerequisite{{ !empty($prerequisite) ? $prerequisite->id :'record' }}"
+         data-bs-toggle="collapse"
+         data-bs-target="#collapsePrerequisite{{ !empty($prerequisite) ? $prerequisite->id :'record' }}"
          aria-expanded="true">
 
         <div class="kemetic-accordion-title">
@@ -239,7 +239,7 @@
 
             @if(!empty($prerequisite))
                 <div class="kemetic-dropdown">
-                    <button class="kemetic-icon-btn" data-toggle="dropdown">
+                    <button class="kemetic-icon-btn" data-bs-toggle="dropdown">
                         <i data-feather="more-vertical"></i>
                     </button>
                     <div class="kemetic-dropdown-menu">
@@ -251,11 +251,12 @@
                 </div>
             @endif
 
-            <i class="kemetic-chevron" 
-               data-feather="chevron-down"
-               data-toggle="collapse"
-               href="#collapsePrerequisite{{ !empty($prerequisite) ? $prerequisite->id :'record' }}">
-            </i>
+            <div class="kemetic-chevron"
+                 data-bs-toggle="collapse"
+                 data-bs-target="#collapsePrerequisite{{ !empty($prerequisite) ? $prerequisite->id :'record' }}"
+                 role="button">
+                <i data-feather="chevron-down"></i>
+            </div>
         </div>
     </div>
 

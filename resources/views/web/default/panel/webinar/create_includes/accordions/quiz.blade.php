@@ -106,8 +106,8 @@
     <!-- HEADER -->
     <div class="kemetic-accordion-header"
          id="quiz_{{ !empty($quizInfo) ? $quizInfo->id :'record' }}"
-         data-toggle="collapse"
-         href="#collapseQuiz{{ !empty($quizInfo) ? $quizInfo->id :'record' }}"
+         data-bs-toggle="collapse"
+         data-bs-target="#collapseQuiz{{ !empty($quizInfo) ? $quizInfo->id :'record' }}"
          aria-expanded="true">
 
         <div class="d-flex align-items-center">
@@ -151,11 +151,12 @@
             @endif
 
             <!-- Chevron -->
-            <i class="kemetic-chevron"
-               data-feather="chevron-down"
-               data-toggle="collapse"
-               href="#collapseQuiz{{ !empty($quizInfo) ? $quizInfo->id :'record' }}">
-            </i>
+            <div class="kemetic-chevron"
+               data-bs-toggle="collapse"
+               data-bs-target="#collapseQuiz{{ !empty($quizInfo) ? $quizInfo->id :'record' }}"
+               role="button">
+                <i data-feather="chevron-down"></i>
+            </div>
 
         </div>
     </div>

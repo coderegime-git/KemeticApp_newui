@@ -458,7 +458,7 @@
 
                                 <div class="dropdown k-dropdown">
                                     <button class="btn-transparent dropdown-toggle"
-                                            data-toggle="dropdown">
+                                            data-bs-toggle="dropdown">
                                         <i data-feather="more-vertical"></i>
                                     </button>
                                     <div class="dropdown-menu">

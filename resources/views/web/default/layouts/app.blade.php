@@ -479,7 +479,7 @@
                     </header>
                     @yield('content')
 
-                    @include('web.default.includes.footer_bar') 
+                    @include('web.default.includes.footer') 
                 </div>
             </main>
             

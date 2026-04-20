@@ -46,6 +46,33 @@
 
 
 <section class="membership-hero">
+  <div class="membership-video-wrapper">
+    <div class="membership-video-container">
+      @php
+      $videoDemo = "https://youtu.be/9xBfox5lvLo?is=9ciOarG_yRkC3IVO";
+       $isYoutube = true;
+        $isIframe = true;
+        // Extract YouTube video ID
+        $youtubeId = '';
+        if (preg_match('/(?:youtube\.com\/(?:[^\/]+\/.+\/|(?:v|e(?:mbed)?)\/|.*[?&]v=)|youtu\.be\/)([^"&?\/\s]{11})/i', $videoDemo, $matches)) {
+            $youtubeId = $matches[1];
+        }
+        $iframeSrc = "https://www.youtube.com/embed/{$youtubeId}?autoplay=1&controls=1&showinfo=0&rel=0&modestbranding=1";
+      @endphp
+      <iframe 
+          id="videoIframe"
+          class="img-cover course-cover-img"
+          src="{{ $iframeSrc }}"
+          frameborder="0"
+          allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+          allowfullscreen
+          loading="lazy"
+          data-original-src="{{ $iframeSrc }}"
+          data-current-time="0"
+          data-is-playing="false">
+      </iframe>
+    </div>
+  </div>
   <div style="display:flex; justify-content:flex-end; width:100%; margin-bottom: 15px; padding-right: 20px;">
     <div class="membership-pill" role="tablist" aria-label="Currency" id="currencyToggle">
       <button class="active" data-currency="EUR" aria-selected="true">EUR</button>

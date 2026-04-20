@@ -163,7 +163,7 @@
                     type="button"
                     data-step="{{ $key }}"
                     class="progress-btn {{ $key == $currentStep ? 'active' : '' }}"
-                    data-toggle="tooltip"
+                    data-bs-toggle="tooltip"
                     data-placement="top"
                     title="{{ trans('public.' . $step['name']) }}"
                 >

@@ -191,10 +191,10 @@
 <li data-id="{{ !empty($chapterItem) ? $chapterItem->id :'' }}" class="accordion-row kemetic-accordion-item">
     <div class="kemetic-accordion-header" role="tab" id="session_{{ !empty($session) ? $session->id :'record' }}">
         <div class="kemetic-accordion-left" 
-             href="#collapseSession{{ !empty($session) ? $session->id :'record' }}" 
+             data-bs-target="#collapseSession{{ !empty($session) ? $session->id :'record' }}" 
              aria-controls="collapseSession{{ !empty($session) ? $session->id :'record' }}" 
-             data-parent="#chapterContentAccordion{{ !empty($chapter) ? $chapter->id :'' }}" 
-             role="button" data-toggle="collapse" aria-expanded="true">
+             data-bs-parent="#chapterContentAccordion{{ !empty($chapter) ? $chapter->id :'' }}" 
+             role="button" data-bs-toggle="collapse" aria-expanded="true">
 
             <span class="kemetic-icon-box">
                 <i data-feather="file-text"></i>
@@ -229,7 +229,7 @@
                 </a>
             @endif
 
-            <button class="kemetic-chevron-btn" data-toggle="collapse" href="#collapseSession{{ !empty($session) ? $session->id :'record' }}" aria-controls="collapseSession{{ !empty($session) ? $session->id :'record' }}" aria-expanded="true">
+            <button type="button" class="kemetic-chevron-btn" data-bs-toggle="collapse" data-bs-target="#collapseSession{{ !empty($session) ? $session->id :'record' }}" aria-controls="collapseSession{{ !empty($session) ? $session->id :'record' }}" aria-expanded="true">
                 <i data-feather="chevron-down"></i>
             </button>
         </div>

@@ -162,7 +162,7 @@
                     </a>
 
                     <div class="dropdown">
-                        <button class="btn-kemetic-more" data-toggle="dropdown">
+                        <button class="btn-kemetic-more" data-bs-toggle="dropdown">
                             <i data-feather="more-vertical"></i>
                         </button>
                         <div class="dropdown-menu dropdown-menu-right">

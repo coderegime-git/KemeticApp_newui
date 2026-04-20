@@ -184,9 +184,9 @@
     <div class="kemetic-accordion-header" 
         role="tab" 
         id="relatedCourse_{{ !empty($relatedCourse) ? $relatedCourse->id :'record' }}"
-        data-toggle="collapse"
-        data-parent="#relatedCoursesAccordion"
-        href="#collapseRelatedCourse{{ !empty($relatedCourse) ? $relatedCourse->id :'record' }}"
+        data-bs-toggle="collapse"
+        data-bs-parent="#relatedCoursesAccordion"
+        data-bs-target="#collapseRelatedCourse{{ !empty($relatedCourse) ? $relatedCourse->id :'record' }}"
         aria-expanded="true">
 
         <div class="kemetic-accordion-title">
@@ -199,7 +199,7 @@
 
             @if(!empty($relatedCourse))
             <div class="kemetic-dropdown">
-                <button class="kemetic-dropdown-btn" data-toggle="dropdown">
+                <button class="kemetic-dropdown-btn" data-bs-toggle="dropdown">
                     <i data-feather="more-vertical"></i>
                 </button>
 

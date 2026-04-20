@@ -29,8 +29,8 @@
         <!-- {{ clean($product->title,'title') }} -->
         <article class="shop-card">
           <div class="shop-media">
-            <a href="{{ $product->getUrl() }}" class="image-box__a"><img src="{{ $product->thumbnail }}" class="img-cover" alt="{{ $product->title }}"></a>
-            <div class="shop-grad"></div>
+            
+            <div class="shop-grad"><a href="{{ $product->getUrl() }}" class="image-box__a"><img src="{{ $product->thumbnail }}" class="img-cover" alt="{{ $product->title }}"></a></div>
             <div class="shop-meta">
               <div class="shop-vendor"><img src="{{ $product->creator->getAvatar() }}" style="width: 50px;" class="img-cover" alt="{{ $product->creator->full_name }}">
                 <a href="{{ $product->creator->getProfileUrl() }}" target="_blank" class="user-name ml-5 font-14">{{ $product->creator->full_name }}</a></div>
@@ -43,7 +43,7 @@
                 <!-- Your existing price display PHP code here -->
               </span>
               </div>
-               @if($hasBought or $product->price == 0 or $activeSubscribe and $productType == 'virtual')
+              @if($hasBought && $product->price == 0 && $activeSubscribe && $productType == 'virtual')
                 <button type="button" data-product-type="{{ $productType }}" data-product-title="{{ $product->title }}" class="shop-atk" onclick="previewPdf('{{ $downloadurl }}')">Download</button>
               @else
                 <button type="button" data-id="{{ $product->id }}" data-product-type="{{ $product->type ?? 'physical' }}" 
@@ -175,7 +175,7 @@
                   $downloadurl = $product->files->first()->path ?? null;
                   $downloadUrl = $downloadurl ? url($downloadurl) : '#';
                 @endphp
-                @if($hasBought or $product->price == 0 or $activeSubscribe and $productType == 'virtual' )
+                @if($hasBought && $product->price == 0 && $activeSubscribe && $productType == 'virtual')
                   <button type="button" data-product-type="{{ $productType }}" data-product-title="{{ $product->title }}" class="shop-atk" onclick="previewPdf('{{ $downloadurl }}')">Download</button>
                 @else
                   @if($product->getAvailability() > 0)

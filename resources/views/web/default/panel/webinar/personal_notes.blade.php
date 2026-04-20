@@ -354,7 +354,7 @@
 
                                     <td>
                                         <div class="dropdown kemetic-actions">
-                                            <button data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                                            <button data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
                                                 <i data-feather="more-vertical" height="20"></i>
                                             </button>
                                             <div class="dropdown-menu">

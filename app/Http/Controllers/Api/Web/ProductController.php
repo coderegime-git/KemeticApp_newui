@@ -64,10 +64,14 @@ class ProductController extends Controller
         $offset = (int) $request->input('offset', 0); // Default offset is 0
 
         // Base query
-        $query = Product::where('products.status', Product::$active)
-            ->where('ordering', true)
-            ->where('price', '!=', 0);
+        // $query = Product::where('products.status', Product::$active)
+        //     ->where('ordering', true)
+        //     ->where('price', '!=', 0);
             // ->orderBy('id', 'desc');
+        $query = Product::with('cjVariants')          // ← add this
+        ->where('products.status', Product::$active)
+        ->where('ordering', true)
+        ->where('price', '!=', 0);
 
         // Apply any additional filters
         $query = $this->handleFilters($request, $query);
@@ -190,11 +194,11 @@ class ProductController extends Controller
             }
             
             // Secondary ordering: by id for consistent results
-            $query->orderBy('id', 'desc');
+            $query->orderBy('products.id', 'desc');
 
         } else {
             // Non-logged in user - default ordering
-            $query->orderBy('id', 'desc');
+            $query->orderBy('products.id', 'desc');
         }
 
         $totalCount = (clone $query)->count();
@@ -290,6 +294,7 @@ class ProductController extends Controller
         }
 
         $trendingProducts = Product::getTrendingProducts(3, $user);
+        $trendingProducts->load('cjVariants');   
 
         if ($trendingProducts->isNotEmpty()) {
             $trendingProductIds = $trendingProducts->pluck('id')->toArray();
@@ -657,6 +662,7 @@ class ProductController extends Controller
         $selectedProduct = Product::where('status', Product::$active)
             ->where('id', $id)
             ->with([
+                'cjVariants',
                 'selectedSpecifications' => function ($query) {
                     $query->where('status', ProductSelectedSpecification::$Active);
                     $query->with(['specification']);
@@ -733,10 +739,15 @@ class ProductController extends Controller
         $selectedProduct->cashbackRules = $cashbackRules;
 
         // Build query for other products (excluding the selected one)
-        $query = Product::where('products.status', Product::$active)
+        // $query = Product::where('products.status', Product::$active)
+        //     ->where('ordering', true)
+        //     ->where('price', '!=', 0)
+        //     ->where('id', '!=', $id); // Exclude the selected product
+        $query = Product::with('cjVariants')          // ← add this
+            ->where('products.status', Product::$active)
             ->where('ordering', true)
             ->where('price', '!=', 0)
-            ->where('id', '!=', $id); // Exclude the selected product
+            ->where('id', '!=', $id);
 
         // Apply any additional filters
         $query = $this->handleFilters($request, $query);
@@ -892,6 +903,7 @@ class ProductController extends Controller
 
         // Get trending products
         $trendingProducts = Product::getTrendingProducts(3, $user);
+        $trendingProducts->load('cjVariants'); 
 
         if ($trendingProducts->isNotEmpty()) {
             $trendingProductIds = $trendingProducts->pluck('id')->toArray();
@@ -1030,7 +1042,7 @@ class ProductController extends Controller
         Product::where('id', $id)->increment('share_count');
         //$product->increment('share_count');
 
-        $shareLink = url('/app/launch') . '?' . http_build_query([
+        $shareLink = url('/launch') . '?' . http_build_query([
             'page'         => 'shop',
             'value'        => $product->id   // or any unique share code
         ]);

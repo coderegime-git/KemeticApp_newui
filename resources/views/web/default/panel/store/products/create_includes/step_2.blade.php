@@ -375,13 +375,13 @@
                         <div class="col-6">
                             <div class="form-group">
                                 <label class="kemetic-label">Shipping Price</label>
-                                <input type="number" id="cjShippingPrice" step="0.01" class="kemetic-input" placeholder="0.00" value="0">
+                                <input type="number" id="cjShippingPrice" name="cj_shipping_price" step="0.01" class="kemetic-input" placeholder="0.00" value="{{ (!empty($product) && !empty($product->cj_shipping_price)) ? convertPriceToUserCurrency($product->cj_shipping_price) : (!empty($cjProduct) ? ceil($cjPrice * 1.10) : old('cj_shipping_price')) }}">
                             </div>
                         </div>
                         <div class="col-6">
                             <div class="form-group">
                                 <label class="kemetic-label">Your Earning</label>
-                                <input type="number" id="userMargin" step="0.01" class="kemetic-input" placeholder="0.00" value="0">
+                                <input type="number" id="userMargin" name="cj_your_price" step="0.01" class="kemetic-input" placeholder="0.00" value="{{ (!empty($product) && !empty($product->cj_your_price)) ? convertPriceToUserCurrency($product->cj_your_price) : old('cj_your_price') }}">
                             </div>
                         </div>
                     </div>
@@ -393,7 +393,7 @@
                         </div>
                         <div class="col-6">
                             <span class="d-block text-gray font-11">Platform Fee (10%)</span>
-                            <span class="text-white font-weight-bold" id="pricingPlatformFee">{{ $currency }}{{ number_format($cjPrice * 0.1, 2) }}</span>
+                            <input type="number" id="platformprice" name="platform_price" step="0.01" class="kemetic-input" placeholder="0.00" value="{{ (!empty($product) && !empty($product->platform_price)) ? convertPriceToUserCurrency($product->platform_price) : old('platform_price') }}">
                         </div>
                     </div>
 
@@ -416,12 +416,14 @@
             </div>
 
             @if($product->isPhysical())
-                    <div class="form-group">
-                        <label class="input-label">{{ trans('update.delivery_fee') }}</label>
-                        <input type="number" name="delivery_fee"
-                            value="{{ (!empty($product) && !empty($product->delivery_fee)) ? convertPriceToUserCurrency($product->delivery_fee) : old('delivery_fee') }}"
-                            class="form-control @error('delivery_fee') is-invalid @enderror">
-                    </div>
+                    @if(empty($cjProduct))
+                        <div class="form-group">
+                            <label class="input-label">{{ trans('update.delivery_fee') }}</label>
+                            <input type="number" name="delivery_fee"
+                                value="{{ (!empty($product) && !empty($product->delivery_fee)) ? convertPriceToUserCurrency($product->delivery_fee) : old('delivery_fee') }}"
+                                class="form-control @error('delivery_fee') is-invalid @enderror">
+                        </div>
+                    @endif
 
                 <div class="form-group">
                     <label class="input-label">{{ trans('update.delivery_estimated_time') }}</label>
@@ -602,25 +604,156 @@
             @if(!empty($cjProduct))
                 const cjPrice = {{ $cjProduct['sellPrice'] ?? 0 }};
                 const currency = '{{ $currency }}';
+                const PLATFORM_FEE_PERCENTAGE = 0.10;
+                
+                // Cache DOM elements
+                const $shippingInput = $('#cjShippingPrice');
+                const $earningInput = $('#userMargin');
+                const $platformFeeInput = $('#platformprice');
+                const $finalPriceInput = $('#finalPriceInput');
+                const $subtotalSpan = $('#pricingSubtotal');
+                const $totalPriceSpan = $('#calculatedTotalPriceText');
 
                 function updateCjPricing() {
-                    const shipping = parseFloat($('#cjShippingPrice').val()) || 0;
-                    const margin = parseFloat($('#userMargin').val()) || 0;
+                    // Get current values (default to 0 if empty)
+                    let shipping = parseFloat($shippingInput.val()) || 0;
+                    let earning = parseFloat($earningInput.val()) || 0;
+                    let platformFee = parseFloat($platformFeeInput.val()) || 0;
                     
-                    const subtotal = cjPrice + shipping + margin;
-                    const platformFee = subtotal * 0.10;
-                    const total = subtotal + platformFee;
-                    const roundedTotal = Math.ceil(total);
-
-                    $('#pricingSubtotal').text(currency + subtotal.toFixed(2));
-                    $('#pricingPlatformFee').text(currency + platformFee.toFixed(2));
-                    $('#calculatedTotalPriceText').text(currency + roundedTotal);
-                    $('#finalPriceInput').val(roundedTotal);
+                    // Calculate subtotal (Product Price + Shipping + Earning)
+                    let subtotal = cjPrice + shipping + earning;
+                    
+                    // Calculate platform fee (10% of subtotal)
+                    let calculatedPlatformFee = subtotal * PLATFORM_FEE_PERCENTAGE;
+                    
+                    // Update platform fee input if it's empty or if we're recalculating from shipping/earning
+                    if (!$platformFeeInput.val() || platformFee === 0) {
+                        platformFee = calculatedPlatformFee;
+                        $platformFeeInput.val(platformFee.toFixed(2));
+                    }
+                    
+                    // Calculate final total and round up (ceil)
+                    let totalBeforeRound = subtotal + platformFee;
+                    let finalTotal = Math.ceil(totalBeforeRound);
+                    
+                    // Update displays
+                    $subtotalSpan.text(currency + subtotal.toFixed(2));
+                    $totalPriceSpan.text(currency + finalTotal.toFixed(2));
+                    
+                    // Update final price input
+                    if ($finalPriceInput.length) {
+                        $finalPriceInput.val(finalTotal);
+                    }
+                    
+                    // Return values for debugging/logging if needed
+                    return {
+                        subtotal: subtotal,
+                        platformFee: platformFee,
+                        finalTotal: finalTotal
+                    };
                 }
-
-                $('#userMargin, #cjShippingPrice').on('input', function() {
+                
+                // Function to recalculate earning when final price changes
+                function updateEarningFromFinalPrice() {
+                    let finalPrice = parseFloat($finalPriceInput.val()) || 0;
+                    let shipping = parseFloat($shippingInput.val()) || 0;
+                    
+                    if (finalPrice > 0) {
+                        // Calculate platform fee from final price
+                        let platformFee = finalPrice * PLATFORM_FEE_PERCENTAGE;
+                        
+                        // Calculate subtotal (final price - platform fee)
+                        let subtotal = finalPrice - platformFee;
+                        
+                        // Calculate earning (subtotal - cjPrice - shipping)
+                        let earning = subtotal - cjPrice - shipping;
+                        
+                        // Only update if earning is a valid positive number
+                        if (earning >= 0) {
+                            $earningInput.val(earning.toFixed(2));
+                        }
+                        
+                        // Update platform fee
+                        $platformFeeInput.val(platformFee.toFixed(2));
+                    }
+                    
+                    // Update all calculations
+                    updateCjPricing();
+                }
+                
+                // Function to handle platform fee manual changes
+                function handlePlatformFeeChange() {
+                    let shipping = parseFloat($shippingInput.val()) || 0;
+                    let earning = parseFloat($earningInput.val()) || 0;
+                    let platformFee = parseFloat($platformFeeInput.val()) || 0;
+                    
+                    let subtotal = cjPrice + shipping + earning;
+                    let finalTotal = Math.ceil(subtotal + platformFee);
+                    
+                    $subtotalSpan.text(currency + subtotal.toFixed(2));
+                    $totalPriceSpan.text(currency + finalTotal.toFixed(2));
+                    $finalPriceInput.val(finalTotal);
+                }
+                
+                // Event Listeners
+                $shippingInput.on('input', function() {
+                    // Reset platform fee to calculated value when shipping changes
+                    let shipping = parseFloat($(this).val()) || 0;
+                    let earning = parseFloat($earningInput.val()) || 0;
+                    let subtotal = cjPrice + shipping + earning;
+                    let platformFee = subtotal * PLATFORM_FEE_PERCENTAGE;
+                    
+                    $platformFeeInput.val(platformFee.toFixed(2));
                     updateCjPricing();
                 });
+                
+                $earningInput.on('input', function() {
+                    // Reset platform fee to calculated value when earning changes
+                    let shipping = parseFloat($shippingInput.val()) || 0;
+                    let earning = parseFloat($(this).val()) || 0;
+                    let subtotal = cjPrice + shipping + earning;
+                    let platformFee = subtotal * PLATFORM_FEE_PERCENTAGE;
+                    
+                    $platformFeeInput.val(platformFee.toFixed(2));
+                    updateCjPricing();
+                });
+                
+                $platformFeeInput.on('input', handlePlatformFeeChange);
+                
+                $finalPriceInput.on('input', updateEarningFromFinalPrice);
+                
+                // Initialize calculations on page load
+                function initializePricing() {
+                    // Set default values if empty
+                    if (!$earningInput.val() || $earningInput.val() === '0.00') {
+                        // Calculate suggested earning (10% of CJ price)
+                        let suggestedEarning = cjPrice * 0.10;
+                        $earningInput.val(suggestedEarning.toFixed(2));
+                    }
+                    
+                    if (!$shippingInput.val() || $shippingInput.val() === '0.00') {
+                        $shippingInput.val('0.00');
+                    }
+                    
+                    // Calculate initial platform fee
+                    let shipping = parseFloat($shippingInput.val()) || 0;
+                    let earning = parseFloat($earningInput.val()) || 0;
+                    let subtotal = cjPrice + shipping + earning;
+                    let platformFee = subtotal * PLATFORM_FEE_PERCENTAGE;
+                    
+                    if (!$platformFeeInput.val() || $platformFeeInput.val() === '0.00') {
+                        $platformFeeInput.val(platformFee.toFixed(2));
+                    }
+                    
+                    // Run initial calculation
+                    updateCjPricing();
+                }
+                
+                // Initialize
+                initializePricing();
+                
+                // Add visual feedback for changes
+                console.log('CJ Pricing Calculator initialized with base price:', currency + cjPrice.toFixed(2));
             @endif
 
             // Related Courses functionality for Products

@@ -1,18 +1,26 @@
 <?php
-
 namespace App\Http\Controllers\Panel\Store;
 
-use App\Http\Controllers\Controller;
 use App\Models\Gift;
 use App\Models\ProductOrder;
 use App\Models\Sale;
 use App\Models\Order;
 use App\User;
+use App\Services\CJDropshippingService;
+use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\DB;
 
 class MyPurchaseController extends Controller
 {
+    protected CJDropshippingService $cjService;
+
+    public function __construct(CJDropshippingService $cjService)
+    {
+        $this->cjService = $cjService;
+    }
+
     public function index(Request $request)
     {
         $this->authorize("panel_products_purchases");
@@ -235,26 +243,26 @@ class MyPurchaseController extends Controller
 
         // Get membership order with relationships
         $membershipOrder = Order::query()
-        ->where('user_id', $user->id)
-        ->where('id', $orderId)
-        ->whereHas('orderItems', function($query) {
-            $query->whereNotNull('subscribe_id'); // Only membership orders
-        })
-        ->with([
-            'orderItems' => function($query) {
-                $query->whereNotNull('subscribe_id')
-                      ->with('subscribe');
-            }
-        ])
-        ->first();
+            ->where('user_id', $user->id)
+            ->where('id', $orderId)
+            ->whereHas('orderItems', function ($query) {
+                $query->whereNotNull('subscribe_id'); // Only membership orders
+            })
+            ->with([
+                'orderItems' => function ($query) {
+                    $query->whereNotNull('subscribe_id')
+                        ->with('subscribe');
+                }
+            ])
+            ->first();
 
         if (!empty($membershipOrder)) {
-        
-        // Get the order item with subscription details
+
+            // Get the order item with subscription details
             $orderItem = $membershipOrder->orderItems->first();
             $subscribe = $orderItem->subscribe ?? null;
-            
-            
+
+
             // Get the sale record for this order
             // Assuming you have a sales table with order_id foreign key
             $sale = Sale::query()
@@ -262,27 +270,27 @@ class MyPurchaseController extends Controller
                 ->where('subscribe_id', $subscribe->id)
                 ->first();
 
-                // dd($subscribe);
-            
+            // dd($subscribe);
+
             // Alternative: if sales table has buyer_id and product_id structure
             // $sale = Sale::query()
             //     ->where('buyer_id', $user->id)
             //     ->where('product_id', $subscribe->id ?? null)
             //     ->where('product_type', 'subscribe')
             //     ->first();
-            
+
             // Check if subscription is active
             $isActive = false;
             if ($subscribe && $sale) {
                 $currentTime = time();
                 // Calculate expiration time based on subscription days
                 $expirationTime = $orderItem->created_at + ($subscribe->days * 86400);
-                
-                $isActive = ($sale->payment_method !== 'offline' && 
-                            $currentTime >= $orderItem->created_at && 
-                            $currentTime < $expirationTime);
+
+                $isActive = ($sale->payment_method !== 'offline' &&
+                    $currentTime >= $orderItem->created_at &&
+                    $currentTime < $expirationTime);
             }
-            
+
             // Get membership features/prices from subscribe table
             $membershipFeatures = [
                 'title' => $subscribe->title ?? 'Membership',
@@ -293,7 +301,7 @@ class MyPurchaseController extends Controller
                 'is_active' => $isActive,
                 'usable_time' => $subscribe->days * 86400, // Convert days to seconds
             ];
-            
+
             $data = [
                 'pageTitle' => 'Membership Invoice',
                 'order' => $membershipOrder,
@@ -305,10 +313,152 @@ class MyPurchaseController extends Controller
                 'membershipFeatures' => $membershipFeatures,
                 'isActive' => $isActive,
             ];
-            
+
             return view('web.default.panel.financial.invoice', $data);
         }
 
         abort(404);
+    }
+
+    public function waitingDeliveryOrders(Request $request, int $productId)
+    {
+        $user = auth()->user();
+
+        $product = \App\Models\Product::where('id', $productId)
+            ->where('creator_id', $user->id)
+            ->firstOrFail();
+
+        if (!$product->is_cj_product) {
+            return response()->json(['code' => 422, 'message' => 'Not a CJ product'], 422);
+        }
+
+        $orders = ProductOrder::where('product_id', $productId)
+            ->where('status', ProductOrder::$waitingDelivery)
+            ->with(['buyer:id,full_name,email'])
+            ->orderByDesc('id')
+            ->get([
+                'id',
+                'product_id',
+                'buyer_id',
+                'quantity',
+                'cj_order_id',
+                'cj_shipment_id',
+                'cj_status',
+                'cj_tracking_number',
+                'created_at',
+            ]);
+
+        return response()->json(['code' => 200, 'data' => $orders]);
+    }
+
+    // ─────────────────────────────────────────────────────────────
+    // CJ — LIVE TRACKING  (called by buyer from My Purchases)
+    //
+    // Route: GET /panel/purchases/{productOrderId}/getProductOrder/tracking
+    //
+    // Flow:
+    //   1. If cj_tracking_number is already saved  → use it directly.
+    //   2. Else if cj_order_id exists              → call getOrderDetail to
+    //      extract the tracking number, then persist it to the DB.
+    //   3. If still no tracking number             → return friendly 404.
+    //   4. Call CJ trackInfo with the number       → return data to frontend.
+    // ─────────────────────────────────────────────────────────────
+    public function trackOrder(Request $request, int $productOrderId)
+    {
+        $user = auth()->user();
+
+        // Scope to buyer – a buyer can only see their own orders
+        $productOrder = ProductOrder::where('id', $productOrderId)
+            ->where('buyer_id', $user->id)
+            ->first();
+
+        // Also allow the seller (product creator) to track
+        if (!$productOrder) {
+            $productOrder = ProductOrder::whereHas('product', function ($q) use ($user) {
+                $q->where('creator_id', $user->id);
+            })
+                ->where('id', $productOrderId)
+                ->first();
+        }
+
+        if (!$productOrder) {
+            abort(403);
+        }
+
+        // ── Step 1: use already-saved tracking number ──────────────
+        $trackNumber = $productOrder->cj_tracking_number ?? null;
+
+        // ── Step 2: no tracking number yet → fetch from CJ order detail ──
+        if (empty($trackNumber) && !empty($productOrder->cj_order_id)) {
+            try {
+                $orderDetail = $this->cjService->queryOrder($productOrder->cj_order_id);
+                // dd($orderDetail);
+
+                // CJ returns the tracking number inside the order detail.
+                // Common field names: trackingNumber, waybillNumber
+                $trackNumber = $orderDetail['trackNumber'] ?? null;
+
+                // Persist so we don't round-trip CJ on every click
+                if (!empty($trackNumber)) {
+                    $productOrder->update(['cj_tracking_number' => $trackNumber]);
+                    Log::info('CJ trackOrder: saved tracking number', [
+                        'productOrderId' => $productOrderId,
+                        'trackNumber' => $trackNumber,
+                    ]);
+                }
+            } catch (\Throwable $e) {
+                Log::error('CJ trackOrder: getOrderDetail failed', [
+                    'productOrderId' => $productOrderId,
+                    'cj_order_id' => $productOrder->cj_order_id,
+                    'error' => $e->getMessage(),
+                ]);
+            }
+        }
+
+        // ── Step 3: still nothing → shipping not created yet ──────
+        if (empty($trackNumber)) {
+            return response()->json([
+                'code' => 404,
+                'result' => false,
+                'message' => 'Tracking not created. Shipment has not been created yet for this order.',
+                'data' => null,
+            ]);
+        }
+
+        // ── Step 4: call CJ trackInfo ──────────────────────────────
+        try {
+            $trackingData = $this->cjService->getTracking($trackNumber);
+            // dd($trackingData);
+
+            if ($trackingData) {
+                return response()->json([
+                    'code' => 200,
+                    'result' => true,
+                    'message' => 'Success',
+                    'data' => $trackingData,
+                ]);
+            }
+
+            // CJ returned data but empty/null
+            return response()->json([
+                'code' => 404,
+                'result' => false,
+                'message' => 'Tracking not created. Shipment still not created for this order.',
+                'data' => null,
+            ]);
+
+        } catch (\Throwable $e) {
+            Log::error('CJ trackOrder: getTracking failed', [
+                'productOrderId' => $productOrderId,
+                'trackNumber' => $trackNumber,
+                'error' => $e->getMessage(),
+            ]);
+            return response()->json([
+                'code' => 500,
+                'result' => false,
+                'message' => 'Tracking lookup failed: ' . $e->getMessage(),
+                'data' => null,
+            ]);
+        }
     }
 }

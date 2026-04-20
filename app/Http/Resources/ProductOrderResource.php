@@ -59,6 +59,7 @@ class ProductOrderResource extends JsonResource
             'purchaseInvoiceUrl' => url('/getPurchaseInvocie/' . $this->sale_id . '/productOrder/' . $this->id . '/invoice/' . apiAuth()->id),
             'pdfPath' => !empty($productData?->files[0]) ? url('/downloadPDF/' . $productData->files[0]->id) : '',
             'viewPdf' => !empty($productData?->files[0]) && ($productData->files[0]->online_viewer == 1) ? url($productData->files[0]->path) : '',
+            'cj_tracking_info' => $this->cj_tracking_info ?? null,
         ];
     }
 }

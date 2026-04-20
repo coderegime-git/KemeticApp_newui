@@ -856,7 +856,7 @@ class BlogController extends Controller
         Blog::where('id', $id)->increment('share_count');
         //$blog->increment('share_count');
 
-        $shareLink = url('/app/launch') . '?' . http_build_query([
+        $shareLink = url('/launch') . '?' . http_build_query([
             'page'         => 'article',
             'value'        => $blog->id   // or any unique share code
         ]);

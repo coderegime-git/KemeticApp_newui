@@ -324,11 +324,11 @@
 
         <!-- LEFT : Icon + Title -->
         <div class="kemetic-accordion-left"
-             href="#collapseFile{{ !empty($assignment) ? $assignment->id :'record' }}"
-             aria-controls="collapseFile{{ !empty($assignment) ? $assignment->id :'record' }}"
-             data-parent="#chapterContentAccordion{{ !empty($chapter) ? $chapter->id :'' }}"
+             data-bs-target="#collapseAssignment{{ !empty($assignment) ? $assignment->id :'record' }}"
+             aria-controls="collapseAssignment{{ !empty($assignment) ? $assignment->id :'record' }}"
+             data-bs-parent="#chapterContentAccordion{{ !empty($chapter) ? $chapter->id :'' }}"
              role="button"
-             data-toggle="collapse"
+             data-bs-toggle="collapse"
              aria-expanded="true">
 
             <span class="kemetic-icon">
@@ -366,20 +366,21 @@
                 </a>
             @endif
 
-            <i class="kemetic-chevron"
-               data-feather="chevron-down"
-               href="#collapseFile{{ !empty($assignment) ? $assignment->id :'record' }}"
-               aria-controls="collapseFile{{ !empty($assignment) ? $assignment->id :'record' }}"
-               data-parent="#chapterContentAccordion{{ !empty($chapter) ? $chapter->id :'' }}"
+            <div class="kemetic-chevron"
+               data-bs-target="#collapseAssignment{{ !empty($assignment) ? $assignment->id :'record' }}"
+               aria-controls="collapseAssignment{{ !empty($assignment) ? $assignment->id :'record' }}"
+               data-bs-parent="#chapterContentAccordion{{ !empty($chapter) ? $chapter->id :'' }}"
                role="button"
-               data-toggle="collapse"
-               aria-expanded="true"></i>
+               data-bs-toggle="collapse"
+               aria-expanded="true">
+                <i data-feather="chevron-down"></i>
+            </div>
         </div>
     </div>
 
     <!-- BODY -->
-    <div id="collapseFile{{ !empty($assignment) ? $assignment->id :'record' }}"
-         aria-labelledby="file_{{ !empty($assignment) ? $assignment->id :'record' }}"
+    <div id="collapseAssignment{{ !empty($assignment) ? $assignment->id :'record' }}"
+         aria-labelledby="assignment_{{ !empty($assignment) ? $assignment->id :'record' }}"
          class="collapse @if(empty($assignment)) show @endif kemetic-accordion-body">
 
         <div class="panel-collapse text-gray">

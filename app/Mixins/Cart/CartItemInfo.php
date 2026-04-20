@@ -51,6 +51,8 @@ class CartItemInfo
                                     ? ($webinar->price - $webinar->getDiscount($cart->ticket))
                                     : null;
         $info['type']         = 'Course';
+        $info['is_cj_product'] = 0;
+        $info['is_physical']  = null;
 
         return $info;
     }
@@ -70,6 +72,8 @@ class CartItemInfo
                                     ? ($bundle->price - $bundle->getDiscount($cart->ticket))
                                     : null;
         $info['type']         = 'Bundle';
+        $info['is_cj_product'] = 0;
+        $info['is_physical']  = null;
 
         return $info;
     }
@@ -119,6 +123,8 @@ class CartItemInfo
                                         ? $product->getPriceWithActiveDiscountPrice()
                                         : null);
         $info['type']         = !empty($specs) ? 'CJ Product' : 'Product';
+        $info['is_cj_product'] = (bool) $product->is_cj_product;
+        $info['is_physical']  = $product->type === 'physical';
 
         return $info;
     }
@@ -138,6 +144,8 @@ class CartItemInfo
         $info['price']        = $book->price ?? 0;
         $info['discountPrice']= null;
         $info['type']         = 'Book';
+        $info['is_cj_product'] = 0;
+        $info['is_physical']  = null;
 
         return $info;
     }
@@ -160,6 +168,8 @@ class CartItemInfo
         $info['rate']        = $creator->rates();
         $info['price']       = $cart->reserveMeeting->paid_amount;
         $info['type']        = 'Reserve Meeting';
+        $info['is_cj_product'] = 0;
+        $info['is_physical']  = null;
 
         return $info;
     }
@@ -179,6 +189,8 @@ class CartItemInfo
         $info['price']        = $subscribe->price;
         $info['discountPrice']= null;
         $info['type']         = 'Subscribe';
+        $info['is_cj_product'] = 0;
+        $info['is_physical']  = null;
 
         return $info;
     }
@@ -198,6 +210,8 @@ class CartItemInfo
         $info['price']        = $registrationPackage->price;
         $info['discountPrice']= null;
         $info['type']         = 'Registration Package';
+        $info['is_cj_product'] = 0;
+        $info['is_physical']  = null;
 
         return $info;
     }

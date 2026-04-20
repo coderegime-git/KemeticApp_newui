@@ -1,5 +1,16 @@
 @extends('web.default.layouts.app')
-
+<style>
+    .cart-delivery-notice {
+    margin-top: 4px;
+    font-size: 0.78rem;
+    color: #b45309;
+    background: #fef3c7;
+    border: 1px solid #fde68a;
+    border-radius: 4px;
+    padding: 2px 8px;
+    display: inline-block;
+}
+</style>
 @section('content')
   <div class="cart-page">
     <header class="cart-page-header">
@@ -25,7 +36,7 @@
                 </tr>
             </thead>
             @endif
-           
+           <!-- !empty($cartItemInfo['is_cj_product']) -->
             <tbody>
             @foreach($carts as $cart)
                 @php
@@ -40,6 +51,11 @@
                   <div class="cart-cart-meta">
                     <div class="cart-cart-title">{{ $cartItemInfo['title'] }}</div>
                     <div class="cart-cart-type"> {{ $cartItemInfo['type'] }}</div>
+                    @if($cartItemInfo['is_physical'])
+                        <div class="cart-delivery-notice">
+                             Estimated delivery: <strong>7–14 business days</strong>
+                        </div>
+                    @endif
                   </div>
                 </div>
               </td>

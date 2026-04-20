@@ -578,16 +578,15 @@ class PaymentController extends Controller
 
                     if(!empty($orderItem->book_id))
                     {
-                        $this->updateBookOrder($sale, $orderItem);
+                        $this->updateBookOrder($sale, $orderItem, $order);
                     }
                 }
             }
 
             // Set Cashback Accounting For All Order Items
             $cashbackAccounting->setAccountingForOrderItems($order->orderItems);
+            Cart::emptyCart($order->user_id);
         }
-
-        Cart::emptyCart($order->user_id);
     }
 
     private function handleLuluPrintJobAfterPayment($order)
@@ -718,10 +717,12 @@ class PaymentController extends Controller
                     "external_id" => "item-reference-1",
                     "printable_normalization" =>[
                         "cover" => [
-                            "source_url" => url($book->cover_pdf),
+                            "source_url" => "https://kemetic.app/store/lulu/cover/cover_1776494782.pdf",
+                            // "source_url" => url($book->cover_pdf),
                         ],
                         "interior" => [
-                            "source_url" => url($book->url),
+                            "source_url" => "https://kemetic.app/store/lulu/interior/interior_1776494755.pdf",
+                            // "source_url" => url($book->url),
                             "page_count" => $book->page_count // You need to add the correct page count
                         ],
                         "pod_package_id" => "0600X0900BWSTDPB060UW444MXX"
@@ -1092,15 +1093,26 @@ class PaymentController extends Controller
             }
  
             // Resolve country name & code
-            $countryCode = 'US';
-            $countryName = 'United States';
+            $countryCode = '';
+            $countryName = '';
             if (!empty($buyer->country_id)) {
-                $region = Region::find($buyer->country_id);
-                if ($region) {
-                    $countryCode = $region->code ?? $countryCode;
-                    $countryName = $region->title ?? $region->name ?? $countryName;
+                $country = Region::select('title')
+                                ->where('id', $buyer->country_id)
+                                ->where('type', Region::$country)
+                                ->first();
+                
+                if ($country) {
+                    $countryName = $country->title;
                 }
             }
+            $countryCode = Country::where('country_name', $countryName)->value('country_code');
+            // if (!empty($buyer->country_id)) {
+            //     $region = Region::find($buyer->country_id);
+            //     if ($region) {
+            //         $countryCode = $region->code ?? $countryCode;
+            //         $countryName = $region->title ?? $region->name ?? $countryName;
+            //     }
+            // }
  
             // ── Build product list for CJ ──────────────────────────
             if ($isCJProxy) {
@@ -1109,9 +1121,36 @@ class PaymentController extends Controller
                 $cjLogistic = $specs['cj_logistic'] ?? env('CJ_DEFAULT_LOGISTIC', 'PostNL');
                 $shopAmount = (string) ($specs['cj_price'] ?? 0);
             } else {
-                // Direct cj_vid on Product model
-                $cjVid      = $product->cj_vid;
-                $cjSku      = $product->cj_sku ?? null;
+                $cjVidFromOrder = $specs['cj_vid'] ?? null;
+                $cjVariant = null;
+
+                if ($cjVidFromOrder) {
+                    $cjVariant = \App\Models\ProductCjVariant::where('product_id', $product->id)
+                        ->where('vid', $cjVidFromOrder)
+                        ->first();
+                }
+
+                if (!$cjVariant) {
+                    $cjVariant = \App\Models\ProductCjVariant::where('product_id', $product->id)
+                        ->where('is_selected', 1)
+                        ->first();
+                }
+                
+                // Fallback: get any variant for this product
+                if (!$cjVariant) {
+                    $cjVariant = \App\Models\ProductCjVariant::where('product_id', $product->id)
+                        ->first();
+                }
+                
+                if (!$cjVariant) {
+                    Log::error('CJ Fulfil: no variant found in product_cj_variants', [
+                        'product_id' => $product->id,
+                    ]);
+                    return;
+                }
+                
+                $cjVid      = $cjVariant->vid;           // the real UUID vid
+                $cjSku      = $cjVariant->variant_sku ?? null;
                 $cjLogistic = env('CJ_DEFAULT_LOGISTIC', 'PostNL');
                 $shopAmount = (string) $product->price;
             }
@@ -1169,7 +1208,8 @@ class PaymentController extends Controller
  
             // ── Step 3: Confirm cart → shipmentOrderId ─────────────
             $confirmed       = $this->cj->confirmCart([$cjOrderId]);
-            $shipmentOrderId = $confirmed['shipmentsId'] ?? $confirmed['shipmentOrderId'] ?? null;
+            $shipmentOrderId = $cjOrderId;
+            // $shipmentOrderId = $confirmed['shipmentsId'] ?? $confirmed['shipmentOrderId'] ?? null;
  
             if (empty($shipmentOrderId)) {
                 Log::error('CJ Fulfil Step 3 failed: no shipmentOrderId', [

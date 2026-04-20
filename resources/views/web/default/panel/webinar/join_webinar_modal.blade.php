@@ -161,7 +161,7 @@
                     <button type="button"
                             class="input-group-text kemetic-copy js-copy"
                             data-input="link"
-                            data-toggle="tooltip"
+                            data-bs-toggle="tooltip"
                             title="{{ trans('public.copy') }}"
                             data-copy-text="{{ trans('public.copy') }}"
                             data-done-text="{{ trans('public.done') }}">

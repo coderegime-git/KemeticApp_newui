@@ -176,10 +176,10 @@
 
     <!-- HEADER -->
     <div class="kemetic-accordion-header" 
-         role="tab" 
+         role="button" 
          id="file_{{ !empty($file) ? $file->id :'record' }}"
-         data-toggle="collapse" 
-         href="#collapseFile{{ !empty($file) ? $file->id :'record' }}"
+         data-bs-toggle="collapse" 
+         data-bs-target="#collapseFile{{ !empty($file) ? $file->id :'record' }}"
          aria-expanded="true">
 
         <div class="kemetic-accordion-title">
@@ -216,8 +216,12 @@
                 </a>
             @endif
 
-            <i class="kemetic-chevron" 
-               data-feather="chevron-down"></i>
+            <div class="kemetic-chevron"
+                 data-bs-toggle="collapse"
+                 data-bs-target="#collapseFile{{ !empty($file) ? $file->id :'record' }}"
+                 role="button">
+                <i data-feather="chevron-down"></i>
+            </div>
         </div>
     </div>
 

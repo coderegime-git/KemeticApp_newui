@@ -250,8 +250,8 @@
          id="ticket_{{ !empty($ticket) ? $ticket->id :'record' }}">
 
         <div class="k-ticket-title"
-             href="#collapseTicket{{ !empty($ticket) ? $ticket->id :'record' }}"
-             data-toggle="collapse"
+             data-bs-target="#collapseTicket{{ !empty($ticket) ? $ticket->id :'record' }}"
+             data-bs-toggle="collapse"
              role="button">
             {{ !empty($ticket) ? $ticket->title : trans('public.add_new_ticket') }}
         </div>
@@ -263,14 +263,9 @@
                
 
                 <div class="btn-group dropdown k-dropdown mr-10">
-                    <button type="button" class="btn-transparent dropdown-toggle kemetic-more-btn" data-toggle="dropdown" data-display="static" aria-haspopup="true" aria-expanded="false">
+                    <button type="button" class="btn-transparent dropdown-toggle kemetic-more-btn" data-bs-toggle="dropdown" data-display="static" aria-haspopup="true" aria-expanded="false">
                         <i data-feather="more-vertical" height="20"></i>
                     </button>
-                    <!-- <button type="button"
-                            class="btn-transparent dropdown-toggle"
-                            data-toggle="dropdown">
-                        <i data-feather="more-vertical" class="k-icon" height="20"></i>
-                    </button> -->
                     <div class="dropdown-menu">
                         <a href="/panel/tickets/{{ $ticket->id }}/delete"
                            class="dropdown-item delete-action">
@@ -280,12 +275,12 @@
                 </div>
             @endif
 
-            <i data-feather="chevron-down"
-               class="k-icon collapse-chevron-icon"
-               height="20"
-               data-toggle="collapse"
-               href="#collapseTicket{{ !empty($ticket) ? $ticket->id :'record' }}">
-            </i>
+            <div class="collapse-chevron-icon"
+                 data-bs-toggle="collapse"
+                 data-bs-target="#collapseTicket{{ !empty($ticket) ? $ticket->id :'record' }}"
+                 role="button">
+                <i data-feather="chevron-down" class="k-icon" height="20"></i>
+            </div>
         </div>
     </div>
 

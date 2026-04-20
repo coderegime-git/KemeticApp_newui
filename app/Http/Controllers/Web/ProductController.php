@@ -460,12 +460,21 @@ class ProductController extends Controller
 
                 $activeDiscount = $product->getActiveDiscount();
 
+                $specifications = !empty($data['specifications']) ? $data['specifications'] : [];
+                if (!is_array($specifications)) {
+                    $specifications = json_decode($specifications, true) ?? [];
+                }
+
+                if (!empty($data['cj_variant_id'])) {
+                    $specifications['cj_vid'] = $data['cj_variant_id'];
+                }
+
                 $productOrder = ProductOrder::updateOrCreate([
                     'product_id' => $product->id,
                     'seller_id' => $product->creator_id,
                     'buyer_id' => $user->id,
                 ], [
-                    'specifications' => $specifications ? json_encode($specifications) : null,
+                    'specifications' => !empty($specifications) ? json_encode($specifications) : null,
                     'quantity' => $quantity,
                     'discount_id' => !empty($activeDiscount) ? $activeDiscount->id : null,
                     'status' => 'pending',

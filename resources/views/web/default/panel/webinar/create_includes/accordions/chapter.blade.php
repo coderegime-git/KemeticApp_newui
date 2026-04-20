@@ -198,8 +198,8 @@
         <li class="kemetic-chapter-item" data-id="{{ $chapter->id }}" data-chapter-order="{{ $chapter->order }}">
 
             <!-- HEADER -->
-            <div class="kemetic-chapter-header" data-toggle="collapse" role="button"
-                 data-target="#chapterCollapse{{ $chapter->id }}" aria-expanded="true">
+            <div class="kemetic-chapter-header" data-bs-toggle="collapse" role="button"
+                 data-bs-target="#collapseChapter{{ !empty($chapter) ? $chapter->id :'record' }}" aria-expanded="true">
 
                 <div class="header-left d-flex align-items-center">
                     <div class="kemetic-icon-box">
@@ -222,41 +222,41 @@
                     @endif
 
                     <!-- + ADD CONTENT DROPDOWN -->
-                    <div class="kemetic-dropdown">
-                        <button class="kemetic-btn-icon" data-toggle="dropdown">
+                    <div class="kemetic-dropdown dropdown">
+                        <button type="button" class="kemetic-btn-icon" data-bs-toggle="dropdown">
                             <i data-feather="plus"></i>
                         </button>
 
                         <div class="dropdown-menu kemetic-dropdown-menu">
 
                             @if($webinar->isWebinar())
-                                <button class="dropdown-item js-add-course-content-btn"
+                                <button type="button" class="dropdown-item js-add-course-content-btn"
                                     data-type="session" data-webinar-id="{{ $webinar->id }}"
                                     data-chapter="{{ $chapter->id }}">
                                     Add Session
                                 </button>
                             @endif
 
-                            <button class="dropdown-item js-add-course-content-btn"
+                            <button type="button" class="dropdown-item js-add-course-content-btn"
                                 data-type="file" data-webinar-id="{{ $webinar->id }}"
                                 data-chapter="{{ $chapter->id }}">
                                 Add File
                             </button>
 
-                            <button class="dropdown-item js-add-course-content-btn"
+                            <button type="button" class="dropdown-item js-add-course-content-btn"
                                 data-type="text_lesson" data-webinar-id="{{ $webinar->id }}"
                                 data-chapter="{{ $chapter->id }}">
                                 Add Text Lesson
                             </button>
 
-                            <button class="dropdown-item js-add-course-content-btn"
+                            <button type="button" class="dropdown-item js-add-course-content-btn"
                                 data-type="quiz" data-webinar-id="{{ $webinar->id }}"
                                 data-chapter="{{ $chapter->id }}">
                                 Add Quiz
                             </button>
 
                             @if(getFeaturesSettings('webinar_assignment_status'))
-                                <button class="dropdown-item js-add-course-content-btn"
+                                <button type="button" class="dropdown-item js-add-course-content-btn"
                                     data-type="assignment" data-webinar-id="{{ $webinar->id }}"
                                     data-chapter="{{ $chapter->id }}">
                                     Add Assignment
@@ -285,8 +285,9 @@
                     <i data-feather="move" class="kemetic-drag-icon"></i>
 
                     <!-- Chevron -->
-                     <!-- <i class="collapse-chevron-icon feather-chevron-up kemetic-chevron" data-feather="chevron-down" height="20" href="#collapseChapter{{ !empty($chapter) ? $chapter->id :'record' }}" aria-controls="collapseChapter{{ !empty($chapter) ? $chapter->id :'record' }}" data-parent="#chapterAccordion" role="button" data-toggle="collapse" aria-expanded="true"></i> -->
-                    <i data-feather="chevron-down" class="kemetic-chevron"></i>
+                    <div class="kemetic-chevron" data-bs-toggle="collapse" data-bs-target="#collapseChapter{{ !empty($chapter) ? $chapter->id :'record' }}" role="button">
+                        <i data-feather="chevron-down" height="20"></i>
+                    </div>
                 </div>
             </div>
 

@@ -15,6 +15,7 @@ use App\Models\Api\Webinar;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Cookie;
 use Illuminate\Validation\Rule;
+use Illuminate\Support\Facades\Log;
 use PhpOffice\PhpSpreadsheet\Calculation\Web;
 
 class AddCartController extends Controller
@@ -150,19 +151,36 @@ class AddCartController extends Controller
 
             $activeDiscount = $product->getActiveDiscount();
 
-            
-            $productOrder = ProductOrder::updateOrCreate([
+            $specifications = !empty($data['specifications']) ? $data['specifications'] : [];
+            if (!is_array($specifications)) {
+                $specifications = json_decode($specifications, true) ?? [];
+            }
+
+            if (!empty($data['cj_variant_id'])) {
+                $specifications['cj_vid'] = $data['cj_variant_id'];
+            }
+
+            $matchConditions = [
                 'product_id' => $product->id,
-                'seller_id' => $product->creator_id,
-                'buyer_id' => $user->id,
-                'sale_id' => null,
-                'status' => 'pending',
-            ], [
-                'specifications' => $specifications ? json_encode($specifications) : null,
+                'seller_id'  => $product->creator_id,
+                'buyer_id'   => $user->id,
+                'sale_id'    => null,
+                'status'     => 'pending',
+            ];
+
+            if (!empty($data['cj_variant_id'])) {
+                $matchConditions['specifications->cj_vid'] = $data['cj_variant_id'];
+            }
+            
+            $productOrder = ProductOrder::updateOrCreate(
+            $matchConditions,
+            [
+                'specifications' => !empty($specifications) ? json_encode($specifications) : null,
                 'quantity' => $quantity,
                 'discount_id' => !empty($activeDiscount) ? $activeDiscount->id : null,
                 'created_at' => time()
             ]);
+
             if($user_as_a_guest){
                 Cart::updateOrCreate([
                     'creator_id'=> 0,
@@ -224,13 +242,44 @@ class AddCartController extends Controller
             }
             $result = $this->storeUserWebinarCart($user, $data,$user_as_a_guest);
         } elseif ($item_name == 'product') {
-            $productOrder = ProductOrder::where('product_id', (int) $request->input('item_id'))->where('buyer_id', $user->id)->orderBy('id', 'desc')->first();
-            // print_r($productOrder->id);
+            $cjVariantId = $request->input('cj_variant_id');
+
+            //$productOrder = ProductOrder::where('product_id', (int) $request->input('item_id'))->where('buyer_id', $user->id)->orderBy('id', 'desc')->first();
+            // if (!empty($productOrder)) {
+            //     // print_r($productOrder->id);die;
+            //     // print_r(Cart::where('product_order_id', $productOrder->id)->where('creator_id', $user->id)->count());die;
+            //     if (Cart::where('product_order_id', $productOrder->id)->where('creator_id', $user->id)->count()) {
+            //         return apiResponse2(0, 'already_in_cart', 'this item is in the cart');
+            //     }
+            // }
+
+            $productOrderQuery = ProductOrder::where('product_id', (int) $request->input('item_id'))
+            ->where('buyer_id', $user->id)
+            ->where('status', 'pending')
+            ->whereNull('sale_id');
+
+            // ✅ Scope to exact variant if provided
+            if (!empty($cjVariantId)) {
+                $productOrderQuery->where('specifications->cj_vid', $cjVariantId);
+            }
+
+            $productOrder = $productOrderQuery->first();
+
             if (!empty($productOrder)) {
-                // print_r($productOrder->id);die;
-                // print_r(Cart::where('product_order_id', $productOrder->id)->where('creator_id', $user->id)->count());die;
-                if (Cart::where('product_order_id', $productOrder->id)->where('creator_id', $user->id)->count()) {
-                    return apiResponse2(0, 'already_in_cart', 'this item is in the cart');
+                $exists = $user_as_a_guest
+                    ? Cart::where('product_order_id', $productOrder->id)
+                        ->where('creator_guest_id', $user->id)
+                        ->where('creator_id', 0)
+                        ->exists()
+                    : Cart::where('product_order_id', $productOrder->id)
+                        ->where('creator_id', $user->id)
+                        ->exists();
+
+                if ($exists) {
+                    return apiResponse2(0, 'already_in_cart', !empty($cjVariantId)
+                        ? 'This product variant is already in the cart.'
+                        : 'This product is already in the cart.'
+                    );
                 }
             }
 

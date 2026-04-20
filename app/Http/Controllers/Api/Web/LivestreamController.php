@@ -860,7 +860,7 @@ class LivestreamController extends Controller
         Livestream::where('id', $id)->increment('share_count');
         //$livestream->increment('share_count');
 
-        $shareLink = url('/app/launch') . '?' . http_build_query([
+        $shareLink = url('/launch') . '?' . http_build_query([
             'page'         => 'livestream',
             'value'        => $livestream->id   // or any unique share code
         ]);

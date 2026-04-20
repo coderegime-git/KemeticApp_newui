@@ -278,10 +278,10 @@
          id="text_lesson_{{ !empty($textLesson) ? $textLesson->id :'record' }}">
 
         <div class="d-flex align-items-center"
-             href="#collapseTextLesson{{ !empty($textLesson) ? $textLesson->id :'record' }}"
+             data-bs-target="#collapseTextLesson{{ !empty($textLesson) ? $textLesson->id :'record' }}"
              aria-controls="collapseTextLesson{{ !empty($textLesson) ? $textLesson->id :'record' }}"
-             data-parent="#chapterContentAccordion{{ !empty($chapter) ? $chapter->id :'' }}"
-             role="button" data-toggle="collapse" aria-expanded="true">
+             data-bs-parent="#chapterContentAccordion{{ !empty($chapter) ? $chapter->id :'' }}"
+             role="button" data-bs-toggle="collapse" aria-expanded="true">
 
             <span class="kemetic-icon mr-10">
                 <i data-feather="file-text"></i>
@@ -317,13 +317,13 @@
                 </a>
             @endif
 
-            <i class="kemetic-chevron"
-               data-feather="chevron-down"
-               height="20"
-               href="#collapseTextLesson{{ !empty($textLesson) ? $textLesson->id :'record' }}"
-               aria-controls="collapseTextLesson{{ !empty($textLesson) ? $textLesson->id :'record' }}"
-               data-parent="#chapterContentAccordion{{ !empty($chapter) ? $chapter->id :'' }}"
-               role="button" data-toggle="collapse" aria-expanded="true"></i>
+            <div class="kemetic-chevron"
+                 data-bs-target="#collapseTextLesson{{ !empty($textLesson) ? $textLesson->id :'record' }}"
+                 aria-controls="collapseTextLesson{{ !empty($textLesson) ? $textLesson->id :'record' }}"
+                 data-bs-parent="#chapterContentAccordion{{ !empty($chapter) ? $chapter->id :'' }}"
+                 role="button" data-bs-toggle="collapse" aria-expanded="true">
+                <i data-feather="chevron-down" height="20"></i>
+            </div>
         </div>
     </div>
 

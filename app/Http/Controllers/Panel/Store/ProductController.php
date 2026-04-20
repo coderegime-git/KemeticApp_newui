@@ -11,6 +11,7 @@ use App\Models\ProductOrder;
 use App\Models\ProductSelectedFilterOption;
 use App\Models\ProductSpecification;
 use App\Models\ProductSpecificationCategory;
+use App\Models\ProductCjVariant;
 use App\Models\Translation\ProductTranslation;
 use App\Services\CJDropshippingService;
 use Illuminate\Http\Request;
@@ -400,8 +401,19 @@ class ProductController extends Controller
                 'description' => $data['description'],
             ]);
         } elseif ($currentStep == 2) {
+            $data['cj_shipping_price'] = !empty($data['cj_shipping_price']) ? convertPriceToDefaultCurrency($data['cj_shipping_price']) : null;
+            $data['cj_your_price'] = !empty($data['cj_your_price']) ? convertPriceToDefaultCurrency($data['cj_your_price']) : null;
+            $data['platform_price'] = !empty($data['platform_price']) ? convertPriceToDefaultCurrency($data['platform_price']) : null;
             $data['price'] = !empty($data['price']) ? convertPriceToDefaultCurrency($data['price']) : null;
             $data['delivery_fee'] = !empty($data['delivery_fee']) ? convertPriceToDefaultCurrency($data['delivery_fee']) : null;
+
+            if ($product->is_cj_product) {
+                ProductCjVariant::where('product_id', $product->id)
+                    ->update([
+                        'sell_price' => $data['price'],
+                        'updated_at' => time(),
+                    ]);
+            }
 
             $inventory = $data['inventory'];
             $productAvailability = $product->getAvailability();

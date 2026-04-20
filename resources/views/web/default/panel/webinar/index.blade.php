@@ -596,7 +596,7 @@ section {
 
                                     @if($webinar->isOwner($authUser->id) or $webinar->isPartnerTeacher($authUser->id))
                                         <div class="btn-group dropdown table-actions webinar-dropdown">
-                                            <button type="button" class="btn-transparent dropdown-toggle kemetic-more-btn" data-toggle="dropdown" data-display="static" aria-haspopup="true" aria-expanded="false">
+                                            <button type="button" class="btn-transparent dropdown-toggle kemetic-more-btn" data-bs-toggle="dropdown" data-display="static" aria-haspopup="true" aria-expanded="false">
                                                 <i data-feather="more-vertical" height="20"></i>
                                             </button>
                                             <div class="dropdown-menu ">

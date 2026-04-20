@@ -51,10 +51,9 @@
       <main class="dashboard-main">
       @yield('content')
     </main>
-    
-   
 </div>
 
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 <script src="/assets/default/js/app.js"></script>
 <script src="/assets/default/vendors/moment.min.js"></script>
 <script src="/assets/default/vendors/feather-icons/dist/feather.min.js"></script>
@@ -201,7 +200,7 @@ document.addEventListener('DOMContentLoaded', function() {
 @stack('scripts_bottom')
 
 <script src="/assets/default/js//parts/main.min.js"></script>
-<!-- <script src="/assets/default/js/panel/public.min.js"></script> -->
+    <script src="/assets/default/js/panel/public.min.js"></script>
 <script src="/assets/default/js/parts/content_delete.min.js"></script>
 <script src="/assets/default/js/panel/ai-content-generator.min.js"></script>
 <script src="/assets/default/js/panel/webinar.min.js"></script>

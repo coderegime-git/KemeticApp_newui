@@ -68,18 +68,31 @@ class Quiz extends Model implements TranslatableContract
         return $this->morphOne('App\Models\CoursePersonalNote', 'targetable');
     }
 
-
     public function increaseTotalMark($grade)
     {
-        $total_mark = $this->total_mark + $grade;
-        return $this->update(['total_mark' => $total_mark]);
+        return $this->newQuery()
+            ->where('id', $this->id)
+            ->update(['total_mark' => $this->total_mark + $grade]);
     }
 
     public function decreaseTotalMark($grade)
     {
-        $total_mark = $this->total_mark - $grade;
-        return $this->update(['total_mark' => $total_mark]);
+        return $this->newQuery()
+            ->where('id', $this->id)
+            ->update(['total_mark' => $this->total_mark - $grade]);
     }
+
+    // public function increaseTotalMark($grade)
+    // {
+    //     $total_mark = $this->total_mark + $grade;
+    //     return $this->update(['total_mark' => $total_mark]);
+    // }
+
+    // public function decreaseTotalMark($grade)
+    // {
+    //     $total_mark = $this->total_mark - $grade;
+    //     return $this->update(['total_mark' => $total_mark]);
+    // }
 
     public function getUserCertificate($user, $quiz_result)
     {

@@ -2199,7 +2199,7 @@ class WebinarController extends Controller
         Webinar::where('id', $id)->increment('share_count');
         //$webinar->increment('share_count');
 
-        $shareLink = url('/app/launch') . '?' . http_build_query([
+        $shareLink = url('/launch') . '?' . http_build_query([
             'page'         => 'course',
             'value'        => $webinar->id   // or any unique share code
         ]);

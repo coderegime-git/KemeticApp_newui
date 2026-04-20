@@ -348,6 +348,8 @@
 
 @section('content')
 
+
+
 <!-- ══ URGENCY STRIP ══ -->
 <div class="founders-urgency-strip">
   <div class="founders-urgency-inner">
@@ -356,6 +358,34 @@
     <span class="founders-urgency-dot"></span>
   </div>
 </div>
+
+<div class="membership-video-wrapper">
+  <div class="membership-video-container">
+      @php
+      $videoDemo = "https://youtu.be/9xBfox5lvLo?is=9ciOarG_yRkC3IVO";
+       $isYoutube = true;
+        $isIframe = true;
+        // Extract YouTube video ID
+        $youtubeId = '';
+        if (preg_match('/(?:youtube\.com\/(?:[^\/]+\/.+\/|(?:v|e(?:mbed)?)\/|.*[?&]v=)|youtu\.be\/)([^"&?\/\s]{11})/i', $videoDemo, $matches)) {
+            $youtubeId = $matches[1];
+        }
+        $iframeSrc = "https://www.youtube.com/embed/{$youtubeId}?autoplay=1&controls=1&showinfo=0&rel=0&modestbranding=1";
+      @endphp
+      <iframe 
+          id="videoIframe"
+          class="img-cover course-cover-img"
+          src="{{ $iframeSrc }}"
+          frameborder="0"
+          allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+          allowfullscreen
+          loading="lazy"
+          data-original-src="{{ $iframeSrc }}"
+          data-current-time="0"
+          data-is-playing="true">
+      </iframe>
+    </div>
+  </div>
 
 <!-- ══ FOUNDERS MANIFESTO SECTION ══ -->
 <div style="display:block !important; visibility:visible !important; width:100% !important; padding:25px 0px 10px !important; box-sizing:border-box !important; background:linear-gradient(180deg,rgba(255,193,7,0.06) 0%,transparent 100%) !important; border-top:1px solid rgba(255,193,7,0.15) !important;">

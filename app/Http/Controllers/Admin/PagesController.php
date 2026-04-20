@@ -43,10 +43,13 @@ class PagesController extends Controller
         $this->validate($request, [
             'locale' => 'required',
             'name' => 'required',
-            'link' => 'required|unique:pages,link',
+            // 'link' => 'required|unique:pages,link',
+            'link'            => 'required|unique:pages,link|regex:/^\//',
             'title' => 'required',
             'seo_description' => 'nullable|string|max:255',
             'content' => 'required',
+        ], [
+            'link.regex' => 'The link must start with "/".',
         ]);
 
         $data = $request->all();
@@ -105,10 +108,13 @@ class PagesController extends Controller
         $this->validate($request, [
             'locale' => 'required',
             'name' => 'required',
-            'link' => 'required|unique:pages,link,' . $page->id,
+            // 'link' => 'required|unique:pages,link,' . $page->id,
+            'link'            => 'required|unique:pages,link,' . $page->id . '|regex:/^\//',
             'title' => 'required',
             'seo_description' => 'nullable|string|max:255',
             'content' => 'required',
+        ], [
+            'link.regex' => 'The link must start with "/".',
         ]);
 
         $data = $request->all();

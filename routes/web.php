@@ -23,7 +23,7 @@ Route::get('/', function () {
 });
 
 Route::get('/apihome', 'App\Http\Controllers\Api\ApiHomeController@index');
-Route::get('/app/launch', 'App\Http\Controllers\Web\ShareRedirectController@launch');
+Route::get('/launch', 'App\Http\Controllers\Web\ShareRedirectController@launch');
 
 Route::get('getPurchaseInvocie/{id}/productOrder/{order_id}/invoice/{user_id}', [ProductOrderController::class, 'purchaseInvoice']);
 Route::get('getSalesInvocie/{id}/productOrder/{order_id}/invoice/{user_id}', [ProductOrderController::class, 'salesInvocie']);
