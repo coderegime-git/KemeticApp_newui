@@ -293,8 +293,16 @@ class UserController extends Controller
 
         $query = fromAndToDateFilter($from, $to, $query, 'created_at');
 
+        // if (!empty($full_name)) {
+        //     $query->where('full_name', 'like', "%$full_name%");
+        // }
         if (!empty($full_name)) {
-            $query->where('full_name', 'like', "%$full_name%");
+            $query->where(function($q) use ($full_name) {
+                $q->where('full_name', 'like', "%$full_name%")
+                ->orWhere('first_name', 'like', "%$full_name%")
+                ->orWhere('last_name', 'like', "%$full_name%")
+                ->orWhere('email', 'like', "%$full_name%");
+            });
         }
 
         if (!empty($sort)) {

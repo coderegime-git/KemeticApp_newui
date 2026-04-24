@@ -132,7 +132,10 @@ class ProductController extends Controller
 
         $data['unlimited_inventory'] = (!empty($data['unlimited_inventory']) and $data['unlimited_inventory'] == 1) ? 1 : 0;
 
+        $data['earning_price'] = !empty($data['earning_price']) ? convertPriceToDefaultCurrency((int) $data['earning_price']) : null;
+        $data['platform_price'] = !empty($data['platform_price']) ? convertPriceToDefaultCurrency((int) $data['platform_price']) : null;
         $data['price'] = !empty($data['price']) ? convertPriceToDefaultCurrency((int) $data['price']) : null;
+        
         $data['delivery_fee'] = !empty($data['delivery_fee']) ? convertPriceToDefaultCurrency((int) $data['delivery_fee']) : null;
 
         $product = Product::create([
@@ -140,6 +143,8 @@ class ProductController extends Controller
             'type' => $data['type'],
             'slug' => Product::makeSlug($data['title']),
             'category_id' => $data['category_id'],
+            'earning_price' => $data['earning_price'],
+            'own_platform_price' => $data['platform_price'],
             'price' => $data['price'],
             'unlimited_inventory' => $data['unlimited_inventory'],
             'ordering' => !empty($data['ordering']) and (int) $data['ordering'] == 1 ?? "on",

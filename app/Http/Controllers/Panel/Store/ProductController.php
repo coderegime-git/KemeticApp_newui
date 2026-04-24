@@ -404,6 +404,8 @@ class ProductController extends Controller
             $data['cj_shipping_price'] = !empty($data['cj_shipping_price']) ? convertPriceToDefaultCurrency($data['cj_shipping_price']) : null;
             $data['cj_your_price'] = !empty($data['cj_your_price']) ? convertPriceToDefaultCurrency($data['cj_your_price']) : null;
             $data['platform_price'] = !empty($data['platform_price']) ? convertPriceToDefaultCurrency($data['platform_price']) : null;
+            $data['earning_price'] = !empty($data['earning_price']) ? convertPriceToDefaultCurrency($data['earning_price']) : null;
+            $data['own_platform_price'] = !empty($data['own_platform_price']) ? convertPriceToDefaultCurrency($data['own_platform_price']) : null;
             $data['price'] = !empty($data['price']) ? convertPriceToDefaultCurrency($data['price']) : null;
             $data['delivery_fee'] = !empty($data['delivery_fee']) ? convertPriceToDefaultCurrency($data['delivery_fee']) : null;
 

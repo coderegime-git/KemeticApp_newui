@@ -434,7 +434,7 @@ class BookController extends Controller
             'gift_count' => $book->gift_count ?? 0,
             'comment_count' => $book->comments->count() ?? 0,
             'saved_count' => $book->saved_count ?? 0,
-            'review_count' => $book->review_count ?? 0,
+            'review_count' => $book->reviews->count() ?? 0,
             'is_liked' => $isLiked,
             'is_saved' => $isSaved,
             'rate' => $book->getRate(),

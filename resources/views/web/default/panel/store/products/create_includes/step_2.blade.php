@@ -359,7 +359,7 @@
                     // Clean price string from commas or currency symbols if any
                     $cjPrice = (float) filter_var($cjPriceRaw, FILTER_SANITIZE_NUMBER_FLOAT, FILTER_FLAG_ALLOW_FRACTION);
                     $defaultShipping = 0;
-                    $initialTotal = ($cjPrice + $defaultShipping) * 1.10;
+                    $initialTotal = $cjPrice ? ceil($cjPrice / 0.90) : 0;
                 @endphp
                 <div class="kemetic-card mb-20 shadow-sm" style="background: rgba(212,175,55,0.05); border: 1px dashed #d4af37;">
                     <h5 class="k-section-title font-16 mb-15">CJ Dropshipping Pricing</h5>
@@ -380,7 +380,7 @@
                         </div>
                         <div class="col-6">
                             <div class="form-group">
-                                <label class="kemetic-label">Your Earning</label>
+                                <label class="kemetic-label">Earning price</label>
                                 <input type="number" id="userMargin" name="cj_your_price" step="0.01" class="kemetic-input" placeholder="0.00" value="{{ (!empty($product) && !empty($product->cj_your_price)) ? convertPriceToUserCurrency($product->cj_your_price) : old('cj_your_price') }}">
                             </div>
                         </div>
@@ -407,19 +407,11 @@
                 </div>
             @endif
 
-            <div class="form-group">
-                <label class="input-label">{{ trans('public.price') }} ({{ $currency }})</label>
-                <input type="number" name="price" id="finalPriceInput"
-                       value="{{ (!empty($product) && !empty($product->price)) ? convertPriceToUserCurrency($product->price) : (!empty($cjProduct) ? ceil($cjPrice * 1.10) : old('price')) }}"
-                       class="form-control @error('price') is-invalid @enderror">
-                @error('price')<div class="invalid-feedback">{{ $message }}</div>@enderror
-            </div>
-
             @if($product->isPhysical())
                     @if(empty($cjProduct))
                         <div class="form-group">
                             <label class="input-label">{{ trans('update.delivery_fee') }}</label>
-                            <input type="number" name="delivery_fee"
+                            <input type="number" name="delivery_fee" data-price-input
                                 value="{{ (!empty($product) && !empty($product->delivery_fee)) ? convertPriceToUserCurrency($product->delivery_fee) : old('delivery_fee') }}"
                                 class="form-control @error('delivery_fee') is-invalid @enderror">
                         </div>
@@ -432,6 +424,30 @@
                            class="form-control">
                 </div>
             @endif
+
+           
+            @if(empty($cjProduct))
+                <div class="form-group">
+                    <label class="input-label">Earning {{ trans('public.price') }} ({{ $currency }})</label>
+                    <input id="computedEarningPrice" name="earning_price" type="text" class="form-control" value="{{ (!empty($product) && !empty($product->earning_price)) ? convertPriceToUserCurrency($product->earning_price) : old('earning_price', '0.00') }}">
+                    <p class="font-12 text-gray mt-10">- Earning amount after 10% platform fee is deducted from the total price.</p>
+                </div>
+
+                <div class="form-group">
+                    <label class="input-label">Platform {{ trans('public.price') }} (10%)</label>
+                    <input id="computedPlatformFee" name="own_platform_price" type="text" class="form-control" value="{{ (!empty($product) && !empty($product->own_platform_price)) ? convertPriceToUserCurrency($product->own_platform_price) : old('own_platform_price', '0.00') }}" readonly>
+                    <p class="font-12 text-gray mt-10">- Platform fee is 10% of the total price.</p>
+                </div>
+            @endif
+            
+
+             <div class="form-group">
+                <label class="input-label">{{ trans('public.price') }} ({{ $currency }})</label>
+                <input type="number" name="price" id="finalPriceInput" data-price-input
+                       value="{{ (!empty($product) && !empty($product->price)) ? convertPriceToUserCurrency($product->price) : (!empty($cjProduct) ? ceil($cjPrice * 1.10) : old('price')) }}"
+                       class="form-control @error('price') is-invalid @enderror">
+                @error('price')<div class="invalid-feedback">{{ $message }}</div>@enderror
+            </div>
 
             <div class="form-group js-inventory-inputs {{ ($product->unlimited_inventory ?? false) ? 'd-none' : '' }}">
                 <label class="input-label">{{ trans('update.inventory') }}</label>
@@ -601,12 +617,11 @@
     <script src="/assets/default/vendors/select2/select2.min.js"></script>
     <script>
         $(document).ready(function() {
+            const currency = '{{ $currency }}';
+            const PLATFORM_FEE_PERCENTAGE = 0.10;
+
             @if(!empty($cjProduct))
                 const cjPrice = {{ $cjProduct['sellPrice'] ?? 0 }};
-                const currency = '{{ $currency }}';
-                const PLATFORM_FEE_PERCENTAGE = 0.10;
-                
-                // Cache DOM elements
                 const $shippingInput = $('#cjShippingPrice');
                 const $earningInput = $('#userMargin');
                 const $platformFeeInput = $('#platformprice');
@@ -615,145 +630,121 @@
                 const $totalPriceSpan = $('#calculatedTotalPriceText');
 
                 function updateCjPricing() {
-                    // Get current values (default to 0 if empty)
                     let shipping = parseFloat($shippingInput.val()) || 0;
                     let earning = parseFloat($earningInput.val()) || 0;
-                    let platformFee = parseFloat($platformFeeInput.val()) || 0;
-                    
-                    // Calculate subtotal (Product Price + Shipping + Earning)
-                    let subtotal = cjPrice + shipping + earning;
-                    
-                    // Calculate platform fee (10% of subtotal)
-                    let calculatedPlatformFee = subtotal * PLATFORM_FEE_PERCENTAGE;
-                    
-                    // Update platform fee input if it's empty or if we're recalculating from shipping/earning
-                    if (!$platformFeeInput.val() || platformFee === 0) {
-                        platformFee = calculatedPlatformFee;
-                        $platformFeeInput.val(platformFee.toFixed(2));
-                    }
-                    
-                    // Calculate final total and round up (ceil)
-                    let totalBeforeRound = subtotal + platformFee;
-                    let finalTotal = Math.ceil(totalBeforeRound);
-                    
-                    // Update displays
-                    $subtotalSpan.text(currency + subtotal.toFixed(2));
-                    $totalPriceSpan.text(currency + finalTotal.toFixed(2));
-                    
-                    // Update final price input
-                    if ($finalPriceInput.length) {
-                        $finalPriceInput.val(finalTotal);
-                    }
-                    
-                    // Return values for debugging/logging if needed
-                    return {
-                        subtotal: subtotal,
-                        platformFee: platformFee,
-                        finalTotal: finalTotal
-                    };
+                    let baseCost = cjPrice + shipping;
+                    let totalCost = baseCost + earning;
+                    let finalTotal = totalCost > 0 ? Math.ceil(totalCost / (1 - PLATFORM_FEE_PERCENTAGE)) : 0;
+                    let platformFee = parseFloat((finalTotal * PLATFORM_FEE_PERCENTAGE).toFixed(2));
+
+                    $subtotalSpan.text(currency + totalCost.toFixed(2));
+                    $totalPriceSpan.text(currency + finalTotal);
+                    $finalPriceInput.val(finalTotal);
+                    $platformFeeInput.val(platformFee.toFixed(2));
+                    // $totalPriceSpan.text(currency + finalTotal.toFixed(2));
+
+                    // if ($finalPriceInput.length) {
+                    //     $finalPriceInput.val(finalTotal);
+                    // }
+
+                    // if (!$platformFeeInput.val() || parseFloat($platformFeeInput.val()) === 0) {
+                    //     $platformFeeInput.val(platformFee.toFixed(2));
+                    // }
+
+                    // return {
+                    //     totalCost: totalCost,
+                    //     platformFee: platformFee,
+                    //     finalTotal: finalTotal
+                    // };
                 }
-                
-                // Function to recalculate earning when final price changes
+
                 function updateEarningFromFinalPrice() {
                     let finalPrice = parseFloat($finalPriceInput.val()) || 0;
                     let shipping = parseFloat($shippingInput.val()) || 0;
-                    
+                    let baseCost = cjPrice + shipping;
+
                     if (finalPrice > 0) {
-                        // Calculate platform fee from final price
-                        let platformFee = finalPrice * PLATFORM_FEE_PERCENTAGE;
-                        
-                        // Calculate subtotal (final price - platform fee)
-                        let subtotal = finalPrice - platformFee;
-                        
-                        // Calculate earning (subtotal - cjPrice - shipping)
-                        let earning = subtotal - cjPrice - shipping;
-                        
-                        // Only update if earning is a valid positive number
+                        let platformFee = parseFloat((finalPrice * PLATFORM_FEE_PERCENTAGE).toFixed(2));
+                        let earning = finalPrice - platformFee - baseCost;
                         if (earning >= 0) {
                             $earningInput.val(earning.toFixed(2));
                         }
-                        
-                        // Update platform fee
                         $platformFeeInput.val(platformFee.toFixed(2));
                     }
-                    
-                    // Update all calculations
+
                     updateCjPricing();
                 }
-                
-                // Function to handle platform fee manual changes
+
                 function handlePlatformFeeChange() {
                     let shipping = parseFloat($shippingInput.val()) || 0;
                     let earning = parseFloat($earningInput.val()) || 0;
-                    let platformFee = parseFloat($platformFeeInput.val()) || 0;
-                    
-                    let subtotal = cjPrice + shipping + earning;
-                    let finalTotal = Math.ceil(subtotal + platformFee);
-                    
-                    $subtotalSpan.text(currency + subtotal.toFixed(2));
+                    let baseCost = cjPrice + shipping;
+                    let finalTotal = Math.ceil((baseCost + earning) / (1 - PLATFORM_FEE_PERCENTAGE));
+                    let platformFee = parseFloat((finalTotal * PLATFORM_FEE_PERCENTAGE).toFixed(2));
+
+                    $subtotalSpan.text(currency + (baseCost + earning).toFixed(2));
                     $totalPriceSpan.text(currency + finalTotal.toFixed(2));
                     $finalPriceInput.val(finalTotal);
+                    $platformFeeInput.val(platformFee.toFixed(2));
                 }
-                
-                // Event Listeners
-                $shippingInput.on('input', function() {
-                    // Reset platform fee to calculated value when shipping changes
-                    let shipping = parseFloat($(this).val()) || 0;
-                    let earning = parseFloat($earningInput.val()) || 0;
-                    let subtotal = cjPrice + shipping + earning;
-                    let platformFee = subtotal * PLATFORM_FEE_PERCENTAGE;
-                    
-                    $platformFeeInput.val(platformFee.toFixed(2));
-                    updateCjPricing();
-                });
-                
-                $earningInput.on('input', function() {
-                    // Reset platform fee to calculated value when earning changes
-                    let shipping = parseFloat($shippingInput.val()) || 0;
-                    let earning = parseFloat($(this).val()) || 0;
-                    let subtotal = cjPrice + shipping + earning;
-                    let platformFee = subtotal * PLATFORM_FEE_PERCENTAGE;
-                    
-                    $platformFeeInput.val(platformFee.toFixed(2));
-                    updateCjPricing();
-                });
-                
+
+                $shippingInput.on('input', updateCjPricing);
+                $earningInput.on('input', updateCjPricing);
                 $platformFeeInput.on('input', handlePlatformFeeChange);
-                
                 $finalPriceInput.on('input', updateEarningFromFinalPrice);
-                
-                // Initialize calculations on page load
-                function initializePricing() {
-                    // Set default values if empty
-                    if (!$earningInput.val() || $earningInput.val() === '0.00') {
-                        // Calculate suggested earning (10% of CJ price)
-                        let suggestedEarning = cjPrice * 0.10;
-                        $earningInput.val(suggestedEarning.toFixed(2));
-                    }
-                    
-                    if (!$shippingInput.val() || $shippingInput.val() === '0.00') {
-                        $shippingInput.val('0.00');
-                    }
-                    
-                    // Calculate initial platform fee
-                    let shipping = parseFloat($shippingInput.val()) || 0;
-                    let earning = parseFloat($earningInput.val()) || 0;
-                    let subtotal = cjPrice + shipping + earning;
-                    let platformFee = subtotal * PLATFORM_FEE_PERCENTAGE;
-                    
-                    if (!$platformFeeInput.val() || $platformFeeInput.val() === '0.00') {
-                        $platformFeeInput.val(platformFee.toFixed(2));
-                    }
-                    
-                    // Run initial calculation
-                    updateCjPricing();
+
+                if (!$earningInput.val() || $earningInput.val() === '0.00') {
+                    $earningInput.val((cjPrice * 0.10).toFixed(2));
                 }
-                
-                // Initialize
-                initializePricing();
-                
-                // Add visual feedback for changes
-                console.log('CJ Pricing Calculator initialized with base price:', currency + cjPrice.toFixed(2));
+                if (!$shippingInput.val() || $shippingInput.val() === '0.00') {
+                    $shippingInput.val('0.00');
+                }
+                updateCjPricing();
+
+                // function initializePricing() {
+                //     if (!$earningInput.val() || $earningInput.val() === '0.00') {
+                //         let suggestedEarning = cjPrice * 0.10;
+                //         $earningInput.val(suggestedEarning.toFixed(2));
+                //     }
+                //     if (!$shippingInput.val() || $shippingInput.val() === '0.00') {
+                //         $shippingInput.val('0.00');
+                //     }
+                //     let shipping = parseFloat($shippingInput.val()) || 0;
+                //     let earning = parseFloat($earningInput.val()) || 0;
+                //     let subtotal = cjPrice + shipping + earning;
+                //     let platformFee = subtotal * PLATFORM_FEE_PERCENTAGE;
+
+                //     if (!$platformFeeInput.val() || $platformFeeInput.val() === '0.00') {
+                //         $platformFeeInput.val(platformFee.toFixed(2));
+                //     }
+                //     updateCjPricing();
+                // }
+                updateCjPricing();
+
+                // initializePricing();
+            @endif
+
+            @if(empty($cjProduct))
+
+                const $ncjEarningInput  = $('#computedEarningPrice');   // editable earning
+                const $ncjDeliveryInput = $('input[name="delivery_fee"]');
+                const $ncjPlatformInput = $('#computedPlatformFee');
+                const $ncjPriceInput    = $('#finalPriceInput');
+
+                function updateNonCjPricing() {
+                    let earning     = parseFloat($ncjEarningInput.val())  || 0;
+                    let delivery    = parseFloat($ncjDeliveryInput.val()) || 0;
+                    let subtotal    = earning + delivery;
+                    let platformFee = parseFloat((subtotal * PLATFORM_FEE_PERCENTAGE).toFixed(2));
+                    let total       = Math.ceil(subtotal + platformFee);
+
+                    $ncjPlatformInput.val(platformFee.toFixed(2));
+                    $ncjPriceInput.val(total);
+                }
+
+                $ncjEarningInput.on('input', updateNonCjPricing);
+                $ncjDeliveryInput.on('input', updateNonCjPricing);
+                updateNonCjPricing();
             @endif
 
             // Related Courses functionality for Products

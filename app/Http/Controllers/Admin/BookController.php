@@ -296,7 +296,7 @@ class BookController extends Controller
 
         // Update the book
         $book->update([
-            'creator_id' => !empty($data['author_id']) ? $data['author_id'] : auth()->id(),
+            // 'creator_id' => !empty($data['author_id']) ? $data['author_id'] : auth()->id(),
             'category_id' => $data['category_id'],
             'slug' => Book::makeSlug($data['title']),
             // 'image_cover' => $data['image_cover'],

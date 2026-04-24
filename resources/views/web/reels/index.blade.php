@@ -333,6 +333,61 @@ input[type="file"]::file-selector-button:hover {
   filter: brightness(0) invert(1);
 }
 
+/* AI Policy Notice */
+.ai-policy-notice {
+  display: flex;
+  gap: 10px;
+  align-items: flex-start;
+  background: #fffbe6;
+  border: 1.5px solid #f5d800;
+  border-radius: 10px;
+  padding: 10px 14px;
+  margin-bottom: 20px;
+}
+
+[data-theme="dark"] .ai-policy-notice {
+  background: #2a2200;
+  border-color: #c8a84b;
+}
+
+.ai-policy-icon {
+  font-size: 18px;
+  flex-shrink: 0;
+  line-height: 1.4;
+}
+
+.ai-policy-text {
+  font-size: 13px;
+  line-height: 1.5;
+  color: #7a5500;
+}
+
+[data-theme="dark"] .ai-policy-text {
+  color: #e0c060;
+}
+
+.ai-policy-text strong {
+  display: block;
+  font-weight: 700;
+  color: #8a6000;
+  margin-bottom: 2px;
+}
+
+[data-theme="dark"] .ai-policy-text strong {
+  color: #f0d080;
+}
+
+.ai-policy-text a {
+  color: #b8860b;
+  font-weight: 600;
+  text-decoration: underline;
+  display: inline-block;
+  margin-top: 4px;
+}
+
+[data-theme="dark"] .ai-policy-text a {
+  color: #c8a84b;
+}
 </style>
 @section('content')
 
@@ -631,6 +686,14 @@ input[type="file"]::file-selector-button:hover {
             <div class="modal-header">
                 <h5 class="modal-title" id="uploadModalLabel">Upload New Portals</h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="ai-policy-notice">
+              <span class="ai-policy-icon">⚠️</span>
+              <div class="ai-policy-text">
+                  <strong>No fully AI-generated content.</strong>
+                  AI may assist, but real human creation is required. Faceless &amp; animation allowed.
+                  <a href="/pages/ai-policy" target="_blank">View AI Policy →</a>
+              </div>
             </div>
             <div class="modal-body">
                 <form id="uploadForm" action="/reels" method="POST" enctype="multipart/form-data">

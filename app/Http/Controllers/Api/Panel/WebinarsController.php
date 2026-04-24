@@ -596,6 +596,8 @@ class WebinarsController extends Controller
             $data['subscribe'] = (!empty($data['subscribe']) and ($data['subscribe'] == 'on' or $data['subscribe'] == 1)) ? 1 : 0;
             $data['private'] = (!empty($data['private']) and ($data['private'] == 'on' or $data['private'] == 1)) ? 1 : 0;
             $data['access_days'] = !empty($data['access_days']) ?? 0;
+            $data['earning_price'] = !empty($data['earning_price']) ? convertPriceToDefaultCurrency($data['earning_price']) : null;
+            $data['platform_price'] = !empty($data['platform_price']) ? convertPriceToDefaultCurrency($data['platform_price']) : null;
             $data['price'] = !empty($data['price']) ? convertPriceToDefaultCurrency($data['price']) : null;
             $data['organization_price'] = !empty($data['organization_price']) ? convertPriceToDefaultCurrency($data['organization_price']) : null;
             $data['status'] = 'pending';
@@ -624,6 +626,8 @@ class WebinarsController extends Controller
                 'video_demo',
                 'video_demo_source',
                 'capacity',
+                'earning_price',
+                'platform_price',
                 'price',
                 'access_days',
                 'organization_price',

@@ -688,6 +688,8 @@ class WebinarController extends Controller
         if ($currentStep == 3) {
             $data['subscribe'] = !empty($data['subscribe']) ? true : false;
             $data['access_days'] = !empty($data['access_days']) ?? 0;
+            $data['earning_price'] = !empty($data['earning_price']) ? convertPriceToDefaultCurrency($data['earning_price']) : null;
+            $data['platform_price'] = !empty($data['platform_price']) ? convertPriceToDefaultCurrency($data['platform_price']) : null;
             $data['price'] = !empty($data['price']) ? convertPriceToDefaultCurrency($data['price']) : null;
             $data['organization_price'] = !empty($data['organization_price']) ? convertPriceToDefaultCurrency($data['organization_price']) : null;
         }

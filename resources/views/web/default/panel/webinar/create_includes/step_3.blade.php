@@ -308,9 +308,22 @@ body {
             <p class="font-12 text-gray mt-10">- {{ trans('update.access_days_input_hint') }}</p>
         </div>
 
+    
+        <div class="form-group mt-15">
+            <label class="input-label">Earning {{ trans('public.price') }} ({{ $currency }})</label>
+            <input id="webinarEarningPrice" name="earning_price" type="number" class="form-control" value="{{ (!empty($webinar) and !empty($webinar->earning_price)) ? convertPriceToUserCurrency($webinar->earning_price) : old('earning_price') }}" />
+            <p class="font-12 text-gray mt-10">- This is the amount you earn after platform fee.</p>
+        </div>
+
+        <div class="form-group mt-15">
+            <label class="input-label">Platform {{ trans('public.price') }} (10%)</label>
+            <input id="webinarPlatformFee" name="platform_price" type="text" class="form-control" value="{{ (!empty($webinar) and !empty($webinar->platform_price)) ? convertPriceToUserCurrency($webinar->platform_price) : old('platform_price') }}" readonly />
+            <p class="font-12 text-gray mt-10">- Platform fee is 10% of the earning price.</p>
+        </div>
+
         <div class="form-group mt-15">
             <label class="input-label">{{ trans('public.price') }} ({{ $currency }})</label>
-            <input type="number" name="price" value="{{ (!empty($webinar) and !empty($webinar->price)) ? convertPriceToUserCurrency($webinar->price) : old('price') }}" class="form-control @error('price')  is-invalid @enderror" placeholder="{{ trans('public.0_for_free') }}"/>
+            <input id="webinarPrice" type="number" name="price" value="{{ (!empty($webinar) and !empty($webinar->price)) ? convertPriceToUserCurrency($webinar->price) : old('price') }}" class="form-control @error('price')  is-invalid @enderror" placeholder="{{ trans('public.0_for_free') }}" readonly/>
             @error('price')
             <div class="invalid-feedback">
                 {{ $message }}
@@ -405,7 +418,35 @@ function initDatePlaceholders() {
 }
 
 // Call on page load
-document.addEventListener('DOMContentLoaded', initDatePlaceholders);
+document.addEventListener('DOMContentLoaded', function () {
+    initDatePlaceholders();
+    initWebinarPriceBreakdown();
+});
+
+function initWebinarPriceBreakdown() {
+    const priceInput = document.querySelector('#webinarPrice');
+    const earningInput = document.querySelector('#webinarEarningPrice');
+    const platformInput = document.querySelector('#webinarPlatformFee');
+    const currency = '{{ $currency }}';
+    const PLATFORM_FEE_RATE = 0.10;
+
+    if (!priceInput || !earningInput || !platformInput) {
+        return;
+    }
+
+    function updatePriceFields() {
+        let earningValue = parseFloat(earningInput.value) || 0;
+        let platformFee = parseFloat((earningValue * PLATFORM_FEE_RATE).toFixed(2));
+        let totalPrice = parseFloat((earningValue + platformFee).toFixed(2));
+
+        platformInput.value = platformFee.toFixed(2);
+        priceInput.value = Math.round(totalPrice);
+    }
+
+    earningInput.addEventListener('input', updatePriceFields);
+
+    updatePriceFields();
+}
 
 function formatDateToYMD(input) {
     if (input.value) {
