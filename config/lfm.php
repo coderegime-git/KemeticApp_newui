@@ -59,7 +59,7 @@ return [
              'folder_name' => '/',
             //'folder_name' => '/imageupload/store',
             'startup_view' => 'list',
-            'max_size' => 102400, // size in KB
+            'max_size' => 262144, // size in KB
             'thumb' => true,
             'thumb_width' => 80,
             'thumb_height' => 80,
@@ -69,31 +69,18 @@ return [
                 'image/pjpeg',
                 'image/png',
                 'image/gif',
-                'image/svg+xml', // 'svg'
                 'application/pdf', // 'pdf'
-                'application/msword', // 'doc'
-                'application/vnd.openxmlformats-officedocument.wordprocessingml.document', // 'docx'
-                'application/vnd.ms-powerpoint', // 'ppt'
-                'application/vnd.openxmlformats-officedocument.presentationml.presentation', // 'pptx'
-                'application/x-rar-compressed', // 'rar'
-                'application/zip', // 'zip'
                 'video/mp4', // 'mp4'
                 'video/x-matroska', // 'mkv'
                 'video/x-msvideo', // 'avi'
                 'audio/mpeg', // 'mp3'
-                'font/woff', // 'woff'
-                'font/woff2', // 'woff2'
-                'font/ttf', // 'ttf'
-                'application/vnd.ms-fontobject', // 'eot'
-                'application/json', // 'json'
-                '.zip',
             ],
         ],
         'image' => [
             //'folder_name' => 'imageupload/store',
              'folder_name' => '/',
             'startup_view' => 'list',
-            'max_size' => 102400, // size in KB
+            'max_size' => 262144, // size in KB
             'thumb' => true,
             'thumb_width' => 80,
             'thumb_height' => 80,
@@ -102,24 +89,11 @@ return [
                 'image/pjpeg',
                 'image/png',
                 'image/gif',
-                'image/svg+xml', // 'svg'
                 'application/pdf', // 'pdf'
-                'application/msword', // 'doc'
-                'application/vnd.openxmlformats-officedocument.wordprocessingml.document', // 'docx'
-                'application/vnd.ms-powerpoint', // 'ppt'
-                'application/vnd.openxmlformats-officedocument.presentationml.presentation', // 'pptx'
-                'application/x-rar-compressed', // 'rar'
-                'application/zip', // 'zip'
                 'video/mp4', // 'mp4'
                 'video/x-matroska', // 'mkv'
                 'video/x-msvideo', // 'avi'
                 'audio/mpeg', // 'mp3'
-                'font/woff', // 'woff'
-                'font/woff2', // 'woff2'
-                'font/ttf', // 'ttf'
-                'application/vnd.ms-fontobject', // 'eot'
-                'application/json', // 'json'
-                '.zip',
             ],
         ],
     ],
@@ -140,15 +114,15 @@ return [
     |--------------------------------------------------------------------------
      */
 
-    'rename_file' => false,
+    'rename_file' => true,
 
-    'rename_duplicates' => false,
+    'rename_duplicates' => true,
 
     'alphanumeric_filename' => false,
 
     'alphanumeric_directory' => false,
 
-    'should_validate_size' => false,
+    'should_validate_size' => true,
 
     'should_validate_mime' => true,
 
@@ -158,10 +132,38 @@ return [
     'over_write_on_duplicate' => false,
 
     // mimetypes of executables to prevent from uploading
-    'disallowed_mimetypes' => ['text/x-php', 'text/html', 'text/javascript', 'application/x-shockwave-flash', 'text/plain'],
+    'disallowed_mimetypes' => [
+        'text/x-php',
+        'application/x-php',
+        'application/x-httpd-php',
+        'text/html',
+        'text/javascript',
+        'application/javascript',
+        'application/x-shockwave-flash',
+        'text/plain',
+        'application/octet-stream',
+        'text/x-shellscript',
+    ],
 
     // extensions of executables to prevent from uploading
-    'disallowed_extensions' => ['php', 'html', 'js', 'jsx', 'swf', 'phtml'],
+    'disallowed_extensions' => [
+        'php','php1','php2','php3','php4','php5','php7','php8',
+        'phtml','phar','phps','pht',
+        'html','htm','xhtml','shtml',
+        'js','jsx',
+        'exe','sh','bat','cmd','com','cpl','ps1',
+        'jar','msi',
+        'doc','docx','ppt','pptx',
+        'vb','vbs','wsf','wsh',
+        'json','xml','yml','yaml',
+        'env','ini','conf','config',
+        'htaccess','htpasswd',
+        'inc',
+        'asp','aspx',
+        'jsp','jspx',
+        'cgi','fcgi','pl','py',
+        'log',
+    ],
 
     // Item Columns
     'item_columns' => ['name', 'url', 'time', 'icon', 'is_file', 'is_image', 'thumb_url'],

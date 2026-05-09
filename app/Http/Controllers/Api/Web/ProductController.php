@@ -44,40 +44,354 @@ class ProductController extends Controller
         }
     }
 
+    // public function index(Request $request)
+    // {
+    //     $user = $this->getUserIdFromToken($request);
+        
+    //     if($user)
+    //     {
+    //         $user_id = $user->id;
+    //     }
+    //     else
+    //     {
+    //         $user_id = null;
+    //     }
+
+    //     $data = $request->all();
+
+    //     // Default limit and offset values
+    //     $limit = (int) $request->input('limit', 10); // Default limit is 10
+    //     $offset = (int) $request->input('offset', 0); // Default offset is 0
+
+    //     // Base query
+    //     // $query = Product::where('products.status', Product::$active)
+    //     //     ->where('ordering', true)
+    //     //     ->where('price', '!=', 0);
+    //         // ->orderBy('id', 'desc');
+    //     $query = Product::with('cjVariants')          // ← add this
+    //     ->where('products.status', Product::$active)
+    //     ->where('ordering', true)
+    //     ->where('price', '!=', 0);
+
+    //     // Apply any additional filters
+    //     $query = $this->handleFilters($request, $query);
+
+    //     if ($user_id) {
+    //         // Get user's like statistics by category
+    //         $userCategoryStats = DB::table('product_like')
+    //             ->join('products', 'product_like.product_id', '=', 'products.id')
+    //             ->where('product_like.user_id', $user_id)
+    //             ->whereNotNull('products.category_id')
+    //             ->select('products.category_id', DB::raw('COUNT(*) as like_count'))
+    //             ->groupBy('products.category_id')
+    //             ->orderByDesc('like_count')
+    //             ->get();
+
+    //         // Get user's saved products count by category
+    //         $userSavedStats = DB::table('product_saved')
+    //             ->join('products', 'product_saved.product_id', '=', 'products.id')
+    //             ->where('product_saved.user_id', $user_id)
+    //             ->whereNotNull('products.category_id')
+    //             ->select('products.category_id', DB::raw('COUNT(*) as saved_count'))
+    //             ->groupBy('products.category_id')
+    //             ->get()
+    //             ->keyBy('category_id');
+
+    //         // Calculate engagement score for each category
+    //         $categoryEngagement = [];
+    //         foreach ($userCategoryStats as $stat) {
+    //             $engagementScore = $stat->like_count;
+                
+    //             // Add saved count to engagement score (weighted less than likes)
+    //             if (isset($userSavedStats[$stat->category_id])) {
+    //                 $engagementScore += ($userSavedStats[$stat->category_id]->saved_count * 0.5);
+    //             }
+                
+    //             $categoryEngagement[$stat->category_id] = [
+    //                 'likes' => $stat->like_count,
+    //                 'engagement_score' => $engagementScore,
+    //                 'level' => $this->getEngagementLevel($stat->like_count)
+    //             ];
+    //         }
+
+    //         // Sort categories by engagement score
+    //         uasort($categoryEngagement, function($a, $b) {
+    //             return $b['engagement_score'] <=> $a['engagement_score'];
+    //         });
+
+    //         // Apply different logic based on engagement levels
+    //         // $highlyEngagedCategories = [];
+    //         // $interestedCategories = [];
+    //         // $moderatelyEngagedCategories = [];
+
+    //         // foreach ($categoryEngagement as $categoryId => $stats) {
+    //         //     switch ($stats['level']) {
+    //         //         case 'highly_engaged': // 6+ likes
+    //         //             $highlyEngagedCategories[] = $categoryId;
+    //         //             break;
+    //         //         case 'interested': // 3-5 likes
+    //         //             $interestedCategories[] = $categoryId;
+    //         //             break;
+    //         //         case 'moderate': // 1-2 likes
+    //         //             $moderatelyEngagedCategories[] = $categoryId;
+    //         //             break;
+    //         //     }
+    //         // }
+
+    //         // Create prioritized ordering based on engagement levels
+    //         $caseOrder = [];
+    //         $priority = 0;
+            
+    //         foreach ($categoryEngagement as $categoryId => $stats) {
+    //             $caseOrder[] = "WHEN category_id = {$categoryId} THEN {$priority}";
+    //             $priority++;
+    //         }
+            
+    //         // Add other categories (no engagement yet)
+    //         $caseOrder[] = "WHEN category_id IS NOT NULL THEN {$priority}";
+    //         $priority++;
+            
+    //         // Add products without category
+    //         $caseOrder[] = "WHEN category_id IS NULL THEN {$priority}";
+
+    //         // Apply the CASE ordering
+    //         if (!empty($caseOrder)) {
+    //             $caseStatement = "CASE " . implode(' ', $caseOrder) . " END";
+    //             $query->orderByRaw($caseStatement);
+    //         }
+
+    //         // Apply different logic based on highest engagement
+    //         if (!empty($categoryEngagement)) {
+    //             $highestEngagement = reset($categoryEngagement); // Get first item (highest likes)
+    //             $highestLikes = $highestEngagement['likes'];
+                
+    //             if ($highestLikes >= 9) {
+    //                 // Deep Interest: Show only from top categories
+    //                 $topCategories = array_slice(array_keys($categoryEngagement), 0, 3); // Top 3 categories
+    //                 $query->whereIn('category_id', $topCategories);
+                    
+    //             } elseif ($highestLikes >= 6) {
+    //                 // High Engagement: Show from all engaged categories
+    //                 $engagedCategoryIds = array_keys($categoryEngagement);
+    //                 $query->whereIn('category_id', $engagedCategoryIds);
+                    
+    //             }
+    //             // For 3-5 likes and 1-2 likes, just use the CASE ordering
+    //         }
+
+    //         // For highly engaged users (9+ likes in any category), mix in learning resources
+    //         $hasDeepLearningInterest = false;
+    //         foreach ($categoryEngagement as $categoryId => $stats) {
+    //             if ($stats['likes'] >= 9) {
+    //                 $hasDeepLearningInterest = true;
+    //                 break;
+    //             }
+    //         }
+
+    //         if ($hasDeepLearningInterest) {
+    //             // Every 6th item should be a learning resource
+    //             // We'll handle this after fetching results
+    //         }
+            
+    //         // Secondary ordering: by id for consistent results
+    //         $query->orderBy('products.id', 'desc');
+
+    //     } else {
+    //         // Non-logged in user - default ordering
+    //         $query->orderBy('products.id', 'desc');
+    //     }
+
+    //     $totalCount = (clone $query)->count();
+
+    //     $dbOffset = $offset * $limit;
+
+    //     // Apply limit and offset
+    //     $products = $query->skip($dbOffset)->take($limit)->get();
+    //     // print_r(count($products));die;
+
+    //     $productIds = $products->pluck('id')->toArray();
+
+    //     // Get user's liked products in a single query
+    //     $userLikedProductIds = [];
+    //     if ($user_id && !empty($productIds)) {
+    //         $userLikedProductIds = DB::table('product_like')
+    //             ->where('user_id', $user_id)
+    //             ->whereIn('product_id', $productIds)
+    //             ->pluck('product_id')
+    //             ->toArray();
+    //     }
+
+    //     $userSavedProductIds = [];
+    //     if ($user_id && !empty($productIds)) {
+    //         $userSavedProductIds = DB::table('product_saved')
+    //             ->where('user_id', $user_id)
+    //             ->whereIn('product_id', $productIds)
+    //             ->pluck('product_id')
+    //             ->toArray();
+    //     }
+
+    //     $finalProducts = collect([]);
+    //     if ($user_id && isset($hasDeepLearningInterest) && $hasDeepLearningInterest) {
+    //         $learningResources = $this->getLearningResources($user_id, $categoryEngagement);
+            
+    //         // Mix products with learning resources (every 6th item)
+    //         $counter = 1;
+    //         foreach ($products as $product) {
+    //             $finalProducts->push($product);
+                
+    //             if ($counter % 6 == 0 && !$learningResources->isEmpty()) {
+    //                 // Add a learning resource
+    //                 $learningResource = $learningResources->shift();
+    //                 if ($learningResource) {
+    //                     $finalProducts->push($learningResource);
+    //                 }
+    //             }
+    //             $counter++;
+    //         }
+            
+    //         // If we didn't reach the limit, add more products
+    //         if ($finalProducts->count() < $limit) {
+    //             $remaining = $limit - $finalProducts->count();
+    //             $extraProducts = Product::where('products.status', Product::$active)
+    //                 ->where('ordering', true)
+    //                 ->where('price', '!=', 0)
+    //                 ->whereNotIn('id', $finalProducts->pluck('id')->toArray())
+    //                 ->orderBy('id', 'desc')
+    //                 ->take($remaining)
+    //                 ->get();
+                    
+    //             $finalProducts = $finalProducts->merge($extraProducts);
+    //         }
+            
+    //         $products = $finalProducts->take($limit);
+    //         $productIds = $products->pluck('id')->toArray();
+    //     }
+
+    //     foreach ($products as $key => $product) {
+    //         if ($user && $product->checkUserHasBought($user)) {
+    //             $product->purchaseStatus = true;
+    //         }
+
+    //         $product->is_liked = in_array($product->id, $userLikedProductIds);
+    //         $product->is_saved = in_array($product->id, $userSavedProductIds);
+
+    //         $seller = $product->creator;
+    //         $followers = $seller->followers();
+
+    //         $authUserIsFollower = false;
+    //         if ($user) {
+    //             // $authUserIsFollower = $followers->where('follower', auth()->id())
+    //             $authUserIsFollower = $followers->where('follower', $user->id)
+    //                 ->where('status', Follow::$accepted)
+    //                 ->isNotEmpty();
+    //         }
+
+    //         $product->creator->userFollowerStatus = $authUserIsFollower;
+    //     }
+
+    //     if (!empty($data['category_id'])) {
+    //         $selectedCategory = ProductCategory::where('id', $data['category_id'])->first();
+    //     }
+
+    //     $trendingProducts = Product::getTrendingProducts(3, $user);
+    //     $trendingProducts->load('cjVariants');   
+
+    //     if ($trendingProducts->isNotEmpty()) {
+    //         $trendingProductIds = $trendingProducts->pluck('id')->toArray();
+            
+    //         // Get user's liked products for trending products
+    //         $userLikedTrendingIds = [];
+    //         if ($user_id && !empty($trendingProductIds)) {
+    //             $userLikedTrendingIds = DB::table('product_like')
+    //                 ->where('user_id', $user_id)
+    //                 ->whereIn('product_id', $trendingProductIds)
+    //                 ->pluck('product_id')
+    //                 ->toArray();
+    //         }
+            
+    //         // Get user's saved products for trending products
+    //         $userSavedTrendingIds = [];
+    //         if ($user_id && !empty($trendingProductIds)) {
+    //             $userSavedTrendingIds = DB::table('product_saved')
+    //                 ->where('user_id', $user_id)
+    //                 ->whereIn('product_id', $trendingProductIds)
+    //                 ->pluck('product_id')
+    //                 ->toArray();
+    //         }
+            
+    //         // Enrich each trending product with user data
+    //         foreach ($trendingProducts as $product) {
+    //             // Check if user has bought the product
+    //             if ($user && $product->checkUserHasBought($user)) {
+    //                 $product->purchaseStatus = true;
+    //             }
+                
+    //             // Set like/save status
+    //             $product->is_liked = in_array($product->id, $userLikedTrendingIds);
+    //             $product->is_saved = in_array($product->id, $userSavedTrendingIds);
+                
+    //             // Set follower status for creator
+    //             $seller = $product->creator;
+    //             $followers = $seller->followers();
+                
+    //             $authUserIsFollower = false;
+    //             if ($user) {
+    //                 $authUserIsFollower = $followers->where('follower', $user->id)
+    //                     ->where('status', Follow::$accepted)
+    //                     ->isNotEmpty();
+    //             }
+                
+    //             $product->creator->userFollowerStatus = $authUserIsFollower;
+    //         }
+    //     }
+
+    //     return apiResponse2(
+    //         1,
+    //         'retrieved',
+    //         trans('api.public.retrieved'),
+    //         [
+    //             'products' => ProductResource::collection($products),
+    //             'trendingProducts' => ProductResource::collection($trendingProducts),
+    //             'limit' => $limit,
+    //             'offset' => $offset,
+    //             'count' => count($products),
+    //             'total_count' => $totalCount,
+    //             'has_more'    => (($dbOffset + $products->count()) < $totalCount)
+    //         ]
+    //     );
+    // }
+
     public function index(Request $request)
     {
         $user = $this->getUserIdFromToken($request);
-        
-        if($user)
-        {
+
+        if ($user) {
             $user_id = $user->id;
-        }
-        else
-        {
+        } else {
             $user_id = null;
         }
 
         $data = $request->all();
 
-        // Default limit and offset values
-        $limit = (int) $request->input('limit', 10); // Default limit is 10
-        $offset = (int) $request->input('offset', 0); // Default offset is 0
+        $limit  = (int) $request->input('limit', 10);
+        $offset = (int) $request->input('offset', 0);
 
-        // Base query
-        // $query = Product::where('products.status', Product::$active)
-        //     ->where('ordering', true)
-        //     ->where('price', '!=', 0);
-            // ->orderBy('id', 'desc');
-        $query = Product::with('cjVariants')          // ← add this
-        ->where('products.status', Product::$active)
-        ->where('ordering', true)
-        ->where('price', '!=', 0);
+        $query = Product::with('cjVariants')
+            ->where('products.status', Product::$active)
+            ->where('ordering', true)
+            ->where('price', '!=', 0);
 
-        // Apply any additional filters
+        // ✅ Capture filter flags BEFORE handleFilters
+        $hasExplicitSort   = !empty($request->get('sort'));
+        $hasCategoryFilter = !empty($request->get('category_id'));
+
+        // ✅ Apply filters (search, category_id, sort, free, discount, etc.)
         $query = $this->handleFilters($request, $query);
 
-        if ($user_id) {
-            // Get user's like statistics by category
+        // ✅ Only apply engagement ordering when no sort and no category filter
+        if ($user_id && !$hasExplicitSort && !$hasCategoryFilter) {
+
+            // Get user's like count per category
             $userCategoryStats = DB::table('product_like')
                 ->join('products', 'product_like.product_id', '=', 'products.id')
                 ->where('product_like.user_id', $user_id)
@@ -87,7 +401,7 @@ class ProductController extends Controller
                 ->orderByDesc('like_count')
                 ->get();
 
-            // Get user's saved products count by category
+            // Get user's saved count per category
             $userSavedStats = DB::table('product_saved')
                 ->join('products', 'product_saved.product_id', '=', 'products.id')
                 ->where('product_saved.user_id', $user_id)
@@ -97,121 +411,59 @@ class ProductController extends Controller
                 ->get()
                 ->keyBy('category_id');
 
-            // Calculate engagement score for each category
+            // Calculate engagement score per category
             $categoryEngagement = [];
             foreach ($userCategoryStats as $stat) {
                 $engagementScore = $stat->like_count;
-                
-                // Add saved count to engagement score (weighted less than likes)
+
                 if (isset($userSavedStats[$stat->category_id])) {
                     $engagementScore += ($userSavedStats[$stat->category_id]->saved_count * 0.5);
                 }
-                
+
                 $categoryEngagement[$stat->category_id] = [
-                    'likes' => $stat->like_count,
+                    'likes'            => $stat->like_count,
                     'engagement_score' => $engagementScore,
-                    'level' => $this->getEngagementLevel($stat->like_count)
+                    'level'            => $this->getEngagementLevel($stat->like_count)
                 ];
             }
 
-            // Sort categories by engagement score
-            uasort($categoryEngagement, function($a, $b) {
+            // Sort categories by engagement score descending
+            uasort($categoryEngagement, function ($a, $b) {
                 return $b['engagement_score'] <=> $a['engagement_score'];
             });
 
-            // Apply different logic based on engagement levels
-            // $highlyEngagedCategories = [];
-            // $interestedCategories = [];
-            // $moderatelyEngagedCategories = [];
+            // ✅ ONLY use CASE ordering — NEVER whereIn filter
+            // All products appear, engaged categories just float to top
+            if (!empty($categoryEngagement)) {
+                $caseOrder = [];
+                $priority  = 0;
 
-            // foreach ($categoryEngagement as $categoryId => $stats) {
-            //     switch ($stats['level']) {
-            //         case 'highly_engaged': // 6+ likes
-            //             $highlyEngagedCategories[] = $categoryId;
-            //             break;
-            //         case 'interested': // 3-5 likes
-            //             $interestedCategories[] = $categoryId;
-            //             break;
-            //         case 'moderate': // 1-2 likes
-            //             $moderatelyEngagedCategories[] = $categoryId;
-            //             break;
-            //     }
-            // }
+                foreach ($categoryEngagement as $categoryId => $stats) {
+                    $caseOrder[] = "WHEN products.category_id = {$categoryId} THEN {$priority}";
+                    $priority++;
+                }
 
-            // Create prioritized ordering based on engagement levels
-            $caseOrder = [];
-            $priority = 0;
-            
-            foreach ($categoryEngagement as $categoryId => $stats) {
-                $caseOrder[] = "WHEN category_id = {$categoryId} THEN {$priority}";
-                $priority++;
-            }
-            
-            // Add other categories (no engagement yet)
-            $caseOrder[] = "WHEN category_id IS NOT NULL THEN {$priority}";
-            $priority++;
-            
-            // Add products without category
-            $caseOrder[] = "WHEN category_id IS NULL THEN {$priority}";
+                // All other categories with a category_id come next
+                $caseOrder[] = "WHEN products.category_id IS NOT NULL THEN {$priority}";
 
-            // Apply the CASE ordering
-            if (!empty($caseOrder)) {
+                // Products with no category come last
+                $caseOrder[] = "WHEN products.category_id IS NULL THEN " . ($priority + 1);
+
                 $caseStatement = "CASE " . implode(' ', $caseOrder) . " END";
                 $query->orderByRaw($caseStatement);
             }
-
-            // Apply different logic based on highest engagement
-            if (!empty($categoryEngagement)) {
-                $highestEngagement = reset($categoryEngagement); // Get first item (highest likes)
-                $highestLikes = $highestEngagement['likes'];
-                
-                if ($highestLikes >= 9) {
-                    // Deep Interest: Show only from top categories
-                    $topCategories = array_slice(array_keys($categoryEngagement), 0, 3); // Top 3 categories
-                    $query->whereIn('category_id', $topCategories);
-                    
-                } elseif ($highestLikes >= 6) {
-                    // High Engagement: Show from all engaged categories
-                    $engagedCategoryIds = array_keys($categoryEngagement);
-                    $query->whereIn('category_id', $engagedCategoryIds);
-                    
-                }
-                // For 3-5 likes and 1-2 likes, just use the CASE ordering
-            }
-
-            // For highly engaged users (9+ likes in any category), mix in learning resources
-            $hasDeepLearningInterest = false;
-            foreach ($categoryEngagement as $categoryId => $stats) {
-                if ($stats['likes'] >= 9) {
-                    $hasDeepLearningInterest = true;
-                    break;
-                }
-            }
-
-            if ($hasDeepLearningInterest) {
-                // Every 6th item should be a learning resource
-                // We'll handle this after fetching results
-            }
-            
-            // Secondary ordering: by id for consistent results
-            $query->orderBy('products.id', 'desc');
-
-        } else {
-            // Non-logged in user - default ordering
-            $query->orderBy('products.id', 'desc');
         }
 
+        // ✅ Always apply id desc as final tiebreaker
+        $query->orderBy('products.id', 'desc');
+
         $totalCount = (clone $query)->count();
-
-        $dbOffset = $offset * $limit;
-
-        // Apply limit and offset
-        $products = $query->skip($dbOffset)->take($limit)->get();
-        // print_r(count($products));die;
+        $dbOffset   = $offset * $limit;
+        $products   = $query->skip($dbOffset)->take($limit)->get();
 
         $productIds = $products->pluck('id')->toArray();
 
-        // Get user's liked products in a single query
+        // Batch fetch liked product IDs
         $userLikedProductIds = [];
         if ($user_id && !empty($productIds)) {
             $userLikedProductIds = DB::table('product_like')
@@ -221,6 +473,7 @@ class ProductController extends Controller
                 ->toArray();
         }
 
+        // Batch fetch saved product IDs
         $userSavedProductIds = [];
         if ($user_id && !empty($productIds)) {
             $userSavedProductIds = DB::table('product_saved')
@@ -230,44 +483,8 @@ class ProductController extends Controller
                 ->toArray();
         }
 
-        $finalProducts = collect([]);
-        if ($user_id && isset($hasDeepLearningInterest) && $hasDeepLearningInterest) {
-            $learningResources = $this->getLearningResources($user_id, $categoryEngagement);
-            
-            // Mix products with learning resources (every 6th item)
-            $counter = 1;
-            foreach ($products as $product) {
-                $finalProducts->push($product);
-                
-                if ($counter % 6 == 0 && !$learningResources->isEmpty()) {
-                    // Add a learning resource
-                    $learningResource = $learningResources->shift();
-                    if ($learningResource) {
-                        $finalProducts->push($learningResource);
-                    }
-                }
-                $counter++;
-            }
-            
-            // If we didn't reach the limit, add more products
-            if ($finalProducts->count() < $limit) {
-                $remaining = $limit - $finalProducts->count();
-                $extraProducts = Product::where('products.status', Product::$active)
-                    ->where('ordering', true)
-                    ->where('price', '!=', 0)
-                    ->whereNotIn('id', $finalProducts->pluck('id')->toArray())
-                    ->orderBy('id', 'desc')
-                    ->take($remaining)
-                    ->get();
-                    
-                $finalProducts = $finalProducts->merge($extraProducts);
-            }
-            
-            $products = $finalProducts->take($limit);
-            $productIds = $products->pluck('id')->toArray();
-        }
-
-        foreach ($products as $key => $product) {
+        // Enrich products with user-specific data
+        foreach ($products as $product) {
             if ($user && $product->checkUserHasBought($user)) {
                 $product->purchaseStatus = true;
             }
@@ -275,12 +492,11 @@ class ProductController extends Controller
             $product->is_liked = in_array($product->id, $userLikedProductIds);
             $product->is_saved = in_array($product->id, $userSavedProductIds);
 
-            $seller = $product->creator;
+            $seller    = $product->creator;
             $followers = $seller->followers();
 
             $authUserIsFollower = false;
             if ($user) {
-                // $authUserIsFollower = $followers->where('follower', auth()->id())
                 $authUserIsFollower = $followers->where('follower', $user->id)
                     ->where('status', Follow::$accepted)
                     ->isNotEmpty();
@@ -289,58 +505,47 @@ class ProductController extends Controller
             $product->creator->userFollowerStatus = $authUserIsFollower;
         }
 
-        if (!empty($data['category_id'])) {
-            $selectedCategory = ProductCategory::where('id', $data['category_id'])->first();
-        }
-
+        // Trending products
         $trendingProducts = Product::getTrendingProducts(3, $user);
-        $trendingProducts->load('cjVariants');   
+        $trendingProducts->load('cjVariants');
 
         if ($trendingProducts->isNotEmpty()) {
-            $trendingProductIds = $trendingProducts->pluck('id')->toArray();
-            
-            // Get user's liked products for trending products
+            $trendingProductIds   = $trendingProducts->pluck('id')->toArray();
             $userLikedTrendingIds = [];
+            $userSavedTrendingIds = [];
+
             if ($user_id && !empty($trendingProductIds)) {
                 $userLikedTrendingIds = DB::table('product_like')
                     ->where('user_id', $user_id)
                     ->whereIn('product_id', $trendingProductIds)
                     ->pluck('product_id')
                     ->toArray();
-            }
-            
-            // Get user's saved products for trending products
-            $userSavedTrendingIds = [];
-            if ($user_id && !empty($trendingProductIds)) {
+
                 $userSavedTrendingIds = DB::table('product_saved')
                     ->where('user_id', $user_id)
                     ->whereIn('product_id', $trendingProductIds)
                     ->pluck('product_id')
                     ->toArray();
             }
-            
-            // Enrich each trending product with user data
+
             foreach ($trendingProducts as $product) {
-                // Check if user has bought the product
                 if ($user && $product->checkUserHasBought($user)) {
                     $product->purchaseStatus = true;
                 }
-                
-                // Set like/save status
+
                 $product->is_liked = in_array($product->id, $userLikedTrendingIds);
                 $product->is_saved = in_array($product->id, $userSavedTrendingIds);
-                
-                // Set follower status for creator
-                $seller = $product->creator;
+
+                $seller    = $product->creator;
                 $followers = $seller->followers();
-                
+
                 $authUserIsFollower = false;
                 if ($user) {
                     $authUserIsFollower = $followers->where('follower', $user->id)
                         ->where('status', Follow::$accepted)
                         ->isNotEmpty();
                 }
-                
+
                 $product->creator->userFollowerStatus = $authUserIsFollower;
             }
         }
@@ -350,13 +555,13 @@ class ProductController extends Controller
             'retrieved',
             trans('api.public.retrieved'),
             [
-                'products' => ProductResource::collection($products),
+                'products'         => ProductResource::collection($products),
                 'trendingProducts' => ProductResource::collection($trendingProducts),
-                'limit' => $limit,
-                'offset' => $offset,
-                'count' => count($products),
-                'total_count' => $totalCount,
-                'has_more'    => (($dbOffset + $products->count()) < $totalCount)
+                'limit'            => $limit,
+                'offset'           => $offset,
+                'count'            => count($products),
+                'total_count'      => $totalCount,
+                'has_more'         => (($dbOffset + $products->count()) < $totalCount),
             ]
         );
     }

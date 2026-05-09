@@ -286,6 +286,45 @@ class LoginController extends Controller
             }
         }
 
+        if (!empty($user->email) && empty($user->email_verified_at)) {
+            $this->guard()->logout();
+            $request->session()->flush();
+            $request->session()->regenerate();
+
+            $otp = rand(100000, 999999);
+
+            $user->update([
+                'verify_otp'     => $otp,
+                'otp_expires_at' => time() + (10 * 60),
+            ]);
+
+            $generalSettings = getGeneralSettings();
+
+            Mail::send('web.default.auth.otp_verify', [
+                'otp'             => $otp,
+                'generalSettings' => $generalSettings,
+                'email'           => $user->email,
+            ], function ($message) use ($user, $generalSettings) {
+                $message->from(
+                    !empty($generalSettings['site_email']) ? $generalSettings['site_email'] : env('MAIL_FROM_ADDRESS'),
+                    env('MAIL_FROM_NAME')
+                );
+                $message->to($user->email);
+                $message->subject('Verify Your Email - OTP Code');
+            });
+
+            session()->put('login_otp_email', $user->email);
+            session()->put('login_otp_user_id', $user->id);
+
+            $toastData = [
+                'title'  => 'Verify Your Email',
+                'msg'    => 'An OTP has been sent to your email. Please verify to continue.',
+                'status' => 'success'
+            ];
+
+            return redirect('/login/verify-otp')->with(['toast' => $toastData]);
+        }
+
         if ($user->status != User::$active and !$verify) {
             $this->guard()->logout();
             $request->session()->flush();
@@ -393,5 +432,168 @@ class LoginController extends Controller
         }
 
         return 'ok';
+    }
+
+    public function showLoginOtpForm()
+    {
+        if (!session()->has('login_otp_email')) {
+            return redirect('/login');
+        }
+        return view(getTemplate() . '.auth.login_verify_otp');
+    }
+
+    public function verifyLoginOtp(Request $request)
+    {
+       
+        $request->validate([
+            'otp' => 'required|numeric|digits:6',
+        ]);
+
+        $email  = session()->get('login_otp_email');
+        $userId = session()->get('login_otp_user_id');
+        //dd($email . ' - ' . $userId);
+
+        if (!$email || !$userId) {
+            return redirect('/login');
+        }
+
+        $user = User::find($userId);
+
+        dd($user);
+
+        if (!$user) {
+            return redirect('/login');
+        }
+
+        // OTP expired
+        if (time() > $user->otp_expires_at) {
+            session()->forget(['login_otp_email', 'login_otp_user_id']);
+
+            $toastData = [
+                'title'  => 'OTP Expired',
+                'msg'    => 'Your OTP has expired. Please login again.',
+                'status' => 'error'
+            ];
+            return redirect('/login')->with(['toast' => $toastData]);
+        }
+
+        // OTP wrong
+        if ((string) $user->verify_otp !== (string) $request->otp) {
+            $toastData = [
+                'title'  => 'Invalid OTP',
+                'msg'    => 'The OTP you entered is incorrect. Please try again.',
+                'status' => 'error'
+            ];
+            return back()->with(['toast' => $toastData]);
+        }
+
+        // ── OTP correct — verify and activate ─────────────────────────
+        $user->update([
+            'verify_otp'        => null,
+            'otp_expires_at'    => null,
+            'email_verified_at' => time(),
+            'status'            => User::$active,
+        ]);
+
+        session()->forget(['login_otp_email', 'login_otp_user_id']);
+
+        // ── Login user ─────────────────────────────────────────────────
+        $this->guard()->login($user);
+
+        // ── Device limit check ─────────────────────────────────────────
+        $checkLoginDeviceLimit = $this->checkLoginDeviceLimit($user);
+        if ($checkLoginDeviceLimit != "ok") {
+            $this->guard()->logout();
+            $request->session()->flush();
+            $request->session()->regenerate();
+            return $this->sendMaximumActiveSessionResponse();
+        }
+
+        $user->update(['logged_count' => (int)$user->logged_count + 1]);
+
+        $cartManagerController = new CartManagerController();
+        $cartManagerController->storeCookieCartsToDB();
+
+        $userLoginHistoryMixin = new UserLoginHistoryMixin();
+        $userLoginHistoryMixin->storeUserLoginHistory($user);
+
+        if ($user->isAdmin()) {
+            return redirect(getAdminPanelUrl());
+        }
+
+        if (session()->has('membership1_after_login')) {
+            $redirectUrl = session()->pull('membership1_after_login');
+            return redirect($redirectUrl);
+        }
+
+        if (session()->has('membership_after_login')) {
+            $redirectUrl = session()->pull('membership_after_login');
+            return redirect($redirectUrl);
+        }
+
+        if (session()->has('redirect_to_checkout')) {
+            $checkoutData = session('redirect_to_checkout');
+            session()->forget('redirect_to_checkout');
+            return view('checkout-redirect')->with('checkoutData', $checkoutData);
+        }
+
+        $cartItems = Cart::where('creator_id', $user->id)->count();
+        if ($cartItems > 0) {
+            return redirect('/cart');
+        }
+
+        $toastData = [
+            'title'  => 'Email Verified',
+            'msg'    => 'Your email has been verified successfully. Welcome!',
+            'status' => 'success'
+        ];
+
+        return redirect('/panel')->with(['toast' => $toastData]);
+    }
+
+    public function resendLoginOtp()
+    {
+        $email  = session()->get('login_otp_email');
+        $userId = session()->get('login_otp_user_id');
+
+        if (!$email || !$userId) {
+            return redirect('/login');
+        }
+
+        $user = User::find($userId);
+
+        if (!$user) {
+            return redirect('/login');
+        }
+
+        $otp = rand(100000, 999999);
+
+        $user->update([
+            'verify_otp'     => $otp,
+            'otp_expires_at' => time() + (10 * 60),
+        ]);
+
+        $generalSettings = getGeneralSettings();
+
+        Mail::send('web.default.auth.otp_verify', [
+            'otp'             => $otp,
+            'generalSettings' => $generalSettings,
+            'email'           => $email,
+        ], function ($message) use ($email, $generalSettings) {
+            $message->from(
+                !empty($generalSettings['site_email']) ? $generalSettings['site_email'] : env('MAIL_FROM_ADDRESS'),
+                env('MAIL_FROM_NAME')
+            );
+            $message->to($email);
+            $message->subject('Verify Your Email - OTP Code');
+        });
+
+        $toastData = [
+            'title'  => 'OTP Resent',
+            'msg'    => 'A new OTP has been sent to your email address.',
+            'status' => 'success'
+        ];
+
+        return back()->with(['toast' => $toastData]);
     }
 }

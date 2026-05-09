@@ -543,6 +543,7 @@
                 const isAndroid = /Android/i.test(navigator.userAgent);
                 const isIOS = /iPhone|iPad|iPod/i.test(navigator.userAgent);
                 const popupDontShow = localStorage.getItem('appPopupDontShow');
+                const isHomePage = window.location.pathname === '/' || window.location.pathname === '/home';
                 const isNewsletterPage = window.location.pathname === '/pages/newsletter';
                 const isPanelMembershipPage = window.location.pathname === '/panel_membership';
                 const isMembershipPage = window.location.pathname === '/membership';

@@ -33,7 +33,7 @@
     
 @php
     $checkSequenceContent = $item->checkSequenceContent();
-    $sequenceContentHasError = (!empty($checkSequenceContent) and (!empty($checkSequenceContent['all_passed_items_error']) or !empty($checkSequenceContent['access_after_day_error'])));
+    $sequenceContentHasError = false; // Allow all quizzes to be opened freely
 @endphp
 
 <div class="{{ $sequenceContentHasError ? 'js-sequence-content-error-modal' : 'kemetic-quiz-card tab-item' }} p-10 cursor-pointer {{ $class ?? '' }}"

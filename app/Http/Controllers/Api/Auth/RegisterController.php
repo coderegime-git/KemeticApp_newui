@@ -18,232 +18,42 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Validation\ValidationException;
 use App\Models\Api\UserFirebaseSessions;
-
+use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Mail;
 
 class RegisterController extends Controller
 {
     use UserFormFieldsTrait;
-    /*
-    |--------------------------------------------------------------------------
-    | Register Controller
-    |--------------------------------------------------------------------------
-    |
-    | This controller handles the registration of new users as well as their
-    | validation and creation. By default this controller uses a trait to
-    | provide this functionality without requiring any additional code.
-    |
-    */
-    // public function stepRegister(Request $request, $step)
-    // {
-    //     if ($step == 1) {
-    //         return $this->stepOne($request);
+    
+    protected array $blockedEmailDomains = [
+        // Disposable / Temporary
+        'mailinator.com', '10minutemail.com', 'guerrillamail.com', 'temp-mail.org',
+        'throwawaymail.com', 'throwam.com', 'yopmail.com', 'getnada.com',
+        'fakemail.net', 'moakt.com', 'sharklasers.com', 'trashmail.com',
+        'mintemail.com', 'dispostable.com', 'dollicons.com', 'xkxkud.com',
+        'tempmail.com', 'fakeinbox.com', 'maildrop.cc', 'spamgourmet.com',
+        'tempail.com', 'emailondeck.com',
+        // Spam / Abuse-Friendly
+        'mail.ru', 'inbox.ru', 'bk.ru', 'list.ru', 'rambler.ru',
+        'qq.com', '163.com', '126.com',
+        // Anonymous / High-Risk
+        'cock.li', 'ctemplar.com', 'elude.in',
+    ];
 
-    //     } elseif ($step == 2) {
-    //         return $this->stepTwo($request);
-
-    //     } elseif ($step == 3) {
-    //         return $this->stepThree($request);
-    //     }
-    //     abort(404);
-
-    // }
-
-    // private function stepOne(Request $request)
-    // {
-    //     $registerMethod = getGeneralSettings('register_method') ?? 'mobile';
-    //     $data = $request->all();
-    //     $username = $this->username();
-    
-    //     if ($registerMethod !== $username && $username) {
-    //         return apiResponse2(0, 'invalid_register_method', trans('api.auth.invalid_register_method'));
-    //     }
-    
-    //     $rules = [
-    //         'country_code' => ($username == 'mobile') ? 'required' : 'nullable',
-    //         $username => ($username == 'mobile') ? 'required|numeric' : 'required|string|email|max:255',
-    //         'password' => 'required|string|min:6|confirmed',
-    //         'password_confirmation' => 'required|same:password',
-    //     ];
-    
-    //     validateParam($data, $rules);
-    
-    //     if ($username == 'mobile') {
-    //         $data[$username] = ltrim($data['country_code'], '+') . ltrim($data[$username], '0');
-    //     }
-    
-    //     $userCase = User::where($username, $data[$username])->first();
-    
-    //     if ($userCase) {
-    //         // Update password and generate token
-    //         //$userCase->update(['password' => Hash::make($data['password'])]);
-    //         $token = auth('api')->tokenById($userCase->id);
-    
-    //         // Store or update Firebase session
-    //         UserFirebaseSessions::updateOrCreate(
-    //             ['user_id' => $userCase->id],
-    //             [
-    //                 "token" => $token,
-    //                 "ip" => $request->ip(),
-    //                 "fcm_token" => $request->input('fcm_token', ''),
-    //             ]
-    //         );
-            
-    //         $userCase->update([
-    //             'logged_count' => max(0, $userCase->logged_count + 1)
-    //         ]);
-
-    
-    //         $verificationController = new VerificationController();
-    //         $checkConfirmed = $verificationController->checkConfirmed($userCase, $username, $data[$username]);
-    
-    //         if ($checkConfirmed['status'] == 'verified') {
-    //             if ($userCase->full_name) {
-    //                 return apiResponse2(0, 'already_registered', trans('api.auth.already_registered'));
-    //             } else {
-    //                 $userCase->update(['password' => Hash::make($data['password'])]);
-    //                 return apiResponse2(0, 'go_step_3', trans('api.auth.go_step_3'), [
-    //                     'user_id' => $userCase->id,
-    //                     'token' => $token,
-    //                 ]);
-    //             }
-    //         } else {
-    //             $userCase->update(['password' => Hash::make($data['password'])]);
-    //             return apiResponse2(0, 'go_step_2', trans('api.auth.go_step_2'), [
-    //                 'user_id' => $userCase->id,
-    //                 'token' => $token,
-    //             ]);
-    //         }
-    //     }
-    
-    //     // Create new user
-    //     $referralSettings = getReferralSettings();
-    //     $usersAffiliateStatus = (!empty($referralSettings) && !empty($referralSettings['users_affiliate_status']));
-    
-    //     $user = User::create([
-    //         'role_name' => Role::$user,
-    //         'role_id' => Role::getUserRoleId(),
-    //         $username => $data[$username],
-    //         'status' => User::$pending,
-    //         'password' => Hash::make($data['password']),
-    //         'affiliate' => $usersAffiliateStatus,
-    //         'created_at' => time(),
-    //     ]);
-    
-    //     // Generate token for the new user
-    //     $token = auth('api')->tokenById($user->id);
-    
-    //     // Store Firebase session
-    //     UserFirebaseSessions::create([
-    //         "user_id" => $user->id,
-    //         "token" => $token,
-    //         "ip" => $request->ip(),
-    //         "fcm_token" => $request->input('fcm_token', ''),
-    //     ]);
-    //     $user->update([
-    //         'logged_count' => 1
-    //     ]);
-
-    
-    //     // Handle additional certificate data
-    //     if (!empty($data['certificate_additional'])) {
-    //         UserMeta::updateOrCreate(
-    //             ['user_id' => $user->id, 'name' => 'certificate_additional'],
-    //             ['value' => $data['certificate_additional']]
-    //         );
-    //     }
-    
-    //     // Validate and store form fields
-    //     $form = $this->getFormFieldsByType($request->get('account_type'));
-    //     $errors = [];
-    
-    //     if (!empty($form)) {
-    //         $fieldErrors = $this->checkFormRequiredFields($request, $form);
-    
-    //         if (!empty($fieldErrors) && count($fieldErrors)) {
-    //             foreach ($fieldErrors as $id => $error) {
-    //                 $errors[$id] = $error;
-    //             }
-    //         }
-    //     }
-    
-    //     if (count($errors)) {
-    //         return apiResponse2(0, 'login', trans('api.auth.login'), $errors);
-    //     }
-    
-    //     $this->storeFormFields($data, $user);
-    
-    //     // Verify the user
-    //     $verificationController = new VerificationController();
-    //     $verificationController->checkConfirmed($user, $username, $data[$username]);
-    
-    //     return apiResponse2(1, 'stored', trans('api.public.stored'), [
-    //         'user_id' => $user->id,
-    //         'token' => $token,
-    //     ]);
-    // }
-
-    // private function stepTwo(Request $request)
-    // {
-    //     $data = $request->all();
-    //     validateParam($data, [
-    //         'user_id' => 'required|exists:users,id',
-    //         //  'code'=>
-    //     ]);
-
-    //     $user = User::find($data['user_id']);
-    //     $verificationController = new VerificationController();
-    //     $ee = $user->email ?? $user->mobile;
-    //     return $verificationController->confirmCode($request, $ee);
-    // }
-
-    // private function stepThree(Request $request)
-    // {
-    //     $data = $request->all();
-    //     validateParam($request->all(), [
-    //         'user_id' => 'required|exists:users,id',
-    //         'full_name' => 'required|string|min:3',
-    //         'referral_code' => 'nullable|exists:affiliates_codes,code'
-
-    //     ]);
-
-    //     $user = User::find($request->input('user_id'));
-    //     $user->update([
-    //         'full_name' => $data['full_name']
-    //     ]);
-
-    //     $enableRegistrationBonus = false;
-    //     $registrationBonusAmount = null;
-    //     $registrationBonusSettings = getRegistrationBonusSettings();
-    //     if (!empty($registrationBonusSettings['status']) and !empty($registrationBonusSettings['registration_bonus_amount'])) {
-    //         $enableRegistrationBonus = true;
-    //         $registrationBonusAmount = $registrationBonusSettings['registration_bonus_amount'];
-    //     }
+    private function isBlockedEmailDomain(string $email): bool
+    {
+        $domain = strtolower(substr(strrchr($email, '@'), 1));
+        return in_array($domain, $this->blockedEmailDomains);
+    }
 
 
-    //     $user->update([
-    //         'enable_registration_bonus' => $enableRegistrationBonus,
-    //         'registration_bonus_amount' => $registrationBonusAmount,
-    //     ]);
-
-    //     $registerReward = RewardAccounting::calculateScore(Reward::REGISTER);
-    //     RewardAccounting::makeRewardAccounting($user->id, $registerReward, Reward::REGISTER, $user->id, true);
-    //     $registrationBonusAccounting = new RegistrationBonusAccounting();
-    //     $registrationBonusAccounting->storeRegistrationBonusInstantly($user);
-    //     $referralCode = $request->input('referral_code', null);
-    //     if (!empty($referralCode)) {
-    //         Affiliate::storeReferral($user, $referralCode);
-    //     }
-    //     event(new Registered($user));
-    //     $token = auth('api')->tokenById($user->id);
-    //     $data['token'] = $token;
-    //     $data['user_id'] = $user->id;
-    //     return apiResponse2(1, 'login', trans('api.auth.login'), $data);
-
-    // }
     public function stepRegister(Request $request, $step)
     {
         if ($step == 1) {
             return $this->stepOne($request);
+        } elseif ($step == 2) {
+            return $this->stepTwo($request);
         } elseif ($step == 3) {
             return $this->stepThree($request);
         }
@@ -272,6 +82,12 @@ class RegisterController extends Controller
         ];
     
         validateParam($data, $rules);
+
+        if ($username === 'email' && !empty($data['email'])) {
+            if ($this->isBlockedEmailDomain($data['email'])) {
+                return apiResponse2(0, 'invalid_email_domain', trans('This email provider is not allowed. Please use a valid email address.'));
+            }
+        }
     
         if ($username == 'mobile') {
             $data[$username] = ltrim($data['country_code'], '+') . ltrim($data[$username], '0');
@@ -346,6 +162,105 @@ class RegisterController extends Controller
     
         $this->storeFormFields($data, $user);
 
+        $otp = rand(100000, 999999);
+
+        $user->update([
+            'verify_otp'        => $otp,
+            'otp_expires_at'    => time() + (10 * 60),   // 10 minutes
+            'email_verified_at' => null,
+        ]);
+
+        $generalSettings = getGeneralSettings();
+
+        Mail::send('web.default.auth.otp_verify', [
+            'otp'             => $otp,
+            'generalSettings' => $generalSettings,
+            'email'           => $user->email,
+        ], function ($message) use ($user, $generalSettings) {
+            $message->from(
+                !empty($generalSettings['site_email'])
+                    ? $generalSettings['site_email']
+                    : env('MAIL_FROM_ADDRESS'),
+                env('MAIL_FROM_NAME')
+            );
+            $message->to($user->email);
+            $message->subject('Verify Your Email - OTP Code');
+        });
+
+        return apiResponse2(1, 'otp_sent', 'OTP has been sent to your email. Please verify to complete registration.', [
+            'user_id' => $user->id,
+        ]);
+
+        // $enableRegistrationBonus = false;
+        // $registrationBonusAmount = null;
+        // $registrationBonusSettings = getRegistrationBonusSettings();
+        // if (!empty($registrationBonusSettings['status']) && !empty($registrationBonusSettings['registration_bonus_amount'])) {
+        //     $enableRegistrationBonus = true;
+        //     $registrationBonusAmount = $registrationBonusSettings['registration_bonus_amount'];
+        // }
+    
+        // $user->update([
+        //     'enable_registration_bonus' => $enableRegistrationBonus,
+        //     'registration_bonus_amount' => $registrationBonusAmount,
+        // ]);
+    
+        // $registerReward = RewardAccounting::calculateScore(Reward::REGISTER);
+        // RewardAccounting::makeRewardAccounting($user->id, $registerReward, Reward::REGISTER, $user->id, true);
+    
+        // (new RegistrationBonusAccounting())->storeRegistrationBonusInstantly($user);
+    
+        // if (!empty($data['referral_code'])) {
+        //     Affiliate::storeReferral($user, $data['referral_code']);
+        // }
+    
+        // event(new Registered($user));
+        // $data['token'] = auth('api')->tokenById($user->id);
+        // $data['user_id'] = $user->id;
+
+        // return apiResponse2(1, 'login', trans('api.auth.login'), $data);
+    
+        // return apiResponse2(1, 'Registration Successfully', trans('api.auth.go_step_3'), [
+        //     'user_id' => $user->id
+        // ]);
+    }
+
+    public function stepTwo(Request $request)
+    {
+        $data = $request->all();
+
+        validateParam($data, [
+            'user_id' => 'required|exists:users,id',
+            'otp'     => 'required|numeric|digits:6',
+        ]);
+
+        $user = User::find($data['user_id']);
+
+        if (!$user) {
+            return apiResponse2(0, 'user_not_found', 'User not found.');
+        }
+
+        // ── OTP expired → delete pending user ────────────────────────────────
+        if (time() > $user->otp_expires_at) {
+            // $user->delete();
+            return apiResponse2(0, 'otp_expired',
+                'Your OTP has expired. Please register again.');
+        }
+
+        // ── Wrong OTP ─────────────────────────────────────────────────────────
+        if ((string) $user->verify_otp !== (string) $data['otp']) {
+            return apiResponse2(0, 'invalid_otp',
+                'The OTP you entered is incorrect. Please try again.');
+        }
+
+        // ── OTP correct — activate account ───────────────────────────────────
+        $user->update([
+            'verify_otp'        => null,
+            'otp_expires_at'    => null,
+            'email_verified_at' => time(),
+            'status'            => User::$active,
+        ]);
+
+        // ── Registration bonus ────────────────────────────────────────────────
         $enableRegistrationBonus = false;
         $registrationBonusAmount = null;
         $registrationBonusSettings = getRegistrationBonusSettings();
@@ -353,33 +268,75 @@ class RegisterController extends Controller
             $enableRegistrationBonus = true;
             $registrationBonusAmount = $registrationBonusSettings['registration_bonus_amount'];
         }
-    
+
         $user->update([
             'enable_registration_bonus' => $enableRegistrationBonus,
             'registration_bonus_amount' => $registrationBonusAmount,
         ]);
-    
+
+        // ── Rewards ───────────────────────────────────────────────────────────
         $registerReward = RewardAccounting::calculateScore(Reward::REGISTER);
         RewardAccounting::makeRewardAccounting($user->id, $registerReward, Reward::REGISTER, $user->id, true);
-    
         (new RegistrationBonusAccounting())->storeRegistrationBonusInstantly($user);
-    
+
+        // ── Referral ──────────────────────────────────────────────────────────
         if (!empty($data['referral_code'])) {
             Affiliate::storeReferral($user, $data['referral_code']);
         }
-    
-        event(new Registered($user));
-        $data['token'] = auth('api')->tokenById($user->id);
-        $data['user_id'] = $user->id;
 
-        return apiResponse2(1, 'login', trans('api.auth.login'), $data);
-    
-        // return apiResponse2(1, 'Registration Successfully', trans('api.auth.go_step_3'), [
-        //     'user_id' => $user->id
-        // ]);
+        // ── Fire event & issue token ──────────────────────────────────────────
+        event(new Registered($user));
+
+        $token = auth('api')->tokenById($user->id);
+
+        return apiResponse2(1, 'login', trans('api.auth.login'), [
+            'user_id' => $user->id,
+            'token'   => $token,
+        ]);
+    }
+
+    public function stepThree(Request $request)
+    {
+        $data = $request->all();
+
+        validateParam($data, [
+            'user_id' => 'required|exists:users,id',
+        ]);
+
+        $user = User::find($data['user_id']);
+
+        if (!$user) {
+            return apiResponse2(0, 'user_not_found', 'User not found.');
+        }
+
+        $otp = rand(100000, 999999);
+
+        $user->update([
+            'verify_otp'     => $otp,
+            'otp_expires_at' => time() + (10 * 60),
+        ]);
+
+        $generalSettings = getGeneralSettings();
+
+        Mail::send('web.default.auth.otp_verify', [
+            'otp'             => $otp,
+            'generalSettings' => $generalSettings,
+            'email'           => $user->email,
+        ], function ($message) use ($user, $generalSettings) {
+            $message->from(
+                !empty($generalSettings['site_email'])
+                    ? $generalSettings['site_email']
+                    : env('MAIL_FROM_ADDRESS'),
+                env('MAIL_FROM_NAME')
+            );
+            $message->to($user->email);
+            $message->subject('Verify Your Email - OTP Code');
+        });
+
+        return apiResponse2(1, 'otp_resent', 'A new OTP has been sent to your email address.');
     }
     
-    private function stepThree(Request $request)
+    private function stepfour(Request $request)
     {
         $data = $request->all();
         validateParam($data, [

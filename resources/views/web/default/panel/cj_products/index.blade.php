@@ -17,7 +17,7 @@
 
     {{-- ── Trending Carousel ──────────────────────────────────────── --}}
     @if(!empty($trendingProducts))
-      <h2>Trending on CJ</h2>
+      <h2>Trending on Products</h2>
       <div class="shop-trend">
         @foreach($trendingProducts as $product)
           <article class="shop-card">
@@ -133,8 +133,8 @@
 
               {{-- Seller / source row --}}
               <div class="shop-ph">
-                <img src="https://cjdropshipping.com/favicon.ico" style="width:20px;height:20px;border-radius:50%" alt="CJ">
-                <span class="ml-5 font-14" style="opacity:.7">CJDropshipping</span>
+                <!-- <img src="https://cjdropshipping.com/favicon.ico" style="width:20px;height:20px;border-radius:50%" alt="CJ"> -->
+                <span class="ml-5 font-14" style="opacity:.7">Dropshipping</span>
                 @if(!empty($product['isFreeShipping']))
                   <span class="ml-auto" style="font-size:11px;color:var(--green,#43d477)">Free Ship</span>
                 @endif

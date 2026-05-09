@@ -115,8 +115,15 @@ class CJProductController extends Controller
         // Delete currently saved variants to re-insert the chosen ones
         ProductCjVariant::where('product_id', $localProduct->id)->delete();
 
+        $shipping = (float)($localProduct->cj_shipping_price ?? 0);
+        $earning = (float)($localProduct->cj_your_price ?? 0);
+
         foreach ($productDetail['variants'] as $v) {
             if (in_array($v['vid'], $selectedVids)) {
+                $cjVPrice = (float)($v['variantSellPrice'] ?? $v['sellPrice'] ?? 0);
+                // Calculate final selling price
+                $variantSellPrice = ceil(($cjVPrice + $shipping + $earning) / 0.9);
+
                 ProductCjVariant::create([
                     'product_id' => $localProduct->id,
                     'cj_pid' => $pid,
@@ -124,9 +131,11 @@ class CJProductController extends Controller
                     'variant_name' => $v['variantNameEn'] ?? $v['variantKey'] ?? 'Variant',
                     'variant_key' => $v['variantKey'] ?? '',
                     'variant_sku' => $v['variantSku'] ?? '',
-                    'sell_price' => $v['variantSellPrice'] ?? $v['sellPrice'] ?? 0,
+                    'sell_price' => $variantSellPrice,
                     'variant_image' => $v['variantImage'] ?? null,
                     'is_selected' => true,
+                    'created_at' => time(),
+                    'updated_at' => time(),
                 ]);
             }
         }

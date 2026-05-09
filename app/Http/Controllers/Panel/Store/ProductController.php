@@ -110,14 +110,32 @@ class ProductController extends Controller
 
         $cjProduct = null;
         $cjVid = request()->get('cj_vid');
+        $cjVariantId = request()->get('cj_variant_id');
+        $cjPrice = 0;
+
         if ($cjVid) {
             $cjProduct = $this->cjService->getProductDetail($cjVid);
+            
+            if ($cjProduct) {
+                $cjPrice = $cjProduct['sellPrice'] ?? 0;
+                
+                if ($cjVariantId && !empty($cjProduct['variants'])) {
+                    foreach ($cjProduct['variants'] as $v) {
+                        if ($v['vid'] == $cjVariantId) {
+                            $cjPrice = $v['variantSellPrice'] ?? $v['sellPrice'] ?? $cjPrice;
+                            break;
+                        }
+                    }
+                }
+            }
         }
 
         $data = [
             'pageTitle' => trans('update.new_product_page_title'),
             'currentStep' => 1,
-            'cjProduct' => $cjProduct
+            'cjProduct' => $cjProduct,
+            'cjVariantId' => $cjVariantId,
+            'cjPrice' => $cjPrice
         ];
 
         return view('web.default.panel.store.products.create', $data);
@@ -225,6 +243,13 @@ class ProductController extends Controller
             $url = '/panel/store/products/' . $product->id . '/step/2';
         }
 
+        if ($request->expectsJson()) {
+            return response()->json([
+                'code' => 200,
+                'redirect_url' => $url
+            ]);
+        }
+
         return redirect($url);
     }
 
@@ -274,8 +299,24 @@ class ProductController extends Controller
         $product = $query->first();
 
         $cjProduct = null;
+        $cjPrice = 0;
         if (!empty($product) && $product->is_cj_product && !empty($product->cj_vid)) {
             $cjProduct = $this->cjService->getProductDetail($product->cj_vid);
+            if ($cjProduct) {
+                // Get the base cost from the CJ API instead of our saved selling price
+                $firstSavedVariant = $product->cjVariants->where('is_selected', true)->first();
+                if ($firstSavedVariant && !empty($cjProduct['variants'])) {
+                    $vid = $firstSavedVariant->vid;
+                    $apiVariant = collect($cjProduct['variants'])->where('vid', $vid)->first();
+                    if ($apiVariant) {
+                        $cjPrice = (float)($apiVariant['variantSellPrice'] ?? $apiVariant['sellPrice'] ?? 0);
+                    } else {
+                        $cjPrice = $cjProduct['sellPrice'] ?? 0;
+                    }
+                } else {
+                    $cjPrice = $cjProduct['sellPrice'] ?? 0;
+                }
+            }
         }
 
         if (empty($product)) {
@@ -289,6 +330,8 @@ class ProductController extends Controller
             'locale' => mb_strtolower($locale),
             'defaultLocale' => getDefaultLocale(),
             'cjProduct' => $cjProduct,
+            'cjPrice' => $cjPrice,
+            'cjVariantId' => request()->get('cj_variant_id')
         ];
 
         if ($step == 2) {
@@ -410,11 +453,31 @@ class ProductController extends Controller
             $data['delivery_fee'] = !empty($data['delivery_fee']) ? convertPriceToDefaultCurrency($data['delivery_fee']) : null;
 
             if ($product->is_cj_product) {
-                ProductCjVariant::where('product_id', $product->id)
-                    ->update([
-                        'sell_price' => $data['price'],
-                        'updated_at' => time(),
-                    ]);
+                $cjProduct = $this->cjService->getProductDetail($product->cj_vid);
+                if ($cjProduct && !empty($cjProduct['variants'])) {
+                    $shipping = (float)($data['cj_shipping_price'] ?? 0);
+                    $earning = (float)($data['cj_your_price'] ?? 0);
+                    
+                    foreach ($cjProduct['variants'] as $v) {
+                        $cjVPrice = (float)($v['variantSellPrice'] ?? $v['sellPrice'] ?? 0);
+                        // Calculate final selling price for this specific variant
+                        $variantSellPrice = ceil(($cjVPrice + $shipping + $earning) / 0.9);
+                        
+                        ProductCjVariant::where('product_id', $product->id)
+                            ->where('vid', $v['vid'])
+                            ->update([
+                                'sell_price' => $variantSellPrice,
+                                'updated_at' => time(),
+                            ]);
+                    }
+                } else {
+                    // Fallback to updating all with the same price if API fails
+                    ProductCjVariant::where('product_id', $product->id)
+                        ->update([
+                            'sell_price' => $data['price'],
+                            'updated_at' => time(),
+                        ]);
+                }
             }
 
             $inventory = $data['inventory'];
@@ -479,6 +542,15 @@ class ProductController extends Controller
         if ($productRulesRequired) {
             $url = '/panel/store/products/' . $product->id . '/step/5';
 
+            if ($request->expectsJson()) {
+                return response()->json([
+                    'code' => 422,
+                    'errors' => [
+                        'rules' => [trans('validation.required', ['attribute' => 'rules'])]
+                    ]
+                ], 422);
+            }
+
             return redirect($url)->withErrors(['rules' => trans('validation.required', ['attribute' => 'rules'])]);
         }
 
@@ -489,6 +561,13 @@ class ProductController extends Controller
                 '[content_type]' => trans('update.product'),
             ];
             sendNotification("content_review_request", $notifyOptions, 1);
+        }
+
+        if ($request->expectsJson()) {
+            return response()->json([
+                'code' => 200,
+                'redirect_url' => $url
+            ]);
         }
 
         return redirect($url);

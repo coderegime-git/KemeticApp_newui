@@ -555,7 +555,7 @@ class WebinarsController extends Controller
             'duration' => $data['duration'],
             'capacity' => $data['capacity'] ?? null,
             'price' => $data['price'] ?? null,
-            'private' => (!empty($data['private']) and $data['private'] == 'on') ? true : false,
+            // 'private' => (!empty($data['private']) and $data['private'] == 'on') ? true : false,
             'thumbnail' => $thumbnail,
             'image_cover' => $imageCover,
             'video_demo' => $videodemo,
@@ -594,7 +594,8 @@ class WebinarsController extends Controller
             $data['downloadable'] = (!empty($data['downloadable']) and ($data['downloadable'] == 'on' or $data['downloadable'] == 1)) ? 1 : 0;
             $data['partner_instructor'] = (!empty($data['partner_instructor']) and ($data['partner_instructor'] == 'on' or $data['partner_instructor'] == 1)) ? 1 : 0;
             $data['subscribe'] = (!empty($data['subscribe']) and ($data['subscribe'] == 'on' or $data['subscribe'] == 1)) ? 1 : 0;
-            $data['private'] = (!empty($data['private']) and ($data['private'] == 'on' or $data['private'] == 1)) ? 1 : 0;
+
+            //$data['private'] = (!empty($data['private']) and ($data['private'] == 'on' or $data['private'] == 1)) ? 1 : 0;
             $data['access_days'] = !empty($data['access_days']) ?? 0;
             $data['earning_price'] = !empty($data['earning_price']) ? convertPriceToDefaultCurrency($data['earning_price']) : null;
             $data['platform_price'] = !empty($data['platform_price']) ? convertPriceToDefaultCurrency($data['platform_price']) : null;

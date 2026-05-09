@@ -242,6 +242,7 @@
             <div class="col-12 col-md-6 col-lg-2 mb-5 mb-lg-0">
                 <h4 class="footer-col-title">How It Works</h4>
                 <ul class="footer-list">
+                    <li><a href="/pages/How-Kemetic-App-works" class="kemetic-footer-link">Learn How Kemetic App Works</a></li>
                     <li><a href="/pages/how-it-works-seekers" class="kemetic-footer-link">Students - Seekers</a></li>
                     <li><a href="/pages/How-It-Works-Wisdom-Keepers" class="kemetic-footer-link">Content creators /
                             Partners</a></li>

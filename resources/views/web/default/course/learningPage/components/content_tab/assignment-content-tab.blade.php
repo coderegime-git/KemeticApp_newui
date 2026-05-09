@@ -78,9 +78,7 @@
     $itemHistory = $item->getAssignmentHistoryByStudentId(request()->get('student', $user->id));
 
     $checkSequenceContent = $item->checkSequenceContent();
-    $sequenceContentHasError = (!empty($checkSequenceContent) 
-        and (!empty($checkSequenceContent['all_passed_items_error']) 
-        or !empty($checkSequenceContent['access_after_day_error'])));
+    $sequenceContentHasError = false; // Allow all assignments to be opened freely
 
     $assignmentUrl = "{$course->getLearningPageUrl()}?type=assignment&item={$item->id}";
     $assignmentUrlTarget = "_self";

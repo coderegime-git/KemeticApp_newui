@@ -312,6 +312,17 @@
     @if(session('success'))
       showToast("{{ session('success') }}", 'success');
     @endif
+
+    @if(session('toast'))
+      const toastData = @json(session('toast'));
+      showToast(toastData.msg || toastData.title, toastData.status || 'error');
+    @endif
+
+    // ADD THIS: Check for login_failed_active_session toast
+    @if(session('login_failed_active_session'))
+      const loginFailedToast = @json(session('login_failed_active_session'));
+      showToast(loginFailedToast.msg || loginFailedToast.title, loginFailedToast.status || 'error');
+    @endif
   });
 
   function showToast(message, type) {

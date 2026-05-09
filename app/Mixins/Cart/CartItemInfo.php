@@ -108,6 +108,19 @@ class CartItemInfo
             $imgPath = $specs['cj_image'];
         }
 
+        $price = $product->price;
+        if (!empty($productOrder) && !empty($productOrder->specifications)) {
+            $decoded = json_decode($productOrder->specifications, true);
+            if (!empty($decoded['cj_vid'])) {
+                $variant = \App\Models\ProductCjVariant::where('product_id', $product->id)
+                    ->where('vid', $decoded['cj_vid'])
+                    ->first();
+                if ($variant) {
+                    $price = $variant->sell_price;
+                }
+            }
+        }
+
         $info['isProduct']    = true;
         $info['imgPath']      = $imgPath;
         $info['itemUrl']      = $product->getUrl();
@@ -116,10 +129,8 @@ class CartItemInfo
         $info['teacherName']  = $product->creator->full_name;
         $info['rate']         = $product->getRate();
         $info['quantity']     = $productOrder ? $productOrder->quantity : 1;
-        $info['price']        = !empty($specs) ? (float)($specs['cj_price'] ?? $product->price) : $product->price;
-        $info['discountPrice']= (!empty($specs))
-                                    ? null   // CJ products don't use local discount system
-                                    : (($product->getPriceWithActiveDiscountPrice() < $product->price)
+        $info['price']        = $price;
+        $info['discountPrice']= (($product->getPriceWithActiveDiscountPrice() < $product->price)
                                         ? $product->getPriceWithActiveDiscountPrice()
                                         : null);
         $info['type']         = !empty($specs) ? 'CJ Product' : 'Product';

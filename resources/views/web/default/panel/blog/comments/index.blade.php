@@ -532,7 +532,7 @@
 
         @else
             <div class="no-result-card mt-25">
-                <img src="/assets/default/img/comment.png" alt="" width="120">
+                <!-- <img src="/assets/default/img/comment.png" alt="" width="120"> -->
                 <h3>{{ trans('panel.comments_no_result') }}</h3>
                 <p>{{ trans('panel.comments_no_result_hint') }}</p>
             </div>

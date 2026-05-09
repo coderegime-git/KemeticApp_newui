@@ -201,7 +201,7 @@
               Download Free Scrolls
             </button>
           @else
-           @if($hasBought or $book->price == 0 or $activeSubscribe and $book->type != 'Print')
+           @if($hasBought || $book->price == 0 || $activeSubscribe && $book->type != 'Print')
             <button class="bookdetail-btn bookdetail-btn-gold bookdetail-btn-lg" type="button" 
                 data-book-type="{{ $book->type }}" data-book-title="{{ $book->title }}" onclick="previewPdf('{{ url($book->url) ?? '#' }}')">
                   Download
@@ -283,6 +283,7 @@
     </div>
 </div>
 @endsection
+
 
 <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 <!-- Fallback to CDN if local files don't work -->

@@ -6,10 +6,88 @@
     }
 
     $('body').on('click', '#sendForReview', function (e) {
-        $(this).addClass('loadingbar primary').prop('disabled', true);
         e.preventDefault();
+        var $btn = $(this);
+        var originalText = $btn.html();
+
+        $btn.addClass('loadingbar primary').prop('disabled', true);
+        $btn.html('<i class="spinner-border spinner-border-sm mr-10" role="status" aria-hidden="true"></i> ' + originalText);
+
         $('#forDraft').val(0);
-        $('#productForm').trigger('submit');
+
+        var form = $('#productForm');
+        var formData = new FormData(form[0]);
+
+        Swal.fire({
+            html: '<div class="d-flex align-items-center justify-content-center py-20"><div class="spinner-border text-primary" role="status"></div><span class="ml-15 font-16">Please wait...</span></div>',
+            showConfirmButton: false,
+            allowOutsideClick: false,
+            allowEscapeKey: false,
+            width: '20rem'
+        });
+
+        $.ajax({
+            url: form.attr('action'),
+            type: 'POST',
+            data: formData,
+            processData: false,
+            contentType: false,
+            headers: {
+                'Accept': 'application/json'
+            },
+            success: function(response) {
+                if (response && response.code === 200) {
+                    Swal.fire({
+                        icon: 'success',
+                        html: '<h3 class="font-20 text-center text-dark-blue py-25">' + saveSuccessLang + '</h3>',
+                        showConfirmButton: false,
+                        width: '25rem',
+                    });
+
+                    $btn.html(originalText);
+                    $btn.removeClass('loadingbar primary').prop('disabled', false);
+
+                    setTimeout(() => {
+                        if (response.redirect_url) {
+                            window.location.href = response.redirect_url;
+                        } else {
+                            window.location.href = '/panel/store/products';
+                        }
+                    }, 500);
+                }
+            },
+            error: function(err) {
+                Swal.close();
+                $btn.html(originalText);
+                $btn.removeClass('loadingbar primary').prop('disabled', false);
+
+                var errors = err.responseJSON;
+                if (errors && errors.errors) {
+                    Object.keys(errors.errors).forEach((key) => {
+                        const error = errors.errors[key];
+                        let element = form.find('.js-ajax-' + key);
+                        if (element.length === 0) {
+                            element = form.find('[name="' + key + '"]');
+                        }
+
+                        element.addClass('is-invalid');
+                        element.parent().find('.invalid-feedback').text(error[0]);
+
+                        if (key === 'rules') {
+                            $.toast({
+                                heading: requestFailedLang,
+                                text: error[0],
+                                bgColor: '#f63c3c',
+                                textColor: 'white',
+                                hideAfter: 5000,
+                                position: 'bottom-right',
+                                icon: 'error'
+                            });
+                        }
+                    });
+                }
+            }
+        });
     });
 
     $('body').on('click', '#saveAsDraft', function (e) {

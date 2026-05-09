@@ -1022,11 +1022,25 @@ class CartController extends Controller
             $totalDiscount += $discount;
             $subTotal += $price;
         } elseif (!empty($cart->product_order_id)) {
-            $product = $cart->productOrder->product;
+            $productOrder = $cart->productOrder;
+            $product = $productOrder->product;
 
             if (!empty($product)) {
-                $productQuantity = $cart->productOrder->quantity;
+                $productQuantity = $productOrder->quantity;
                 $price = ($product->price * $productQuantity);
+
+                if (!empty($productOrder->specifications)) {
+                    $specifications = json_decode($productOrder->specifications, true);
+                    if (!empty($specifications['cj_vid'])) {
+                        $variant = \App\Models\ProductCjVariant::where('product_id', $product->id)
+                            ->where('vid', $specifications['cj_vid'])
+                            ->first();
+                        if ($variant) {
+                            $price = ($variant->sell_price * $productQuantity);
+                        }
+                    }
+                }
+
                 $discount = $product->getDiscountPrice() * $productQuantity;
 
                 $productTax = $product->getTax();

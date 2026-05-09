@@ -386,5 +386,6 @@ return [
 
     'forbidden_request_toast_lang' => '"FORBIDDEN" Request',
     'forbidden_request_toast_msg_lang' => 'You not access to this content.',
+    'redirect_to_app' => 'Go to Home'
 
 ];

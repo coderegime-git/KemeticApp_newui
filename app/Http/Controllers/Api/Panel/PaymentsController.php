@@ -686,9 +686,7 @@ class PaymentsController extends Controller
         if (!$book) {
             throw new \Exception("Book not found with ID: $bookid");
         }
-        // dd($book);
-
-        // 2. FETCH USER/BUYER DATA
+        
         $user = User::select(
             'id',
             'full_name',
@@ -699,8 +697,7 @@ class PaymentsController extends Controller
             'city_name',
             'address',
             'zip_code'
-        )
-            ->find($userid);
+        )->find($userid);
         // dd($user);
         if (!$user) {
             throw new \Exception("User not found with ID: $userid");
@@ -753,10 +750,12 @@ class PaymentsController extends Controller
                     "external_id" => "item-reference-1",
                     "printable_normalization" => [
                         "cover" => [
-                            "source_url" => url($book->cover_pdf),
+                            // "source_url" => "https://kemetic.app/store/lulu/cover/cover_1777529086.pdf",
+                            // "source_url" => url($book->cover_pdf),
                         ],
                         "interior" => [
-                            "source_url" => url($book->url),
+                            // "source_url" => "https://kemetic.app/store/lulu/interior/interior_1777529012.pdf",
+                            // "source_url" => url($book->url),
                             "page_count" => $book->page_count // You need to add the correct page count
                         ],
                         "pod_package_id" => "0600X0900BWSTDPB060UW444MXX"
@@ -837,6 +836,15 @@ class PaymentsController extends Controller
         // dd($response);
 
         $responseData = json_decode($response, true);
+
+        if ($responseData && isset($responseData['id'])) {
+            BookOrder::where('book_id', $bookid)
+            ->where('buyer_id', $userid)
+            ->where('status', BookOrder::$waitingDelivery) // Only update if still waiting delivery
+            ->update([
+                'printjob_id' => $responseData['id']
+            ]);
+        }
 
         return $responseData;
     }

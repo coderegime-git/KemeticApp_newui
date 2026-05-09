@@ -86,10 +86,10 @@
           
           @if(!empty($product->price) and $product->price > 0)
             @if($product->getPriceWithActiveDiscountPrice() < $product->price)
-                <span class="real">{{ handlePrice($product->getPriceWithActiveDiscountPrice(), true, true, false, null, true, 'store') }}</span>
+                <span class="real" id="mainVariantPrice">{{ handlePrice($product->getPriceWithActiveDiscountPrice(), true, true, false, null, true, 'store') }}</span>
                 <span class="off ml-10">{{ handlePrice($product->price, true, true, false, null, true, 'store') }}</span>
             @else
-                <span class="real">{{ handlePrice($product->price, true, true, false, null, true, 'store') }}</span>
+                <span class="real" id="mainVariantPrice">{{ handlePrice($product->price, true, true, false, null, true, 'store') }}</span>
             @endif
         @else
             <span class="real">{{ trans('public.free') }}</span>
@@ -169,15 +169,39 @@
         color: var(--text,#eee); border-radius: 8px; padding: 8px 10px;
         font-size: 13px; cursor: pointer;
       }
+      /* Constrain main image and description images */
+      .shopdetail-hero {
+          max-height: 500px;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          background: #000;
+      }
+      .shopdetail-hero img {
+          max-height: 500px;
+          width: auto !important;
+          object-fit: contain !important;
+      }
+      .shopdetail-about img {
+          max-width: 100% !important;
+          height: auto !important;
+          border-radius: 8px;
+          margin: 10px 0;
+      }
+      .shopdetail-thumb.active {
+          border-color: var(--gold, #FFD700) !important;
+          opacity: 1;
+      }
       </style>
       
       <script>
       document.addEventListener('DOMContentLoaded', function() {
           const variants = @json($cjVariants);
+          const variantKeysLength = {{ count($variantKeys) }};
           const selectedOptions = {};
+          const currencySymbol = "{{ $currency ?? '$' }}";
 
           document.querySelectorAll('.cj-swatch').forEach(function(swatch) {
-              // Pre-select first options
               if (swatch.classList.contains('active')) {
                   selectedOptions[swatch.dataset.keyIndex] = swatch.dataset.value;
               }
@@ -195,33 +219,47 @@
               });
           });
 
-          // Run once on load to ensure right price is shown
+          // Run once on load
           updateSelectedVariant();
 
           function updateSelectedVariant() {
               if (!variants.length) return;
-              const selParts = Object.values(selectedOptions);
-              const match = variants.find(function(v) {
-                  if (!v.variant_key) return false;
-                  const parts = v.variant_key.split('-').map(s => s.trim());
-                  return selParts.every(function(sp, i) { return parts[i] === sp; });
-              }) || variants[0];
+              
+              // Build search key from selected options in order
+              let match = null;
+              if (variantKeysLength > 0) {
+                  const selParts = [];
+                  for (let i = 0; i < variantKeysLength; i++) {
+                      selParts.push(selectedOptions[i] || '');
+                  }
+                  
+                  match = variants.find(function(v) {
+                      if (!v.variant_key) return false;
+                      const parts = v.variant_key.split('-').map(s => s.replace(/\s+/g, '').toLowerCase());
+                      return selParts.every(function(sp, i) { 
+                          const normalizedSp = (sp || '').replace(/\s+/g, '').toLowerCase();
+                          return parts[i] === normalizedSp; 
+                      });
+                  });
+              }
+
+              if (!match && variants.length > 0) match = variants[0];
 
               if (match) {
                   const hiddenInput = document.getElementById('cjSelectedVid');
                   if (hiddenInput) hiddenInput.value = match.vid;
                   
-                  const priceNode = document.querySelector('.shopdetail-price .real');
-                  if (priceNode) priceNode.textContent = '$' + parseFloat(match.sell_price).toFixed(2);
+                  const priceFormatted = currencySymbol + parseFloat(match.sell_price).toFixed(2);
                   
-                  const buyBarPriceNode = document.querySelector('.shopdetail-buybar div:nth-child(3) span');
-                  if (buyBarPriceNode) {
-                    buyBarPriceNode.textContent = '$' + parseFloat(match.sell_price).toFixed(2);
-                  } else {
-                    const fallbackBuyBarPriceNode = document.querySelector('.shopdetail-buybar div:nth-child(3)');
-                    if (fallbackBuyBarPriceNode) fallbackBuyBarPriceNode.innerHTML = '<span>$' + parseFloat(match.sell_price).toFixed(2) + '</span>';
-                  }
+                  // Update Main Price
+                  const mainPrice = document.getElementById('mainVariantPrice');
+                  if (mainPrice) mainPrice.textContent = priceFormatted;
+                  
+                  // Update Buy Bar Price
+                  const barPrice = document.getElementById('barVariantPrice');
+                  if (barPrice) barPrice.textContent = priceFormatted;
 
+                  // Update Image
                   const mainImageNode = document.querySelector('.main-s-image');
                   if (mainImageNode && match.variant_image) {
                       mainImageNode.src = match.variant_image;
@@ -234,17 +272,13 @@
               varSelect.addEventListener('change', function() {
                   const opt = this.options[this.selectedIndex];
                   const price = parseFloat(opt.dataset.price || 0).toFixed(2);
+                  const priceFormatted = currencySymbol + price;
                   
-                  const priceNode = document.querySelector('.shopdetail-price .real');
-                  if (priceNode) priceNode.textContent = '$' + price;
+                  const mainPrice = document.getElementById('mainVariantPrice');
+                  if (mainPrice) mainPrice.textContent = priceFormatted;
                   
-                  const buyBarPriceNode = document.querySelector('.shopdetail-buybar div:nth-child(3) span');
-                  if (buyBarPriceNode) {
-                    buyBarPriceNode.textContent = '$' + price;
-                  } else {
-                    const fallbackBuyBarPriceNode = document.querySelector('.shopdetail-buybar div:nth-child(3)');
-                    if (fallbackBuyBarPriceNode) fallbackBuyBarPriceNode.innerHTML = '<span>$' + price + '</span>';
-                  }
+                  const barPrice = document.getElementById('barVariantPrice');
+                  if (barPrice) barPrice.textContent = priceFormatted;
 
                   const vImg = opt.dataset.image;
                   const mainImageNode = document.querySelector('.main-s-image');
@@ -252,8 +286,6 @@
                       mainImageNode.src = vImg;
                   }
               });
-              
-              // Run once on load for select dropdown
               varSelect.dispatchEvent(new Event('change'));
           }
       });
@@ -275,13 +307,27 @@
         <button type="button" data-product-type="{{ $productType }}" data-product-title="{{ $product->title }}" class="shopdetail-btn-ghost btn-add-product-to-carts" {{ ($productAvailability < 1) || ($product->price == 0) ? 'disabled' : '' }}> {{ ($productAvailability > 0) ? trans('public.add_to_cart') : trans('update.out_of_stock') }}</button>
       @endif
         <div style="margin-top:16px;border-top:1px solid var(--edge);padding-top:12px">
-          <div class="shopdetail-muted" style="font-weight:800;margin-bottom:8px">Includes</div>
-          <ul style="margin:0 0 0 18px;line-height:1.7">
-            <li>30-day returns</li>
-            <li>Secure worldwide shipping</li>
-            <li>Member perks & gifts</li>
           </ul>
         </div>
+
+        {{-- Variant Price List --}}
+        @if($product->cjVariants->count() > 0)
+        <div style="margin-top:20px; border-top:1px solid var(--edge); padding-top:12px">
+            <div class="shopdetail-muted" style="font-weight:800; margin-bottom:8px">Variant Prices</div>
+            <div style="max-height: 150px; overflow-y: auto; background: rgba(255,255,255,0.03); border-radius: 8px; border: 1px solid var(--edge);">
+                <table style="width: 100%; font-size: 12px; border-collapse: collapse;">
+                    @foreach($product->cjVariants as $variant)
+                        <tr style="border-bottom: 1px solid rgba(255,255,255,0.05);">
+                            <td style="padding: 6px 10px; opacity: 0.8;">{{ $variant->variant_name }}</td>
+                            <td style="padding: 6px 10px; text-align: right; font-weight: bold; color: var(--gold, #F2C94C);">
+                                {{ handlePrice($variant->sell_price, true, true, false, null, true, 'store') }}
+                            </td>
+                        </tr>
+                    @endforeach
+                </table>
+            </div>
+        </div>
+        @endif
       </aside>
     </div>
   </div>
@@ -293,10 +339,10 @@
     <div class="shopdetail-spacer"></div>
     <div style="font-weight:900;margin-right:10px">@if(!empty($product->price) and $product->price > 0)
             @if($product->getPriceWithActiveDiscountPrice() < $product->price)
-                <span>{{ handlePrice($product->getPriceWithActiveDiscountPrice(), true, true, false, null, true, 'store') }}</span>
-                <span>{{ handlePrice($product->price, true, true, false, null, true, 'store') }}</span>
+                <span id="barVariantPrice">{{ handlePrice($product->getPriceWithActiveDiscountPrice(), true, true, false, null, true, 'store') }}</span>
+                <span style="text-decoration: line-through; opacity: 0.6; font-size: 0.8em; margin-left: 5px;">{{ handlePrice($product->price, true, true, false, null, true, 'store') }}</span>
             @else
-                <span>{{ handlePrice($product->price, true, true, false, null, true, 'store') }}</span>
+                <span id="barVariantPrice">{{ handlePrice($product->price, true, true, false, null, true, 'store') }}</span>
             @endif
         @else
             <span>{{ trans('public.free') }}</span>
@@ -304,7 +350,7 @@
 
         @if($product->isPhysical() && $product->is_cj_product == '0')
           @if(!empty($product->delivery_fee) and $product->delivery_fee > 0)
-              <span">+ {{ handlePrice($product->delivery_fee) }} {{ trans('update.shipping') }}</span>
+              <span>+ {{ handlePrice($product->delivery_fee) }} {{ trans('update.shipping') }}</span>
           @else
               <span>{{ trans('update.free_shipping') }}</span>
           @endif
@@ -470,6 +516,14 @@
             $form.trigger('submit');
         }
     }
+
+    // Manual thumbnail click
+    $('body').on('click', '.shopdetail-thumb img', function() {
+        const src = $(this).attr('src');
+        $('.main-s-image').attr('src', src);
+        $('.shopdetail-thumb').removeClass('active');
+        $(this).parent().addClass('active');
+    });
 
     // $('body').on('click', '.js-product-direct-payment-buybar', function (e) {
     //   const $this = $(this);

@@ -20,6 +20,17 @@ class BookOrder extends Model
     static $success = 'success';
     static $canceled = 'canceled';
     static $pending = 'pending';
+
+    // Lulu Statuses
+    public const LULU_CREATED = 'CREATED';
+    public const LULU_UNPAID = 'UNPAID';
+    public const LULU_PAYMENT_IN_PROGRESS = 'PAYMENT_IN_PROGRESS';
+    public const LULU_PRODUCTION_READY = 'PRODUCTION_READY';
+    public const LULU_IN_PRODUCTION = 'IN_PRODUCTION';
+    public const LULU_SHIPPED = 'SHIPPED';
+    public const LULU_DELIVERED = 'DELIVERED';
+    public const LULU_CANCELED = 'CANCELED';
+    public const LULU_REJECTED = 'REJECTED';
     
     protected $fillable = [
         'book_id',
@@ -29,6 +40,7 @@ class BookOrder extends Model
         'quantity',
         'message_to_seller',
         'tracking_code',
+        'printjob_id',
         'status',
         'created_at',
         'updated_at'
@@ -108,12 +120,12 @@ class BookOrder extends Model
     
     public function seller()
     {
-        return $this->belongsTo(User::class, 'seller_id');
+        return $this->belongsTo(\App\User::class, 'seller_id');
     }
     
     public function buyer()
     {
-        return $this->belongsTo(User::class, 'buyer_id');
+        return $this->belongsTo(\App\User::class, 'buyer_id');
     }
     
     public function sale()

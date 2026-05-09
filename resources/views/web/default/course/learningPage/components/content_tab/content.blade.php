@@ -235,7 +235,7 @@
     }
 
     $checkSequenceContent = $item->checkSequenceContent();
-    $sequenceContentHasError = (!empty($checkSequenceContent) and (!empty($checkSequenceContent['all_passed_items_error']) or !empty($checkSequenceContent['access_after_day_error'])));
+    $sequenceContentHasError = false; // Allow all chapters to be opened freely
 
     $itemPersonalNote = $item->personalNote()->where('user_id', $authUser->id)->first();
     $hasPersonalNote = (!empty($itemPersonalNote) and !empty($itemPersonalNote->note));
@@ -294,7 +294,7 @@
                            data-item="{{ $type }}_id"
                            value="{{ $item->webinar_id }}"
                            class="js-passed-lesson-toggle custom-control-input"
-                           @if($sequenceContentHasError) disabled @endif
+                           
                            @if(!empty($item->checkPassedItem())) checked @endif>
 
                            <!-- <span class="kemetic-switch-slider"></span> -->

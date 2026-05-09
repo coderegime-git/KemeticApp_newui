@@ -21,7 +21,9 @@ use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\MessageBag;
 use Illuminate\Validation\ValidationException;
 use App\Models\Subscribe;
-
+use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Mail;
 use App\Http\Controllers\Web\CartManagerController;
 use App\Models\Cart;
 
@@ -42,6 +44,26 @@ class RegisterController extends Controller
     */
 
     use RegistersUsers;
+    protected array $blockedEmailDomains = [
+        // Disposable / Temporary
+        'mailinator.com', '10minutemail.com', 'guerrillamail.com', 'temp-mail.org',
+        'throwawaymail.com', 'throwam.com', 'yopmail.com', 'getnada.com',
+        'fakemail.net', 'moakt.com', 'sharklasers.com', 'trashmail.com',
+        'mintemail.com', 'dispostable.com', 'dollicons.com', 'xkxkud.com',
+        'tempmail.com', 'fakeinbox.com', 'maildrop.cc', 'spamgourmet.com',
+        'tempail.com', 'emailondeck.com',
+        // Spam / Abuse-Friendly
+        'mail.ru', 'inbox.ru', 'bk.ru', 'list.ru', 'rambler.ru',
+        'qq.com', '163.com', '126.com',
+        // Anonymous / High-Risk
+        'cock.li', 'ctemplar.com', 'elude.in',
+    ];
+
+    private function isBlockedEmailDomain(string $email): bool
+    {
+        $domain = strtolower(substr(strrchr($email, '@'), 1));
+        return in_array($domain, $this->blockedEmailDomains);
+    }
 
     protected $redirectTo = '/panel';
     public function __construct()
@@ -188,6 +210,18 @@ class RegisterController extends Controller
 
     public function register(Request $request)
     {
+        $registerMethod = getGeneralSettings('register_method') ?? 'mobile';
+        if ($registerMethod === 'email' && !empty($request->email)) {
+            if ($this->isBlockedEmailDomain($request->email)) {
+                $toastData = [
+                    'title' => trans('Email Not Allowed'),
+                    'msg'   => trans('This email provider is not allowed. Please use a valid email address.'),
+                    'status' => 'error'
+                ];
+                return back()->with(['toast' => $toastData])->withInput();
+            }
+        }
+
         if ($request->wantsJson()) {
             $validate = $this->validator($request->all());
 
@@ -284,102 +318,317 @@ class RegisterController extends Controller
             $user = User::create($data);
         }
 
-        $registerMethod = getGeneralSettings('register_method') ?? 'mobile';
+        $otp = rand(100000, 999999);
 
-        $value = $request->get($registerMethod);
-        if ($registerMethod == 'mobile') {
-            $value = $request->get('country_code') . ltrim($request->get('mobile'), '0');
-        }
+        $user->update([
+            'verify_otp'        => $otp,
+            'otp_expires_at'    => time() + (10 * 60), // 10 minutes as unix timestamp
+            'email_verified_at' => null,
+        ]);
 
-        $referralCode = $request->get('referral_code', null);
-        if (!empty($referralCode)) {
-            session()->put('referralCode', $referralCode);
-        }
+        $generalSettings = getGeneralSettings();
 
-        $verificationController = new VerificationController();
-        $checkConfirmed = $verificationController->checkConfirmed($user, $registerMethod, $value);
+        Mail::send('web.default.auth.otp_verify', [
+            'otp'             => $otp,
+            'generalSettings' => $generalSettings,
+            'email'           => $user->email,
+        ], function ($message) use ($user, $generalSettings) {
+            $message->from(
+                !empty($generalSettings['site_email']) ? $generalSettings['site_email'] : env('MAIL_FROM_ADDRESS'),
+                env('MAIL_FROM_NAME')
+            );
+            $message->to($user->email);
+            $message->subject('Verify Your Email - OTP Code');
+        });
 
-        $referralCode = $request->get('referral_code', null);
+        session()->put('register_otp_email', $user->email);
+        session()->put('register_otp_user_id', $user->id);
 
-        if ($checkConfirmed['status'] == 'send') {
-            if (!empty($referralCode)) {
-                session()->put('referralCode', $referralCode);
-            }
-            return redirect('/verification');
+        $toastData = [
+            'title'  => 'Verify Your Email',
+            'msg'    => 'An OTP has been sent to your email address. Please verify to complete registration.',
+            'status' => 'success'
+        ];
 
-        } elseif ($checkConfirmed['status'] == 'verified') {
-            $this->guard()->login($user);
+        return redirect('/register/verify-otp')->with(['toast' => $toastData]);
 
-            $enableRegistrationBonus = false;
-            $registrationBonusAmount = null;
-            $registrationBonusSettings = getRegistrationBonusSettings();
-            if (!empty($registrationBonusSettings['status']) and !empty($registrationBonusSettings['registration_bonus_amount'])) {
-                $enableRegistrationBonus = true;
-                $registrationBonusAmount = $registrationBonusSettings['registration_bonus_amount'];
-            }
+        // $registerMethod = getGeneralSettings('register_method') ?? 'mobile';
+
+        // $value = $request->get($registerMethod);
+        // if ($registerMethod == 'mobile') {
+        //     $value = $request->get('country_code') . ltrim($request->get('mobile'), '0');
+        // }
+
+        // $referralCode = $request->get('referral_code', null);
+        // if (!empty($referralCode)) {
+        //     session()->put('referralCode', $referralCode);
+        // }
+
+        // $verificationController = new VerificationController();
+        // $checkConfirmed = $verificationController->checkConfirmed($user, $registerMethod, $value);
+
+        // $referralCode = $request->get('referral_code', null);
+
+        // if ($checkConfirmed['status'] == 'send') {
+        //     if (!empty($referralCode)) {
+        //         session()->put('referralCode', $referralCode);
+        //     }
+        //     return redirect('/verification');
+
+        // } elseif ($checkConfirmed['status'] == 'verified') {
+        //     $this->guard()->login($user);
+
+        //     $enableRegistrationBonus = false;
+        //     $registrationBonusAmount = null;
+        //     $registrationBonusSettings = getRegistrationBonusSettings();
+        //     if (!empty($registrationBonusSettings['status']) and !empty($registrationBonusSettings['registration_bonus_amount'])) {
+        //         $enableRegistrationBonus = true;
+        //         $registrationBonusAmount = $registrationBonusSettings['registration_bonus_amount'];
+        //     }
 
 
-            $user->update([
-                'status' => User::$active,
-                'enable_registration_bonus' => $enableRegistrationBonus,
-                'registration_bonus_amount' => $registrationBonusAmount,
-            ]);
+        //     $user->update([
+        //         'status' => User::$active,
+        //         'enable_registration_bonus' => $enableRegistrationBonus,
+        //         'registration_bonus_amount' => $registrationBonusAmount,
+        //     ]);
 
-            // if (!empty($referralCode)) {
-            //     Affiliate::storeReferral($user, $referralCode);
-            // }
+        //     // if (!empty($referralCode)) {
+        //     //     Affiliate::storeReferral($user, $referralCode);
+        //     // }
 
-            // $registrationBonusAccounting = new RegistrationBonusAccounting();
-            // $registrationBonusAccounting->storeRegistrationBonusInstantly($user);
+        //     // $registrationBonusAccounting = new RegistrationBonusAccounting();
+        //     // $registrationBonusAccounting->storeRegistrationBonusInstantly($user);
 
-            // Flag to differ the codes to dashboard controller
-            session()->put('user_just_registered', $user->id);
+        //     // Flag to differ the codes to dashboard controller
+        //     session()->put('user_just_registered', $user->id);
 
-            if (session()->has('membership1_after_login')) {
-                $redirectUrl = session()->pull('membership1_after_login');
-                return redirect($redirectUrl);
-            }
+        //     if (session()->has('membership1_after_login')) {
+        //         $redirectUrl = session()->pull('membership1_after_login');
+        //         return redirect($redirectUrl);
+        //     }
 
-            if (session()->has('membership_after_login')) {
-                $redirectUrl = session()->pull('membership_after_login');
-                return redirect($redirectUrl);
-            }
+        //     if (session()->has('membership_after_login')) {
+        //         $redirectUrl = session()->pull('membership_after_login');
+        //         return redirect($redirectUrl);
+        //     }
             
-            // dd($data);
-            if ($response = $this->registered($request, $user)) {
-                // return $response;
-                if ($request->wantsJson())
-                    return $response;
-                else
-                    if (session()->has('membership1_after_login')) {
-                        $redirectUrl = session()->pull('membership1_after_login');
-                        return redirect($redirectUrl);
-                    }
+        //     // dd($data);
+        //     if ($response = $this->registered($request, $user)) {
+        //         // return $response;
+        //         if ($request->wantsJson())
+        //             return $response;
+        //         else
+        //             if (session()->has('membership1_after_login')) {
+        //                 $redirectUrl = session()->pull('membership1_after_login');
+        //                 return redirect($redirectUrl);
+        //             }
 
-                    if (session()->has('membership_after_login')) {
-                        $redirectUrl = session()->pull('membership_after_login');
-                        return redirect($redirectUrl);
-                    }
+        //             if (session()->has('membership_after_login')) {
+        //                 $redirectUrl = session()->pull('membership_after_login');
+        //                 return redirect($redirectUrl);
+        //             }
 
-                    redirect()->route('homepage');
-            }
+        //             redirect()->route('homepage');
+        //     }
 
-            if (session()->has('membership1_after_login')) {
-                $redirectUrl = session()->pull('membership1_after_login');
-                return redirect($redirectUrl);
-            }
+        //     if (session()->has('membership1_after_login')) {
+        //         $redirectUrl = session()->pull('membership1_after_login');
+        //         return redirect($redirectUrl);
+        //     }
 
-            if (session()->has('membership_after_login')) {
-                $redirectUrl = session()->pull('membership_after_login');
-                return redirect($redirectUrl);
-            }
+        //     if (session()->has('membership_after_login')) {
+        //         $redirectUrl = session()->pull('membership_after_login');
+        //         return redirect($redirectUrl);
+        //     }
 
-            return $request->wantsJson()
-                ? new JsonResponse([], 201)
-                : redirect()->route('homepage');
-        }
+        //     return $request->wantsJson()
+        //         ? new JsonResponse([], 201)
+        //         : redirect()->route('homepage');
+        // }
     }
 
+    public function showRegisterOtpForm()
+    {
+        if (!session()->has('register_otp_email')) {
+            return redirect('/register');
+        }
+        return view(getTemplate() . '.auth.register_verify_otp');
+    }
+
+    public function verifyRegisterOtp(Request $request)
+    {
+        $request->validate([
+            'otp' => 'required|numeric|digits:6',
+        ]);
+
+        $email  = session()->get('register_otp_email');
+        $userId = session()->get('register_otp_user_id');
+
+        if (!$email || !$userId) {
+            return redirect('/login');
+        }
+
+        $user = User::find($userId);
+
+        if (!$user) {
+            return redirect('/login');
+        }
+
+        // OTP expired
+        if (time() > $user->otp_expires_at) {
+            $user->delete();
+            session()->forget(['register_otp_email', 'register_otp_user_id']);
+
+            $toastData = [
+                'title'  => 'OTP Expired',
+                'msg'    => 'Your OTP has expired. Please register again.',
+                'status' => 'error'
+            ];
+            //return redirect('/register')->with(['toast' => $toastData]);
+        }
+
+        if ((string) $user->verify_otp !== (string) $request->otp) {
+            $toastData = [
+                'title'  => 'Invalid OTP',
+                'msg'    => 'The OTP you entered is incorrect. Please try again.',
+                'status' => 'error'
+            ];
+            return back()->with(['toast' => $toastData]);
+        }
+
+        // ── OTP correct — clear OTP columns ───────────────────────────
+        $user->update([
+            'verify_otp'        => null,
+            'otp_expires_at'    => null,
+            'email_verified_at' => time(), // unix timestamp
+            'status'            => User::$active,
+        ]);
+
+        session()->forget(['register_otp_email', 'register_otp_user_id']);
+
+        // ── Registration bonus ─────────────────────────────────────────
+        $enableRegistrationBonus   = false;
+        $registrationBonusAmount   = null;
+        $registrationBonusSettings = getRegistrationBonusSettings();
+        if (!empty($registrationBonusSettings['status']) && !empty($registrationBonusSettings['registration_bonus_amount'])) {
+            $enableRegistrationBonus = true;
+            $registrationBonusAmount = $registrationBonusSettings['registration_bonus_amount'];
+        }
+
+        $user->update([
+            'enable_registration_bonus' => $enableRegistrationBonus,
+            'registration_bonus_amount' => $registrationBonusAmount,
+        ]);
+
+        // ── Rewards & bonus accounting ─────────────────────────────────
+        $registerReward = RewardAccounting::calculateScore(Reward::REGISTER);
+        RewardAccounting::makeRewardAccounting($user->id, $registerReward, Reward::REGISTER, $user->id, true);
+        (new RegistrationBonusAccounting())->storeRegistrationBonusInstantly($user);
+
+        // ── Referral ───────────────────────────────────────────────────
+        $referralCode = session()->pull('referralCode', null);
+        if (!empty($referralCode)) {
+            Affiliate::storeReferral($user, $referralCode);
+        }
+
+        // ── Fire registered event & login ─────────────────────────────
+        event(new Registered($user));
+        $this->guard()->login($user);
+
+        session()->put('user_just_registered', $user->id);
+
+        // ── Membership redirects layer 1 ──────────────────────────────
+        if (session()->has('membership1_after_login')) {
+            $redirectUrl = session()->pull('membership1_after_login');
+            return redirect($redirectUrl);
+        }
+
+        if (session()->has('membership_after_login')) {
+            $redirectUrl = session()->pull('membership_after_login');
+            return redirect($redirectUrl);
+        }
+
+        // ── registered() hook ─────────────────────────────────────────
+        if ($response = $this->registered($request, $user)) {
+            if ($request->wantsJson()) {
+                return $response;
+            }
+
+            if (session()->has('membership1_after_login')) {
+                $redirectUrl = session()->pull('membership1_after_login');
+                return redirect($redirectUrl);
+            }
+
+            if (session()->has('membership_after_login')) {
+                $redirectUrl = session()->pull('membership_after_login');
+                return redirect($redirectUrl);
+            }
+
+            return $response;
+        }
+
+        // ── Final fallback ─────────────────────────────────────────────
+        if (session()->has('membership1_after_login')) {
+            $redirectUrl = session()->pull('membership1_after_login');
+            return redirect($redirectUrl);
+        }
+
+        if (session()->has('membership_after_login')) {
+            $redirectUrl = session()->pull('membership_after_login');
+            return redirect($redirectUrl);
+        }
+
+        return $request->wantsJson()
+            ? new JsonResponse([], 201)
+            : redirect()->route('homepage');
+    }
+
+    public function resendRegisterOtp()
+    {
+        $email  = session()->get('register_otp_email');
+        $userId = session()->get('register_otp_user_id');
+
+        if (!$email || !$userId) {
+            return redirect('/login');
+        }
+
+        $user = User::find($userId);
+
+        if (!$user) {
+            return redirect('/login');
+        }
+
+        $otp = rand(100000, 999999);
+
+        $user->update([
+            'verify_otp'     => $otp,
+            'otp_expires_at' => time() + (10 * 60),
+        ]);
+
+        $generalSettings = getGeneralSettings();
+
+        Mail::send('web.default.auth.otp_verify', [
+            'otp'             => $otp,
+            'generalSettings' => $generalSettings,
+            'email'           => $email,
+        ], function ($message) use ($email, $generalSettings) {
+            $message->from(
+                !empty($generalSettings['site_email']) ? $generalSettings['site_email'] : env('MAIL_FROM_ADDRESS'),
+                env('MAIL_FROM_NAME')
+            );
+            $message->to($email);
+            $message->subject('Verify Your Email - OTP Code');
+        });
+
+        $toastData = [
+            'title'  => 'OTP Resent',
+            'msg'    => 'A new OTP has been sent to your email address.',
+            'status' => 'success'
+        ];
+
+        return back()->with(['toast' => $toastData]);
+    }
 
     protected function registered(Request $request, $user)
     {

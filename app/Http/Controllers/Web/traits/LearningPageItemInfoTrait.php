@@ -73,7 +73,7 @@ trait LearningPageItemInfoTrait
         $checkSequenceContent = !empty($file) ? $file->checkSequenceContent() : null;
         $sequenceContentHasError = (!empty($checkSequenceContent) and (!empty($checkSequenceContent['all_passed_items_error']) or !empty($checkSequenceContent['access_after_day_error'])));
 
-        if (!empty($file) and ($file->accessibility == 'free' or $this->checkCourseAccess($file->webinar_id)) and !$sequenceContentHasError) {
+        if (!empty($file) and ($file->accessibility == 'free' or $this->checkCourseAccess($file->webinar_id))) {
 
             $filePath = url($file->file);
 
@@ -122,7 +122,7 @@ trait LearningPageItemInfoTrait
         $checkSequenceContent = !empty($session) ? $session->checkSequenceContent() : null;
         $sequenceContentHasError = (!empty($checkSequenceContent) and (!empty($checkSequenceContent['all_passed_items_error']) or !empty($checkSequenceContent['access_after_day_error'])));
 
-        if (!empty($session) and $this->checkCourseAccess($session->webinar_id) and !$sequenceContentHasError) {
+        if (!empty($session) and $this->checkCourseAccess($session->webinar_id)) {
 
             // Learning Last View
             $this->storeCourseLearningLastView($session->webinar_id, $session->id, 'session');
@@ -287,7 +287,7 @@ trait LearningPageItemInfoTrait
         $checkSequenceContent = !empty($textLesson) ? $textLesson->checkSequenceContent() : null;
         $sequenceContentHasError = (!empty($checkSequenceContent) and (!empty($checkSequenceContent['all_passed_items_error']) or !empty($checkSequenceContent['access_after_day_error'])));
 
-        if (!empty($textLesson) and ($textLesson->accessibility == 'free' or $this->checkCourseAccess($textLesson->webinar_id)) and !$sequenceContentHasError) {
+        if (!empty($textLesson) and ($textLesson->accessibility == 'free' or $this->checkCourseAccess($textLesson->webinar_id))) {
 
             $attachments = [];
 

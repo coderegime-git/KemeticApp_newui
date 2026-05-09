@@ -28,6 +28,29 @@
     box-shadow: 0 6px 20px rgba(212,175,55,.3);
     color: #000;
 }
+/* Constrain main image and description images */
+.shopdetail-hero {
+    max-height: 500px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: #000;
+}
+.shopdetail-hero img {
+    max-height: 500px;
+    width: auto !important;
+    object-fit: contain !important;
+}
+.shopdetail-about img {
+    max-width: 100% !important;
+    height: auto !important;
+    border-radius: 8px;
+    margin: 10px 0;
+}
+.shopdetail-thumb.active {
+    border-color: var(--gold, #FFD700) !important;
+    opacity: 1;
+}
 </style>
 @endpush
 
@@ -148,7 +171,7 @@
           <div class="shopdetail-vendor">
             <img src="https://cjdropshipping.com/favicon.ico" style="width:28px;height:28px;border-radius:50%" alt="CJ">
             <div style="margin-left:8px">
-              <strong>CJDropshipping</strong>
+              <strong>Dropshipping</strong>
               <span class="shopdetail-muted"> • Verified Dropship Supplier</span>
             </div>
           </div>
@@ -211,9 +234,8 @@
       </div>
       @endif
 
-      {{-- Add to Product Action --}}
       <div style="margin:20px 0">
-        <a href="/panel/store/products/new?cj_vid={{ $product['pid'] }}" class="btn-add-product">
+        <a href="/panel/store/products/new?cj_vid={{ $product['pid'] }}&cj_variant_id={{ $variants[0]['vid'] ?? '' }}" id="cjAddProductLink" class="btn-add-product">
             {{ !empty($localProduct) ? 'Edit Linked Product' : 'Add to Product' }}
         </a>
       </div>
@@ -225,12 +247,23 @@
         <div class="shopdetail-muted" style="font-weight:800;margin-bottom:10px">Save CJ Variants to Store</div>
         <div style="max-height: 150px; overflow-y: auto; margin-bottom: 15px;">
             @foreach($variants as $v)
-            <label style="display: flex; align-items: center; gap: 8px; margin-bottom: 8px; font-size: 13px;">
-                <input type="checkbox" name="variants[]" value="{{ $v['vid'] }}" 
-                       {{ in_array($v['vid'], $savedVariants) ? 'checked' : '' }}>
-                {{ $v['variantNameEn'] ?? $v['variantKey'] ?? 'Variant' }} 
-                (${{ number_format((float)($v['variantSellPrice'] ?? $v['sellPrice'] ?? 0), 2) }})
-            </label>
+                @php
+                    $cjVPrice = (float)($v['variantSellPrice'] ?? $v['sellPrice'] ?? 0);
+                    $shipping = (float)($localProduct->cj_shipping_price ?? 0);
+                    $earning = (float)($localProduct->cj_your_price ?? 0);
+                    $sellPrice = ceil(($cjVPrice + $shipping + $earning) / 0.9);
+                @endphp
+                <label style="display: flex; align-items: center; gap: 8px; margin-bottom: 8px; font-size: 13px;">
+                    <input type="checkbox" name="variants[]" value="{{ $v['vid'] }}" 
+                           {{ in_array($v['vid'], $savedVariants) ? 'checked' : '' }}>
+                    <div style="display: flex; flex-direction: column;">
+                        <span>{{ $v['variantNameEn'] ?? $v['variantKey'] ?? 'Variant' }}</span>
+                        <span style="font-size: 11px; opacity: 0.6;">
+                            CJ: ${{ number_format($cjVPrice, 2) }} → 
+                            <strong style="color: var(--gold,#F2C94C)">Sell: ${{ number_format($sellPrice, 2) }}</strong>
+                        </span>
+                    </div>
+                </label>
             @endforeach
         </div>
         <button type="submit" class="btn-add-product" style="padding: 10px; font-size: 14px; background: #fff; color: #000;">
@@ -243,7 +276,7 @@
       <div style="margin-top:16px;border-top:1px solid var(--edge);padding-top:12px">
         <div class="shopdetail-muted" style="font-weight:800;margin-bottom:8px">Includes</div>
         <ul style="margin:0 0 0 18px;line-height:1.7">
-          <li>CJ verified dropship supplier</li>
+          <li>Verified dropship supplier</li>
           <li>Worldwide shipping available</li>
           <li>Inventory tracked in real-time</li>
           @if(!empty($product['isFreeShipping']))<li>✅ Free shipping</li>@endif
@@ -428,6 +461,13 @@ input[type=number]::-webkit-inner-spin-button { -webkit-appearance: none; }
       const price = parseFloat(opt.dataset.price || 0).toFixed(2);
       document.getElementById('cjDisplayPrice').textContent = '$' + price;
       document.getElementById('cjSelectedSku').textContent  = 'SKU: ' + (opt.dataset.sku || '');
+      
+      const link = document.getElementById('cjAddProductLink');
+      if (link) {
+        const url = new URL(link.href, window.location.origin);
+        url.searchParams.set('cj_variant_id', this.value);
+        link.href = url.pathname + url.search;
+      }
     });
   }
 
@@ -438,6 +478,13 @@ input[type=number]::-webkit-inner-spin-button { -webkit-appearance: none; }
     // Swap variant image if available
     if (v.variantImage) {
       document.getElementById('cjMainImage').src = v.variantImage;
+    }
+
+    const link = document.getElementById('cjAddProductLink');
+    if (link && v.vid) {
+        const url = new URL(link.href, window.location.origin);
+        url.searchParams.set('cj_variant_id', v.vid);
+        link.href = url.pathname + url.search;
     }
   }
 

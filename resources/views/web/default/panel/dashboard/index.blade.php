@@ -404,13 +404,9 @@ document.addEventListener('DOMContentLoaded', function() {
                 }
             ],
             'savedReels': [
-                { key: 'title', label: 'Reel', width: '35%' },
-                { key: 'creator', label: 'Creator', width: '25%' },
-                { key: 'views', label: 'Views', width: '15%',
-                  format: (val) => val.toLocaleString()
-                },
-                { key: 'duration', label: 'Duration', width: '10%' },
-                { key: 'saved_at', label: 'Saved', width: '15%' }
+                { key: 'title', label: 'Reel', width: '45%' },
+                { key: 'creator', label: 'Creator', width: '30%' },
+                { key: 'saved_at', label: 'Saved', width: '25%' }
             ],
             'orders': [
                 { key: 'order_id', label: 'Order #', width: '15%' },
@@ -431,16 +427,15 @@ document.addEventListener('DOMContentLoaded', function() {
                 }
             ],
             'courses': [
-                { key: 'title', label: 'Course', width: '30%' },
-                { key: 'type', label: 'Type', width: '15%' },
-                { key: 'price', label: 'Price', width: '15%' },
+                { key: 'title', label: 'Course', width: '35%' },
+                { key: 'type', label: 'Type', width: '20%' },
+                { key: 'price', label: 'Price', width: '20%' },
                 { key: 'enrollments', label: 'Students', width: '15%',
                   format: (val) => val.toLocaleString()
                 },
-                { key: 'rating', label: 'Rating', width: '15%',
+                { key: 'rating', label: 'Rating', width: '10%',
                   format: (val) => `${val}/5 ⭐`
-                },
-                { key: 'updated_at', label: 'Updated', width: '10%' }
+                }
             ],
             'students': [
                 { key: 'name', label: 'Student', width: '25%' },
@@ -475,11 +470,10 @@ document.addEventListener('DOMContentLoaded', function() {
                 { key: 'method', label: 'Method', width: '25%' }
             ],
             'products': [
-                { key: 'name', label: 'Product', width: '35%' },
-                { key: 'sku', label: 'SKU', width: '20%' },
-                { key: 'price', label: 'Price', width: '15%' },
+                { key: 'name', label: 'Product', width: '45%' },
+                { key: 'price', label: 'Price', width: '20%' },
                 { key: 'stock', label: 'Stock', width: '15%' },
-                { key: 'status', label: 'Status', width: '15%' }
+                { key: 'status', label: 'Status', width: '20%' }
             ],
             'ordersVendor': [
                 { key: 'order_id', label: 'Order #', width: '20%' },
@@ -489,11 +483,9 @@ document.addEventListener('DOMContentLoaded', function() {
                 { key: 'status', label: 'Status', width: '15%' }
             ],
             'books': [
-                { key: 'title', label: 'Book', width: '35%' },
-                { key: 'format', label: 'Format', width: '20%' },
-                { key: 'price', label: 'Price', width: '15%' },
-                { key: 'sales', label: 'Sales', width: '15%' },
-                { key: 'status', label: 'Status', width: '15%' }
+                { key: 'title', label: 'Book', width: '50%' },
+                { key: 'format', label: 'Format', width: '25%' },
+                { key: 'price', label: 'Price', width: '25%' }
             ],
             'royalties': [
                 { key: 'book_title', label: 'Month', width: '25%' },

@@ -118,7 +118,7 @@
             @if(auth()->check())
             <a href="/membership"><span class="material-symbols-outlined">workspace_premium</span> Join Now</a>
           @else
-            <a href="/register"><span class="material-symbols-outlined">workspace_premium</span> Join Now</a>
+            <a href="/login"><span class="material-symbols-outlined">workspace_premium</span> Join Now</a>
           @endif
             
           </button>

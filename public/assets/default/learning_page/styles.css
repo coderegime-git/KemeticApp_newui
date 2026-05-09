@@ -9,6 +9,7 @@ html {
   html {
     overflow-y: auto;
     overflow-x: hidden;
+    height: auto;
   }
 }
 
@@ -19,6 +20,7 @@ body {
   body {
     overflow-y: auto;
     overflow-x: hidden;
+    height: auto;
   }
 }
 
@@ -94,14 +96,15 @@ body {
 }
 @media (max-width: 991px) {
   .learning-page .learning-page-tabs {
-    position: absolute;
-    right: -200px;
-    bottom: 0;
-    top: 15px;
-    background-color: #fff;
-    border-left: 1px solid #f1f1f1;
-    width: 0;
-    min-width: 0;
+    position: relative;
+    right: auto;
+    bottom: auto;
+    top: auto;
+    background-color: #1A1A1A;
+    border-left: none;
+    border-top: 1px solid #333;
+    width: 100% !important;
+    min-width: 100% !important;
     height: auto !important;
     z-index: 5;
   }
@@ -154,7 +157,7 @@ body {
   }
 }
 .learning-page .learning-page-tabs .tab-item.active, .learning-page .learning-page-tabs .certificate-item.active {
-  background-color: #f1f1f1;
+  background-color: rgba(242, 201, 76, 0.1);
 }
 .learning-page .learning-page-tabs .tab-item .tab-item-info, .learning-page .learning-page-tabs .certificate-item .tab-item-info {
   display: none;
@@ -162,7 +165,7 @@ body {
 .learning-page .learning-content {
   width: 100%;
   height: calc(100vh - 120px);
-  background-color: #FFFFFF;
+  background-color: #1A1A1A;
   border-radius: 10px;
   overflow-y: auto;
 }
@@ -171,7 +174,7 @@ body {
   height: 80px;
 }
 .learning-page .learning-content .learning-content-box {
-  border: dashed 1px #ececec;
+  border: dashed 1px #333;
 }
 @media (min-width: 991px) {
   .learning-page .learning-content .learning-content-box {
@@ -198,7 +201,7 @@ body {
   }*/
 }
 .learning-page .learning-content .text-lesson-content p, .learning-page .learning-content .text-lesson-content span {
-  color: #818894 !important;
+  color: #e0e0e0 !important;
   margin-top: 15px !important;
 }
 .learning-page .learning-content .text-lesson-content img {
@@ -208,16 +211,18 @@ body {
 .learning-page .learning-content .text-lesson-content h1, .learning-page .learning-content .text-lesson-content h2, .learning-page .learning-content .text-lesson-content h3 {
   font-size: 20px !important;
   font-weight: bold !important;
-  color: #171347 !important;
+  color: #F2C94C !important;
   margin-top: 25px !important;
 }
 .learning-page .learning-content .text-lesson-content li {
   list-style: inherit !important;
+  color: #e0e0e0 !important;
 }
 @media (max-width: 991px) {
   .learning-page .learning-content {
-    height: calc(100vh - 240px);
-    min-height: calc(100vh - 240px);
+    height: auto;
+    min-height: 50vh;
+    overflow-y: visible;
   }
   .learning-page .learning-content .learning-content-video-player {
     height: 60vh;

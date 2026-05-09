@@ -717,12 +717,12 @@ class PaymentController extends Controller
                     "external_id" => "item-reference-1",
                     "printable_normalization" =>[
                         "cover" => [
-                            "source_url" => "https://kemetic.app/store/lulu/cover/cover_1776494782.pdf",
-                            // "source_url" => url($book->cover_pdf),
+                            // "source_url" => "https://kemetic.app//store/lulu/cover/cover_1777529086.pdf",
+                            "source_url" => url($book->cover_pdf),
                         ],
                         "interior" => [
-                            "source_url" => "https://kemetic.app/store/lulu/interior/interior_1776494755.pdf",
-                            // "source_url" => url($book->url),
+                            // "source_url" => "https://kemetic.app/store/lulu/interior/interior_1777529012.pdf",
+                            "source_url" => url($book->url),
                             "page_count" => $book->page_count // You need to add the correct page count
                         ],
                         "pod_package_id" => "0600X0900BWSTDPB060UW444MXX"
@@ -799,10 +799,19 @@ class PaymentController extends Controller
             \Log::error("File exists: " . (file_exists($this->laragonCertPath) ? 'Yes' : 'No'));
         }
 
+        $responseData = json_decode($response, true);
+
+        if ($responseData && isset($responseData['id'])) {
+            BookOrder::where('book_id', $bookid)
+            ->where('buyer_id', $userid)
+            ->where('status', BookOrder::$waitingDelivery) // Only update if still waiting delivery
+            ->update([
+                'printjob_id' => $responseData['id']
+            ]);
+        }
+
         // dd($data);
         // dd($response);
-
-        $responseData = json_decode($response, true);
        
         return $responseData;
     }

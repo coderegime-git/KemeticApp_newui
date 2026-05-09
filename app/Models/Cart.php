@@ -111,9 +111,23 @@ class Cart extends Model
         } else if (!empty($cart->reserve_meeting_id) and !empty($cart->reserveMeeting)) {
             $price += $cart->reserveMeeting->paid_amount;
         } else if (!empty($cart->product_order_id) and !empty($cart->productOrder) and !empty($cart->productOrder->product)) {
-            $product = $cart->productOrder->product;
+            $productOrder = $cart->productOrder;
+            $product = $productOrder->product;
+            $price_val = $product->price;
 
-            $price += (($product->price * $cart->productOrder->quantity) - $product->getDiscountPrice());
+            if (!empty($productOrder->specifications)) {
+                $specifications = json_decode($productOrder->specifications, true);
+                if (!empty($specifications['cj_vid'])) {
+                    $variant = \App\Models\ProductCjVariant::where('product_id', $product->id)
+                        ->where('vid', $specifications['cj_vid'])
+                        ->first();
+                    if ($variant) {
+                        $price_val = $variant->sell_price;
+                    }
+                }
+            }
+
+            $price += (($price_val * $productOrder->quantity) - $product->getDiscountPrice());
         }
 
         return $price;

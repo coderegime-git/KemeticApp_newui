@@ -129,7 +129,7 @@ class ShareRedirectController extends Controller
                     // Use found thumbnail or default
                     $thumbnailUrl = $thumbnailPath 
                         ? url($thumbnailPath) 
-                        : asset('store/1/default_images/website-logo.png');
+                        : asset('store/1/logo/69f1966bd17cc.webp');
 
                     $ogData = [
                         'title'       => $portal->title ?? 'Portal Reel',
@@ -152,7 +152,7 @@ class ShareRedirectController extends Controller
         elseif ($page === 'course') {
             if ($value) {
                 $course = Webinar::find($value);
-                $course_translation = WebinarTranslation::find($value);
+                $course_translation = WebinarTranslation::where('webinar_id', $value)->first();
 
                 if ($course) {
                     $slug = $course->slug;
@@ -172,7 +172,7 @@ class ShareRedirectController extends Controller
         elseif ($page === 'article') {
             if ($value) {
                 $blog = Blog::find($value);
-                $blog_translation = BlogTranslation::find($value);
+                $blog_translation = BlogTranslation::where('blog_id', $value)->first();
 
                 if ($blog) {
                     $slug = $blog->slug;
@@ -192,7 +192,7 @@ class ShareRedirectController extends Controller
         elseif ($page === 'shop') {
             if ($value) {
                 $product = Product::find($value);
-                $product_translation = ProductTranslation::find($value);
+                $product_translation = ProductTranslation::where('product_id', $value)->first();
                 $product_media = ProductMedia::where('product_id', $value)->first();
                 if($product->is_cj_product=='1'){
                     $imageUrl = $product_media->path;
@@ -218,7 +218,7 @@ class ShareRedirectController extends Controller
         elseif ($page === 'scrolls') {
             if ($value) {
                 $book = Book::find($value);
-                $book_translation = BookTranslation::find($value);
+                $book_translation = BookTranslation::where('book_id', $value)->first();
                 if ($book) {
                     $slug = $book->slug;
                     $ogData = [
@@ -231,6 +231,34 @@ class ShareRedirectController extends Controller
                 }
             }
             $webUrl .= $slug ? "/book/{$slug}" : "/book";
+        }
+        elseif ($page === 'profile') {
+            if ($value) {
+                $user = User::find($value);
+                if ($user) {
+                    $avatarUrl = $user->getAvatar(200);
+            
+                    // Make sure it's an absolute URL
+                    if (!str_starts_with($avatarUrl, 'http')) {
+                        $avatarUrl = url($avatarUrl);
+                    }
+
+                    // full_name may be an accessor — fall back to name
+                    $displayName = $user->full_name ?? 'User';
+
+                    // bio may not exist on your model — guard it
+                    $bio = $user->bio ?? 'View this user\'s profile on Kemetic App';
+
+                    $ogData = [
+                        'title'       => $displayName,
+                        'description' => $bio,
+                        'image'       => $avatarUrl,
+                        'url'         => $request->fullUrl(),
+                        'type'        => 'profile',
+                    ];
+                }
+            }
+            $webUrl .= "/users/{$value}/profile";
         }
         
         // HOME

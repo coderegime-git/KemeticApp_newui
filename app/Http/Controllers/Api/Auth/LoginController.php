@@ -125,14 +125,15 @@ class LoginController extends Controller
             $data['profile_completion'] = $profile_completion;
         }
 
-        UserFirebaseSessions::create([
-            "user_id"=>$user->id,
-            "token"=>$token,
-            "ip"=>$request->getClientIp(),
-            "fcm_token"=>"",
-        ]);
-        $userLoginHistoryMixin = new UserLoginHistoryMixin();
-        $userLoginHistoryMixin->storeUserLoginHistory($user);
+        // UserFirebaseSessions::create([
+        //     "user_id"=>$user->id,
+        //     "token"=>$token,
+        //     "ip"=>$request->getClientIp(),
+        //     "fcm_token"=>"",
+        // ]);
+
+        // $userLoginHistoryMixin = new UserLoginHistoryMixin();
+        // $userLoginHistoryMixin->storeUserLoginHistory($user);
         $user->update([
             'logged_count' => $user->logged_count + 1
         ]);

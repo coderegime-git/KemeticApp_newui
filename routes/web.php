@@ -37,8 +37,8 @@ Route::group(['prefix' => 'my_api', 'namespace' => 'Api\Panel', 'middleware' => 
 });
 
 Route::group(['prefix' => 'api_sessions'], function () {
-    Route::get('/big_blue_button', ['uses' => 'Api\Panel\SessionsController@BigBlueButton'])->name('big_blue_button');
-    Route::get('/agora', ['uses' => 'Api\Panel\SessionsController@agora'])->name('agora');
+    Route::get('/big_blue_button', ['uses' => 'Api\Panel\SessionController@BigBlueButton'])->name('big_blue_button');
+    Route::get('/agora', ['uses' => 'Api\Panel\SessionController@agora'])->name('agora');
 });
 
 Route::get('/mobile-app', 'Web\MobileAppController@index')->middleware(['share'])->name('mobileAppRoute');
@@ -95,6 +95,14 @@ Route::group(['namespace' => 'Auth', 'middleware' => ['check_mobile_app', 'share
     Route::get('/facebook/redirect', 'SocialiteController@redirectToFacebook');
     Route::get('/facebook/callback', 'SocialiteController@handleFacebookCallback');
     Route::get('/reff/{code}', 'ReferralController@referral');
+
+    Route::get('/login/verify-otp',  'LoginController@showLoginOtpForm');
+    Route::post('/login/verify-otp', 'LoginController@verifyLoginOtp');
+    Route::get('/login/resend-otp',  'LoginController@resendLoginOtp');
+
+    Route::get('/register/verify-otp', 'RegisterController@showRegisterOtpForm');
+    Route::post('/register/verify-otp', 'RegisterController@verifyRegisterOtp');
+    Route::get('/register/resend-otp', 'RegisterController@resendRegisterOtp');
 });
 
 Route::group(['namespace' => 'Web', 'middleware' => ['check_mobile_app', 'impersonate', 'share', 'check_maintenance', 'check_restriction']], function () {
@@ -293,6 +301,7 @@ Route::group(['namespace' => 'Web', 'middleware' => ['check_mobile_app', 'impers
         Route::post('/payment-request', 'PaymentController@paymentRequest');
         Route::post('/recurringPayment-request', 'PaymentController@recurringPaymentRequest');
         Route::post('/webhook', 'PaymentController@handleWebhook');
+        Route::post('/lulu-webhook', 'LuluWebhookController@handle');
         Route::get('/recurringVerify/{gateway}', ['as' => 'payment_verify', 'uses' => 'PaymentController@recurringPaymentVerify']);
         Route::get('/verify/{gateway}', ['as' => 'payment_verify', 'uses' => 'PaymentController@paymentVerify']);
         Route::post('/verify/{gateway}', ['as' => 'payment_verify_post', 'uses' => 'PaymentController@paymentVerify']);
@@ -524,6 +533,8 @@ Route::group(['namespace' => 'Web', 'middleware' => ['check_mobile_app', 'impers
     Route::get('/media-kit', 'HomeController@media_kit')->name('media-kit');
     Route::get('/upload-media', 'HomeController@upload_media');
     Route::post('/create-media', 'HomeController@create_media');
+
+   
 
     /* reels */
     //	Route::get('/reels', [App\Http\Controllers\ReelController::class, 'index'])->name('reels.index');

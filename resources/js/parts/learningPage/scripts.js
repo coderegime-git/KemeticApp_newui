@@ -164,48 +164,47 @@
 
     function handlePersonalNoteHtml(item) {
         if (courseNotesStatus === '1') {
-            return `<div class="js-personal-notes-form learning-page-personal-note bg-white mt-15 p-10 rounded-sm" data-item-id="${item.id}" data-item-type="${item.modelName}" data-course-id="${item.webinar_id}">
-                <h4 class="font-14 font-weight-bold text-secondary">${personalNoteLang}</h4>
-                <p class="mt-5 font-12 text-gray">${personalNoteHintLang}</p>
+            return `
+        <div class="kemetic-note-box js-personal-notes-form" 
+            data-item-id="${item.id}" 
+            data-item-type="${item.modelName}" 
+            data-course-id="${item.webinar_id}">
+            
+            <!-- Title -->
+            <h4 class="note-title">${personalNoteLang}</h4>
+            <p class="note-subtitle">${personalNoteHintLang}</p>
 
-                <textarea name="notes" rows="5" class="form-control mt-5">${(item.personalNote && item.personalNote.note) ? item.personalNote.note : ''}</textarea>
+            <!-- Text area -->
+            <textarea name="notes" rows="5" class="note-textarea">${item.personalNote?.note ?? ''}</textarea>
 
-                ${
-                    (courseNotesShowAttachment) ?
-                        `<div class="form-group mt-15">
-                            <label class="input-label">${attachmentLang}</label>
+            <!-- Attachment -->
+            ${courseNotesShowAttachment ? `
+            <div class="note-attachment">
+                <label class="note-label">${attachmentLang}</label>
 
-                            <div class="input-group mr-10">
-                                <div class="input-group-prepend">
-                                    <button type="button" class="input-group-text panel-file-manager" data-input="personalNotesAttachment" data-preview="holder">
-                                        <i data-feather="upload" width="18" height="18" class="text-white"></i>
-                                    </button>
-                                </div>
-                                <input type="text" name="attach" id="personalNotesAttachment" value="${(item.personalNote && item.personalNote.attachment) ? item.personalNote.attachment : ''}" class="form-control" placeholder=""/>
+                <div class="note-attach-box">
+                    <button type="button" class="attach-btn panel-file-manager" 
+                            data-input="personalNotesAttachment" data-preview="holder">
+                        <i data-feather="upload" width="18" height="18"></i>
+                    </button>
 
-                                ${
-                                    (item.personalNote && item.personalNote.attachment) ?
-                                        `<div class="input-group-append">
-                                            <a href="/course/personal-notes/${item.personalNote.id}/download-attachment" target="_blank" class="input-group-text">
-                                                <i data-feather="download" width="18" height="18" class="text-white"></i>
-                                            </a>
-                                        </div>` : ''
-                                }
-
-                            </div>
-                        </div>`
-                        : ''
-                }
-
-                <div class="d-flex align-items-center mt-15">
-                    <button type="button" class="js-save-personal-note btn btn-sm btn-primary">${saveNoteLang}</button>
-                    ${
-                (item.personalNote && item.personalNote.note) ?
-                    '<button type="button" class="js-clear-personal-note btn btn-sm btn-danger ml-2">' + clearNoteLang + '</button>'
-                    : ''
-            }
+                    <input type="text" 
+                          id="personalNotesAttachment" 
+                          name="attach" 
+                          class="attach-input"
+                          value="${item.personalNote?.attachment ?? ''}">
                 </div>
-            </div>`;
+            </div>` : ''}
+
+            <!-- Buttons -->
+            <div class="note-actions">
+                <button type="button" class="note-btn-save js-save-personal-note">${saveNoteLang}</button>
+
+                ${item.personalNote?.note ? 
+                `<button type="button" class="note-btn-clear js-clear-personal-note">${clearNoteLang}</button>` 
+                : ''}
+            </div>
+        </div>`;
         }
 
         return '';
@@ -221,11 +220,17 @@
 
         if (result && result !== '') {
             otherHtml = `
-                <a href="/panel/quizzes/results/${result}/showCertificate" target="_blank" class="btn btn-primary btn-sm mt-15">${downloadLang}</a>
+                <a href="/panel/quizzes/results/${result}/showCertificate" 
+                  target="_blank" 
+                  class="kemetic-certificate-btn">
+                    ${downloadLang}
+                </a>
             `;
         } else {
             otherHtml = `
-                <button type="button" disabled class="btn btn-primary btn-sm mt-15">${downloadLang}</button>
+                <button type="button" disabled class="kemetic-disabled-btn">
+                    ${downloadLang}
+                </button>
             `;
         }
 
@@ -244,11 +249,17 @@
 
         if (id && id !== '') {
             otherHtml = `
-                <a href="/panel/certificates/webinars/${id}/show" target="_blank" class="btn btn-primary btn-sm mt-15">${showLang}</a>
+                <a href="/panel/certificates/webinars/${id}/show" 
+                  target="_blank" 
+                  class="kemetic-show-btn">
+                    ${showLang}
+                </a>
             `;
         } else {
             otherHtml = `
-                <button type="button" disabled class="btn btn-primary btn-sm mt-15">${showLang}</button>
+                <button type="button" disabled class="kemetic-show-btn-disabled">
+                    ${showLang}
+                </button>
             `;
         }
 
@@ -270,16 +281,20 @@
             hint = quiz.expired_message;
         } else {
             if (quiz.expire_time_message && quiz.expire_time_message !== "null") {
-                otherHtml += `<div class="mt-10 font-14 text-gray">${quiz.expire_time_message}</div>`;
+                otherHtml += `
+                <div class="kemetic-expire-msg">
+                    ${quiz.expire_time_message}
+                </div>
+            `;
             }
 
             if (quiz.can_try) {
                 otherHtml += `
-                <a href="/panel/quizzes/${quiz.id}/start" target="_blank" class="btn btn-primary btn-sm mt-15">${quizPageLang}</a>
+                <a href="/panel/quizzes/${quiz.id}/start" target="_blank" class="btn btn-sm mt-15" style="background:#F2C94C; color:#1C1C1C;">${quizPageLang}</a>
             `;
             } else {
                 otherHtml += `
-                <button type="button" class="js-cant-start-quiz-toast btn btn-primary btn-sm mt-15 disabled">${quizPageLang}</button>
+                <button type="button" disabled class="btn btn-sm mt-15" style="background:#333; color:#F2C94C;">${quizPageLang}</button>
             `;
             }
         }
@@ -299,7 +314,7 @@
         const hint = sessionIsFinishedHintLang;
         const img = 'live_session.svg';
         const otherHtml = `
-                <a href="${courseUrl}" class="btn btn-white btn-sm mt-15">${coursePageLang}</a>
+                <a href="${courseUrl}" class="kemetic-btn-outline mt-15">${coursePageLang}</a>
         `;
 
         let html = handleContentBoxHtml(title, hint, img, otherHtml, 'mt-10');
@@ -317,9 +332,9 @@
         const hint = thisSessionWillBeStartedOnLang + ' ' + session.start_data;
         const img = 'live_session.svg';
         const otherHtml = `
-            <div class="d-flex align-items-center mt-15">
-                <button type="button" id="checkAgainSession" data-type="session" data-id="${session.id}" class="btn btn-primary btn-sm ">${checkAgainLang}</button>
-                <a href="${courseUrl}" class="btn btn-white btn-sm ml-10">${coursePageLang}</a>
+            <div class="kemetic-flex mt-15">
+                <button type="button" id="checkAgainSession" data-type="session" data-id="${session.id}" class="kemetic-btn-gold">${checkAgainLang}</button>
+                <a href="${courseUrl}" class="kemetic-btn-outline ml-10">${coursePageLang}</a>
             </div>
         `;
 
@@ -341,14 +356,14 @@
         let otherHtml = "";
 
         if (session.password) {
-            otherHtml += `<div class="font-14 font-weight-500 text-gray mt-5">${passwordLang}: ${session.password}</div>`
+            otherHtml += `<div class="kemetic-info-text mt-5">${passwordLang}: ${session.password}</div>`
         }
 
 
         otherHtml += `
-            <div class="d-flex align-items-center mt-15">
-                <a href="${session.join_url}" target="_blank" class="btn btn-primary btn-sm ">${joinTheClassLang}</a>
-                <a href="${courseUrl}" class="btn btn-white btn-sm ml-10">${coursePageLang}</a>
+            <div class="kemetic-flex mt-15">
+                <a href="${session.join_url}" target="_blank" class="kemetic-btn-gold">${joinTheClassLang}</a>
+                <a href="${courseUrl}" class="kemetic-btn-outline ml-10">${coursePageLang}</a>
             </div>
         `;
 
@@ -533,16 +548,16 @@
 
     function handleContentBoxHtml(title, hint, img, html = null, titleClassName = null) {
         return `<div class="d-flex align-items-center justify-content-center w-100 h-100">
-                    <div class="learning-content-box d-flex align-items-center justify-content-center flex-column p-15 p-lg-30 rounded-lg">
-                        <div class="learning-content-box-icon">
-                            <img src="/assets/default/img/learning/${img}" alt="downloadable icon">
+                    <div class="learning-content-box d-flex align-items-center justify-content-center flex-column p-15 p-lg-30 rounded-lg" style="background:#1C1C1C; color:#F2C94C;">
+                        <div class="learning-content-box-icon mb-10">
+                            <img src="/assets/default/img/learning/${img}" alt="icon">
                         </div>
 
-                        <h4 class="font-16 font-weight-bold text-dark ${titleClassName ?? ''}">${title}</h4>
+                        <h4 class="font-16 font-weight-bold ${titleClassName ?? ''}">${title}</h4>
 
                         <span class="font-14 font-weight-500 text-gray mt-5">${hint}</span>
 
-                        ${html ?? ''}
+                        <div class="mt-15">${html ?? ''}</div>
                     </div>
                 </div>`
             ;

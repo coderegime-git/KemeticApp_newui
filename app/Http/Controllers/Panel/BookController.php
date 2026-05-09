@@ -9,7 +9,12 @@ use App\User;
 use App\Models\Role;
 use App\Models\BookTranslation;
 use App\Services\PdfResizerService;
+use App\Models\BookOrder;
+use App\Models\Sale;
+use App\Models\Gift;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 
 class BookController extends Controller
 {
@@ -22,7 +27,7 @@ class BookController extends Controller
         $this->pdfResizer = $pdfResizer;
         // Laragon certificate path - adjust if different
         $this->laragonCertPath = "C:/laragon/etc/ssl/cert.pem";
-
+        
         // Alternative paths to check
         $alternativePaths = [
             "C:/laragon/etc/ssl/cert.pem",
@@ -31,7 +36,7 @@ class BookController extends Controller
             base_path("cacert.pem"), // If you want to store in your project
             storage_path("app/certs/cacert.pem"), // Custom storage path
         ];
-
+        
         // Find the first existing certificate file
         foreach ($alternativePaths as $path) {
             if (file_exists($path)) {
@@ -52,16 +57,13 @@ class BookController extends Controller
         $query = Book::query();
 
         $books = $this->filters($query, $request)
-            ->with([
-                'categories',
-                'creator' => function ($query) {
-                    $query->select('id', 'full_name');
-                }
-            ])
-            ->withCount('comments')
-            ->where('creator_id', auth()->id())
-            ->orderBy('created_at', 'desc')
-            ->paginate(10);
+        ->with(['categories', 'creator' => function ($query) {
+            $query->select('id', 'full_name');
+        }])
+        ->withCount('comments')
+        ->where('creator_id',auth()->id())
+        ->orderBy('created_at', 'desc')
+        ->paginate(10);
 
         $bookCategories = BookCategory::all();
         $adminRoleIds = Role::where('is_admin', true)->pluck('id')->toArray();
@@ -120,7 +122,7 @@ class BookController extends Controller
     {
         //$this->authorize('admin_book_create');
 
-
+        
         $this->validate($request, [
             'locale' => 'required',
             'title' => 'required|string|max:255',
@@ -133,26 +135,26 @@ class BookController extends Controller
             'description' => 'required|string',
             'content' => 'required|string',
         ]);
-
+       
         $data = $request->all();
 
         $pdfService = new PdfResizerService();
-
+        
         $pdfurl = url($data['image_path']);
         $coverpdfurl = url($data['cover_pdf']);
 
-        if ($data['type'] == 'Print') {
+        if($data['type'] == 'Print')
+        {
             $covercheck = $pdfService->resizeForLulu(
                 $coverpdfurl, // interior PDF
                 false                // no full bleed
             );
-
+            
             $coverpageCount = $covercheck['page_count'];
 
             if ($coverpageCount > 1) {
-
                 $toastData = [
-                    'title' => 'Upload Error',
+                    'title' => 'Cover PDFUpload Error',
                     'msg' => 'Cover PDF must be a single page only. Your file contains ' . $coverpageCount . ' pages.',
                     'status' => 'error'
                 ];
@@ -166,18 +168,18 @@ class BookController extends Controller
 
             $interiorPdfPath = str_replace(public_path(), '', $interior['local_path']);
             $pageCount = $interior['page_count'];
-
-            // === START LULU API INTEGRATION ===
+            
             $token = $this->getLuluAccessTokenUsingCurl();
             $podPackageId = "0600X0900BWSTDPB060UW444MXX"; // default
 
             $interiorPublicUrl = url(str_replace('\\', '/', ltrim($interiorPdfPath, '/\\')));
 
             $interiorValidation = $this->validateLuluFile('interior', $interiorPublicUrl, $token);
+            
             if (!empty($interiorValidation['errors'])) {
                 $toastData = [
-                    'title' => 'Interior Validation Error',
-                    'msg' => $interiorValidation['errors'][0]['message'] ?? 'Interior PDF validation failed.',
+                    'title' => 'Interior PDF Validation Error',
+                    'msg' => $this->formatLuluValidationErrors($interiorValidation['errors']),
                     'status' => 'error'
                 ];
                 return back()->with(['toast' => $toastData])->withInput();
@@ -187,8 +189,8 @@ class BookController extends Controller
 
             if (!isset($dimensions['width']) || !isset($dimensions['height'])) {
                 $toastData = [
-                    'title' => 'API Error',
-                    'msg' => 'Failed to calculate cover dimensions from Lulu API.',
+                    'title' => 'Dimension Error',
+                    'msg' => 'Could not calculate cover dimensions from Lulu. Please check your interior PDF page count and try again.',
                     'status' => 'error'
                 ];
                 return back()->with(['toast' => $toastData])->withInput();
@@ -204,22 +206,22 @@ class BookController extends Controller
             $coverPublicUrl = url(str_replace('\\', '/', ltrim($coverPdfPath, '/\\')));
 
             $coverValidation = $this->validateLuluFile('cover', $coverPublicUrl, $token, $podPackageId, $pageCount);
+            // dd($coverValidation);
             if (!empty($coverValidation['errors'])) {
                 $toastData = [
-                    'title' => 'Cover Validation Error',
-                    'msg' => $coverValidation['errors'][0]['message'] ?? 'Cover PDF validation failed.',
+                    'title' => 'Cover PDF Validation Error',
+                    'msg' =>  $this->formatLuluValidationErrors($coverValidation['errors']),
                     'status' => 'error'
                 ];
                 return back()->with(['toast' => $toastData])->withInput();
             }
-            // === END LULU API INTEGRATION ===
-        } else {
+        }
+        else
+        {
             $interiorPdfPath = $data['image_path'];
             $coverPdfPath = $data['cover_pdf'];
             $pageCount = 0;
-        }
-
-
+        }        
 
         // Create the book
         $book = Book::create([
@@ -229,8 +231,8 @@ class BookController extends Controller
             // 'image_cover' => $data['image_cover'],
             // 'url' => $data['image_path'],
             'image_cover' => $data['image_cover'],     // ✅ Lulu cover PDF
-            'url' => $interiorPdfPath,  // ✅ Lulu interior PDF
-            'cover_pdf' => $coverPdfPath,
+            'url'         => $interiorPdfPath,  // ✅ Lulu interior PDF
+            'cover_pdf'   => $coverPdfPath,  
             'page_count' => $pageCount,
             'price' => $data['price'] ?? null,
             'print_price' => $data['print_price'] ?? null,
@@ -271,7 +273,7 @@ class BookController extends Controller
             'book' => $book
         ];
 
-
+        
         return view(getTemplate() . '.panel.book.create', $data);
     }
 
@@ -296,21 +298,22 @@ class BookController extends Controller
         $book = Book::findOrFail($id);
 
         $pdfService = new PdfResizerService();
-
+        
         $pdfurl = url($data['image_path']);
         $coverpdfurl = url($data['cover_pdf']);
 
-        if ($data['type'] == 'Print') {
+        if($data['type'] == 'Print')
+        {
             $covercheck = $pdfService->resizeForLulu(
                 $coverpdfurl, // interior PDF
                 false                // no full bleed
             );
-
+            
             $coverpageCount = $covercheck['page_count'];
 
             if ($coverpageCount > 1) {
                 $toastData = [
-                    'title' => 'Upload Error',
+                    'title' => 'Cover PDFUpload Error',
                     'msg' => 'Cover PDF must be a single page only. Your file contains ' . $coverpageCount . ' pages.',
                     'status' => 'error'
                 ];
@@ -324,18 +327,18 @@ class BookController extends Controller
 
             $interiorPdfPath = str_replace(public_path(), '', $interior['local_path']);
             $pageCount = $interior['page_count'];
-
-            // === START LULU API INTEGRATION ===
+            
             $token = $this->getLuluAccessTokenUsingCurl();
             $podPackageId = "0600X0900BWSTDPB060UW444MXX"; // default
 
             $interiorPublicUrl = url(str_replace('\\', '/', ltrim($interiorPdfPath, '/\\')));
 
             $interiorValidation = $this->validateLuluFile('interior', $interiorPublicUrl, $token);
+            
             if (!empty($interiorValidation['errors'])) {
                 $toastData = [
-                    'title' => 'Interior Validation Error',
-                    'msg' => $interiorValidation['errors'][0]['message'] ?? 'Interior PDF validation failed.',
+                    'title' => 'Interior PDF Validation Error',
+                    'msg' => $this->formatLuluValidationErrors($interiorValidation['errors']),
                     'status' => 'error'
                 ];
                 return back()->with(['toast' => $toastData])->withInput();
@@ -345,8 +348,8 @@ class BookController extends Controller
 
             if (!isset($dimensions['width']) || !isset($dimensions['height'])) {
                 $toastData = [
-                    'title' => 'API Error',
-                    'msg' => 'Failed to calculate cover dimensions from Lulu API.',
+                    'title' => 'Dimension Error',
+                    'msg' => 'Could not calculate cover dimensions from Lulu. Please check your interior PDF page count and try again.',
                     'status' => 'error'
                 ];
                 return back()->with(['toast' => $toastData])->withInput();
@@ -362,20 +365,22 @@ class BookController extends Controller
             $coverPublicUrl = url(str_replace('\\', '/', ltrim($coverPdfPath, '/\\')));
 
             $coverValidation = $this->validateLuluFile('cover', $coverPublicUrl, $token, $podPackageId, $pageCount);
+            // dd($coverValidation);
             if (!empty($coverValidation['errors'])) {
                 $toastData = [
-                    'title' => 'Cover Validation Error',
-                    'msg' => $coverValidation['errors'][0]['message'] ?? 'Cover PDF validation failed.',
+                    'title' => 'Cover PDF Validation Error',
+                    'msg' =>  $this->formatLuluValidationErrors($coverValidation['errors']),
                     'status' => 'error'
                 ];
                 return back()->with(['toast' => $toastData])->withInput();
             }
-            // === END LULU API INTEGRATION ===
-        } else {
+        }
+        else
+        {
             $interiorPdfPath = $data['image_path'];
             $coverPdfPath = $data['cover_pdf'];
             $pageCount = 0;
-        }
+        }  
 
         // Update the book
         $book->update([
@@ -385,8 +390,8 @@ class BookController extends Controller
             // 'image_cover' => $data['image_cover'],
             // 'url' => $data['image_path'],
             'image_cover' => $data['image_cover'],     // ✅ Lulu cover PDF
-            'url' => $interiorPdfPath,  // ✅ Lulu interior PDF
-            'cover_pdf' => $coverPdfPath,
+            'url'         => $interiorPdfPath,  // ✅ Lulu interior PDF
+            'cover_pdf'   => $coverPdfPath,  
             'page_count' => $pageCount,
             'price' => $data['price'] ?? null,
             'print_price' => $data['print_price'] ?? null,
@@ -420,9 +425,177 @@ class BookController extends Controller
         return redirect('panel/book/')->with('success', 'Book deleted successfully.');
     }
 
+    public function purchases(Request $request)
+    {
+        $user = auth()->user();
+
+        $query = BookOrder::query()
+            ->where('book_order.buyer_id', $user->id)
+            ->where('book_order.status', '!=', 'pending')
+            ->whereHas('sale', function ($query) {
+                $query->where('type', 'book');
+                $query->whereNull('refund_at');
+            });
+
+        $totalOrders = deepClone($query)->count();
+        $pendingOrders = deepClone($query)->whereIn('book_order.status', [BookOrder::$waitingDelivery, BookOrder::$shipped])->count();
+        $canceledOrders = deepClone($query)->where('book_order.status', BookOrder::$canceled)->count();
+
+        $totalPurchase = deepClone($query)
+            ->join('sales', 'sales.book_order_id', 'book_order.id')
+            ->select(DB::raw("sum(total_amount) as totalAmount"))
+            ->first();
+
+        $sellerIds = deepClone($query)->pluck('seller_id')->toArray();
+        $sellers = User::select('id', 'full_name')
+            ->whereIn('id', array_unique($sellerIds))
+            ->get();
+
+        $query = $this->purchaseFilters($query, $request);
+
+        $orders = $query->orderBy('created_at', 'desc')
+            ->with([
+                'book',
+                'sale',
+                'seller' => function ($query) {
+                    $query->select('id', 'full_name', 'email', 'mobile', 'avatar');
+                }
+            ])
+            ->paginate(10);
+
+        $data = [
+            'pageTitle' => 'Book Purchases',
+            'totalOrders' => $totalOrders,
+            'pendingOrders' => $pendingOrders,
+            'canceledOrders' => $canceledOrders,
+            'totalPurchase' => $totalPurchase ? $totalPurchase->totalAmount : 0,
+            'sellers' => $sellers,
+            'orders' => $orders,
+        ];
+
+        return view(getTemplate() . '.panel.book.my-purchases', $data);
+    }
+
+    private function purchaseFilters($query, $request)
+    {
+        $from = $request->input('from');
+        $to = $request->input('to');
+        $seller_id = $request->input('seller_id');
+        $status = $request->input('status');
+
+        $query = fromAndToDateFilter($from, $to, $query, 'book_order.created_at');
+
+        if (!empty($seller_id) and $seller_id != 'all') {
+            $query->where('book_order.seller_id', $seller_id);
+        }
+
+        if (isset($status) and $status !== 'all') {
+            $query->where('book_order.status', $status);
+        }
+
+        return $query;
+    }
+
+    public function trackOrder(Request $request, int $id)
+    {
+        $user = auth()->user();
+
+        $bookOrder = BookOrder::where('id', $id)
+            ->where(function ($query) use ($user) {
+                $query->where('buyer_id', $user->id)
+                    ->orWhere('seller_id', $user->id);
+            })
+            ->first();
+
+        if (!$bookOrder) {
+            abort(403);
+        }
+
+        if (empty($bookOrder->printjob_id)) {
+            return response()->json([
+                'code' => 404,
+                'message' => 'Lulu Print Job ID not found for this order.'
+            ]);
+        }
+
+        try {
+            $token = $this->getLuluAccessTokenUsingCurl();
+            $url = "https://api.lulu.com/print-jobs/{$bookOrder->printjob_id}/";
+
+            $curl = curl_init();
+            curl_setopt_array($curl, [
+                CURLOPT_URL => $url,
+                CURLOPT_RETURNTRANSFER => true,
+                CURLOPT_HTTPHEADER => [
+                    'Authorization: Bearer ' . $token,
+                    'Content-Type: application/json'
+                ],
+            ]);
+
+            // SSL verification
+            if ($this->laragonCertPath && file_exists($this->laragonCertPath)) {
+                curl_setopt($curl, CURLOPT_CAINFO, $this->laragonCertPath);
+            }
+
+            $response = curl_exec($curl);
+            $error = curl_error($curl);
+            curl_close($curl);
+
+            if ($error) {
+                throw new \Exception($error);
+            }
+
+            $orderData = json_decode($response, true);
+
+            // Update status and tracking code if changed
+            if (isset($orderData['status']['name'])) {
+                $newLuluStatus = $orderData['status']['name'];
+                $appStatus = $this->mapLuluStatusToApp($newLuluStatus);
+                
+                $updateData = ['status' => $appStatus];
+                
+                if (isset($orderData['line_items'][0]['tracking_url'])) {
+                    $updateData['tracking_code'] = $orderData['line_items'][0]['tracking_url'];
+                }
+
+                $bookOrder->update($updateData);
+            }
+
+            return response()->json([
+                'code' => 200,
+                'data' => $orderData
+            ]);
+
+        } catch (\Exception $e) {
+            Log::error('Lulu trackOrder failed: ' . $e->getMessage());
+            return response()->json([
+                'code' => 500,
+                'message' => 'Failed to fetch tracking info from Lulu.'
+            ]);
+        }
+    }
+
+    private function mapLuluStatusToApp($luluStatus)
+    {
+        switch ($luluStatus) {
+            case 'SHIPPED':
+                return BookOrder::$shipped;
+            case 'DELIVERED':
+                return BookOrder::$success;
+            case 'CANCELED':
+            case 'REJECTED':
+                return BookOrder::$canceled;
+            case 'IN_PRODUCTION':
+            case 'PRODUCTION_READY':
+                return BookOrder::$waitingDelivery;
+            default:
+                return BookOrder::$waitingDelivery;
+        }
+    }
+    
     public function getLuluAccessTokenUsingCurl()
     {
-
+        
         $url = "https://api.lulu.com/auth/realms/glasstree/protocol/openid-connect/token";
         //$url = "https://api.sandbox.lulu.com/auth/realms/glasstree/protocol/openid-connect/token";
         $authorization = "OWY2MDViMTUtNmMzYy00OWU1LTkxOWItODRmNzM0MWEyMjgzOk50cVpOa2N2aE1nNlJpb25FaEVSbWpyZW5EQTJYU3dW";
@@ -431,9 +604,9 @@ class BookController extends Controller
         $laragonCertPath = "C:/laragon/etc/ssl/cert.pem";
         $verifyOption = file_exists($laragonCertPath) ? $laragonCertPath : false;
 
-
+        
         $curl = curl_init();
-        $authorization = "OWY2MDViMTUtNmMzYy00OWU1LTkxOWItODRmNzM0MWEyMjgzOk50cVpOa2N2aE1nNlJpb25FaEVSbWpyZW5EQTJYU3dW";
+         $authorization = "OWY2MDViMTUtNmMzYy00OWU1LTkxOWItODRmNzM0MWEyMjgzOk50cVpOa2N2aE1nNlJpb25FaEVSbWpyZW5EQTJYU3dW";
         curl_setopt_array($curl, [
             CURLOPT_URL => 'https://api.lulu.com/auth/realms/glasstree/protocol/openid-connect/token',
             CURLOPT_RETURNTRANSFER => true,
@@ -449,8 +622,8 @@ class BookController extends Controller
                 'Authorization: Basic ' . $authorization
             ],
         ]);
-
-
+        
+        
         if ($this->laragonCertPath && file_exists($this->laragonCertPath)) {
             // Use Laragon certificate
             $options[CURLOPT_CAINFO] = $this->laragonCertPath;
@@ -461,23 +634,23 @@ class BookController extends Controller
             // Disable SSL verification if no certificate found (NOT RECOMMENDED for production)
             $options[CURLOPT_SSL_VERIFYPEER] = false;
             $options[CURLOPT_SSL_VERIFYHOST] = false;
-
+            
             \Log::warning('SSL certificate verification disabled. Certificate file not found.');
         }
-
+        
         curl_setopt_array($curl, $options);
 
         $response = curl_exec($curl);
         $httpCode = curl_getinfo($curl, CURLINFO_HTTP_CODE);
         $error = curl_error($curl);
-
+          
         if ($error) {
             $errorNo = curl_errno($curl);
             \Log::error("cURL Error #{$errorNo}: {$error}");
             \Log::error("Certificate path used: " . ($this->laragonCertPath ?? 'none'));
             \Log::error("File exists: " . (file_exists($this->laragonCertPath) ? 'Yes' : 'No'));
         }
-
+        
         curl_close($curl);
 
         $data = json_decode($response, true);
@@ -513,7 +686,7 @@ class BookController extends Controller
 
 
         $curl = curl_init();
-
+        
         $url = "https://api.lulu.com/print-job-cost-calculations/";
         curl_setopt_array($curl, [
             CURLOPT_URL => $url,
@@ -525,7 +698,7 @@ class BookController extends Controller
             CURLOPT_HTTP_VERSION => CURL_HTTP_VERSION_1_1,
             CURLOPT_CUSTOMREQUEST => strtoupper($method),
             CURLOPT_HTTPHEADER => [
-                'Authorization: Bearer ' . $token,
+                'Authorization: Bearer '. $token,
                 'Cache-Control: no-cache',
                 'Content-Type: application/json'
             ],
@@ -547,8 +720,8 @@ class BookController extends Controller
         }
 
         curl_setopt_array($curl, $options);
-
-
+        
+        
         $response = curl_exec($curl);
         $httpCode = curl_getinfo($curl, CURLINFO_HTTP_CODE);
         $error = curl_error($curl);
@@ -561,7 +734,7 @@ class BookController extends Controller
         }
 
         //dd($response);
-
+        
         // Enhanced error logging
         if ($error) {
             $errorNo = curl_errno($curl);
@@ -574,28 +747,28 @@ class BookController extends Controller
             ];
             \Log::error('Lulu API cURL Error', $errorInfo);
         }
-
+        
         curl_close($curl);
 
         $responseData = json_decode($response, true);
 
-        if (json_last_error() !== JSON_ERROR_NONE) {
+         if (json_last_error() !== JSON_ERROR_NONE) {
             \Log::error('Lulu API Invalid JSON Response', [
                 'response' => $response,
                 'json_error' => json_last_error_msg()
             ]);
-
+            
             return [
                 'success' => false,
                 'message' => 'Invalid response from Lulu API',
                 'print_price' => 0
             ];
         }
-
+        
         // Check if we got the expected data structure
         if (isset($responseData['line_item_costs'][0]['total_cost_incl_tax'])) {
             $printPrice = (float) $responseData['line_item_costs'][0]['total_cost_incl_tax'];
-
+            
             return [
                 'success' => true,
                 'print_price' => $printPrice,
@@ -605,7 +778,7 @@ class BookController extends Controller
             \Log::error('Lulu API Unexpected Response Structure', [
                 'response_data' => $responseData
             ]);
-
+            
             return [
                 'success' => false,
                 'message' => 'Unexpected response structure from Lulu API',
@@ -613,59 +786,200 @@ class BookController extends Controller
                 'raw_response' => $responseData
             ];
         }
-
+       
         //return $responseData;
     }
 
+    // private function validateLuluFile($type, $sourceUrl, $token, $podPackageId = null, $pageCount = null)
+    // {
+    //     $curl = curl_init();
+    //     $url = $type == 'interior' ? 'https://api.lulu.com/validate-interior/' : 'https://api.lulu.com/validate-cover/';
+
+    //     $data = ['source_url' => $sourceUrl];
+    //     if ($type == 'cover') {
+    //         $data['pod_package_id'] = $podPackageId;
+    //         $data['interior_page_count'] = $pageCount;
+    //     }
+
+    //     $options = [
+    //         CURLOPT_URL => $url,
+    //         CURLOPT_RETURNTRANSFER => true,
+    //         CURLOPT_ENCODING => '',
+    //         CURLOPT_MAXREDIRS => 10,
+    //         CURLOPT_TIMEOUT => 30,
+    //         CURLOPT_FOLLOWLOCATION => true,
+    //         CURLOPT_HTTP_VERSION => CURL_HTTP_VERSION_1_1,
+    //         CURLOPT_CUSTOMREQUEST => 'POST',
+    //         CURLOPT_POSTFIELDS => json_encode($data),
+    //         CURLOPT_HTTPHEADER => [
+    //             'Authorization: Bearer ' . $token,
+    //             'Cache-Control: no-cache',
+    //             'Content-Type: application/json'
+    //         ],
+    //     ];
+
+    //     if ($this->laragonCertPath && file_exists($this->laragonCertPath)) {
+    //         $options[CURLOPT_CAINFO] = $this->laragonCertPath;
+    //         $options[CURLOPT_CAPATH] = dirname($this->laragonCertPath);
+    //         $options[CURLOPT_SSL_VERIFYPEER] = true;
+    //         $options[CURLOPT_SSL_VERIFYHOST] = 2;
+    //     } else {
+    //         $options[CURLOPT_SSL_VERIFYPEER] = false;
+    //         $options[CURLOPT_SSL_VERIFYHOST] = false;
+    //     }
+
+    //     curl_setopt_array($curl, $options);
+    //     $response = curl_exec($curl);
+
+    //     if (curl_error($curl)) {
+    //         \Log::error("cURL Error Lulu Validation ($type): " . curl_error($curl));
+    //         return ['errors' => [['message' => curl_error($curl)]]];
+    //     }
+    //     curl_close($curl);
+
+    //     return json_decode($response, true);
+    // }
+
     private function validateLuluFile($type, $sourceUrl, $token, $podPackageId = null, $pageCount = null)
     {
-        $curl = curl_init();
-        $url = $type == 'interior' ? 'https://api.lulu.com/validate-interior/' : 'https://api.lulu.com/validate-cover/';
+        // ── STEP 1: POST to start validation, get the ID ──────────────────────
+        $postUrl = $type == 'interior'
+            ? 'https://api.lulu.com/validate-interior/'
+            : 'https://api.lulu.com/validate-cover/';
 
-        $data = ['source_url' => $sourceUrl];
+        $postData = ['source_url' => $sourceUrl];
         if ($type == 'cover') {
-            $data['pod_package_id'] = $podPackageId;
-            $data['interior_page_count'] = $pageCount;
+            $postData['pod_package_id']       = $podPackageId;
+            $postData['interior_page_count']  = $pageCount;
         }
 
-        $options = [
-            CURLOPT_URL => $url,
+        $postOptions = [
+            CURLOPT_URL            => $postUrl,
             CURLOPT_RETURNTRANSFER => true,
-            CURLOPT_ENCODING => '',
-            CURLOPT_MAXREDIRS => 10,
-            CURLOPT_TIMEOUT => 30,
+            CURLOPT_ENCODING       => '',
+            CURLOPT_MAXREDIRS      => 10,
+            CURLOPT_TIMEOUT        => 60,
             CURLOPT_FOLLOWLOCATION => true,
-            CURLOPT_HTTP_VERSION => CURL_HTTP_VERSION_1_1,
-            CURLOPT_CUSTOMREQUEST => 'POST',
-            CURLOPT_POSTFIELDS => json_encode($data),
-            CURLOPT_HTTPHEADER => [
+            CURLOPT_HTTP_VERSION   => CURL_HTTP_VERSION_1_1,
+            CURLOPT_CUSTOMREQUEST  => 'POST',
+            CURLOPT_POSTFIELDS     => json_encode($postData),
+            CURLOPT_HTTPHEADER     => [
                 'Authorization: Bearer ' . $token,
                 'Cache-Control: no-cache',
                 'Content-Type: application/json'
             ],
         ];
 
+        $this->applySslOptions($postOptions);
+
+        $curl = curl_init();
+        curl_setopt_array($curl, $postOptions);
+        $postResponse = curl_exec($curl);
+
+        if (curl_error($curl)) {
+            $error = curl_error($curl);
+            \Log::error("cURL POST Error Lulu Validation ($type): " . $error);
+            curl_close($curl);
+            return ['errors' => [['message' => $error]]];
+        }
+
+        $httpCode = curl_getinfo($curl, CURLINFO_HTTP_CODE);
+        curl_close($curl);
+
+        $postData = json_decode($postResponse, true);
+
+        \Log::info("Lulu Validation POST ($type) - HTTP $httpCode", ['response' => $postData]);
+
+        // ── STEP 2: Extract validation ID from POST response ──────────────────
+        $validationId = $postData['id'] ?? null;
+
+        if (!$validationId) {
+            \Log::error("Lulu Validation: No ID returned for $type", ['response' => $postData]);
+            return ['errors' => [['message' => 'Validation ID not returned from Lulu API.']]];
+        }
+
+        // ── STEP 3: GET poll until status is complete ─────────────────────────
+        $getUrl = $type == 'interior'
+            ? "https://api.lulu.com/validate-interior/{$validationId}/"
+            : "https://api.lulu.com/validate-cover/{$validationId}/";
+
+        $maxAttempts  = 20;  // 20 x 3s = 60 seconds max wait
+        $sleepSeconds = 3;
+
+        for ($attempt = 1; $attempt <= $maxAttempts; $attempt++) {
+
+            sleep($sleepSeconds);
+
+            $getOptions = [
+                CURLOPT_URL            => $getUrl,
+                CURLOPT_RETURNTRANSFER => true,
+                CURLOPT_ENCODING       => '',
+                CURLOPT_MAXREDIRS      => 10,
+                CURLOPT_TIMEOUT        => 30,
+                CURLOPT_FOLLOWLOCATION => true,
+                CURLOPT_HTTP_VERSION   => CURL_HTTP_VERSION_1_1,
+                CURLOPT_CUSTOMREQUEST  => 'GET',
+                CURLOPT_HTTPHEADER     => [
+                    'Authorization: Bearer ' . $token,
+                    'Cache-Control: no-cache',
+                ],
+            ];
+
+            $this->applySslOptions($getOptions);
+
+            $curl = curl_init();
+            curl_setopt_array($curl, $getOptions);
+            $getResponse = curl_exec($curl);
+
+            if (curl_error($curl)) {
+                \Log::error("cURL GET Error Lulu Validation ($type, attempt $attempt): " . curl_error($curl));
+                curl_close($curl);
+                continue; // retry on network error
+            }
+            curl_close($curl);
+
+            $pollData = json_decode($getResponse, true);
+            $status   = $pollData['status'] ?? '';
+
+            \Log::info("Lulu Validation GET ($type, attempt $attempt)", [
+                'validation_id' => $validationId,
+                'status'        => $status,
+                'data'          => $pollData,
+            ]);
+
+            // Still processing — keep polling
+            if (in_array($status, ['VALIDATING', 'NORMALIZING', 'PENDING'])) {
+                continue;
+            }
+
+            // ── Validation finished ───────────────────────────────────────────
+            // If errors array is non-empty, caller will show toast
+            return $pollData;
+        }
+
+        // ── Timed out ─────────────────────────────────────────────────────────
+        \Log::error("Lulu Validation timed out after {$maxAttempts} attempts ($type)", [
+            'validation_id' => $validationId,
+        ]);
+
+        return ['errors' => [['message' => 'Lulu ' . $type . ' validation timed out. Please try again.']]];
+    }
+
+    /**
+     * Apply SSL options to a cURL options array.
+     */
+    private function applySslOptions(array &$options): void
+    {
         if ($this->laragonCertPath && file_exists($this->laragonCertPath)) {
-            $options[CURLOPT_CAINFO] = $this->laragonCertPath;
-            $options[CURLOPT_CAPATH] = dirname($this->laragonCertPath);
+            $options[CURLOPT_CAINFO]         = $this->laragonCertPath;
+            $options[CURLOPT_CAPATH]         = dirname($this->laragonCertPath);
             $options[CURLOPT_SSL_VERIFYPEER] = true;
             $options[CURLOPT_SSL_VERIFYHOST] = 2;
         } else {
             $options[CURLOPT_SSL_VERIFYPEER] = false;
             $options[CURLOPT_SSL_VERIFYHOST] = false;
+            \Log::warning('SSL certificate verification disabled. Certificate file not found.');
         }
-
-        curl_setopt_array($curl, $options);
-        $response = curl_exec($curl);
-        dd($response);
-
-        if (curl_error($curl)) {
-            \Log::error("cURL Error Lulu Validation ($type): " . curl_error($curl));
-            return ['errors' => [['message' => curl_error($curl)]]];
-        }
-        curl_close($curl);
-
-        return json_decode($response, true);
     }
 
     private function getLuluCoverDimensionsFromApi($podPackageId, $pageCount, $token)
@@ -715,5 +1029,34 @@ class BookController extends Controller
         curl_close($curl);
 
         return json_decode($response, true);
+    }
+
+    public function invoice($id)
+    {
+        $user = auth()->user();
+
+        $order = BookOrder::where('id', $id)
+            ->where(function ($query) use ($user) {
+                $query->where('buyer_id', $user->id)
+                    ->orWhere('seller_id', $user->id);
+            })
+            ->where('status', '!=', 'pending')
+            ->with(['book', 'sale', 'seller', 'buyer'])
+            ->first();
+
+        if (!empty($order)) {
+            $data = [
+                'pageTitle' => trans('webinars.invoice_page_title'),
+                'order' => $order,
+                'book' => $order->book,
+                'sale' => $order->sale,
+                'seller' => $order->seller,
+                'buyer' => $order->buyer,
+            ];
+
+            return view('web.default.panel.book.invoice', $data);
+        }
+
+        abort(404);
     }
 }

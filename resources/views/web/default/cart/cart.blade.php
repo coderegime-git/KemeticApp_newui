@@ -47,10 +47,10 @@
             <tr class="cart-cart-row">
               <td>
                 <div class="cart-cart-item">
-                  <div class="cart-cart-thumb"><img src="{{ $cartItemInfo['imgPath'] }}" width="50" alt="user avatar"></div>
+                  <div class="cart-cart-thumb">@if(!empty($cartItemInfo['imgPath']))<img src="{{ $cartItemInfo['imgPath'] }}" width="50" alt="user avatar"> @endif</div>
                   <div class="cart-cart-meta">
-                    <div class="cart-cart-title">{{ $cartItemInfo['title'] }}</div>
-                    <div class="cart-cart-type"> {{ $cartItemInfo['type'] }}</div>
+                    <div class="cart-cart-title">@if(!empty($cartItemInfo['title'])){{ $cartItemInfo['title'] }} @endif</div>
+                    <div class="cart-cart-type">@if(!empty($cartItemInfo['type'])){{ $cartItemInfo['type'] }} @endif</div>
                     @if($cartItemInfo['is_physical'])
                         <div class="cart-delivery-notice">
                              Estimated delivery: <strong>7–14 business days</strong>

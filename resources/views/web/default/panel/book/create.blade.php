@@ -86,7 +86,7 @@
         Scrolls
     </h2>
 
-    <form action="/panel/book/{{ (!empty($book) ? $book->id.'/update' : 'store') }}" method="post">
+    <form id="bookForm" action="/panel/book/{{ (!empty($book) ? $book->id.'/update' : 'store') }}" method="post">
         {{ csrf_field() }}
 
         <div class="kemetic-form-card">
@@ -469,5 +469,17 @@
 
     // Add event listeners for manual triggers
     document.getElementById('book_price').addEventListener('input', calculatePlatformFee)
+
+    document.getElementById('bookForm').addEventListener('submit', function(e) {
+        if (this.checkValidity()) {
+            Swal.fire({
+                html: '<div class="d-flex align-items-center justify-content-center py-20"><div class="spinner-border text-primary" role="status"></div><span class="ml-15 font-16">Please wait...</span></div>',
+                showConfirmButton: false,
+                allowOutsideClick: false,
+                allowEscapeKey: false,
+                width: '20rem'
+            });
+        }
+    });
 </script>
 @endpush

@@ -9,6 +9,32 @@
     --k-radius: 16px;
 }
 
+/* Professional Custom Scrollbar */
+.kemetic-learning-content::-webkit-scrollbar,
+.kemetic-tab-container::-webkit-scrollbar {
+    width: 8px;
+}
+
+.kemetic-learning-content::-webkit-scrollbar-track,
+.kemetic-tab-container::-webkit-scrollbar-track {
+    background: rgba(26, 26, 26, 0.5); /* Subtle dark track */
+    border-radius: 10px;
+}
+
+.kemetic-learning-content::-webkit-scrollbar-thumb,
+.kemetic-tab-container::-webkit-scrollbar-thumb {
+    background: #444; /* Default subtle thumb */
+    border-radius: 10px;
+    border: 2px solid transparent;
+    background-clip: content-box;
+}
+
+.kemetic-learning-content::-webkit-scrollbar-thumb:hover,
+.kemetic-tab-container::-webkit-scrollbar-thumb:hover {
+    background: var(--k-gold); /* Gold thumb on hover */
+    background-clip: content-box;
+}
+
 /* MAIN PAGE */
 .kemetic-learning-page {
     background: var(--k-dark);
@@ -36,6 +62,7 @@
 
     border-right: 1px solid var(--k-border);
     overflow-y: auto; /* keep scroll inside if content is long */
+    min-height: 85vh; /* Ensure the container has a good height even when loading */
 }
 
 
@@ -106,18 +133,39 @@
 
 /* MOBILE RESPONSIVE */
 @media (max-width: 992px) {
+    .kemetic-learning-page {
+        max-width: 100%;
+        overflow-y: auto;
+        overflow-x: hidden;
+    }
+
+    .kemetic-learning-content {
+        flex: 1 1 auto !important;
+        width: 100% !important;
+        max-width: 100% !important;
+        border-right: none;
+        overflow-y: visible;
+        min-height: 50vh;
+        padding-bottom: 20px;
+    }
+
     .kemetic-learning-tabs {
-        width: 100%;
+        width: 100% !important;
+        min-width: 100% !important;
         border-left: none;
         border-top: 1px solid var(--k-border);
+        position: relative !important;
+        right: auto !important;
+        height: auto !important;
     }
 
     .kemetic-tabs-nav {
         justify-content: space-between;
     }
 
-    .kemetic-learning-content {
-        border-right: none;
+    .kemetic-tab-container {
+        max-height: none;
+        overflow-y: visible;
     }
 }
 
@@ -284,17 +332,37 @@
     box-shadow: 0 4px 12px rgba(0,0,0,0.35);
     padding: 20px 22px;
 }
-/* .kemetic-text-lesson * {
-    color: #ffffff !important;
-} */
 
-/* .kemetic-text-lesson {
-    color: #fff;
+/* Force white/light text inside text lesson content for dark theme */
+.kemetic-text-lesson p,
+.kemetic-text-lesson font,
+.kemetic-text-lesson span,
+.kemetic-text-lesson li,
+.kemetic-text-lesson td,
+.kemetic-text-lesson th,
+.kemetic-text-lesson div,
+.kemetic-text-lesson blockquote,
+.kemetic-text-lesson label {
+    color: #e0e0e0 !important;
 }
 
-.kemetic-text-lesson [style*="color"] {
-    color: inherit !important;
-} */
+.kemetic-text-lesson h1,
+.kemetic-text-lesson h2,
+.kemetic-text-lesson h3,
+.kemetic-text-lesson h4,
+.kemetic-text-lesson h5,
+.kemetic-text-lesson h6 {
+    color: #F2C94C !important;
+}
+
+.kemetic-text-lesson a {
+    color: #F2C94C !important;
+}
+
+.kemetic-text-lesson strong,
+.kemetic-text-lesson b {
+    color: #ffffff !important;
+}
 
 /* Title */
 .kemetic-title {
@@ -605,7 +673,7 @@
 
     .kemetic-file-iframe {
     width: 100%;
-    height: 70vh;
+    height: 85vh;
     border: none;
     z-index: 1;
     pointer-events: auto;
@@ -694,8 +762,8 @@
 }
 
 .kemetic-video-wrapper .learning-content-video-player {
-    width: 70%;
-    height: 320px; /* Adjust as needed */
+    width: 100%;
+    height: 520px; /* Adjust as needed */
     border-radius: 14px;
     overflow: hidden;
     background: #000;
@@ -711,8 +779,8 @@
 }
 
 .kemetic-video-wrapper .learning-content-video-player {
-    width: 70%;
-    height: 320px; /* Adjust if needed */
+    width: 100%;
+    height: 520px; /* Adjust if needed */
     border-radius: 14px;
     overflow: hidden;
     background: #000;
@@ -785,7 +853,7 @@
 .kemetic-iframe-box iframe {
     width: 100%;
     height: 100%;
-    min-height: 480px;
+    min-height: 600px;
     border-radius: 14px;
     border: none;
     background: #000;
@@ -800,12 +868,12 @@
 
 @section('content')
 
-    <div class="kemetic-learning-page">
+    <div class="learning-page kemetic-learning-page">
 
         {{-- Navbar --}}
         @include('web.default.course.learningPage.components.navbar')
 
-        <div class="d-flex position-relative">
+        <div class="d-flex flex-column flex-lg-row position-relative">
 
             <div class="kemetic-learning-content flex-grow-1">
                 @include('web.default.course.learningPage.components.content')

@@ -497,7 +497,7 @@
         @if(auth()->user())
             @if($authUser->isOrganization() || $authUser->isTeacher())
                 @can('panel_bundles')
-                <div class="nav-collapsible {{ Request::is('panel/bundles*') ? 'open' : '' }}">
+                <!-- <div class="nav-collapsible {{ Request::is('panel/bundles*') ? 'open' : '' }}">
                     <a class="nav-collapsible-toggle {{ Request::is('panel/bundles*') ? 'active' : '' }}">
                         <span class="dashboard-ms">package</span> {{ trans('update.bundles') }}
                         <span class="nav-arrow">›</span>
@@ -514,7 +514,7 @@
                             </a>
                         @endcan
                     </div>
-                </div>
+                </div> -->
                 @endcan
             @endif
         @endif
@@ -685,12 +685,13 @@
                 <span class="nav-arrow">›</span>
             </a>
             <div class="nav-collapsible-content">
-                @can('panel_products_create')
+                
+                @if($authUser->isTeacher())
+                    @can('panel_products_create')
                     <a href="/panel/store/products/new" class="{{ Request::is('panel/store/products/new') ? 'active' : '' }}">
                         <span class="dashboard-ms">add_circle</span>Own Product
                     </a>
                 @endcan
-                @if($authUser->isTeacher())
                     <div class="nav-collapsible nav-sub-collapsible {{ (request()->is('panel/cj-products') or request()->is('panel/cj/*')) ? 'open' : '' }}" data-sub="true">
                         <a class="nav-collapsible-toggle {{ (request()->is('panel/cj-products') or request()->is('panel/cj/*')) ? 'active' : '' }}">
                             <span class="dashboard-ms">store</span>Dropshipping
@@ -699,7 +700,7 @@
                         <div class="nav-collapsible-content">
                             
                             <a href="/panel/cj-products" class="{{ (request()->is('panel/cj-products')) ? 'active' : '' }}">
-                                <span class="dashboard-ms">shopping_cart</span> CJ Products
+                                <span class="dashboard-ms">shopping_cart</span> Dropshipping Products
                             </a>
                             <!-- <a href="/panel/book/" class="{{ (request()->is('panel/book/')) ? 'active' : '' }}">
                                 <span class="dashboard-ms">library_books</span> My Scrolls
@@ -1017,6 +1018,10 @@
                     <a href="/panel/book/" class="{{ (request()->is('panel/book/')) ? 'active' : '' }}">
                         <span class="dashboard-ms">library_books</span> My Scrolls
                     </a>
+
+                    <a href="/panel/book/purchases" class="{{ Request::is('panel/book/purchases') ? 'active' : '' }}">
+                        <span class="dashboard-ms">shopping_bag</span> {{ trans('panel.my_purchases') }}
+                    </a>
                 </div>
             </div>
             @endif
@@ -1081,7 +1086,7 @@
                 @endcan
             @endif
         
-            <div class="nav-collapsible {{ (request()->is('panel/adreel') or request()->is('panel/adreel/*')) ? 'open' : '' }}">
+            <!-- <div class="nav-collapsible {{ (request()->is('panel/adreel') or request()->is('panel/adreel/*')) ? 'open' : '' }}">
                 <a class="nav-collapsible-toggle {{ (request()->is('panel/adreel') or request()->is('panel/adreel/*')) ? 'active' : '' }}">
                     <span class="dashboard-ms">ad</span>FMD
                     <span class="nav-arrow">›</span>
@@ -1100,7 +1105,7 @@
                         </a>
                     @endif
                 </div>
-            </div>
+            </div> -->
 
             <!-- <div class="nav-collapsible {{ (request()->is('panel/livestream') or request()->is('panel/livestream/*')) ? 'open' : '' }}">
                 <a class="nav-collapsible-toggle {{ (request()->is('panel/livestream') or request()->is('panel/livestream/*')) ? 'active' : '' }}">

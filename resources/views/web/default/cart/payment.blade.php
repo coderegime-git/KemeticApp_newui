@@ -16,16 +16,21 @@
                     @foreach($carts as $cart)
                         @php
                             $cartItemInfo = $cart->getItemInfo();
+                            if(empty($cartItemInfo)) continue;
                             $cartTaxType = !empty($cartItemInfo['isProduct']) ? 'store' : 'general';
                         @endphp
                     <div class="checkout-item-row">
-                        <div class="checkout-item-thumb"><img src="{{ $cartItemInfo['imgPath'] }}" width="50" alt="user avatar"></div>
+                        <div class="checkout-item-thumb">@if(!empty($cartItemInfo['imgPath']))<img src="{{ $cartItemInfo['imgPath'] }}" width="50" alt="user avatar"> @endif</div>
                         <div class="checkout-item-meta">
-                            <div class="checkout-item-title">{{ $cartItemInfo['title'] }}</div>
+                            <div class="checkout-item-title">@if(!empty($cartItemInfo['title'])){{ $cartItemInfo['title'] }} @endif</div>
                             <div class="checkout-item-type"> @if(!empty($cartItemInfo['quantity'])) Product @else Course @endif </div>
                         </div>
                         <div class="checkout-item-qty">@if(!empty($cartItemInfo['quantity'])) x{{ $cartItemInfo['quantity'] }} @endif</div>
-                        <div class="checkout-item-price">{{ handlePrice($cartItemInfo['price'], true, true, false, null, true, $cartTaxType) }}</div>
+                        <div class="checkout-item-price">@if(!empty($cartItemInfo['price']))
+                            {{ handlePrice($cartItemInfo['price'], true, true, false, null, true, $cartTaxType) }}
+                        @else
+                            {{ handlePrice(0, true, true, false, null, true, $cartTaxType) }}
+                        @endif</div>
                     </div>
                     @endforeach
                 </div>

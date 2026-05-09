@@ -575,6 +575,7 @@ class DashboardController extends Controller
                     'id' => $book->id,
                     'title' => $book->title,
                     'author' => $book->creator->full_name ?? 'Unknown',
+                    'format' => $book->type ?? 'Digital',
                     'categories' => $book->categories->pluck('slug')->implode(', '),
                     'price' => $this->formatPrice($book->price),
                     'royalties' => $this->formatPrice($book->royalty_earnings ?? 0),
@@ -611,7 +612,7 @@ class DashboardController extends Controller
             ->map(function ($product) {
                 return [
                     'id' => $product->id,
-                    'title' => $product->title,
+                    'name' => $product->title,
                     'type' => $product->type ?? 'Physical',
                     'price' => $this->formatPrice($product->price),
                     'inventory' => $product->inventory ?? 'N/A',
@@ -985,9 +986,9 @@ class DashboardController extends Controller
                 return [
                     'id' => $reel->id,
                     'title' => $reel->title ?? 'Untitled Reel',
-                    'creator' => $reel->creator->full_name ?? $reel->creator->username ?? 'Unknown',
-                    'saved_at' => $savedReel->created_at,
-                    'views' => $reel->views ?? 0,
+                    'creator' => $reel->user->full_name ?? $reel->user->username ?? 'Unknown',
+                    'saved_at' => \Illuminate\Support\Carbon::parse($savedReel->created_at)->format('d-m-Y H:i:s'),
+                    'views' => $reel->views_count ?? 0,
                     'duration' => $reel->duration ?? '0:00',
                 ];
             })
