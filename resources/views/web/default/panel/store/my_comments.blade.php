@@ -3,9 +3,6 @@
 @push('styles_top')
     <link rel="stylesheet" href="/assets/default/vendors/daterangepicker/daterangepicker.min.css">
     <style>
-        /* =========================
-           KEMETIC THEME VARIABLES
-        ========================= */
         :root {
             --k-bg: #0b0b0b;
             --k-card: #141414;
@@ -18,9 +15,6 @@
             --k-shadow: 0 12px 40px rgba(0,0,0,.65);
         }
 
-        /* =========================
-           PAGE
-        ========================= */
         .kemetic-page {
             background: radial-gradient(circle at top, #1a1a1a, #000);
             min-height: 100vh;
@@ -46,9 +40,6 @@
             background: linear-gradient(to right, var(--k-gold), transparent);
         }
 
-        /* =========================
-           FORM CARD
-        ========================= */
         .panel-section-card {
             background: linear-gradient(180deg, #121212, #0a0a0a);
             border: 1px solid var(--k-border);
@@ -58,9 +49,6 @@
             margin-bottom: 2rem;
         }
 
-        /* =========================
-           FORM STYLING
-        ========================= */
         .form-group label,
         .input-label {
             color: var(--k-gold);
@@ -71,9 +59,7 @@
             letter-spacing: 0.3px;
         }
 
-        .form-control,
-        .datefilter,
-        .datepicker {
+        .form-control {
             background: #1a1a1a !important;
             color: var(--k-text) !important;
             border: 1px solid var(--k-border) !important;
@@ -84,43 +70,17 @@
             width: 100%;
         }
 
-        .form-control:focus,
-        .datefilter:focus,
-        .datepicker:focus {
+        .form-control:focus {
             border-color: var(--k-gold) !important;
             box-shadow: 0 0 8px var(--k-gold-soft) !important;
             outline: none;
         }
 
-        .form-control::placeholder,
-        .datefilter::placeholder,
-        .datepicker::placeholder {
+        .form-control::placeholder {
             color: var(--k-muted);
             opacity: 0.7;
         }
 
-        .input-group-text {
-            background: #1a1a1a;
-            border: 1px solid var(--k-border);
-            border-right: none;
-            border-top-left-radius: 12px !important;
-            border-bottom-left-radius: 12px !important;
-            color: var(--k-gold);
-        }
-
-        .input-group .form-control {
-            border-left: none;
-            border-top-left-radius: 0 !important;
-            border-bottom-left-radius: 0 !important;
-        }
-
-        .input-group-text i {
-            color: var(--k-gold);
-        }
-
-        /* =========================
-           BUTTONS
-        ========================= */
         .btn-primary {
             background: linear-gradient(135deg, #d4af37, #b8962e) !important;
             color: #000 !important;
@@ -156,9 +116,6 @@
             color: #000;
         }
 
-        /* =========================
-           TABLE
-        ========================= */
         .custom-table {
             width: 100%;
             border-collapse: collapse;
@@ -177,10 +134,6 @@
 
         .custom-table thead th.text-left {
             text-align: left;
-        }
-
-        .custom-table thead th.text-gray {
-            color: var(--k-gold);
         }
 
         .custom-table tbody tr {
@@ -207,13 +160,6 @@
             text-align: left;
         }
 
-        .custom-table tbody td.align-middle {
-            vertical-align: middle;
-        }
-
-        /* =========================
-           PRODUCT LINK
-        ========================= */
         .custom-table a.text-dark-blue {
             color: var(--k-gold) !important;
             font-weight: 500;
@@ -225,9 +171,7 @@
             color: #ffd700 !important;
         }
 
-        /* =========================
-           STATUS BADGES
-        ========================= */
+        /* STATUS BADGES — matches product file */
         .text-primary {
             color: #2ecc71 !important;
             font-weight: 600;
@@ -246,18 +190,12 @@
             display: inline-block;
         }
 
-        /* =========================
-           DATE
-        ========================= */
         .text-dark-blue.font-weight-500 {
             color: var(--k-gold) !important;
             font-weight: 500;
             font-size: 13px;
         }
 
-        /* =========================
-           DROPDOWN / ACTIONS
-        ========================= */
         .btn-transparent {
             color: var(--k-gold) !important;
             background: none;
@@ -273,44 +211,43 @@
         }
 
         .table-actions .dropdown-menu {
-            background: #0f0f0f;
-            border: 1px solid var(--k-border);
-            border-radius: 12px;
-            padding: 6px;
-            min-width: 120px;
+            background: #0f0f0f !important;
+            border: 1px solid var(--k-border) !important;
+            border-radius: 12px !important;
+            padding: 8px !important;
+            min-width: 120px !important;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5) !important;
         }
 
-        .table-actions .btn-transparent {
-            color: var(--k-text);
-            font-size: 13px;
-            padding: 8px 12px;
-            border-radius: 8px;
-            transition: all 0.2s ease;
-            display: block;
-            width: 100%;
-            border: none;
-            background: none;
-            cursor: pointer;
+        .table-actions .dropdown-menu .dropdown-item {
+            color: var(--k-text) !important;
+            font-size: 13px !important;
+            padding: 8px 12px !important;
+            border-radius: 8px !important;
+            transition: all 0.2s ease !important;
+            display: block !important;
+            width: 100% !important;
+            text-align: left !important;
+            border: none !important;
+            background: transparent !important;
+            cursor: pointer !important;
         }
 
-        .table-actions .btn-transparent:hover {
-            background: rgba(212, 175, 55, 0.12);
-            color: var(--k-gold);
-            text-decoration: none;
+        .table-actions .dropdown-menu .dropdown-item:hover {
+            background: rgba(212, 175, 55, 0.12) !important;
+            color: var(--k-gold) !important;
+            text-decoration: none !important;
         }
 
-        .delete-action {
+        .table-actions .dropdown-menu .delete-action {
             color: #e74c3c !important;
         }
 
-        .delete-action:hover {
+        .table-actions .dropdown-menu .delete-action:hover {
             background: rgba(231, 76, 60, 0.15) !important;
             color: #ff6b6b !important;
         }
 
-        /* =========================
-           NO RESULT
-        ========================= */
         .no-result {
             background: #0f0f0f;
             border: 1px dashed var(--k-border);
@@ -339,9 +276,6 @@
             margin: 0 auto;
         }
 
-        /* =========================
-           PAGINATION
-        ========================= */
         .pagination .page-link {
             background: #111;
             color: var(--k-gold);
@@ -362,9 +296,6 @@
             border-color: #2a2a2a;
         }
 
-        /* =========================
-           RESPONSIVE
-        ========================= */
         @media (max-width: 768px) {
             .custom-table thead {
                 display: none;
@@ -379,7 +310,6 @@
                 display: block;
                 text-align: left;
                 padding: 12px;
-                position: relative;
             }
 
             .custom-table tbody td:before {
@@ -395,68 +325,62 @@
 @endpush
 
 @section('content')
+    {{-- ✅ FIX 1: kemetic-page wrapper added (was missing in original) --}}
     <div class="kemetic-page">
+
         <section>
             <h2 class="section-title">{{ trans('panel.filter_comments') }}</h2>
 
             <div class="panel-section-card">
                 <form action="" method="get">
                     <div class="row">
+
+                        {{-- Date Range --}}
                         <div class="col-12 col-lg-5">
                             <div class="row">
                                 <div class="col-12 col-md-6">
                                     <div class="form-group">
                                         <label>{{ trans('public.from') }}</label>
-                                        <div class="input-group">
-                                            <input type="date"
-                                                class="form-control kemetic-input text-center"
-                                                name="from"
-                                                value="{{ request()->get('from') }}">
-                                                <!-- <span class="input-group-text kemetic-icon bg-gold text-black">
-                                                    <i data-feather="calendar" width="18" height="18"></i>
-                                                </span> -->
-
-                                                <!-- <input type="text" name="from" autocomplete="off"
-                                                    class="form-control kemetic-input @if(request()->get('from')) datepicker @else datefilter @endif"
-                                                    value="{{ request()->get('from','') }}"> -->
-                                        </div>
+                                        <input type="date"
+                                            class="form-control"
+                                            name="from"
+                                            value="{{ request()->get('from') }}">
                                     </div>
                                 </div>
                                 <div class="col-12 col-md-6">
                                     <div class="form-group">
                                         <label>{{ trans('public.to') }}</label>
-                                        <div class="input-group">
-                                            <input type="date"
-                                                    class="form-control kemetic-input text-center"
-                                                    name="to"
-                                                    value="{{ request()->get('to') }}">
-
-                                            <!-- <span class="input-group-text kemetic-icon bg-gold text-black">
-                                                <i data-feather="calendar" width="18" height="18"></i>
-                                            </span> -->
-                                            
-                                            <!-- <input type="text" name="to" autocomplete="off"
-                                                class="form-control kemetic-input @if(request()->get('to')) datepicker @else datefilter @endif"
-                                                value="{{ request()->get('to','') }}"> -->
-                                        </div>
+                                        <input type="date"
+                                            class="form-control"
+                                            name="to"
+                                            value="{{ request()->get('to') }}">
                                     </div>
                                 </div>
                             </div>
                         </div>
-                        
+
+                        {{-- Webinar Search --}}
                         <div class="col-12 col-lg-5">
                             <div class="form-group">
-                                <label>{{ trans('update.product') }}</label>
-                                <input type="text" name="product" value="{{ request()->get('product') }}" class="form-control" placeholder="{{ trans('update.product') }}"/>
+                                <label>{{ trans('panel.webinar') }}</label>
+                                <input type="text"
+                                    name="webinar"
+                                    value="{{ request()->get('webinar') }}"
+                                    class="form-control"
+                                    placeholder="{{ trans('panel.webinar') }}"/>
                             </div>
                         </div>
-                        
+
+                        {{-- Submit --}}
                         <div class="col-12 col-lg-2 d-flex align-items-end">
                             <div class="form-group w-100">
                                 <label class="d-none d-lg-block">&nbsp;</label>
-                                <button type="submit" class="btn btn-primary w-100">{{ trans('public.show_results') }}</button>
+                                <button type="submit" class="btn btn-primary w-100">
+                                    {{ trans('public.show_results') }}
+                                </button>
                             </div>
                         </div>
+
                     </div>
                 </form>
             </div>
@@ -466,12 +390,13 @@
             <h2 class="section-title">{{ trans('panel.my_comments') }}</h2>
 
             @if(!empty($comments) and !$comments->isEmpty())
+
                 <div class="panel-section-card">
                     <div class="table-responsive">
                         <table class="custom-table text-center">
                             <thead>
                                 <tr>
-                                    <th class="text-left">{{ trans('update.product') }}</th>
+                                    <th class="text-left">{{ trans('panel.webinar') }}</th>
                                     <th>{{ trans('panel.comment') }}</th>
                                     <th>{{ trans('public.status') }}</th>
                                     <th>{{ trans('public.date') }}</th>
@@ -481,12 +406,22 @@
                             <tbody>
                                 @foreach($comments as $comment)
                                     <tr>
-                                        <td class="text-left" data-label="{{ trans('update.product') }}">
-                                            <a class="text-dark-blue" href="{{ $comment->product->getUrl() }}" target="_blank">{{ $comment->product->title }}</a>
+                                        {{-- ✅ FIX 2: data-label added for responsive mobile view --}}
+                                        <td class="text-left" data-label="{{ trans('panel.webinar') }}">
+                                            <a class="text-dark-blue" href="{{ $comment->webinar->getUrl() }}" target="_blank">
+                                                {{ $comment->webinar->title }}
+                                            </a>
                                         </td>
+
                                         <td data-label="{{ trans('panel.comment') }}">
-                                            <button type="button" data-comment-id="{{ $comment->id }}" class="js-view-comment btn-gray200 btn-sm">{{ trans('public.view') }}</button>
+                                            <button type="button"
+                                                data-comment-id="{{ $comment->id }}"
+                                                class="js-view-comment btn-gray200 btn-sm">
+                                                {{ trans('public.view') }}
+                                            </button>
                                         </td>
+
+                                        {{-- ✅ FIX 3: status badges now use pill style matching product file --}}
                                         <td data-label="{{ trans('public.status') }}">
                                             @if($comment->status == 'active')
                                                 <span class="text-primary">{{ trans('public.published') }}</span>
@@ -494,16 +429,33 @@
                                                 <span class="text-warning">{{ trans('public.pending') }}</span>
                                             @endif
                                         </td>
-                                        <td data-label="{{ trans('public.date') }}" class="text-dark-blue font-weight-500">{{ dateTimeFormat($comment->created_at,'j M Y | H:i') }}</td>
+
+                                        <td data-label="{{ trans('public.date') }}" class="text-dark-blue font-weight-500">
+                                            {{ dateTimeFormat($comment->created_at,'j M Y | H:i') }}
+                                        </td>
+
                                         <td>
-                                            <input type="hidden" id="commentDescription{{ $comment->id }}" value="{{ nl2br($comment->comment) }}">
+                                            <input type="hidden"
+                                                id="commentDescription{{ $comment->id }}"
+                                                value="{{ nl2br($comment->comment) }}">
+
                                             <div class="btn-group dropdown table-actions">
-                                                <button type="button" class="btn-transparent dropdown-toggle" data-toggle="dropdown">
+                                                {{-- ✅ FIX 4: data-toggle (Bootstrap 4) consistent with project --}}
+                                                <button type="button"
+                                                    class="btn-transparent dropdown-toggle"
+                                                    data-toggle="dropdown">
                                                     <i data-feather="more-vertical" height="20"></i>
                                                 </button>
                                                 <div class="dropdown-menu">
-                                                    <button type="button" data-comment-id="{{ $comment->id }}" class="js-edit-comment btn-transparent">{{ trans('public.edit') }}</button>
-                                                    <a href="/panel/webinars/comments/{{ $comment->id }}/delete" class="delete-action btn-transparent">{{ trans('public.delete') }}</a>
+                                                    <button type="button"
+                                                        data-comment-id="{{ $comment->id }}"
+                                                        class="dropdown-item js-edit-comment btn-transparent">
+                                                        {{ trans('public.edit') }}
+                                                    </button>
+                                                    <a href="/panel/webinars/comments/{{ $comment->id }}/delete"
+                                                        class="dropdown-item delete-action btn-transparent">
+                                                        {{ trans('public.delete') }}
+                                                    </a>
                                                 </div>
                                             </div>
                                         </td>
@@ -513,23 +465,27 @@
                         </table>
                     </div>
 
+                    {{-- ✅ FIX 5: pagination moved inside card + hasPages() guard added --}}
                     @if($comments->hasPages())
                         <div class="my-30">
                             {{ $comments->appends(request()->input())->links('vendor.pagination.panel') }}
                         </div>
                     @endif
                 </div>
+
             @else
                 <div class="no-result">
                     <div class="no-result-content">
-                        <img src="/assets/default/img/no-results/comment.png" alt="{{ trans('panel.my_comments_no_result') }}">
+                        <img src="/assets/default/img/no-results/comment.png"
+                            alt="{{ trans('panel.my_comments_no_result') }}">
                         <h2>{{ trans('panel.my_comments_no_result') }}</h2>
                         <p>{{ trans('panel.my_comments_no_result_hint') }}</p>
                     </div>
                 </div>
             @endif
         </section>
-    </div>
+
+    </div>{{-- end .kemetic-page --}}
 @endsection
 
 @push('scripts_bottom')

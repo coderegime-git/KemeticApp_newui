@@ -27,7 +27,8 @@ class SaleController extends Controller
             ->where('product_orders.status', '!=', 'pending')
             ->whereHas('sale', function ($query) {
                 $query->whereNull('refund_at');
-            });
+            })
+            ->whereHas('product');
         // print_r($query->get());die;
         $totalOrders = deepClone($query)->count();
         $pendingOrders = deepClone($query)->where('product_orders.status', ProductOrder::$waitingDelivery)->count();

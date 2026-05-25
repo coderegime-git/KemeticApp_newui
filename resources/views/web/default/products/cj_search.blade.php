@@ -81,6 +81,7 @@
     </section>
 
     <!-- Pagination (Simplified for now) -->
+    @if(isset($totalPages) && $totalPages > 1)
     <div class="mt-4 d-flex justify-content-center">
         <nav aria-label="Page navigation">
             <ul class="pagination">
@@ -90,12 +91,15 @@
                 </li>
                 @endif
                 <li class="page-item active"><a class="page-link" href="#">{{ $pageNum }}</a></li>
+                @if($pageNum < $totalPages)
                 <li class="page-item">
                     <a class="page-link" href="{{ route('dropship.products.index', ['page' => $pageNum + 1, 'search' => $search]) }}">Next</a>
                 </li>
+                @endif
             </ul>
         </nav>
     </div>
+    @endif
   </div>
 
   <style>

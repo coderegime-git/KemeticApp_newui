@@ -267,6 +267,11 @@ Route::group(['prefix' => $prefix, 'namespace' => 'Admin', 'middleware' => ['web
             Route::get('/reasons', 'ReportsController@reasons');
             Route::post('/reasons', 'ReportsController@storeReasons');
             Route::get('/webinars', 'ReportsController@webinarsReports');
+            Route::get('/reels', 'ReportsController@reelsReports')->name('admin.reports.reels');
+            Route::get('/reels/{reelId}/show', 'ReportsController@reelReportShow')->name('admin.reports.reels.show');
+            Route::post('/reels/{reelId}/accept', 'ReportsController@acceptReelReport')->name('admin.reports.reels.accept');
+            Route::post('/reels/{reelId}/decline', 'ReportsController@declineReelReport')->name('admin.reports.reels.decline');
+            Route::delete('/reels/{id}/delete', 'ReportsController@deleteOneReelReport')->name('admin.reports.reels.delete');
             Route::get('/webinars/{id}/delete', 'ReportsController@delete');
 
             Route::group(['prefix' => 'forum-topics'], function () {
@@ -591,6 +596,8 @@ Route::group(['prefix' => $prefix, 'namespace' => 'Admin', 'middleware' => ['web
                 Route::get('/{id}/refund', 'SaleController@refund');
                 Route::get('/{id}/invoice', 'SaleController@invoice');
                 Route::get('/export', 'SaleController@exportExcel');
+                Route::get('/{id}/view-book',    'SaleController@viewBook')->name('admin.financial.sales.view_book');
+                Route::get('/{id}/view-product', 'SaleController@viewProduct')->name('admin.financial.sales.view_product');
             });
 
             Route::group(['prefix' => 'payouts'], function () {

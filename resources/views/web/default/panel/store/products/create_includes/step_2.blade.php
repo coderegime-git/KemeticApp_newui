@@ -466,7 +466,7 @@
                         <div class="form-group">
                             <label class="input-label">{{ trans('update.delivery_fee') }}</label>
                             <input type="number" name="delivery_fee" data-price-input
-                                value="{{ (!empty($product) && !empty($product->delivery_fee)) ? convertPriceToUserCurrency($product->delivery_fee) : old('delivery_fee') }}"
+                                value="{{ (!empty($product) && isset($product->delivery_fee)) ? convertPriceToUserCurrency($product->delivery_fee) : old('delivery_fee') }}"
                                 class="form-control @error('delivery_fee') is-invalid @enderror">
                         </div>
                     @endif
@@ -483,14 +483,14 @@
             @if(empty($cjProduct))
                 <div class="form-group">
                     <label class="input-label">Earning {{ trans('public.price') }} ({{ $currency }})</label>
-                    <input id="computedEarningPrice" name="earning_price" type="text" class="form-control" value="{{ (!empty($product) && !empty($product->earning_price)) ? convertPriceToUserCurrency($product->earning_price) : old('earning_price', '0.00') }}">
-                    <p class="font-12 text-gray mt-10">- Earning amount after 10% platform fee is deducted from the total price.</p>
+                    <input id="computedEarningPrice" name="earning_price" type="text" class="form-control" value="{{ (!empty($product) && isset($product->earning_price)) ? convertPriceToUserCurrency($product->earning_price) : old('earning_price', '0.00') }}">
+                    <p class="font-12 text-gray mt-10">- Earning amount for this product.</p>
                 </div>
 
                 <div class="form-group">
                     <label class="input-label">Platform {{ trans('public.price') }} (10%)</label>
-                    <input id="computedPlatformFee" name="own_platform_price" type="text" class="form-control" value="{{ (!empty($product) && !empty($product->own_platform_price)) ? convertPriceToUserCurrency($product->own_platform_price) : old('own_platform_price', '0.00') }}" readonly>
-                    <p class="font-12 text-gray mt-10">- Platform fee is 10% of the total price.</p>
+                    <input id="computedPlatformFee" name="own_platform_price" type="text" class="form-control" value="{{ (!empty($product) && isset($product->own_platform_price)) ? convertPriceToUserCurrency($product->own_platform_price) : old('own_platform_price', '0.00') }}" readonly>
+                    <p class="font-12 text-gray mt-10">- Platform fee is 10% of the earning price.</p>
                 </div>
             @endif
             
@@ -498,7 +498,7 @@
              <div class="form-group">
                 <label class="input-label">{{ trans('public.price') }} ({{ $currency }})</label>
                 <input type="number" name="price" id="finalPriceInput" data-price-input
-                       value="{{ (!empty($product) && !empty($product->price)) ? convertPriceToUserCurrency($product->price) : (!empty($cjProduct) ? ceil($cjPrice * 1.10) : old('price')) }}"
+                       value="{{ (!empty($product) && isset($product->price)) ? convertPriceToUserCurrency($product->price) : (!empty($cjProduct) ? ceil($cjPrice * 1.10) : old('price')) }}"
                        class="form-control @error('price') is-invalid @enderror">
                 @error('price')<div class="invalid-feedback">{{ $message }}</div>@enderror
             </div>
@@ -773,8 +773,6 @@
                 //     }
                 //     updateCjPricing();
                 // }
-                updateCjPricing();
-
                 // initializePricing();
             @if(empty($cjProduct))
 
@@ -786,17 +784,42 @@
                 function updateNonCjPricing() {
                     let earning     = parseFloat($ncjEarningInput.val())  || 0;
                     let delivery    = parseFloat($ncjDeliveryInput.val()) || 0;
-                    let subtotal    = earning + delivery;
-                    let platformFee = parseFloat((subtotal * PLATFORM_FEE_PERCENTAGE).toFixed(2));
-                    let total       = Math.ceil(subtotal + platformFee);
+                    
+                    let platformFee = parseFloat((earning * PLATFORM_FEE_PERCENTAGE).toFixed(2));
+                    let total       = Math.ceil(earning + delivery + platformFee);
+                    
+                    // Adjust platform fee to match the ceiled total, maintaining exact earning
+                    platformFee = parseFloat((total - earning - delivery).toFixed(2));
 
                     $ncjPlatformInput.val(platformFee.toFixed(2));
                     $ncjPriceInput.val(total);
                 }
 
+                function updateEarningFromPrice() {
+                    let total       = parseFloat($ncjPriceInput.val()) || 0;
+                    let delivery    = parseFloat($ncjDeliveryInput.val()) || 0;
+                    
+                    let earning     = (total - delivery) / (1 + PLATFORM_FEE_PERCENTAGE);
+                    let platformFee = total - earning - delivery;
+                    
+                    if (earning >= 0) {
+                        $ncjEarningInput.val(earning.toFixed(2));
+                    } else {
+                        $ncjEarningInput.val('0.00');
+                    }
+                    $ncjPlatformInput.val(platformFee.toFixed(2));
+                }
+
                 $ncjEarningInput.on('input', updateNonCjPricing);
                 $ncjDeliveryInput.on('input', updateNonCjPricing);
-                updateNonCjPricing();
+                $ncjPriceInput.on('input', updateEarningFromPrice);
+                
+                // Initial update based on what is already filled
+                if ($ncjPriceInput.val() && $ncjPriceInput.val() !== '0') {
+                    updateEarningFromPrice();
+                } else {
+                    updateNonCjPricing();
+                }
             @endif
 
             // Related Courses functionality for Products

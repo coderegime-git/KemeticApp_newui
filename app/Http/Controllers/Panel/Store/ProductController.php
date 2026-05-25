@@ -115,10 +115,10 @@ class ProductController extends Controller
 
         if ($cjVid) {
             $cjProduct = $this->cjService->getProductDetail($cjVid);
-            
+
             if ($cjProduct) {
                 $cjPrice = $cjProduct['sellPrice'] ?? 0;
-                
+
                 if ($cjVariantId && !empty($cjProduct['variants'])) {
                     foreach ($cjProduct['variants'] as $v) {
                         if ($v['vid'] == $cjVariantId) {
@@ -309,7 +309,7 @@ class ProductController extends Controller
                     $vid = $firstSavedVariant->vid;
                     $apiVariant = collect($cjProduct['variants'])->where('vid', $vid)->first();
                     if ($apiVariant) {
-                        $cjPrice = (float)($apiVariant['variantSellPrice'] ?? $apiVariant['sellPrice'] ?? 0);
+                        $cjPrice = (float) ($apiVariant['variantSellPrice'] ?? $apiVariant['sellPrice'] ?? 0);
                     } else {
                         $cjPrice = $cjProduct['sellPrice'] ?? 0;
                     }
@@ -455,14 +455,14 @@ class ProductController extends Controller
             if ($product->is_cj_product) {
                 $cjProduct = $this->cjService->getProductDetail($product->cj_vid);
                 if ($cjProduct && !empty($cjProduct['variants'])) {
-                    $shipping = (float)($data['cj_shipping_price'] ?? 0);
-                    $earning = (float)($data['cj_your_price'] ?? 0);
-                    
+                    $shipping = (float) ($data['cj_shipping_price'] ?? 0);
+                    $earning = (float) ($data['cj_your_price'] ?? 0);
+
                     foreach ($cjProduct['variants'] as $v) {
-                        $cjVPrice = (float)($v['variantSellPrice'] ?? $v['sellPrice'] ?? 0);
+                        $cjVPrice = (float) ($v['variantSellPrice'] ?? $v['sellPrice'] ?? 0);
                         // Calculate final selling price for this specific variant
                         $variantSellPrice = ceil(($cjVPrice + $shipping + $earning) / 0.9);
-                        
+
                         ProductCjVariant::where('product_id', $product->id)
                             ->where('vid', $v['vid'])
                             ->update([

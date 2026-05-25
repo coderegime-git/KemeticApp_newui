@@ -2650,7 +2650,7 @@
     
     /* Price cell */
     .cart-cart-row td:nth-child(2)::before {
-      content: "Price:";
+      content: "Quantity:";
       font-size: 13px;
       color: var(--text-sub);
       font-weight: 500;
@@ -2663,7 +2663,7 @@
     
     /* Quantity cell */
     .cart-cart-row td:nth-child(3)::before {
-      content: "Quantity:";
+      content: "Price:";
       font-size: 13px;
       color: var(--text-sub);
       font-weight: 500;

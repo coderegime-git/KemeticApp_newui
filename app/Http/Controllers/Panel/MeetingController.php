@@ -86,10 +86,14 @@ class MeetingController extends Controller
         $validator = Validator::make($data, $rules);
 
         if ($validator->fails()) {
-            return response([
-                'code' => 422,
-                'errors' => $validator->errors(),
-            ], 422);
+            if ($request->ajax() or $request->wantsJson()) {
+                return response([
+                    'code' => 422,
+                    'errors' => $validator->errors(),
+                ], 422);
+            }
+
+            return redirect()->back()->withErrors($validator)->withInput();
         }
 
         $meeting = Meeting::where('id', $id)
@@ -112,12 +116,32 @@ class MeetingController extends Controller
                 'in_person_group_amount' => ($groupMeeting and $inPerson) ? convertPriceToDefaultCurrency($data['in_person_group_amount']) : null,
             ]);
 
-            return response()->json([
-                'code' => 200
-            ], 200);
+            if ($request->ajax() or $request->wantsJson()) {
+                return response()->json([
+                    'code' => 200
+                ], 200);
+            }
+
+            return redirect()->back()->with([
+                'toast' => [
+                    'title' => trans('public.success'),
+                    'msg' => trans('meeting.save_meeting_setting_success'),
+                    'status' => 'success'
+                ]
+            ]);
         }
 
-        return response()->json([], 422);
+        if ($request->ajax() or $request->wantsJson()) {
+            return response()->json([], 422);
+        }
+
+        return redirect()->back()->with([
+            'toast' => [
+                'title' => trans('public.fail'),
+                'msg' => trans('public.request_failed'),
+                'status' => 'error'
+            ]
+        ]);
     }
 
     public function saveTime(Request $request)
@@ -144,30 +168,36 @@ class MeetingController extends Controller
 
             $explodeTime = explode('-', $time);
 
-            if (!empty($explodeTime[0]) and !empty($explodeTime[1])) {
-                $start_time = date("H:i", strtotime($explodeTime[0]));
-                $end_time = date("H:i", strtotime($explodeTime[1]));
+if (!empty($explodeTime[0]) and !empty($explodeTime[1])) {
+                $start_raw = trim($explodeTime[0]);
+                $end_raw   = trim($explodeTime[1]);
 
-                if (strtotime($end_time) >= strtotime($start_time)) {
+                // Convert 12-hour AM/PM strings to comparable timestamps
+                $start_ts = strtotime($start_raw);
+                $end_ts   = strtotime($end_raw);
+
+                if ($start_ts !== false && $end_ts !== false && $end_ts > $start_ts) {
                     $checkTime = MeetingTime::where('meeting_id', $meeting->id)
-                        ->where('day_label', $data)
+                        ->where('day_label', $day)
                         ->where('time', $time)
                         ->first();
 
                     if (empty($checkTime)) {
                         MeetingTime::create([
-                            'meeting_id' => $meeting->id,
+                            'meeting_id'   => $meeting->id,
                             'meeting_type' => $meetingType,
-                            'day_label' => $day,
-                            'time' => $time,
-                            'description' => $description,
-                            'created_at' => time(),
+                            'day_label'    => $day,
+                            'time'         => $time,
+                            'description'  => $description,
+                            'created_at'   => time(),
                         ]);
 
                         return response()->json([
                             'code' => 200
                         ], 200);
                     }
+
+                    return response()->json(['code' => 200], 200);
                 } else {
                     return response()->json([
                         'error' => 'contradiction'

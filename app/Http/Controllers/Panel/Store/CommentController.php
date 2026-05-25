@@ -18,6 +18,7 @@ class CommentController extends Controller
         $user = auth()->user();
 
         $query = Comment::where('status', 'active')
+            ->whereNull('reply_id')
             ->whereNotNull('product_id')
             ->whereHas('product', function ($query) use ($user) {
                 $query->where('creator_id', $user->id);
@@ -33,7 +34,7 @@ class CommentController extends Controller
             ]);
 
 
-        $repliedCommentsCount = deepClone($query)->whereNotNull('reply_id')->count();
+        $repliedCommentsCount = deepClone($query)->whereHas('replies')->count();
 
         $query = $this->filterComments($query, $request);
 
@@ -91,21 +92,21 @@ class CommentController extends Controller
         $product = $request->get('product', null);
 
         if (!empty($from) and !empty($to)) {
-            $from = strtotime($from);
-            $to = strtotime($to);
+            $from = strtotime($from . ' 00:00:00');
+            $to = strtotime($to . ' 23:59:59');
 
             $query->whereBetween('created_at', [$from, $to]);
         } else {
             if (!empty($from)) {
-                $from = strtotime($from);
+                $from = strtotime($from . ' 00:00:00');
 
                 $query->where('created_at', '>=', $from);
             }
 
             if (!empty($to)) {
-                $to = strtotime($to);
+                $to = strtotime($to . ' 23:59:59');
 
-                $query->where('created_at', '<', $to);
+                $query->where('created_at', '<=', $to);
             }
         }
 

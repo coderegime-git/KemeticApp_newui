@@ -53,7 +53,20 @@ trait LearningPageItemInfoTrait
 
         $course = Webinar::find($courseId);
 
-        return (!empty($course) and ($course->checkUserHasBought($user) or !empty($course->getInstallmentOrder())));
+        if (empty($course)) {
+            return false;
+        }
+
+        // Free course — everyone can access
+        $isFree = is_null($course->price) || (float)$course->price == 0.0;
+        if ($isFree) {
+            return true;
+        }
+
+        return ($course->checkUserHasBought($user) or !empty($course->getInstallmentOrder()));
+
+
+        //return (!empty($course) and ($course->checkUserHasBought($user) or !empty($course->getInstallmentOrder())));
     }
 
     private function getFileInfo($id)

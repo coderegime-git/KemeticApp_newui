@@ -9,6 +9,7 @@ use App\Models\Webinar;
 use App\Models\Product;
 use App\Models\Book;
 use App\Models\Reel;
+use App\User;
 use App\Models\ProductMedia;
 use App\Models\Translation\BlogTranslation;
 use App\Models\Translation\WebinarTranslation;
@@ -129,7 +130,7 @@ class ShareRedirectController extends Controller
                     // Use found thumbnail or default
                     $thumbnailUrl = $thumbnailPath 
                         ? url($thumbnailPath) 
-                        : asset('store/1/logo/69f1966bd17cc.webp');
+                        : asset('store/1/69f1ea5d674a1.jpeg');
 
                     $ogData = [
                         'title'       => $portal->title ?? 'Portal Reel',

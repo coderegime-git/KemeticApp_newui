@@ -168,22 +168,41 @@ section {
 
 /* DROPDOWN */
 .table-actions .dropdown-menu {
-    background: #161616;
-    border: 1px solid var(--k-border);
-    border-radius: 12px;
-    padding: 10px;
+    background: #161616 !important;
+    border: 1px solid var(--k-border) !important;
+    border-radius: 12px !important;
+    padding: 8px !important;
+    min-width: 120px !important;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5) !important;
 }
 
-.table-actions .dropdown-menu button,
-.table-actions .dropdown-menu a {
-    color: var(--k-text);
-    font-size: 14px;
+.table-actions .dropdown-menu .dropdown-item {
+    color: var(--k-text) !important;
+    font-size: 14px !important;
+    padding: 8px 12px !important;
+    border-radius: 8px !important;
+    transition: all 0.2s ease !important;
+    display: block !important;
+    width: 100% !important;
+    text-align: left !important;
+    border: none !important;
+    background: transparent !important;
+    cursor: pointer !important;
 }
 
-.table-actions .dropdown-menu button:hover,
-.table-actions .dropdown-menu a:hover {
-    color: var(--k-gold);
-    background: transparent;
+.table-actions .dropdown-menu .dropdown-item:hover {
+    background: rgba(242, 201, 76, 0.12) !important;
+    color: var(--k-gold) !important;
+    text-decoration: none !important;
+}
+
+.table-actions .dropdown-menu .delete-action {
+    color: #e74c3c !important;
+}
+
+.table-actions .dropdown-menu .delete-action:hover {
+    background: rgba(231, 76, 60, 0.15) !important;
+    color: #ff6b6b !important;
 }
 
 /* PAGINATION */
@@ -450,8 +469,8 @@ section {
                                                     <i data-feather="more-vertical" height="20"></i>
                                                 </button>
                                                 <div class="dropdown-menu">
-                                                    <button type="button" data-comment-id="{{ $comment->id }}" class="js-edit-comment btn-transparent">{{ trans('public.edit') }}</button>
-                                                    <a href="/panel/webinars/comments/{{ $comment->id }}/delete" class="delete-action btn-transparent d-block mt-10">{{ trans('public.delete') }}</a>
+                                                    <button type="button" data-comment-id="{{ $comment->id }}" class="dropdown-item js-edit-comment btn-transparent">{{ trans('public.edit') }}</button>
+                                                    <a href="/panel/webinars/comments/{{ $comment->id }}/delete" class="dropdown-item delete-action btn-transparent d-block mt-10">{{ trans('public.delete') }}</a>
                                                 </div>
                                             </div>
                                         </td>

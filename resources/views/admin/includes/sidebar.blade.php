@@ -697,6 +697,10 @@
                             </li>
                         @endcan
 
+                            <li class="{{ (request()->is(getAdminPanelUrl('/reports/reels', false))) ? 'active' : '' }}">
+                                <a class="nav-link" href="{{ getAdminPanelUrl() }}/reports/reels">Portals</a>
+                            </li>
+
                         @can('admin_webinar_comments_reports')
                             <li class="{{ (request()->is(getAdminPanelUrl('/comments/webinars/reports', false))) ? 'active' : '' }}">
                                 <a class="nav-link" href="{{ getAdminPanelUrl() }}/comments/webinars/reports">{{ trans('admin/main.classes_comments_reports') }}</a>

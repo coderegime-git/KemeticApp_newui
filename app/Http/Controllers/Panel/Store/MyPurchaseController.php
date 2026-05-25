@@ -243,26 +243,26 @@ class MyPurchaseController extends Controller
 
         // Get membership order with relationships
         $membershipOrder = Order::query()
-            ->where('user_id', $user->id)
-            ->where('id', $orderId)
-            ->whereHas('orderItems', function ($query) {
-                $query->whereNotNull('subscribe_id'); // Only membership orders
-            })
-            ->with([
-                'orderItems' => function ($query) {
-                    $query->whereNotNull('subscribe_id')
-                        ->with('subscribe');
-                }
-            ])
-            ->first();
+        ->where('user_id', $user->id)
+        ->where('id', $orderId)
+        ->whereHas('orderItems', function($query) {
+            $query->whereNotNull('subscribe_id'); // Only membership orders
+        })
+        ->with([
+            'orderItems' => function($query) {
+                $query->whereNotNull('subscribe_id')
+                      ->with('subscribe');
+            }
+        ])
+        ->first();
 
         if (!empty($membershipOrder)) {
-
-            // Get the order item with subscription details
+        
+        // Get the order item with subscription details
             $orderItem = $membershipOrder->orderItems->first();
             $subscribe = $orderItem->subscribe ?? null;
-
-
+            
+            
             // Get the sale record for this order
             // Assuming you have a sales table with order_id foreign key
             $sale = Sale::query()
@@ -270,27 +270,27 @@ class MyPurchaseController extends Controller
                 ->where('subscribe_id', $subscribe->id)
                 ->first();
 
-            // dd($subscribe);
-
+                // dd($subscribe);
+            
             // Alternative: if sales table has buyer_id and product_id structure
             // $sale = Sale::query()
             //     ->where('buyer_id', $user->id)
             //     ->where('product_id', $subscribe->id ?? null)
             //     ->where('product_type', 'subscribe')
             //     ->first();
-
+            
             // Check if subscription is active
             $isActive = false;
             if ($subscribe && $sale) {
                 $currentTime = time();
                 // Calculate expiration time based on subscription days
                 $expirationTime = $orderItem->created_at + ($subscribe->days * 86400);
-
-                $isActive = ($sale->payment_method !== 'offline' &&
-                    $currentTime >= $orderItem->created_at &&
-                    $currentTime < $expirationTime);
+                
+                $isActive = ($sale->payment_method !== 'offline' && 
+                            $currentTime >= $orderItem->created_at && 
+                            $currentTime < $expirationTime);
             }
-
+            
             // Get membership features/prices from subscribe table
             $membershipFeatures = [
                 'title' => $subscribe->title ?? 'Membership',
@@ -301,7 +301,7 @@ class MyPurchaseController extends Controller
                 'is_active' => $isActive,
                 'usable_time' => $subscribe->days * 86400, // Convert days to seconds
             ];
-
+            
             $data = [
                 'pageTitle' => 'Membership Invoice',
                 'order' => $membershipOrder,
@@ -313,7 +313,7 @@ class MyPurchaseController extends Controller
                 'membershipFeatures' => $membershipFeatures,
                 'isActive' => $isActive,
             ];
-
+            
             return view('web.default.panel.financial.invoice', $data);
         }
 

@@ -453,6 +453,12 @@
                 vimeo: '{{ trans('update.file_source_vimeo_placeholder') }}',
                 external_link: '{{ trans('update.file_source_external_link_placeholder') }}',
             }
+            
+            $(document).ready(function() {
+                $(document).on('click', '.note-modal .close, .note-modal [data-dismiss="modal"]', function() {
+                    $(this).closest('.modal').modal('hide');
+                });
+            });
         </script>
     @endpush
 @endpush

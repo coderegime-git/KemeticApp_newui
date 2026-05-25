@@ -80,6 +80,42 @@
     box-shadow: 0 10px 25px rgba(245, 199, 122, 0.45);
 }
 
+
+    /* Summernote Modal Fixes */
+    .note-modal .modal-content {
+        background-color: #121212 !important;
+        color: #fff !important;
+        border: 1px solid rgba(242,201,76,0.3);
+    }
+    .note-modal .modal-header {
+        border-bottom: 1px solid rgba(242,201,76,0.25);
+    }
+    .note-modal .modal-title, .note-modal label, .note-modal label small {
+        color: #f2c94c !important;
+    }
+    .note-modal .text-muted {
+        color: #c9b26d !important;
+    }
+    .note-modal .close {
+        color: #fff !important;
+        opacity: 1 !important;
+        background: transparent !important;
+        text-shadow: none !important;
+        border: none !important;
+    }
+    .note-modal .form-control {
+        background: #0e0e0e !important;
+        border: 1px solid rgba(242,201,76,0.3) !important;
+        color: #fff !important;
+    }
+    .note-modal .btn-primary {
+        background: linear-gradient(135deg, #f2c94c, #caa63c) !important;
+        color: #000 !important;
+        border: none !important;
+    }
+    .note-modal .checkbox input {
+        margin-right: 5px;
+    }
 </style>
 @push('styles_top')
     <link rel="stylesheet" href="/assets/vendors/summernote/summernote-bs4.min.css">
@@ -256,6 +292,15 @@
 <script src="/assets/vendors/summernote/summernote-bs4.min.js"></script>
 <script>
     var noticeboard_success_send = '{{ trans('panel.noticeboard_success_send') }}';
+
+     document.addEventListener('click', function(e) {
+            if (e.target.closest('.note-modal .close')) {
+                const modal = e.target.closest('.note-modal');
+                if (modal) {
+                    $(modal).modal('hide');
+                }
+            }
+        });
 </script>
 <script src="/assets/default/js/panel/noticeboard.min.js"></script>
 @endpush

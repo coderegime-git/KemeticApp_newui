@@ -41,8 +41,25 @@ class Share
                 view()->share('unReadNotifications', $unReadNotifications);
             }
             
-            $cartManagerController = new CartManagerController();
-            $carts = $cartManagerController->getCarts();
+            // $cartManagerController = new CartManagerController();
+            // $carts = $cartManagerController->getCarts();
+            $carts = Cart::where('creator_id', $user->id)
+                ->with([
+                    'user',
+                    'webinar',
+                    'installmentPayment',
+                    'reserveMeeting' => function ($query) {
+                        $query->with(['meeting', 'meetingTime']);
+                    },
+                    'ticket',
+                    'productOrder' => function ($query) {
+                        $query->whereHas('product')->with('product');
+                    },
+                    'bookOrder' => function ($query) {
+                        $query->whereHas('book')->with('book');
+                    }
+                ])
+            ->get();
         }
         else{
             $deviceId = session('device_id');

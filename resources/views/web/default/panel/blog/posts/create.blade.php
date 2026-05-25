@@ -75,6 +75,42 @@
     border-radius: 14px;
     padding: 10px 26px;
 }
+
+/* Summernote Modal Fixes */
+.note-modal .modal-content {
+    background-color: #121212 !important;
+    color: #fff !important;
+    border: 1px solid rgba(242,201,76,0.3);
+}
+.note-modal .modal-header {
+    border-bottom: 1px solid rgba(242,201,76,0.25);
+}
+.note-modal .modal-title, .note-modal label, .note-modal label small {
+    color: #f2c94c !important;
+}
+.note-modal .text-muted {
+    color: #c9b26d !important;
+}
+.note-modal .close {
+    color: #fff !important;
+    opacity: 1 !important;
+    background: transparent !important;
+    text-shadow: none !important;
+    border: none !important;
+}
+.note-modal .form-control {
+    background: #0e0e0e !important;
+    border: 1px solid rgba(242,201,76,0.3) !important;
+    color: #fff !important;
+}
+.note-modal .btn-primary {
+    background: linear-gradient(135deg, #f2c94c, #caa63c) !important;
+    color: #000 !important;
+    border: none !important;
+}
+.note-modal .checkbox input {
+    margin-right: 5px;
+}
 </style>
 @endpush
 
@@ -148,7 +184,7 @@
                         <div class="input-group">
                             <div class="input-group-prepend">
                                 <button type="button"
-                                        class="input-group-text panel-file-manager"
+                                        class="input-group-text panel-file-manager-image"
                                         data-input="image"
                                         data-preview="holder">
                                     <i data-feather="upload" width="18"></i>
@@ -208,4 +244,25 @@
 
 @push('scripts_bottom')
 <script src="/assets/vendors/summernote/summernote-bs4.min.js"></script>
+<script src="/vendor/laravel-filemanager/js/stand-alone-button.js"></script>
+<script>
+    // Initialize file manager for images only
+    $(document).ready(function() {
+        if($.fn.filemanager) {
+            $('.panel-file-manager-image').filemanager('image', {
+                prefix: '/laravel-filemanager'
+            });
+        }
+    });
+
+    // Fix for Summernote modals close button in Bootstrap 5
+    document.addEventListener('click', function(e) {
+        if (e.target.closest('.note-modal .close')) {
+            const modal = e.target.closest('.note-modal');
+            if (modal) {
+                $(modal).modal('hide');
+            }
+        }
+    });
+</script>
 @endpush

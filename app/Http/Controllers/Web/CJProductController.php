@@ -38,10 +38,14 @@ class CJProductController extends Controller
         $user            = auth()->user();
         $activeSubscribe = $user ? \App\Models\Subscribe::getActiveSubscribe($user->id) : null;
 
+        $pageSize        = 20;
+        $maxPage         = (int) floor(6000 / $pageSize); // 300
+        $page            = max(1, min((int) $request->get('page', 1), $maxPage));
+
         // Build filters from request
         $filters = array_filter([
-            'pageNum'      => max(1, (int) $request->get('page', 1)),
-            'pageSize'     => 20,
+            'pageNum'      => $page,
+            'pageSize'     => $pageSize,
             'productNameEn'=> $request->get('search'),
             'categoryId'   => $request->get('category_id'),
             'countryCode'  => $request->get('country', ''),
@@ -57,8 +61,7 @@ class CJProductController extends Controller
         $products        = $result['list']  ?? [];
         $total           = $result['total'] ?? 0;
         $currentPage     = $result['pageNum']  ?? 1;
-        $pageSize        = $result['pageSize'] ?? 20;
-        $totalPages      = $total > 0 ? ceil($total / $pageSize) : 1;
+        $totalPages      = $total > 0 ? ceil(min($total, 6000) / $pageSize) : 1;
 
         // Trending sidebar (cached)
         $trendingProducts = $this->cj->getTrendingProducts(6);
@@ -120,9 +123,13 @@ class CJProductController extends Controller
 
     public function apiList(Request $request): JsonResponse
     {
+        $pageSize       = min(100, max(1, (int) $request->get('size', 20)));
+        $maxPage        = (int) floor(6000 / $pageSize);
+        $page           = max(1, min((int) $request->get('page', 1), $maxPage));
+
         $filters = array_filter([
-            'pageNum'       => max(1, (int) $request->get('page', 1)),
-            'pageSize'      => min(100, max(1, (int) $request->get('size', 20))),
+            'pageNum'       => $page,
+            'pageSize'      => $pageSize,
             'productNameEn' => $request->get('search'),
             'categoryId'    => $request->get('category_id'),
             'countryCode'   => $request->get('country'),

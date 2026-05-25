@@ -1007,20 +1007,24 @@
             @if($authUser->isTeacher())
             <div class="nav-collapsible {{ (request()->is('panel/book') or request()->is('panel/book/*')) ? 'open' : '' }}">
                 <a class="nav-collapsible-toggle {{ (request()->is('panel/book') or request()->is('panel/book/*')) ? 'active' : '' }}">
-                    <span class="dashboard-ms">book</span>Scrolls
+                    <span class="dashboard-ms">book</span>Library
                     <span class="nav-arrow">›</span>
                 </a>
                 <div class="nav-collapsible-content">
                     <a href="/panel/book/new" class="{{ (request()->is('panel/book/new')) ? 'active' : '' }}">
-                        <span class="dashboard-ms">add_circle</span> New Scrolls
+                        <span class="dashboard-ms">add_circle</span> New Library
                     </a>
 
                     <a href="/panel/book/" class="{{ (request()->is('panel/book/')) ? 'active' : '' }}">
-                        <span class="dashboard-ms">library_books</span> My Scrolls
+                        <span class="dashboard-ms">library_books</span> My Libraries
                     </a>
 
                     <a href="/panel/book/purchases" class="{{ Request::is('panel/book/purchases') ? 'active' : '' }}">
                         <span class="dashboard-ms">shopping_bag</span> {{ trans('panel.my_purchases') }}
+                    </a>
+
+                    <a href="/panel/book/sales" class="{{ Request::is('panel/book/sales') ? 'active' : '' }}">
+                        <span class="dashboard-ms">shopping_cart</span> {{ trans('panel.sales') }}
                     </a>
                 </div>
             </div>
@@ -1169,51 +1173,3 @@
         </div>
     </div>
 </aside>
-<script>
-(function() {
-    function initSidebar() {
-        // Remove ALL previous click handlers on toggles by cloning
-        document.querySelectorAll('.nav-collapsible-toggle').forEach(function(toggle) {
-            var fresh = toggle.cloneNode(true);
-            toggle.parentNode.replaceChild(fresh, toggle);
-        });
-
-        // Re-attach clean handlers, innermost first
-        var all = Array.from(document.querySelectorAll('.nav-collapsible'));
-        all.reverse(); // reverse DOM order = deepest last in HTML = process children first
-
-        all.forEach(function(col) {
-            var toggle = col.querySelector(':scope > .nav-collapsible-toggle');
-            if (!toggle) return;
-
-            toggle.addEventListener('click', function(e) {
-                e.preventDefault();
-                e.stopPropagation();
-                e.stopImmediatePropagation();
-                col.classList.toggle('open');
-                console.log('Toggled:', toggle.textContent.trim().substring(0,20), col.classList.contains('open') ? 'now OPEN' : 'now CLOSED');
-            }, false);
-        });
-
-        // Mobile
-        var mobileBtn = document.querySelector('.mobile-menu-toggle');
-        var side = document.querySelector('.dashboard-side');
-        var ov = document.querySelector('.mobile-overlay');
-        if (mobileBtn && side && ov) {
-            mobileBtn.addEventListener('click', function() {
-                side.classList.toggle('mobile-open');
-                ov.classList.toggle('active');
-            });
-            ov.addEventListener('click', function() {
-                side.classList.remove('mobile-open');
-                ov.classList.remove('active');
-            });
-        }
-    }
-
-    // Run after ALL other scripts finish
-    window.addEventListener('load', function() {
-        setTimeout(initSidebar, 300);
-    });
-})();
-</script>

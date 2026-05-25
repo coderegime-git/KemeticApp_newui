@@ -578,7 +578,7 @@ class PaymentController extends Controller
 
                     if(!empty($orderItem->book_id))
                     {
-                        $this->updateBookOrder($sale, $orderItem, $order);
+                        $this->updateBookOrder($sale, $orderItem);
                     }
                 }
             }
@@ -587,6 +587,8 @@ class PaymentController extends Controller
             $cashbackAccounting->setAccountingForOrderItems($order->orderItems);
             Cart::emptyCart($order->user_id);
         }
+
+        
     }
 
     private function handleLuluPrintJobAfterPayment($order)
@@ -691,7 +693,7 @@ class PaymentController extends Controller
         
         $quantity = 1;
 
-        $address = $user->address;
+        $address = $user->house_no . ' ' . $user->address;
 
         // If address is longer than 30 chars, split intelligently
         if (strlen($address) > 30) {
@@ -717,7 +719,7 @@ class PaymentController extends Controller
                     "external_id" => "item-reference-1",
                     "printable_normalization" =>[
                         "cover" => [
-                            // "source_url" => "https://kemetic.app//store/lulu/cover/cover_1777529086.pdf",
+                            // "source_url" => "https://kemetic.app/store/lulu/cover/cover_1777529086.pdf",
                             "source_url" => url($book->cover_pdf),
                         ],
                         "interior" => [
@@ -753,8 +755,6 @@ class PaymentController extends Controller
             "shipping_level" => "MAIL"
         ];
 
-        // dd($data);
-        
         $printcurl = curl_init();
         curl_setopt_array($printcurl, [
             CURLOPT_URL => $printurl,
@@ -799,6 +799,9 @@ class PaymentController extends Controller
             \Log::error("File exists: " . (file_exists($this->laragonCertPath) ? 'Yes' : 'No'));
         }
 
+        // dd($data);
+        // dd($response);
+
         $responseData = json_decode($response, true);
 
         if ($responseData && isset($responseData['id'])) {
@@ -809,9 +812,6 @@ class PaymentController extends Controller
                 'printjob_id' => $responseData['id']
             ]);
         }
-
-        // dd($data);
-        // dd($response);
        
         return $responseData;
     }

@@ -354,6 +354,3 @@
 <script src="{{ url('/assets/default/js/parts/video_player_helpers.min.js') }}"></script>
 <script src="{{ url('/assets/default/js/parts/webinar_show.min.js') }}"></script>
 <script src="{{ url('/assets/default/js/parts/blog.min.js') }}"></script>
-</body>
-
-</html>

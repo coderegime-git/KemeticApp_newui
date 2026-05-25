@@ -762,7 +762,7 @@
                             <span class="settings-experience-period">{{ $experience->start_date }} - {{ $experience->end_date }}</span>
                             <div class="settings-experience-description">{{ $experience->description }}</div>
                             <div class="settings-experience-actions kemetic-actions">
-                                <button type="button" data-experience-id="{{ $experience->id }}" data-user-id="{{ (!empty($user) and empty($new_user)) ? $user->id : '' }}"  class="kemetic-btn kemetic-btn-edi">Edit</button>
+                                <button type="button" data-experience-id="{{ $experience->id }}" data-user-id="{{ (!empty($user) and empty($new_user)) ? $user->id : '' }}" class="kemetic-btn kemetic-btn-edit settings-experience-edit">Edit</button>
                                 <a href="/panel/setting/metas/{{ $experience->id }}/delete?user_id={{ (!empty($user) and empty($new_user)) ? $user->id : '' }}" class="kemetic-btn kemetic-btn-delete">Delete</a>              
                             </div>
 
@@ -806,7 +806,7 @@
                                     <p class="settings-education-subtitle">{{ $education->institution }}</p>
                                     <span class="settings-education-period">{{ $education->year }}</span>
                                     <div class="settings-education-actions kemetic-actions">
-                                        <button type="button" data-education-id="{{ $education->id }}" data-user-id="{{ (!empty($user) and empty($new_user)) ? $user->id : '' }}" class="kemetic-btn kemetic-btn-edi">Edit</button>
+                                        <button type="button" data-education-id="{{ $education->id }}" data-user-id="{{ (!empty($user) and empty($new_user)) ? $user->id : '' }}" class="kemetic-btn kemetic-btn-edit settings-education-edit">Edit</button>
                                         <a href="/panel/setting/metas/{{ $education->id }}/delete?user_id={{ (!empty($user) and empty($new_user)) ? $user->id : '' }}" class="kemetic-btn kemetic-btn-delete">Delete</a>
                                     </div>
                                 </div>
@@ -1187,6 +1187,8 @@
                     <label for="year">Year</label>
                     <input type="text" id="year" name="year" placeholder="e.g. 2018-2020">
                 </div>
+                <input type="hidden" id="educationEditId" value="">
+                <input type="hidden" id="educationOwnerUserId" value="">
                 <div class="settings-modal-actions">
                     <button type="button" class="settings-btn-ghost settings-close-modal">Cancel</button>
                     <button type="button" class="settings-btn-primary" id="saveEducation">Save</button>
@@ -1223,6 +1225,8 @@
                     <label for="description">Description</label>
                     <textarea id="description" name="description" placeholder="Describe your role, responsibilities, and achievements..."></textarea>
                 </div>
+                <input type="hidden" id="experienceEditId" value="">
+                <input type="hidden" id="experienceOwnerUserId" value="">
                 <div class="settings-modal-actions">
                     <button type="button" class="settings-btn-ghost settings-close-modal">Cancel</button>
                     <button type="button" class="settings-btn-primary" id="saveExperience">Save</button>
@@ -1338,30 +1342,20 @@
 
             const addEducationBtn = document.getElementById('addEducationBtn');
             const educationModal = document.getElementById('educationModal');
-            const saveEducationBtn = document.getElementById('saveEducation');
             const addExperienceBtn = document.getElementById('addExperienceBtn');
             const experienceModal = document.getElementById('experienceModal');
-            const saveExperienceBtn = document.getElementById('saveExperience');
 
             const closeModalBtns = document.querySelectorAll('.settings-close-modal');
 
-            // Education modal - UPDATED
+            // Education modal - open in ADD mode (reset ensures clean state)
             addEducationBtn.addEventListener('click', function() {
-                // Reset form for new entry
-                document.querySelector('#educationModal input#new_education_val').value = '';
-                document.querySelector('#educationModal input#institution').value = '';
-                document.querySelector('#educationModal input#year').value = '';
+                resetEducationModal();
                 educationModal.style.display = 'flex';
             });
 
-            // Experience modal - UPDATED
+            // Experience modal - open in ADD mode (reset ensures clean state)
             addExperienceBtn.addEventListener('click', function() {
-                // Reset form for new entry
-                document.querySelector('#experienceModal input#new_experience_val').value = '';
-                document.querySelector('#experienceModal input#organization').value = '';
-                document.querySelector('#experienceModal input#startDate').value = '';
-                document.querySelector('#experienceModal input#endDate').value = '';
-                document.querySelector('#experienceModal textarea#description').value = '';
+                resetExperienceModal();
                 experienceModal.style.display = 'flex';
             });
 
@@ -1369,108 +1363,197 @@
                 btn.addEventListener('click', function() {
                     educationModal.style.display = 'none';
                     experienceModal.style.display = 'none';
+                    resetEducationModal();
+                    resetExperienceModal();
                 });
             });
 
-            // Save Education - UPDATED
-            saveEducationBtn.addEventListener('click', function() {
+            // Education Save/Update - UNIFIED handler (checks #educationEditId to decide ADD vs UPDATE)
+            $(document).on('click', '#educationModal #saveEducation', function(e) {
+                e.preventDefault();
                 var $this = $(this);
                 $this.addClass('loadingbar primary').prop('disabled', true);
-                var $input = $('#educationModal #new_education_val');
-                var $inputInstitution = $('#educationModal #institution');
-                var $inputYear = $('#educationModal #year');
-                var $inputOrganization = $('#experienceModal #organization');
-                var $inputStartDate = $('#experienceModal #startDate');
-                var $inputEndDate = $('#experienceModal #endDate');
-                var $inputDescription = $('#experienceModal #description');
 
-                submitMetas($this, $input, $inputInstitution, $inputYear, $inputOrganization, $inputStartDate, $inputEndDate, $inputDescription, 'education', function() {
-                    educationModal.style.display = 'none';
+                var val = $('#educationModal #new_education_val').val().trim();
+                var institution = $('#educationModal #institution').val();
+                var year = $('#educationModal #year').val();
+                var editId = $('#educationEditId').val();
+                var ownerUserId = $('#educationOwnerUserId').val() ||
+                    ($('input#userId').length ? $('input#userId').val() : null);
+
+                if (!val) {
+                    $('#educationModal #new_education_val').addClass('is-invalid');
+                    $this.removeClass('loadingbar primary').prop('disabled', false);
+                    return;
+                }
+                $('#educationModal #new_education_val').removeClass('is-invalid');
+
+                var data = { value: val, institution: institution, year: year, name: 'education' };
+                if (ownerUserId) data.user_id = ownerUserId;
+
+                var url = editId
+                    ? ('/panel/setting/metas/' + editId + '/update')
+                    : '/panel/setting/metas';
+
+                $.post(url, data, function(result) {
+                    if (result && result.code == 200) {
+                        Swal.fire({
+                            icon: 'success',
+                            html: '<h3 class="font-20 text-center text-dark-blue py-25">success</h3>',
+                            showConfirmButton: false,
+                            width: '25rem',
+                        });
+                        educationModal.style.display = 'none';
+                        setTimeout(() => { window.location.reload(); }, 500);
+                    } else {
+                        Swal.fire({
+                            icon: 'error',
+                            html: '<h3 class="font-20 text-center text-dark-blue py-25">error</h3>',
+                            showConfirmButton: false,
+                            width: '25rem',
+                        });
+                        $this.removeClass('loadingbar primary').prop('disabled', false);
+                    }
+                }).fail(function() {
+                    Swal.fire({
+                        icon: 'error',
+                        html: '<h3 class="font-20 text-center text-dark-blue py-25">error</h3>',
+                        showConfirmButton: false,
+                        width: '25rem',
+                    });
+                    $this.removeClass('loadingbar primary').prop('disabled', false);
                 });
             });
 
-            // Save Experience - UPDATED
-            saveExperienceBtn.addEventListener('click', function() {
+            // Experience Save/Update - UNIFIED handler (checks #experienceEditId to decide ADD vs UPDATE)
+            $(document).on('click', '#experienceModal #saveExperience', function(e) {
+                e.preventDefault();
                 var $this = $(this);
                 $this.addClass('loadingbar primary').prop('disabled', true);
-                var $input = $('#experienceModal #new_experience_val');
-                var $inputInstitution = $('#educationModal #institution');
-                var $inputYear = $('#educationModal #year');
-                var $inputOrganization = $('#experienceModal #organization');
-                var $inputStartDate = $('#experienceModal #startDate');
-                var $inputEndDate = $('#experienceModal #endDate');
-                var $inputDescription = $('#experienceModal #description');
-            
 
-                submitMetas($this, $input,$inputInstitution, $inputYear, $inputOrganization, $inputStartDate, $inputEndDate, $inputDescription, 'experience', function() {
-                    experienceModal.style.display = 'none';
+                var val = $('#experienceModal #new_experience_val').val().trim();
+                var organization = $('#experienceModal #organization').val();
+                var startDate = $('#experienceModal #startDate').val();
+                var endDate = $('#experienceModal #endDate').val();
+                var description = $('#experienceModal #description').val();
+                var editId = $('#experienceEditId').val();
+                var ownerUserId = $('#experienceOwnerUserId').val() ||
+                    ($('input#userId').length ? $('input#userId').val() : null);
+
+                if (!val) {
+                    $('#experienceModal #new_experience_val').addClass('is-invalid');
+                    $this.removeClass('loadingbar primary').prop('disabled', false);
+                    return;
+                }
+                $('#experienceModal #new_experience_val').removeClass('is-invalid');
+
+                var data = {
+                    value: val,
+                    organization: organization,
+                    start_date: startDate,
+                    end_date: endDate,
+                    description: description,
+                    name: 'experience'
+                };
+                if (ownerUserId) data.user_id = ownerUserId;
+
+                var url = editId
+                    ? ('/panel/setting/metas/' + editId + '/update')
+                    : '/panel/setting/metas';
+
+                $.post(url, data, function(result) {
+                    if (result && result.code == 200) {
+                        Swal.fire({
+                            icon: 'success',
+                            html: '<h3 class="font-20 text-center text-dark-blue py-25">success</h3>',
+                            showConfirmButton: false,
+                            width: '25rem',
+                        });
+                        experienceModal.style.display = 'none';
+                        setTimeout(() => { window.location.reload(); }, 500);
+                    } else {
+                        Swal.fire({
+                            icon: 'error',
+                            html: '<h3 class="font-20 text-center text-dark-blue py-25">error</h3>',
+                            showConfirmButton: false,
+                            width: '25rem',
+                        });
+                        $this.removeClass('loadingbar primary').prop('disabled', false);
+                    }
+                }).fail(function() {
+                    Swal.fire({
+                        icon: 'error',
+                        html: '<h3 class="font-20 text-center text-dark-blue py-25">error</h3>',
+                        showConfirmButton: false,
+                        width: '25rem',
+                    });
+                    $this.removeClass('loadingbar primary').prop('disabled', false);
                 });
             });
 
-            // Edit Education buttons - UPDATED
-            document.querySelectorAll('.settings-education-edit').forEach(btn => {
-                btn.addEventListener('click', function(e) {
-                    e.preventDefault();
-                    var educationId = this.getAttribute('data-education-id');
-                    var userId = this.getAttribute('data-user-id');
-                    var educationItem = this.closest('.settings-education-item');
-                    var educationValue = educationItem.querySelector('.settings-education-title').textContent;
-                    var institutionValue = educationItem.querySelector('.settings-education-subtitle').textContent;
-                    var yearValue = educationItem.querySelector('.settings-education-period').textContent;
-                    
-                    // Populate modal with existing data
-                    document.querySelector('#educationModal input#new_education_val').value = educationValue;
-                    document.querySelector('#educationModal input#institution').value = institutionValue;
-                    document.querySelector('#educationModal input#year').value = yearValue;
-                    
-                    // Change modal to edit mode
-                    const modal = document.getElementById('educationModal');
-                    const title = modal.querySelector('.settings-modal-title');
-                    const saveBtn = modal.querySelector('#saveEducation');
-                    
-                    title.textContent = 'Edit Education';
-                    saveBtn.textContent = 'Update';
-                    saveBtn.setAttribute('data-education-id', educationId);
-                    saveBtn.setAttribute('data-user-id', userId);
-                    saveBtn.setAttribute('id', 'editEducation');
-                    
-                    modal.style.display = 'flex';
-                });
+            // Edit Education button in list - populates modal and sets edit state
+            $(document).on('click', '.settings-education-edit', function(e) {
+                e.preventDefault();
+                var educationId = this.getAttribute('data-education-id');
+                var userId = this.getAttribute('data-user-id');
+                var educationItem = this.closest('.settings-education-item');
+                var educationValue = educationItem.querySelector('.settings-education-title').textContent.trim();
+                var institutionValue = educationItem.querySelector('.settings-education-subtitle').textContent.trim();
+                var yearValue = educationItem.querySelector('.settings-education-period').textContent.trim();
+
+                // Reset first, then populate with item data
+                resetEducationModal();
+                document.querySelector('#educationModal input#new_education_val').value = educationValue;
+                document.querySelector('#educationModal input#institution').value = institutionValue;
+                document.querySelector('#educationModal input#year').value = yearValue;
+
+                // Store edit state in hidden inputs
+                document.getElementById('educationEditId').value = educationId;
+                document.getElementById('educationOwnerUserId').value = userId;
+
+                // Update modal title and button label
+                const eduModal = document.getElementById('educationModal');
+                const eduTitle = eduModal.querySelector('.settings-modal-title');
+                const eduSaveBtn = eduModal.querySelector('#saveEducation');
+                if (eduTitle) eduTitle.textContent = 'Edit Education';
+                if (eduSaveBtn) eduSaveBtn.textContent = 'Update';
+
+                eduModal.style.display = 'flex';
             });
 
-            // Edit Experience buttons - UPDATED
-            document.querySelectorAll('.settings-experience-edit').forEach(btn => {
-                btn.addEventListener('click', function(e) {
-                    e.preventDefault();
-                    var experienceId = this.getAttribute('data-experience-id');
-                    var userId = this.getAttribute('data-user-id');
-                    var experienceItem = this.closest('.settings-experience-item');
-                    var experienceValue = experienceItem.querySelector('.settings-experience-title').textContent;
-                    var organizationValue = experienceItem.querySelector('.settings-experience-subtitle').textContent;
-                    var startDateValue = experienceItem.querySelector('.settings-experience-period').textContent.split(' - ')[0];
-                    var endDateValue = experienceItem.querySelector('.settings-experience-period').textContent.split(' - ')[1];
-                    var descriptionValue = experienceItem.querySelector('.settings-experience-description').textContent;
-                    
-                    // Populate modal with existing data
-                    document.querySelector('#experienceModal input#new_experience_val').value = experienceValue;
-                    document.querySelector('#experienceModal input#organization').value = organizationValue;
-                    document.querySelector('#experienceModal input#startDate').value = startDateValue;
-                    document.querySelector('#experienceModal input#endDate').value = endDateValue;
-                    document.querySelector('#experienceModal textarea#description').value = descriptionValue;
-                    
-                    // Change modal to edit mode
-                    const modal = document.getElementById('experienceModal');
-                    const title = modal.querySelector('.settings-modal-title');
-                    const saveBtn = modal.querySelector('#saveExperience');
-                    
-                    title.textContent = 'Edit Experience';
-                    saveBtn.textContent = 'Update';
-                    saveBtn.setAttribute('data-experience-id', experienceId);
-                    saveBtn.setAttribute('data-user-id', userId);
-                    saveBtn.setAttribute('id', 'editExperience');
-                    
-                    modal.style.display = 'flex';
-                });
+            // Edit Experience button in list - populates modal and sets edit state
+            $(document).on('click', '.settings-experience-edit', function(e) {
+                e.preventDefault();
+                var experienceId = this.getAttribute('data-experience-id');
+                var userId = this.getAttribute('data-user-id');
+                var experienceItem = this.closest('.settings-experience-item');
+                var experienceValue = experienceItem.querySelector('.settings-experience-title').textContent.trim();
+                var organizationValue = experienceItem.querySelector('.settings-experience-subtitle').textContent.trim();
+                var periodText = experienceItem.querySelector('.settings-experience-period').textContent.trim();
+                var startDateValue = periodText.split(' - ')[0] || '';
+                var endDateValue = periodText.split(' - ')[1] || '';
+                var descriptionValue = experienceItem.querySelector('.settings-experience-description').textContent.trim();
+
+                // Reset first, then populate with item data
+                resetExperienceModal();
+                document.querySelector('#experienceModal input#new_experience_val').value = experienceValue;
+                document.querySelector('#experienceModal input#organization').value = organizationValue;
+                document.querySelector('#experienceModal input#startDate').value = startDateValue;
+                document.querySelector('#experienceModal input#endDate').value = endDateValue;
+                document.querySelector('#experienceModal textarea#description').value = descriptionValue;
+
+                // Store edit state in hidden inputs
+                document.getElementById('experienceEditId').value = experienceId;
+                document.getElementById('experienceOwnerUserId').value = userId;
+
+                // Update modal title and button label
+                const expModal = document.getElementById('experienceModal');
+                const expTitle = expModal.querySelector('.settings-modal-title');
+                const expSaveBtn = expModal.querySelector('#saveExperience');
+                if (expTitle) expTitle.textContent = 'Edit Experience';
+                if (expSaveBtn) expSaveBtn.textContent = 'Update';
+
+                expModal.style.display = 'flex';
             });
 
             // Close modal when clicking outside
@@ -1488,209 +1571,51 @@
             
         });
 
+        // Reset education modal to ADD mode (clears form and edit state)
         function resetEducationModal() {
             const modal = document.getElementById('educationModal');
-            const title = modal.querySelector('.settings-modal-title');
-            const saveBtn = modal.querySelector('#saveEducation');
-            
-            title.textContent = 'Add Education';
-            saveBtn.textContent = 'Save';
-            saveBtn.setAttribute('id', 'saveEducation');
-            saveBtn.removeAttribute('data-education-id');
-            saveBtn.removeAttribute('data-user-id');
+            const title = modal ? modal.querySelector('.settings-modal-title') : null;
+            const saveBtn = modal ? modal.querySelector('#saveEducation') : null;
+            const valInput = modal ? modal.querySelector('#new_education_val') : null;
+            const instInput = modal ? modal.querySelector('#institution') : null;
+            const yearInput = modal ? modal.querySelector('#year') : null;
+
+            if (valInput) valInput.value = '';
+            if (instInput) instInput.value = '';
+            if (yearInput) yearInput.value = '';
+            if (title) title.textContent = 'Add Education';
+            if (saveBtn) saveBtn.textContent = 'Save';
+
+            const editIdEl = document.getElementById('educationEditId');
+            const ownerIdEl = document.getElementById('educationOwnerUserId');
+            if (editIdEl) editIdEl.value = '';
+            if (ownerIdEl) ownerIdEl.value = '';
         }
 
+        // Reset experience modal to ADD mode (clears form and edit state)
         function resetExperienceModal() {
             const modal = document.getElementById('experienceModal');
-            const title = modal.querySelector('.settings-modal-title');
-            const saveBtn = modal.querySelector('#saveExperience');
-            
-            title.textContent = 'Add Experience';
-            saveBtn.textContent = 'Save';
-            saveBtn.setAttribute('id', 'saveExperience');
-            saveBtn.removeAttribute('data-experience-id');
-            saveBtn.removeAttribute('data-user-id');
+            const title = modal ? modal.querySelector('.settings-modal-title') : null;
+            const saveBtn = modal ? modal.querySelector('#saveExperience') : null;
+            const valInput = modal ? modal.querySelector('#new_experience_val') : null;
+            const orgInput = modal ? modal.querySelector('#organization') : null;
+            const startInput = modal ? modal.querySelector('#startDate') : null;
+            const endInput = modal ? modal.querySelector('#endDate') : null;
+            const descInput = modal ? modal.querySelector('#description') : null;
+
+            if (valInput) valInput.value = '';
+            if (orgInput) orgInput.value = '';
+            if (startInput) startInput.value = '';
+            if (endInput) endInput.value = '';
+            if (descInput) descInput.value = '';
+            if (title) title.textContent = 'Add Experience';
+            if (saveBtn) saveBtn.textContent = 'Save';
+
+            const editIdEl = document.getElementById('experienceEditId');
+            const ownerIdEl = document.getElementById('experienceOwnerUserId');
+            if (editIdEl) editIdEl.value = '';
+            if (ownerIdEl) ownerIdEl.value = '';
         }
-
-        function submitMetas($this, $input, $inputInstitution, $inputYear,$inputOrganization, $inputStartDate, $inputEndDate, $inputDescription, name, callback) {
-            var val = $input.val();
-            $input.removeClass('is-invalid');
-            var institution = $inputInstitution.val();
-            var year = $inputYear.val();
-            var organization = $inputOrganization.val();
-            var startDate = $inputStartDate.val();
-            var endDate = $inputEndDate.val();
-            var description = $inputDescription.val();
-            
-            var user_id = null;
-            if ($('input#userId').length) {
-                user_id = $('input#userId').val();
-            }
-
-            if (val !== '' && val !== null) {
-                var data = {
-                    name: name,
-                    value: val,
-                    institution: institution,
-                    year: year,
-                    organization: organization,
-                    start_date: startDate,
-                    end_date: endDate,
-                    description: description,
-                    user_id: user_id
-                };
-
-                $.post('/panel/setting/metas', data, function (result) {
-                    if (result && result.code == 200) {
-                        Swal.fire({
-                            icon: 'success',
-                            html: '<h3 class="font-20 text-center text-dark-blue py-25">success</h3>',
-                            showConfirmButton: false,
-                            width: '25rem',
-                        });
-
-                        if (typeof callback === 'function') {
-                            callback();
-                        }
-
-                        setTimeout(() => {
-                            window.location.reload();
-                        }, 500)
-                    }
-                }).fail(err => {
-                    Swal.fire({
-                        icon: 'error',
-                        html: '<h3 class="font-20 text-center text-dark-blue py-25">error</h3>',
-                        showConfirmButton: false,
-                        width: '25rem',
-                    });
-
-                    $this.removeClass('loadingbar primary').prop('disabled', false);
-                });
-            } else {
-                $input.addClass('is-invalid');
-                $this.removeClass('loadingbar primary').prop('disabled', false);
-            }
-        }
-
-        // Handle edit education
-        $('body').on('click', '#educationModal #editEducation', function (e) {
-            e.preventDefault();
-            var $this = $(this);
-            $this.addClass('loadingbar primary').prop('disabled', true);
-            var $input = $('#educationModal #new_education_val');
-            var $inputInstitution = $('#educationModal #institution');
-            var $inputYear = $('#educationModal #year');
-            var user_id = $(this).attr('data-user-id');
-            var education_id = $(this).attr('data-education-id');
-            var val = $input.val();
-            var institution = $inputInstitution.val();
-            var year = $inputYear.val();
-
-            if (val !== '' && val !== null) {
-                var data = {
-                    user_id: user_id,
-                    value: val,
-                    institution: institution,
-                    year: year,
-                    name: 'education',
-                };
-
-                $.post('/panel/setting/metas/' + education_id + '/update', data, function (result) {
-                    if (result && result.code == 200) {
-                        Swal.fire({
-                            icon: 'success',
-                            html: '<h3 class="font-20 text-center text-dark-blue py-25">success</h3>',
-                            showConfirmButton: false,
-                            width: '25rem',
-                        });
-
-                        setTimeout(() => {
-                            window.location.reload();
-                        }, 500);
-                    } else if (result.code == 403) {
-                        Swal.fire({
-                            icon: 'error',
-                            html: '<h3 class="font-20 text-center text-dark-blue py-25">error</h3>',
-                            showConfirmButton: false,
-                            width: '25rem',
-                        });
-
-                        $this.removeClass('loadingbar primary').prop('disabled', false);
-                    }
-                }).fail(err => {
-                    Swal.fire({
-                        icon: 'error',
-                        html: '<h3 class="font-20 text-center text-dark-blue py-25">error</h3>',
-                        showConfirmButton: false,
-                        width: '25rem',
-                    });
-
-                    $this.removeClass('loadingbar primary').prop('disabled', false);
-                });
-            }
-        });
-
-        // Handle edit experience
-        $('body').on('click', '#experienceModal #editExperience', function (e) {
-            e.preventDefault();
-            var $this = $(this);
-            $this.addClass('loadingbar primary').prop('disabled', true);
-            var $input = $('#experienceModal #new_experience_val');
-            var user_id = $(this).attr('data-user-id');
-            var experience_id = $(this).attr('data-experience-id');
-            var val = $input.val();
-            var organization = $('#experienceModal #organization').val();
-            var startDate = $('#experienceModal #startDate').val();
-            var endDate = $('#experienceModal #endDate').val();
-            var description = $('#experienceModal #description').val();
-
-
-            if (val !== '' && val !== null) {
-                var data = {
-                    user_id: user_id,
-                    value: val,
-                    organization: organization,
-                    start_date: startDate,
-                    end_date: endDate,
-                    description: description,
-                    name: 'experience',
-                };
-
-                $.post('/panel/setting/metas/' + experience_id + '/update', data, function (result) {
-                    if (result && result.code == 200) {
-                        Swal.fire({
-                            icon: 'success',
-                            html: '<h3 class="font-20 text-center text-dark-blue py-25">success</h3>',
-                            showConfirmButton: false,
-                            width: '25rem',
-                        });
-
-                        setTimeout(() => {
-                            window.location.reload();
-                        }, 500);
-                    } else if (result.code == 403) {
-                        Swal.fire({
-                            icon: 'error',
-                            html: '<h3 class="font-20 text-center text-dark-blue py-25">error</h3>',
-                            showConfirmButton: false,
-                            width: '25rem',
-                        });
-
-                        $this.removeClass('loadingbar primary').prop('disabled', false);
-                    }
-                }).fail(err => {
-                    Swal.fire({
-                        icon: 'error',
-                        html: '<h3 class="font-20 text-center text-dark-blue py-25">error</h3>',
-                        showConfirmButton: false,
-                        width: '25rem',
-                    });
-
-                    $this.removeClass('loadingbar primary').prop('disabled', false);
-                });
-            }
-        });
 
         function previewProfileImage(event) {
             const file = event.target.files[0];

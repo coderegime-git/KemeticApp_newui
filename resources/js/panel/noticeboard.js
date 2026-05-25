@@ -9,6 +9,12 @@
     $('body').on('click', '#submitForm', function (e) {
         e.preventDefault();
         const $this = $(this);
+        
+        if ($this.hasClass('loadingbar') || $this.attr('data-submitting') === 'true') {
+            return false;
+        }
+
+        $this.attr('data-submitting', 'true');
         $this.addClass('loadingbar primary').prop('disabled', true);
 
         const $form = $this.closest('form');
@@ -29,6 +35,7 @@
                 }, 2000)
             }
         }).fail(err => {
+            $this.attr('data-submitting', 'false');
             $this.removeClass('loadingbar primary').prop('disabled', false);
             var errors = err.responseJSON;
             if (errors && errors.errors) {

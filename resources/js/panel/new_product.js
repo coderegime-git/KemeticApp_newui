@@ -186,7 +186,7 @@
     /**
      * add product files
      * */
-    $('body').on('click', '#productAddFile', function (e) {
+    $('body').off('click', '#productAddFile').on('click', '#productAddFile', function (e) {
         e.preventDefault();
         const key = randomString();
 
@@ -198,7 +198,7 @@
         feather.replace();
     });
 
-    $('body').on('click', '.js-save-file', function (e) {
+    $('body').off('click', '.js-save-file').on('click', '.js-save-file', function (e) {
         e.preventDefault();
         const $this = $(this);
         let form = $this.closest('.file-form');
@@ -206,7 +206,7 @@
         handleProductItemForm(form, $this);
     });
 
-    $('body').on('click', '.js-save-specification', function (e) {
+    $('body').off('click', '.js-save-specification').on('click', '.js-save-specification', function (e) {
         e.preventDefault();
         const $this = $(this);
         let form = $this.closest('.specification-form');
@@ -446,13 +446,13 @@
 
     handleSpecificationSelect2('search-specification-select2');
 
-    $('body').on('click', '.cancel-accordion', function (e) {
+    $('body').off('click', '.cancel-accordion').on('click', '.cancel-accordion', function (e) {
         e.preventDefault();
 
         $(this).closest('.accordion-row').remove();
     });
 
-    $('body').on('click', '#productAddSpecification', function (e) {
+    $('body').off('click', '#productAddSpecification').on('click', '#productAddSpecification', function (e) {
         e.preventDefault();
         const key = randomString();
 
@@ -471,7 +471,7 @@
         handleSpecificationSelect2('search-specification-select2-' + key);
     });
 
-    $('body').on('click', '#productAddFAQ', function (e) {
+    $('body').off('click', '#productAddFAQ').on('click', '#productAddFAQ', function (e) {
         e.preventDefault();
         const key = randomString();
 

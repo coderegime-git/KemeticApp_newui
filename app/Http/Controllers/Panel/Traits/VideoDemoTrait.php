@@ -14,20 +14,21 @@ trait VideoDemoTrait
 
             if (!empty($request->file('video_demo_secure_host_file'))) {
                 try {
-                    $bunnyVideoStream = new BunnyVideoStream();
-
                     $file = $request->file('video_demo_secure_host_file');
+                    $filename = time() . '_' . $file->getClientOriginalName();
 
-                    $collectionId = $bunnyVideoStream->createCollection($name);
+                    $userId = auth()->id() ?? 1;
+                    $videoPath = public_path('store/' . $userId);
 
-                    if ($collectionId) {
-
-                        $videoUrl = $bunnyVideoStream->uploadVideo($file->getClientOriginalName(), $collectionId, $file);
-
-                        $data['video_demo'] = $videoUrl;
+                    if (!file_exists($videoPath)) {
+                        mkdir($videoPath, 0777, true);
                     }
+
+                    $file->move($videoPath, $filename);
+
+                    $data['video_demo'] = '/store/' . $userId . '/' . $filename;
                 } catch (\Exception $ex) {
-                    dd($ex);
+                    \Illuminate\Support\Facades\Log::error('Local secure_host upload error: ' . $ex->getMessage());
                 }
             }
         } else {

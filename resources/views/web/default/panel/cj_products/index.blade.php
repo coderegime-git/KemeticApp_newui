@@ -34,9 +34,9 @@
                 @endif
                 <div class="shop-price-row">
                   <span class="shop-price">${{ number_format((float) ($product['sellPrice'] ?? 0), 2) }}</span>
-                  @if(!empty($product['isFreeShipping']))
+                  <!-- @if(!empty($product['isFreeShipping']))
                     <span class="text-warning" style="font-size:11px;margin-left:6px">Free shipping</span>
-                  @endif
+                  @endif -->
                 </div>
                 <a href="{{ route('panel.cj.products.show', $product['pid']) }}" class="shop-atk"
                   style="display:inline-block;text-align:center">View</a>
@@ -135,9 +135,9 @@
               <div class="shop-ph">
                 <!-- <img src="https://cjdropshipping.com/favicon.ico" style="width:20px;height:20px;border-radius:50%" alt="CJ"> -->
                 <span class="ml-5 font-14" style="opacity:.7">Dropshipping</span>
-                @if(!empty($product['isFreeShipping']))
+                <!-- @if(!empty($product['isFreeShipping']))
                   <span class="ml-auto" style="font-size:11px;color:var(--green,#43d477)">Free Ship</span>
-                @endif
+                @endif -->
               </div>
 
               {{-- Image --}}

@@ -261,7 +261,7 @@
 
 @section('content')
 
-<form action="/panel/meetings/{{ $meeting->id }}/update" method="post" class="kemetic-form">
+<form action="/panel/meetings/{{ $meeting->id }}/update" method="post" id="meetingSettingForm" class="kemetic-form">
     {{ csrf_field() }}
 
     <!-- Timesheet Header -->
@@ -436,7 +436,7 @@
         </div>
 
         <div class="mt-20">
-            <button type="submit" class="btn btn-gold">{{ trans('public.submit') }}</button>
+            <button type="submit" id="meetingSettingFormSubmit" class="btn btn-gold">{{ trans('public.submit') }}</button>
         </div>
 </form>
 
@@ -464,5 +464,5 @@
 
         var toTimepicker, fromTimepicker;
     </script>
-    <script src="/assets/default/js/panel/meeting/meeting.min.js"></script>
+    <script src="/assets/default/js/panel/meeting/meeting.min.js?v={{ time() }}"></script>
 @endpush

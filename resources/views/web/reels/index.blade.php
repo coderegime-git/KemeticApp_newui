@@ -439,7 +439,7 @@ input[type="file"]::file-selector-button:hover {
           <b style="margin-left:10px">{{ $rate }}+</b>
         </div>
         <button class="reels-btn play-video-btn" data-video-url="{{ $heroreels->video_url }}" data-title="{{ $heroreels->title }}" data-thumbnail="{{ $heroreels->thumbnail_url }}">Watch Portals</button>
-        <a class="reels-go-profile" href="/user/1066/profile">→ View profile</a>
+        <a class="reels-go-profile" href="/users/1066/profile">→ View profile</a>
       </div>
     </div>
     <div>
@@ -706,7 +706,7 @@ input[type="file"]::file-selector-button:hover {
                                 <source src="" type="video/mp4">
                             </video>
                         </div>
-                        <small class="text-muted">Supported formats: MP4, MOV, OGG, WebM</small>
+                        <small class="text-muted">Supported formats: MP4, MOV, WebM</small>
                     </div>
                     <div class="mb-3">
                         <label class="form-label">Title</label>

@@ -56,7 +56,7 @@ return [
 
     'folder_categories' => [
         'file' => [
-             'folder_name' => '/',
+            'folder_name' => '/',
             //'folder_name' => '/imageupload/store',
             'startup_view' => 'list',
             'max_size' => 262144, // size in KB
@@ -78,7 +78,7 @@ return [
         ],
         'image' => [
             //'folder_name' => 'imageupload/store',
-             'folder_name' => '/',
+            'folder_name' => '/',
             'startup_view' => 'list',
             'max_size' => 262144, // size in KB
             'thumb' => true,
@@ -86,14 +86,49 @@ return [
             'thumb_height' => 80,
             'valid_mime' => [
                 'image/jpeg',
+                'image/webp',
                 'image/pjpeg',
                 'image/png',
                 'image/gif',
-                'application/pdf', // 'pdf'
+            ],
+            'valid_extensions' => [
+                'jpg',
+                'jpeg',
+                'png',
+                'gif',
+                'webp'
+            ],
+        ],
+        'video' => [
+            'folder_name' => '/',
+            'startup_view' => 'list',
+            'max_size' => 262144, // size in KB
+            'thumb' => false,
+            'thumb_width' => 80,
+            'thumb_height' => 80,
+            'valid_mime' => [
                 'video/mp4', // 'mp4'
                 'video/x-matroska', // 'mkv'
                 'video/x-msvideo', // 'avi'
-                'audio/mpeg', // 'mp3'
+            ],
+            'valid_extensions' => [
+                'mp4',
+                'mkv',
+                'avi'
+            ],
+        ],
+        'pdf' => [
+            'folder_name' => '/',
+            'startup_view' => 'list',
+            'max_size' => 262144, // size in KB
+            'thumb' => false,
+            'thumb_width' => 80,
+            'thumb_height' => 80,
+            'valid_mime' => [
+                'application/pdf',
+            ],
+            'valid_extensions' => [
+                'pdf'
             ],
         ],
     ],
@@ -147,21 +182,60 @@ return [
 
     // extensions of executables to prevent from uploading
     'disallowed_extensions' => [
-        'php','php1','php2','php3','php4','php5','php7','php8',
-        'phtml','phar','phps','pht',
-        'html','htm','xhtml','shtml',
-        'js','jsx',
-        'exe','sh','bat','cmd','com','cpl','ps1',
-        'jar','msi',
-        'doc','docx','ppt','pptx',
-        'vb','vbs','wsf','wsh',
-        'json','xml','yml','yaml',
-        'env','ini','conf','config',
-        'htaccess','htpasswd',
+        'php',
+        'php1',
+        'php2',
+        'php3',
+        'php4',
+        'php5',
+        'php7',
+        'php8',
+        'phtml',
+        'phar',
+        'phps',
+        'pht',
+        'html',
+        'htm',
+        'xhtml',
+        'shtml',
+        'js',
+        'jsx',
+        'exe',
+        'sh',
+        'bat',
+        'cmd',
+        'com',
+        'cpl',
+        'ps1',
+        'jar',
+        'msi',
+        'doc',
+        'docx',
+        'ppt',
+        'pptx',
+        'vb',
+        'vbs',
+        'wsf',
+        'wsh',
+        'json',
+        'xml',
+        'yml',
+        'yaml',
+        'env',
+        'ini',
+        'conf',
+        'config',
+        'htaccess',
+        'htpasswd',
         'inc',
-        'asp','aspx',
-        'jsp','jspx',
-        'cgi','fcgi','pl','py',
+        'asp',
+        'aspx',
+        'jsp',
+        'jspx',
+        'cgi',
+        'fcgi',
+        'pl',
+        'py',
         'log',
     ],
 

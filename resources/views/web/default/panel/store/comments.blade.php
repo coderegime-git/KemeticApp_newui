@@ -579,15 +579,20 @@
                                             <button type="button" data-comment-id="{{ $comment->id }}" class="js-view-comment btn-gray200 btn-sm">{{ trans('public.view') }}</button>
                                         </td>
                                         <td data-label="{{ trans('public.status') }}">
-                                            @if(empty($comment->reply_id))
-                                                <span class="text-primary">{{ trans('public.open') }}</span>
-                                            @else
+                                            @if($comment->replies && count($comment->replies) > 0)
                                                 <span class="text-dark-blue status-success">{{ trans('panel.replied') }}</span>
+                                            @else
+                                                <span class="text-primary">{{ trans('public.open') }}</span>
                                             @endif
                                         </td>
                                         <td data-label="{{ trans('public.date') }}">{{ dateTimeFormat($comment->created_at,'j M Y | H:i') }}</td>
                                         <td>
                                             <input type="hidden" id="commentDescription{{ $comment->id }}" value="{{ nl2br($comment->comment) }}">
+                                            @if($comment->replies && count($comment->replies) > 0)
+                                                @foreach($comment->replies as $reply)
+                                                    <input type="hidden" class="replyDescription{{ $comment->id }}" value="{{ nl2br($reply->comment) }}" data-user="{{ $reply->user->full_name ?? trans('panel.user') }}" data-date="{{ dateTimeFormat($reply->created_at,'j M Y | H:i') }}">
+                                                @endforeach
+                                            @endif
                                             <div class="btn-group dropdown table-actions">
                                                 <button class="btn-transparent dropdown-toggle" data-toggle="dropdown">
                                                     <i data-feather="more-vertical" height="20"></i>

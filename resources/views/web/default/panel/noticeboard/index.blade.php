@@ -1,5 +1,6 @@
 @extends('web.default.layouts.newapp')
 
+@push('styles_top')
 <style>
   /* KEMETIC STATS */
 .kemetic-stat-section {
@@ -405,6 +406,7 @@
     font-size: 14px;
 }
 </style>
+@endpush
 
 @push('styles_top')
     <link rel="stylesheet" href="/assets/default/vendors/daterangepicker/daterangepicker.min.css">
@@ -575,7 +577,7 @@
                                         <input type="hidden" class="js-noticeboard-message" value="{{ nl2br($noticeboard->message) }}">
                                         <input type="hidden" class="js-noticeboard-title" value="{{ $noticeboard->title }}">
                                         <input type="hidden" class="js-noticeboard-date" value="{{ dateTimeFormat($noticeboard->created_at,'j M Y | H:i') }}">
-                                        <button type="button" class="view-btn js-view-message" data-notice-id="{{ $noticeboard->id }}">
+                                        <button type="button" class="view-btn js-view-notice-modal" data-notice-id="{{ $noticeboard->id }}">
                                             {{ trans('public.view') }}
                                         </button>
                                     </td>
@@ -645,21 +647,21 @@
     @endif
 
     {{-- Message Modal --}}
-    <div class="modal fade" id="noticeboardMessageModal" tabindex="-1" role="dialog" aria-hidden="true">
+    <div class="modal fade" id="noticeboardMessageModal" tabindex="-1" role="dialog" aria-hidden="true" >
         <div class="modal-dialog modal-lg">
             <div class="modal-content">
                 <div class="modal-header">
                     <h5 class="modal-title" id="modalTitle"></h5>
-                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
-                        <span aria-hidden="true" style="color: #111010;">&times;</span>
+                    <button type="button" class="close" data-bs-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true" style="color: #fff;">&times;</span>
                     </button>
                 </div>
                 <div class="modal-body">
-                    <span class="modal-time" id="modalTime" style="color: #111010;"></span>
+                    <span class="modal-time" id="modalTime"></span>
                     <p class="modal-message" id="modalMessage"></p>
                 </div>
                 <div class="modal-footer">
-                    <button type="button" class="btn" data-dismiss="modal">{{ trans('public.close') }}</button>
+                    <button type="button" class="btn" data-bs-dismiss="modal">{{ trans('public.close') }}</button>
                 </div>
             </div>
         </div>
@@ -680,7 +682,7 @@
             });
 
             // View message
-            $('.js-view-message').on('click', function() {
+            $('.js-view-notice-modal').on('click', function() {
                 var message = $(this).closest('tr').find('.js-noticeboard-message').val();
                 var title = $(this).closest('tr').find('.js-noticeboard-title').val();
                 var date = $(this).closest('tr').find('.js-noticeboard-date').val();

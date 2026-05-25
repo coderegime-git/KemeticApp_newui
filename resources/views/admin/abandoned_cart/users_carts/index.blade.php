@@ -43,6 +43,7 @@
                             </tr>
 
                             @foreach($carts as $cart)
+                                @if(empty($cart->user)) @continue @endif
                                 <tr>
                                     <td>{{ $cart->user->full_name }}</td>
 

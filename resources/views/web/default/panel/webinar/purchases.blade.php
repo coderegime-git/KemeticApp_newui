@@ -494,11 +494,11 @@
                                                                 @endif
 
                                                                 @if(!empty($item->downloadable) or (!empty($item->files) and count($item->files)))
-                                                                    <a href="{{ $item->getUrl() }}?tab=content"
+                                                                    <!-- <a href="{{ $item->getUrl() }}?tab=content"
                                                                     target="_blank"
                                                                     class="kemetic-dropdown-item">
                                                                         {{ trans('home.download') }}
-                                                                    </a>
+                                                                    </a> -->
                                                                 @endif
 
                                                                 @if($item->price > 0)

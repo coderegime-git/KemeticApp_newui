@@ -263,6 +263,10 @@
                         <input type="hidden" name="ajax[new][webinar_id]" value="{{ $selectedWebinar->id }}">
                     @endif
 
+                    @if(!empty($inWebinarPage))
+                        <input type="hidden" name="ajax[new][is_webinar_page]" value="1">
+                    @endif
+
                     {{-- Chapter --}}
                     @if(!empty($quiz))
                         <div class="kemetic-form-group">

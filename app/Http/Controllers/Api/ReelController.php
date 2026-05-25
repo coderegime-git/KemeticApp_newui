@@ -96,6 +96,8 @@ class ReelController extends Controller
         // Base query - exclude hidden and reported reels
         $reelQuery = Reel::with(['likes', 'comments.user', 'comments.replies.user', 'review.user', 'savedreel', 'user'])
             ->where('is_hidden', false)
+            ->whereNotNull('video_path')
+            ->where('video_path', '!=', '')
             ->where(function($query) {
                 $query->where('reports_count', '<', 15)
                     ->orWhereNull('reports_count');
@@ -174,6 +176,30 @@ class ReelController extends Controller
                 ->orderByRaw("RAND($randomSeed)") // Consistent random shuffle
                 ->paginate(10);
         }
+
+        $videoBasePath = public_path('store/reels/videos/');
+
+        $filtered = $reels->getCollection()->filter(function ($reel) use ($videoBasePath) {
+        $videoPath = ($reel->is_processed && $reel->processed_video_path)
+            ? $reel->processed_video_path
+            : $reel->video_path;
+
+        if (empty($videoPath)) {
+            return false;
+        }
+
+        $fullPath = $videoBasePath . $videoPath;
+        $exists   = file_exists($fullPath);
+
+        // Auto-mark missing files in DB so future queries skip them at DB level
+        if (!$exists) {
+            DB::table('reels')
+                ->where('id', $reel->id)
+                ->update(['video_path' => '']);
+        }
+
+        return $exists;
+        })->values();
 
         // Format the response
         $pagination = $reels->toArray();

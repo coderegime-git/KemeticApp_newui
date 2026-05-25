@@ -70,8 +70,12 @@
             </div>
 
             <div class="shopdetail-vendor">
-              <img src="https://images.unsplash.com/photo-1544005313-94ddf0286df2?w=200" alt="">
-              <div>@TigerEyeCrystals &nbsp;•&nbsp; <a href="{{ $product->category->getUrl() }}" target="_blank"><span class="shopdetail-muted">{{ $product->category->title }}</span></a></div>
+              
+              <img src="{{ $product->creator->getAvatar() 
+                    ? (Str::startsWith($product->creator->getAvatar(), '/') ? $product->creator->getAvatar() : '/' . $product->creator->getAvatar())
+                    : url('/getDefaultAvatar?item=' . ($product->creator->id ?? '') . '&name=' . urlencode($product->creator->full_name) . '&size=36') 
+                }}" alt="">
+              <div><a href="{{ $product->creator->getProfileUrl() }}" target="_blank" class="user-name ml-5 font-14">{{ $product->creator->full_name }}</a> &nbsp;•&nbsp; <a href="{{ $product->category->getUrl() }}" target="_blank"><span class="shopdetail-muted">{{ $product->category->title }}</span></a></div>
               <!-- <div style="margin-left:auto">❤️ {{ $product->reviews->pluck('creator_id')->count() }}</div> -->
             </div>
           </div>

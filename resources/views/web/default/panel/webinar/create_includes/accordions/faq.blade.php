@@ -136,7 +136,7 @@
 
                     <div class="dropdown-menu kemetic-dropdown-menu">
                         <a href="/panel/faqs/{{ $faq->id }}/delete"
-                           class="dropdown-item text-danger">
+                           class="dropdown-item text-danger delete-action">
                             {{ trans('public.delete') }}
                         </a>
                     </div>

@@ -54,6 +54,12 @@ class LoginController extends Controller
 
     public function showLoginForm()
     {
+        if (auth()->check()) {
+            $this->guard()->logout();
+            request()->session()->invalidate();
+            request()->session()->regenerateToken();
+        }
+
         $seoSettings = getSeoMetas('login');
         $pageTitle = !empty($seoSettings['title']) ? $seoSettings['title'] : trans('site.login_page_title');
         $pageDescription = !empty($seoSettings['description']) ? $seoSettings['description'] : trans('site.login_page_title');
@@ -101,6 +107,12 @@ class LoginController extends Controller
 
     public function login(Request $request)
     {
+        if (auth()->check()) {
+            $this->guard()->logout();
+            $request->session()->invalidate();
+            $request->session()->regenerateToken();
+        }
+
         $type = $request->get('type');
 
         if ($type == 'mobile') {

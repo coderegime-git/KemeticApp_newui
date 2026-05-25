@@ -1,7 +1,7 @@
 @extends('web.default.layouts.app')
 
 @section('content')
-<div style="width: 1100px;">
+<div style="width: 1100px; margin: 0 auto;">
     <section class="forum-hero-section mt-50 position-relative">
         <div class="container forum-hero-section__container">
             <div class="row">
@@ -34,7 +34,7 @@
             <div class="row">
                 <div class="col-6 col-md-3">
                     <div class="d-flex align-items-center justify-content-center flex-column">
-                        <img src="/assets/default/img/forum/1.svg" alt="{{ trans('update.forums') }}" class="forum-stat-icon"/>
+                        <img width="60" height="60" src="/assets/default/img/forum/1.svg" alt="{{ trans('update.forums') }}" class="forum-stat-icon"/>
                         <span class="font-30 font-weight-bold text-secondary">{{ $forumsCount }}</span>
                         <span class="font-16 font-weight-500 text-gray">{{ trans('update.forums') }}</span>
                     </div>
@@ -69,7 +69,6 @@
 
     @if(!empty($featuredTopics) and count($featuredTopics))
         <section class="container forums-featured-section mt-30 mt-md-50">
-
             <div class="text-center mb-30">
                 <h2 class="font-30 font-weight-bold text-secondary">{{ trans('update.featured_topics') }}</h2>
                 <p class="font-14 text-gray">{{ trans('update.featured_topics_hint') }}</p>
@@ -78,7 +77,7 @@
             @foreach($featuredTopics as $featuredTopic)
                 <div class="forums-featured-card d-flex align-items-center bg-white p-20 p-md-35 rounded-lg mt-15">
                     <div class="forums-featured-card-icon">
-                        <img src="{{ $featuredTopic->icon }}" alt="{{ $featuredTopic->topic->title }}" class="img-cover">
+                        <img width="60" height="60" src="{{ $featuredTopic->icon }}" alt="{{ $featuredTopic->topic->title }}" class="img-cover">
                     </div>
 
                     <div class="ml-15">
@@ -91,7 +90,7 @@
                                 <div class="forums-featured-card-users-avatar d-flex align-items-center mr-10">
                                     @foreach($featuredTopic->usersAvatars as $userAvatar)
                                         <div class="user-avatar-card rounded-circle">
-                                            <img src="{{ $userAvatar->getAvatar(32) }}" class="img-cover rounded-circle" alt="{{ $userAvatar->full_name }}" width="50">
+                                            <img width="50" height="50" src="{{ $userAvatar->getAvatar(32) }}" class="img-cover rounded-circle" alt="{{ $userAvatar->full_name }}">
                                         </div>
                                     @endforeach
 
@@ -150,7 +149,7 @@
                     <div class="col-12 col-md-3 mt-15">
                         <div class="forum-recommended-topics__card position-relative rounded-lg bg-white px-20 py-30">
                             <div class="forum-recommended-topics__icon">
-                                <img src="{{ $recommendedTopic->icon }}" alt="{{ $recommendedTopic->title }}" class="img-cover">
+                                <img width="60" height="60" src="{{ $recommendedTopic->icon }}" alt="{{ $recommendedTopic->title }}" class="img-cover">
                             </div>
 
                             <h4 class="font-16 font-weight-bold text-secondary mt-10">{{ $recommendedTopic->title }}</h4>
@@ -203,5 +202,5 @@
             </div>
         </div>
     </section>
-@endsection
 </div>
+@endsection

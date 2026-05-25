@@ -171,7 +171,7 @@ class Channel extends BasePaymentChannel implements IChannel
 
             // dd($customer);
 
-            if($subscribe->usable_count == '1'){
+            if($subscribe->id == '4'){
 
                 $checkoutData = [
                     'payment_method_types' => ['card', 'bancontact', 'ideal', 'klarna'],

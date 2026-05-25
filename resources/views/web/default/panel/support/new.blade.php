@@ -17,7 +17,7 @@
 
     body {
         background: var(--k-bg);
-        color: var(--k-text);
+        color: var(--k-bg);
         font-family: 'Nunito', sans-serif;
     }
 

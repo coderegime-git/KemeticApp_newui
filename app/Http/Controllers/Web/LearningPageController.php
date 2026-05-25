@@ -35,10 +35,10 @@ class LearningPageController extends Controller
         $course = $data['course'];
         $user = $data['user'];
 
-        // dd($course->price);
+        $isFree = is_null($course->price) || (float)$course->price == 0.0;
 
         /* Check Not Active */
-        if ($course->status != "active"  and $course->price = 0.0 and (empty($user) or (!$user->isAdmin() and !$course->canAccess($user)))) {
+        if ($course->status != "active" && !$isFree && (empty($user) || (!$user->isAdmin() && !$course->canAccess($user)))) {
             $data = [
                 'pageTitle' => trans('update.access_denied'),
                 'pageRobot' => getPageRobotNoIndex(),
@@ -51,8 +51,7 @@ class LearningPageController extends Controller
             return $installmentLimitation;
         }
 
-
-        if (!$data or (!$data['hasBought'] and $course->price != 0.0 and empty($course->getInstallmentOrder()))) {
+        if (!$data || (!$data['hasBought'] && !$isFree && empty($course->getInstallmentOrder()))) {
             abort(403);
         }
 

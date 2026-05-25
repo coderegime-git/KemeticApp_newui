@@ -530,8 +530,12 @@ class FileController extends Controller
             if ($file->creator_id == $user->id or (!empty($webinar) and $webinar->canAccess($user))) {
 
                 if ($file->storage == "secure_host") {
-                    $bunnyVideoStream = new BunnyVideoStream();
-                    $bunnyVideoStream->deleteVideo($file->file);
+                    try {
+                        $bunnyVideoStream = new BunnyVideoStream();
+                        $bunnyVideoStream->deleteVideo($file->file);
+                    } catch (\Exception $ex) {
+                        \Illuminate\Support\Facades\Log::error('BunnyVideoStream delete error: ' . $ex->getMessage());
+                    }
                 }
 
 

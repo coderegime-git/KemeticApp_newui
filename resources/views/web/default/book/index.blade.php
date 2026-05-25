@@ -97,8 +97,12 @@
         @if($popularBook->creator)
          <a href="{{ $popularBook->creator->getProfileUrl() }}">
         <div class="book-hero-avatar">
-         
-          <img src="{{ $popularBook->creator->avatar ?? 'https://images.unsplash.com/photo-1524504388940-b1c1722653e1?w=200' }}" alt="Creator avatar">
+         <img src="{{ $popularBook->creator->getAvatar(190) 
+            ? (Str::startsWith($popularBook->creator->getAvatar(190), '/') ? $popularBook->creator->getAvatar(190) : '/' . $popularBook->creator->getAvatar(190))
+            : url('/getDefaultAvatar?item=' . ($popularBook->creator['id'] ?? '') . '&name=' . urlencode($popularBook->creator['full_name']) . '&size=190') 
+        }}" 
+            alt="{{ $popularBook->creator['full_name'] }}">
+          
           <span>{{ $popularBook->creator->full_name }}</span>
         </div></a>
         @endif

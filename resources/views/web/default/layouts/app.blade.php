@@ -255,6 +255,10 @@
                             </div>
                         </div>
 
+                        @php
+                            $validCartCount = !empty($userCarts) ? $userCarts->filter(fn($cart) => !empty($cart->getItemInfo()))->count() : 0;
+                        @endphp
+
                         <div class="topheader-header-right">
                             <!-- Notification button -->
 
@@ -265,17 +269,17 @@
                                 @endif
                             </button>
 
-                            @if((empty($userCarts) or count($userCarts) < 1) and !empty($userCartDiscount))
+                            @if($validCartCount < 1 and !empty($userCartDiscount))
 
                                 <button class="topheader-icon-btn" id="cart-btn" >
                                     <span class="topheader-material-symbols-outlined topheader-icon-cart-grad">shopping_cart</span>
                                 </button>
 
                             @else
-                                <button class="topheader-icon-btn" id="cart-btn" {{ (empty($userCarts) or count($userCarts) < 1) ? 'disabled' : '' }} >
+                                <button class="topheader-icon-btn" id="cart-btn" {{ $validCartCount < 1 ? 'disabled' : '' }}>
                                     <span class="topheader-material-symbols-outlined topheader-icon-cart-grad">shopping_cart</span>
-                                    @if(!empty($userCarts) and count($userCarts))
-                                        <div class="topheader-badge" id="cart-badge">{{ count($userCarts) }}</div>
+                                    @if($validCartCount > 0)
+                                        <div class="topheader-badge" id="cart-badge">{{ $validCartCount }}</div>
                                     @endif
                                 </button>
                             @endif

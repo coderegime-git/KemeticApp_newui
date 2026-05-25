@@ -11,5 +11,13 @@ class LfmConfigHandler extends ConfigHandler
         $user = auth()->user();
         return $user->id;
     }
+
+    public function allowedMimeTypes($type)
+    {
+        if ($type === 'image') {
+            return ['image/jpeg', 'image/pjpeg', 'image/png', 'image/gif', 'image/webp'];
+        }
+        return parent::allowedMimeTypes($type);
+    }
 }
 

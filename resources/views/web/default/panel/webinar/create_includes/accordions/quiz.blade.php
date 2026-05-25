@@ -145,7 +145,7 @@
             <!-- Delete -->
             @if(!empty($quizInfo))
                 <a href="/panel/quizzes/{{ $quizInfo->id }}/delete"
-                   class="kemetic-icon-btn text-red">
+                   class="kemetic-icon-btn text-red delete-action">
                     <i data-feather="trash-2"></i>
                 </a>
             @endif

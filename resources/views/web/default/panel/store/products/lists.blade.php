@@ -328,15 +328,14 @@
                                             ⋮
                                         </button>
                                         <div class="dropdown-menu dropdown-menu-right">
-                                            <a href="/panel/store/products/{{ $product->id }}/edit">
+                                            <a href="/panel/store/products/{{ $product->id }}/edit" class="dropdown-item">
                                                 {{ trans('public.edit') }}
                                             </a>
 
-                                            @include('web.default.panel.includes.content_delete_btn',[
-                                                'deleteContentUrl'=>"/panel/store/products/{$product->id}/delete",
-                                                'deleteContentClassName'=>'text-danger',
-                                                'deleteContentItem'=>$product
-                                            ])
+                                            <a href="/panel/store/products/{{ $product->id }}/delete"
+                                               class="delete-action dropdown-item text-danger mt-1">
+                                                {{ trans('public.delete') }}
+                                            </a>
                                         </div>
                                     </div>
                                 @endif

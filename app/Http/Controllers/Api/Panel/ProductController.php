@@ -268,6 +268,37 @@ class ProductController extends Controller
 
             }
 
+            if (!empty($data['product_file'])) {
+                $pf = $data['product_file'];          // keyed sub-array from the request
+
+                $file = ProductFile::create([
+                    'creator_id'    => $user->id,
+                    'product_id'    => $product->id,
+                    'path'          => $pf['path'],
+                    'order'         => null,
+                    'volume'        => $pf['volume'],
+                    'file_type'     => $pf['file_type'],
+                    'online_viewer' => (!empty($pf['online_viewer']) && $pf['online_viewer'] == 'on'),
+                    'status'        => (!empty($pf['status']) && $pf['status'] == 'on')
+                                            ? ProductFile::$Active
+                                            : ProductFile::$Inactive,
+                    'created_at'    => time(),
+                ]);
+
+                if (!empty($file)) {
+                    ProductFileTranslation::updateOrCreate(
+                        [
+                            'product_file_id' => $file->id,
+                            'locale'          => mb_strtolower($pf['locale']),
+                        ],
+                        [
+                            'title'       => $pf['title'],
+                            'description' => $pf['description'],
+                        ]
+                    );
+                }
+            }
+
             if (!empty($data['courses'])) {
                 $courseData = json_decode($data['courses']);
                 foreach ($courseData as $val) {

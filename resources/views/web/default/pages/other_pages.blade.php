@@ -15,7 +15,7 @@
         <div class="row">
             <div class="col-12">
                 <div class="policy-description">
-                    {!! nl2br($page->content) !!}
+                     {!! $page->content !!}
                 </div>
             </div>
         </div>

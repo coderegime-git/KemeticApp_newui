@@ -692,8 +692,9 @@
                                                 <i data-feather="more-vertical" height="20"></i>
                                             </button>
                                             <div class="dropdown-menu">
+                                                <a href="/panel/store/sales/{{ $order->id }}" class="dropdown-item">View Details</a>
                                                 <a href="/panel/store/sales/{{ $order->sale_id }}/productOrder/{{ $order->id }}/invoice" target="_blank" class="dropdown-item">{{ trans('public.invoice') }}</a>
-                                                @if($order->status == \App\Models\ProductOrder::$waitingDelivery)
+                                                @if($order->status == \App\Models\ProductOrder::$waitingDelivery && !empty($order->product) && $order->product->is_cj_product)
                                                     <button type="button" data-sale-id="{{ $order->sale_id }}" data-product-order-id="{{ $order->id }}" class="js-enter-tracking-code dropdown-item">{{ trans('update.enter_tracking_code') }}</button>
                                                 @endif
                                             </div>

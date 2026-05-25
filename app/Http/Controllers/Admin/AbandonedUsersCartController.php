@@ -44,6 +44,9 @@ class AbandonedUsersCartController extends Controller
         $cartController = new CartController();
 
         foreach ($carts as $cart) {
+            if (empty($cart->user)) {
+                continue; // skip orphaned carts with no matching user
+            }
             $userCarts = $cart->user->carts;
             $calculate = $cartController->calculatePrice($userCarts, $cart->user);
 
@@ -111,7 +114,11 @@ class AbandonedUsersCartController extends Controller
         $totalPrice = 0;
 
         foreach ($items as $column => $table) {
-            $query = Cart::query();
+            // $query = Cart::query();
+            $query = Cart::query()
+                ->select('cart.*', DB::raw("count(cart.id) as total_items"))
+                ->whereHas('user')
+                ->groupBy('creator_id');
             $query->join("{$table}", "{$table}.id", "cart.{$column}");
 
             if ($column == "reserve_meeting_id") {

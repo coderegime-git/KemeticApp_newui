@@ -56,6 +56,8 @@ class MarketingController extends Controller
         $promotion = Promotion::where('id', $data['promotion_id'])->first();
 
         if (!empty($promotion)) {
+
+            // dd('hi');
             $webinar = Webinar::where('id', $data['webinar_id'])
                 ->where(function ($query) use ($user) {
                     $query->where('creator_id', $user->id)
@@ -63,8 +65,10 @@ class MarketingController extends Controller
                 })
                 ->where('status', 'active')
                 ->first();
-
+            
             if (!empty($webinar)) {
+
+            
                 $financialSettings = getFinancialSettings();
                 //$commission = $financialSettings['commission'] ?? 0;
                 $tax = $financialSettings['tax'] ?? 0;
@@ -73,6 +77,7 @@ class MarketingController extends Controller
 
                 $taxPrice = $tax ? $amount * $tax / 100 : 0;
                 //$commissionPrice = $commission ? $amount * $commission / 100 : 0;
+                
 
                 $order = Order::create([
                     "user_id" => $user->id,
@@ -99,6 +104,8 @@ class MarketingController extends Controller
                     'created_at' => time(),
                 ]);
 
+                
+
                 if ($amount > 0) {
                     $razorpay = false;
                     foreach ($paymentChannels as $paymentChannel) {
@@ -106,19 +113,23 @@ class MarketingController extends Controller
                             $razorpay = true;
                         }
                     }
-
                     $data = [
                         'pageTitle' => trans('public.checkout_page_title'),
                         'paymentChannels' => $paymentChannels,
                         'total' => $order->total_amount,
                         'order' => $order,
+                        'cartItems' => [$orderItem],
                         'count' => 1,
                         'userCharge' => $user->getAccountingCharge(),
                         'razorpay' => $razorpay
                     ];
 
+                     //dd($data);
+
                     return view(getTemplate() . '.cart.payment', $data);
                 }
+
+                // dd($amount);
 
                 // Handle Free
                 Sale::createSales($orderItem, Sale::$credit);

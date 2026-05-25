@@ -1201,4 +1201,10 @@
         $(this).closest('.js-ajax-attachments').remove();
     });
 
+    $('body').on('click', '.kemetic-faq-header, .kemetic-accordion-header, .kemetic-chapter-header', function (e) {
+        if ($(e.target).closest('button, a, .dropdown-menu, svg, path, i').length) {
+            e.stopPropagation();
+        }
+    });
+
 })(jQuery);

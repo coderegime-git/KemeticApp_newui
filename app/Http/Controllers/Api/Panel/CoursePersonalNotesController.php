@@ -21,13 +21,21 @@ class CoursePersonalNotesController extends Controller
             if (!empty($personalNote)) {
                 if (!empty($personalNote->attachment)) {
                     $attachment = $personalNote->attachment;
-                    $filePath = public_path($attachment);
+                    // $filePath = public_path($attachment);
 
-                    if (file_exists($filePath)) {
-                        $extension = \Illuminate\Support\Facades\File::extension($filePath);
-                        $fileName = "personal_note_{$personalNote->id}." . $extension;
+                    // if (file_exists($filePath)) {
+                    //     $extension = \Illuminate\Support\Facades\File::extension($filePath);
+                    //     $fileName = "personal_note_{$personalNote->id}." . $extension;
 
-                        $personalNote->attachment = url( $filePath . $fileName );
+                    //     $personalNote->attachment = url( $filePath . $fileName );
+                    // }
+                    if (strpos($attachment, '/store/') === 0) {
+                        $filePath = public_path($attachment);
+                        
+                        if (file_exists($filePath)) {
+                            // Return the URL directly without re-adding filename
+                            $personalNote->attachment = url($attachment);
+                        }
                     }
                 }
                 return apiResponse2(1, 'retrieved', trans('api.public.retrieved'),$personalNote);
@@ -35,6 +43,7 @@ class CoursePersonalNotesController extends Controller
         }
         return apiResponse2(1, 'retrieved', trans('api.public.retrieved'),[]);
     }
+
     public function destroy( $id)
     {
         if (!empty(getFeaturesSettings('course_notes_status'))) {
@@ -52,6 +61,7 @@ class CoursePersonalNotesController extends Controller
 
         return apiResponse2(0, 'error', trans('api.public.error'));
     }
+
     public function store(Request $request , $id)
     {
         $user = apiAuth();
@@ -82,6 +92,10 @@ class CoursePersonalNotesController extends Controller
                 break;
         }
 
+        $attachment = $data['attachment'] ?? null;
+        if ($request->hasFile('attachment')) {
+            $attachment = $this->uploadFile($request->file('attachment'), $user->id);
+        }
 
         CoursePersonalNote::query()->updateOrCreate([
             'user_id' => $user->id,
@@ -90,10 +104,31 @@ class CoursePersonalNotesController extends Controller
             'targetable_type' => $type,
         ], [
             'note' => $data['note'] ?? null,
-            'attachment' => null,
+            'attachment' => $attachment,
             'created_at' => time()
         ]);
 
         return apiResponse2(1, 'retrieved', trans('api.public.retrieved'));
+    }
+
+    private function uploadFile($file, $userId)
+    {
+        if (!($file instanceof \Illuminate\Http\UploadedFile)) {
+            // Return as-is if it's already a plain string path (or null)
+            return $file;
+        }
+
+        $uploadPath = public_path('store/' . $userId);
+
+        if (!file_exists($uploadPath)) {
+            mkdir($uploadPath, 0755, true);
+        }
+
+        // Use timestamp + original name so filenames stay human-readable and
+        // do not collide (matches the pattern already visible in public/store/).
+        $fileName = time() . '_' . $file->getClientOriginalName();
+        $file->move($uploadPath, $fileName);
+
+        return '/store/' . $userId . '/' . $fileName;
     }
 }

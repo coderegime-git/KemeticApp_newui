@@ -1,13 +1,17 @@
 <html lang="fa">
+
 <head>
     <meta charset="UTF-8">
     <meta content="width=device-width, initial-scale=1, maximum-scale=1, shrink-to-fit=no" name="viewport">
-    <title>{{ $pageTitle ?? 'Kemetic Invoice' }} </title>
+    <title> {{ $pageTitle ?? 'Kemetic Invoice' }} </title>
+    @if(!empty($generalSettings['fav_icon']))
+        <link href="{{ $generalSettings['fav_icon'] }}" rel="icon" type="image/png">
+    @endif
     <meta name="csrf-token" content="{{ csrf_token() }}">
 
     <!-- General CSS File -->
-    <link rel="stylesheet" href="/assets/admin/vendor/bootstrap/bootstrap.min.css"/>
-    <link rel="stylesheet" href="/assets/vendors/fontawesome/css/all.min.css"/>
+    <link rel="stylesheet" href="/assets/admin/vendor/bootstrap/bootstrap.min.css" />
+    <link rel="stylesheet" href="/assets/vendors/fontawesome/css/all.min.css" />
 
     <style>
         :root {
@@ -31,7 +35,7 @@
             background: var(--k-card);
             border-radius: var(--k-radius);
             border: 1px solid var(--k-border);
-            box-shadow: 0 4px 30px rgba(242,201,76,0.1);
+            box-shadow: 0 4px 30px rgba(242, 201, 76, 0.1);
         }
 
         .invoice-title h2 {
@@ -61,7 +65,8 @@
             color: var(--k-text);
         }
 
-        .table th, .table td {
+        .table th,
+        .table td {
             vertical-align: middle;
             border-top: 1px solid var(--k-border);
         }
@@ -111,164 +116,192 @@
         }
     </style>
 </head>
+
 <body>
-<div id="app">
-    <section class="section">
-        <div class="container mt-5">
-            <div class="row justify-content-center">
-                <div class="col-12 col-md-10 col-lg-10">
+    <div id="app">
+        <section class="section">
+            <div class="container mt-5">
+                <div class="row justify-content-center">
+                    <div class="col-12 col-md-10 col-lg-10">
 
-                    <div class="card card-primary p-4">
-                        <div class="invoice">
-                            <div class="invoice-print">
+                        <div class="card card-primary p-4">
+                            <div class="invoice">
+                                <div class="invoice-print">
 
-                                <div class="invoice-title mb-4">
-                                    <h2>{{ $generalSettings['site_name'] ?? 'Kemetic App' }}</h2>
-                                    <div class="invoice-number">{{ trans('public.item_id') }}: #{{ $order->product_id }}</div>
-                                </div>
-
-                                <div class="row mb-4">
-                                    <div class="col-md-6">
-                                        <address>
-                                            <strong>{{ trans('admin/main.buyer') }}:</strong><br>
-                                            {{ $buyer->full_name }}
-                                        </address>
-                                        <address class="mt-2">
-                                            <strong>{{ trans('update.buyer_address') }}:</strong><br>
-                                            {{ $buyer->getAddressInvoice(true) }}
-                                        </address>
+                                    <div class="invoice-title mb-4">
+                                        <h2>
+                                            @if(!empty($generalSettings['logo']))
+                                                <img src="{{ $generalSettings['logo'] }}" alt="logo" height="40"
+                                                    class="mr-2" style="vertical-align: middle;">
+                                            @endif
+                                            {{ $generalSettings['site_name'] ?? 'Kemetic App' }}
+                                        </h2>
+                                        <div class="invoice-number">{{ trans('public.item_id') }}:
+                                            #{{ $order->product_id }}</div>
                                     </div>
 
-                                    <div class="col-md-6 text-md-right">
-                                        <address>
-                                            <strong>{{ trans('home.platform_address') }}:</strong><br>
-                                            {!! nl2br(getContactPageSettings('address')) !!}
-                                        </address>
+                                    <div class="row mb-4">
+                                        <div class="col-md-6">
+                                            <address>
+                                                <strong>{{ trans('admin/main.buyer') }}:</strong><br>
+                                                {{ $buyer->full_name }}
+                                            </address>
+                                            <address class="mt-2">
+                                                <strong>{{ trans('update.buyer_address') }}:</strong><br>
+                                                {{ $buyer->getAddressInvoice(true) }}
+                                            </address>
+                                        </div>
+
+                                        <div class="col-md-6 text-md-right">
+                                            <address>
+                                                <strong>{{ trans('home.platform_address') }}:</strong><br>
+                                                {!! nl2br(getContactPageSettings('address')) !!}
+                                            </address>
+                                        </div>
                                     </div>
-                                </div>
 
-                                <div class="row mb-4">
-                                    <div class="col-md-6">
-                                        <address>
-                                            <strong>{{ trans('admin/main.seller') }}:</strong><br>
-                                            {{ $seller->full_name }}
-                                        </address>
+                                    <div class="row mb-4">
+                                        <div class="col-md-6">
+                                            <address>
+                                                <strong>{{ trans('admin/main.seller') }}:</strong><br>
+                                                {{ $seller->full_name }}
+                                            </address>
+                                        </div>
+
+                                        <div class="col-md-6 text-md-right">
+                                            <address>
+                                                <strong>{{ trans('panel.purchase_date') }}:</strong><br>
+                                                {{ dateTimeFormat($sale->created_at, 'Y M j | H:i') }}
+                                            </address>
+                                        </div>
                                     </div>
 
-                                    <div class="col-md-6 text-md-right">
-                                        <address>
-                                            <strong>{{ trans('panel.purchase_date') }}:</strong><br>
-                                            {{ dateTimeFormat($sale->created_at,'Y M j | H:i') }}
-                                        </address>
+                                    <div class="section-title">{{ trans('home.order_summary') }}</div>
+
+                                    <div class="table-responsive mb-4">
+                                        <table class="table table-striped table-hover table-md text-center">
+                                            <thead>
+                                                <tr>
+                                                    <th>{{ trans('admin/main.item') }}</th>
+                                                    <th>{{ trans('update.quantity') }}</th>
+                                                    <th>{{ trans('public.price') }}</th>
+                                                    <th>{{ trans('panel.discount') }}</th>
+                                                    <th>{{ trans('update.delivery_fee') }}</th>
+                                                    <th>{{ trans('cart.total') }}</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody>
+                                                <tr>
+                                                    <td>
+                                                        {{ $product->title ?? trans('update.delete_item') }}
+                                                        @if(!empty($order->specifications))
+                                                            <div>
+                                                                @foreach(json_decode($order->specifications, true) as $specKey => $specValue)
+                                                                    <span>{{ str_replace('_', ' ', $specValue) }}{{ !$loop->last ? ', ' : '' }}</span>
+                                                                @endforeach
+                                                            </div>
+                                                        @endif
+                                                    </td>
+                                                    <td>{{ $order->quantity }} {{ trans('cart.item') }}</td>
+                                                    <td>{{ handlePrice($sale->amount) ?? trans('public.free') }}</td>
+                                                    <td>{{ handlePrice($sale->discount) ?? '-' }}</td>
+                                                    <td>{{ handlePrice($sale->product_delivery_fee) ?? '-' }}</td>
+                                                    <td>{{ handlePrice($sale->total_amount) ?? '-' }}</td>
+                                                </tr>
+                                            </tbody>
+                                        </table>
                                     </div>
-                                </div>
 
-                                <div class="section-title">{{ trans('home.order_summary') }}</div>
-
-                                <div class="table-responsive mb-4">
-                                    <table class="table table-striped table-hover table-md text-center">
-                                        <thead>
-                                            <tr>
-                                                <th>{{ trans('admin/main.item') }}</th>
-                                                <th>{{ trans('update.quantity') }}</th>
-                                                <th>{{ trans('public.price') }}</th>
-                                                <th>{{ trans('panel.discount') }}</th>
-                                                <th>{{ trans('update.delivery_fee') }}</th>
-                                                <th>{{ trans('cart.total') }}</th>
-                                            </tr>
-                                        </thead>
-                                        <tbody>
-                                            <tr>
-                                                <td>
+                                    <div class="row mt-4">
+                                        <div class="col-lg-6 text-left">
+                                            <div class="invoice-detail-item">
+                                                <div class="invoice-detail-name">{{ trans('admin/main.item') }}</div>
+                                                <div class="invoice-detail-value">
                                                     {{ $product->title ?? trans('update.delete_item') }}
-                                                    @if(!empty($order->specifications))
-                                                        <div>
-                                                            @foreach(json_decode($order->specifications,true) as $specKey => $specValue)
-                                                                <span>{{ str_replace('_',' ',$specValue) }}{{ !$loop->last ? ', ' : '' }}</span>
-                                                            @endforeach
-                                                        </div>
-                                                    @endif
-                                                </td>
-                                                <td>{{ $order->quantity }} {{ trans('cart.item') }}</td>
-                                                <td>{{ handlePrice($sale->amount) ?? trans('public.free') }}</td>
-                                                <td>{{ handlePrice($sale->discount) ?? '-' }}</td>
-                                                <td>{{ handlePrice($sale->product_delivery_fee) ?? '-' }}</td>
-                                                <td>{{ handlePrice($sale->total_amount) ?? '-' }}</td>
-                                            </tr>
-                                        </tbody>
-                                    </table>
-                                </div>
+                                                </div>
+                                            </div>
 
-                                <div class="row mt-4">
-                                    <div class="col-lg-6 text-left">
-                                        <div class="invoice-detail-item">
-                                            <div class="invoice-detail-name">{{ trans('admin/main.item') }}</div>
-                                            <div class="invoice-detail-value">{{ $product->title ?? trans('update.delete_item') }}</div>
-                                        </div>
-
-                                        <div class="invoice-detail-item">
-                                            <div class="invoice-detail-name">{{ trans('update.quantity') }}</div>
-                                            <div class="invoice-detail-value">{{ $order->quantity }} {{ trans('cart.item') }}</div>
-                                        </div>
-
-                                        @if(!empty($order->specifications))
                                             <div class="invoice-detail-item">
-                                                <div class="invoice-detail-name">{{ trans('update.specifications') }}</div>
-                                                @foreach(json_decode($order->specifications,true) as $specKey => $specValue)
-                                                    <div class="invoice-detail-value">
-                                                        <span>{{ $specKey }}:</span>
-                                                        <span class="ml-3">{{ str_replace('_',' ',$specValue) }}</span>
+                                                <div class="invoice-detail-name">{{ trans('update.quantity') }}</div>
+                                                <div class="invoice-detail-value">{{ $order->quantity }}
+                                                    {{ trans('cart.item') }}
+                                                </div>
+                                            </div>
+
+                                            @if(!empty($order->specifications))
+                                                <div class="invoice-detail-item">
+                                                    <div class="invoice-detail-name">{{ trans('update.specifications') }}
                                                     </div>
-                                                @endforeach
-                                            </div>
-                                        @endif
+                                                    @foreach(json_decode($order->specifications, true) as $specKey => $specValue)
+                                                        <div class="invoice-detail-value">
+                                                            <span>{{ $specKey }}:</span>
+                                                            <span class="ml-3">{{ str_replace('_', ' ', $specValue) }}</span>
+                                                        </div>
+                                                    @endforeach
+                                                </div>
+                                            @endif
 
-                                        @if(!empty($order->message_to_seller))
+                                            @if(!empty($order->message_to_seller))
+                                                <div class="invoice-detail-item">
+                                                    <div class="invoice-detail-name">{{ trans('update.message_to_seller') }}
+                                                    </div>
+                                                    <div class="invoice-detail-value">{!! $order->message_to_seller !!}
+                                                    </div>
+                                                </div>
+                                            @endif
+                                        </div>
+
+                                        <div class="col-lg-6 text-right">
                                             <div class="invoice-detail-item">
-                                                <div class="invoice-detail-name">{{ trans('update.message_to_seller') }}</div>
-                                                <div class="invoice-detail-value">{!! $order->message_to_seller !!}</div>
+                                                <div class="invoice-detail-name">{{ trans('cart.sub_total') }}</div>
+                                                <div class="invoice-detail-value">{{ handlePrice($sale->amount) }}</div>
                                             </div>
-                                        @endif
+                                            <div class="invoice-detail-item">
+                                                <div class="invoice-detail-name">{{ trans('cart.tax') }}
+                                                    @if(!empty($product)) ({{ $product->getTax() }}%) @endif
+                                                </div>
+                                                <div class="invoice-detail-value">{{ handlePrice($sale->tax) ?? '-' }}
+                                                </div>
+                                            </div>
+                                            <div class="invoice-detail-item">
+                                                <div class="invoice-detail-name">{{ trans('public.discount') }}</div>
+                                                <div class="invoice-detail-value">
+                                                    {{ handlePrice($sale->discount) ?? '-' }}
+                                                </div>
+                                            </div>
+                                            <div class="invoice-detail-item">
+                                                <div class="invoice-detail-name">{{ trans('update.delivery_fee') }}
+                                                </div>
+                                                <div class="invoice-detail-value">
+                                                    {{ handlePrice($sale->product_delivery_fee) ?? '-' }}
+                                                </div>
+                                            </div>
+                                            <hr class="mt-2 mb-2">
+                                            <div class="invoice-detail-item">
+                                                <div class="invoice-detail-name">{{ trans('cart.total') }}</div>
+                                                <div class="invoice-detail-value invoice-detail-value-lg">
+                                                    {{ handlePrice($sale->total_amount) ?? '-' }}
+                                                </div>
+                                            </div>
+                                        </div>
                                     </div>
 
-                                    <div class="col-lg-6 text-right">
-                                        <div class="invoice-detail-item">
-                                            <div class="invoice-detail-name">{{ trans('cart.sub_total') }}</div>
-                                            <div class="invoice-detail-value">{{ handlePrice($sale->amount) }}</div>
-                                        </div>
-                                        <div class="invoice-detail-item">
-                                            <div class="invoice-detail-name">{{ trans('cart.tax') }} @if(!empty($product)) ({{ $product->getTax() }}%) @endif</div>
-                                            <div class="invoice-detail-value">{{ handlePrice($sale->tax) ?? '-' }}</div>
-                                        </div>
-                                        <div class="invoice-detail-item">
-                                            <div class="invoice-detail-name">{{ trans('public.discount') }}</div>
-                                            <div class="invoice-detail-value">{{ handlePrice($sale->discount) ?? '-' }}</div>
-                                        </div>
-                                        <div class="invoice-detail-item">
-                                            <div class="invoice-detail-name">{{ trans('update.delivery_fee') }}</div>
-                                            <div class="invoice-detail-value">{{ handlePrice($sale->product_delivery_fee) ?? '-' }}</div>
-                                        </div>
-                                        <hr class="mt-2 mb-2">
-                                        <div class="invoice-detail-item">
-                                            <div class="invoice-detail-name">{{ trans('cart.total') }}</div>
-                                            <div class="invoice-detail-value invoice-detail-value-lg">{{ handlePrice($sale->total_amount) ?? '-' }}</div>
-                                        </div>
+                                    <hr>
+                                    <div class="text-md-right">
+                                        <button type="button" onclick="window.print()"
+                                            class="btn btn-warning btn-icon icon-left"><i class="fas fa-print"></i>
+                                            Print</button>
                                     </div>
-                                </div>
 
-                                <hr>
-                                <div class="text-md-right">
-                                    <button type="button" onclick="window.print()" class="btn btn-warning btn-icon icon-left"><i class="fas fa-print"></i> Print</button>
                                 </div>
-
                             </div>
                         </div>
-                    </div>
 
+                    </div>
                 </div>
             </div>
-        </div>
-    </section>
-</div>
+        </section>
+    </div>
 </body>
+
 </html>

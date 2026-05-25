@@ -180,7 +180,7 @@
 
                 <div class="kemetic-input-group">
                     <button type="button"
-                            class="kemetic-upload-btn panel-file-manager"
+                            class="kemetic-upload-btn panel-file-manager-image"
                             data-input="thumbnail"
                             data-preview="holder">
                         <i data-feather="upload" width="18"></i>
@@ -191,7 +191,7 @@
                            id="thumbnail"
                            value="{{ (!empty($product) && !empty($product->thumbnail)) ? $product->thumbnail : (!empty($cjProduct) ? (is_array($cjProduct['productImage']) ? reset($cjProduct['productImage']) : $cjProduct['productImage']) : old('thumbnail')) }}"
                            class="kemetic-input @error('thumbnail') is-invalid @enderror"
-                           placeholder="{{ trans('update.thumbnail_images_size') }}">
+                           placeholder="{{ trans('update.thumbnail_images_size') }}" readonly>
 
                 </div>
 
@@ -206,10 +206,10 @@
                 <label class="kemetic-label mb-0">{{ trans('update.images') }}</label>
 
                 <div class="main-row input-group product-images-input-group kemetic-input-group mt-10" style="margin-bottom:10px;">
-                    <button type="button" class="kemetic-upload-btn panel-file-manager" data-input="images_record" data-preview="holder">
+                    <button type="button" class="kemetic-upload-btn panel-file-manager-image" data-input="images_record" data-preview="holder">
                         <i data-feather="upload" width="18"></i>
                     </button>
-                    <input type="text" name="images[]" id="images_record" value="{{ (!empty($cjProduct) && !empty($cjProduct['productImageSet']) && (empty($product->images) || count($product->images) == 0)) ? (is_array($cjProduct['productImageSet'][0]) ? reset($cjProduct['productImageSet'][0]) : $cjProduct['productImageSet'][0]) : '' }}" class="form-control" placeholder="{{ trans('update.product_images_size') }}"/>
+                    <input type="text" name="images[]" id="images_record" value="{{ (!empty($cjProduct) && !empty($cjProduct['productImageSet']) && (empty($product->images) || count($product->images) == 0)) ? (is_array($cjProduct['productImageSet'][0]) ? reset($cjProduct['productImageSet'][0]) : $cjProduct['productImageSet'][0]) : '' }}" class="form-control" placeholder="{{ trans('update.product_images_size') }}" readonly/>
                     <button type="button" class="kemetic-btn-primary kemetic-icon-btn add-btn">
                         <i data-feather="plus" width="16"></i>
                     </button>
@@ -219,10 +219,10 @@
                     @foreach($cjProduct['productImageSet'] as $index => $imagePath)
                         @if($index > 0)
                             <div class="input-group product-images-input-group kemetic-input-group mt-10 cj-prefilled">
-                                <button type="button" class="kemetic-upload-btn panel-file-manager" data-input="cj_images_{{ $index }}" data-preview="holder">
+                                <button type="button" class="kemetic-upload-btn panel-file-manager-image" data-input="cj_images_{{ $index }}" data-preview="holder">
                                     <i data-feather="upload" width="18"></i>
                                 </button>
-                                <input type="text" name="images[]" id="cj_images_{{ $index }}" value="{{ is_array($imagePath) ? reset($imagePath) : $imagePath }}" class="form-control" placeholder="{{ trans('update.product_images_size') }}"/>
+                                <input type="text" name="images[]" id="cj_images_{{ $index }}" value="{{ is_array($imagePath) ? reset($imagePath) : $imagePath }}" class="form-control" placeholder="{{ trans('update.product_images_size') }}" readonly/>
                                 <button type="button" class="kemetic-btn-danger kemetic-icon-btn remove-btn">
                                     <i data-feather="x" width="16"></i>
                                 </button>
@@ -234,10 +234,10 @@
                 @if(!empty($product->images) && count($product->images))
                     @foreach($product->images as $productImage)
                         <div class="input-group product-images-input-group kemetic-input-group mt-10">
-                            <button type="button" class="kemetic-upload-btn panel-file-manager" data-input="images_{{ $productImage->id }}" data-preview="holder">
+                            <button type="button" class="kemetic-upload-btn panel-file-manager-image" data-input="images_{{ $productImage->id }}" data-preview="holder">
                                 <i data-feather="upload" width="18"></i>
                             </button>
-                            <input type="text" name="images[]" id="images_{{ $productImage->id }}" value="{{ $productImage->path }}" class="form-control" placeholder="{{ trans('update.product_images_size') }}"/>
+                            <input type="text" name="images[]" id="images_{{ $productImage->id }}" value="{{ $productImage->path }}" class="form-control" placeholder="{{ trans('update.product_images_size') }}" readonly/>
                             <button type="button" class="kemetic-btn-danger kemetic-icon-btn remove-btn">
                                 <i data-feather="x" width="16"></i>
                             </button>
@@ -261,7 +261,7 @@
 
                 <div class="kemetic-input-group">
                     <button type="button"
-                            class="kemetic-upload-btn panel-file-manager"
+                            class="kemetic-upload-btn panel-file-manager-video"
                             data-input="demo_video"
                             data-preview="holder">
                         <i data-feather="upload" width="18"></i>
@@ -271,7 +271,7 @@
                            name="video_demo"
                            id="demo_video"
                            value="{{ !empty($product) ? $product->video_demo : old('video_demo') }}"
-                           class="kemetic-input @error('video_demo') is-invalid @enderror">
+                           class="kemetic-input @error('video_demo') is-invalid @enderror" readonly>
                 </div>
 
                 @error('video_demo')
@@ -286,7 +286,28 @@
 
 @push('scripts_bottom')
 <script src="/assets/default/vendors/sortable/jquery-ui.min.js"></script>
+<script src="/vendor/laravel-filemanager/js/stand-alone-button.js"></script>
+<script>
+    $(document).ready(function() {
+        $('body').on('click', '.panel-file-manager-image', function (e) {
+            e.preventDefault();
+            $(this).filemanager('image', {
+                prefix: '/laravel-filemanager'
+            });
+        });
+
+        $('body').on('click', '.panel-file-manager-video', function (e) {
+            e.preventDefault();
+            $(this).filemanager('video', {
+                prefix: '/laravel-filemanager'
+            });
+        });
+    });
+</script>
+@endpush
+
 @if(!empty($cjProduct))
+@push('scripts_bottom')
 <script>
 (function ($) {
     // For CJ products: override the add-btn so it counts only user-added rows
@@ -317,11 +338,11 @@
         copyHtml = copyHtml.replaceAll('add-btn', 'remove-btn');
         copy.html(copyHtml);
         // Clear the value so the new row is always EMPTY
-        copy.find('input[type="text"]').val('');
+        copy.find('input[type="text"]').val('').prop('readonly', true);
         $('#productImagesInputs').append(copy);
         if (typeof feather !== 'undefined') feather.replace();
     });
 })(jQuery);
 </script>
-@endif
 @endpush
+@endif

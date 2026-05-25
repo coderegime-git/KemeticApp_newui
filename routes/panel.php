@@ -430,6 +430,7 @@ Route::group(['namespace' => 'Panel', 'prefix' => 'panel', 'middleware' => ['imp
 
             Route::group(['prefix' => 'sales'], function () {
                 Route::get('/', 'SaleController@index');
+                Route::get('/{id}', 'ProductSalesController@show');
                 Route::get('/{id}/productOrder/{order_id}/invoice', 'SaleController@invoice');
                 Route::get('/{id}/getProductOrder/{order_id}', 'SaleController@getProductOrder');
                 Route::post('/{id}/productOrder/{order_id}/setTrackingCode', 'SaleController@setTrackingCode');
@@ -444,7 +445,6 @@ Route::group(['namespace' => 'Panel', 'prefix' => 'panel', 'middleware' => ['imp
             Route::get('/{id}/productOrder/{order_id}/invoice', 'MyPurchaseController@invoice');
             Route::get('/{order_id}/invoice', 'MyPurchaseController@memberinvoice');
         });
-
 
         Route::group(['prefix' => 'products'], function () {
             Route::get('/my-comments', 'CommentController@myComments');
@@ -524,6 +524,11 @@ Route::group(['namespace' => 'Panel', 'prefix' => 'panel', 'middleware' => ['imp
         Route::get('/purchases', 'BookController@purchases');
         Route::get('/purchases/{id}/track', 'BookController@trackOrder');
         Route::get('/purchases/{id}/invoice', 'BookController@invoice');
+
+        Route::group(['prefix' => 'sales'], function () {
+            Route::get('/', 'BookSalesController@index');
+            Route::get('/{id}', 'BookSalesController@show');
+        });
     });
 
     Route::group(['prefix' => 'livestream'], function () {

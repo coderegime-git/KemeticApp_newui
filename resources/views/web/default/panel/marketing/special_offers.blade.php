@@ -80,7 +80,6 @@
    SELECT2 – KEMETIC DARK THEME
 ================================ */
 
-/* main box */
 .select2-container--default .select2-selection--single {
     background: #0d0d0d !important;
     border: 1px solid rgba(242,201,76,.35) !important;
@@ -91,42 +90,35 @@
     color: #e0e0e0 !important;
 }
 
-/* text */
 .select2-container--default .select2-selection--single .select2-selection__rendered {
     color: #e0e0e0 !important;
     line-height: 30px !important;
 }
 
-/* arrow */
 .select2-container--default .select2-selection--single .select2-selection__arrow b {
     border-color: #f2c94c transparent transparent transparent !important;
 }
 
-/* dropdown */
 .select2-dropdown {
     background: #0f0f0f !important;
     border: 1px solid rgba(242,201,76,.35) !important;
     border-radius: 12px !important;
 }
 
-/* options */
 .select2-results__option {
     color: #e0e0e0 !important;
     padding: 10px 14px !important;
 }
 
-/* hover */
 .select2-results__option--highlighted {
     background: rgba(242,201,76,.15) !important;
     color: #fff !important;
 }
 
-/* selected */
 .select2-results__option[aria-selected=true] {
     background: rgba(242,201,76,.25) !important;
 }
 
-/* search box */
 .select2-search--dropdown .select2-search__field {
     background: #0d0d0d !important;
     border: 1px solid rgba(242,201,76,.35) !important;
@@ -173,10 +165,12 @@
   background-color: #43d477;
   border-color: #43d477;
 }
-.custom-control-input[disabled] ~ .custom-control-label, .custom-control-input:disabled ~ .custom-control-label {
+.custom-control-input[disabled] ~ .custom-control-label,
+.custom-control-input:disabled ~ .custom-control-label {
   color: #6c757d;
 }
-.custom-control-input[disabled] ~ .custom-control-label::before, .custom-control-input:disabled ~ .custom-control-label::before {
+.custom-control-input[disabled] ~ .custom-control-label::before,
+.custom-control-input:disabled ~ .custom-control-label::before {
   background-color: #f1f1f1;
 }
 
@@ -218,7 +212,7 @@
 .custom-checkbox .custom-control-input:indeterminate ~ .custom-control-label::before {
   border-color: #F2C94C;
   background-color: #F2C94C;
-}#
+}
 .custom-checkbox .custom-control-input:indeterminate ~ .custom-control-label::after {
   background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' width='4' height='4' viewBox='0 0 4 4'%3e%3cpath stroke='%23ffffff' d='M0 2h4'/%3e%3c/svg%3e");
 }
@@ -270,14 +264,27 @@
   background-color: rgba(67, 212, 119, 0.5);
 }
 
+/* ===== Invalid feedback – always visible ===== */
+.invalid-feedback {
+    display: block;
+    color: #f87171;
+    font-size: 12px;
+    margin-top: 4px;
+    min-height: 16px;
+}
+
+.k-input.is-invalid,
+.k-select.is-invalid {
+    border-color: #f87171 !important;
+}
 </style>
- <link rel="stylesheet" href="/assets/default/vendors/select2/select2.min.css">
 @endpush
 
 @section('content')
 
     <section>
         <h2 class="k-section-title">{{ trans('panel.create_a_new_discount') }}</h2>
+
         @if (\Session::has('msg'))
             <div class="alert alert-warning">
                 <ul>
@@ -286,99 +293,105 @@
             </div>
         @endif
 
-        <div class="k-card p-25 mt-20" style="padding: 10px;">
-        <form action="/panel/marketing/special_offers/store" method="post" class="row">
-            {{ csrf_field() }}
+        <div class="k-card mt-20" style="padding: 16px;">
+            <form action="/panel/marketing/special_offers/store" method="post" class="row">
+                {{ csrf_field() }}
 
-            <div class="col-12 col-lg-6">
-                <div class="row">
-                    <div class="col-lg-5">
-                        <div class="form-group">
-                            <label class="k-label">{{ trans('public.title') }}</label>
-                            <input type="text" name="name" class="form-control k-input">
+                <div class="col-12 col-lg-6">
+                    <div class="row">
+
+                        {{-- Title --}}
+                        <div class="col-lg-5">
+                            <div class="form-group">
+                                <label class="k-label">{{ trans('public.title') }}</label>
+                                <input type="text" name="name" class="form-control k-input">
+                                <div class="invalid-feedback"></div>
+                            </div>
                         </div>
-                    </div>
 
-                    <div class="col-lg-4">
-                        <div class="form-group">
-                            <label class="k-label">{{ trans('panel.webinar') }}</label>
-                            <select name="webinar_id" class="form-control k-select select2">
-                                <option disabled selected>{{ trans('panel.select_course') }}</option>
-                                @foreach($webinars as $webinar)
-                                    <option value="{{ $webinar->id }}">{{ $webinar->title }}</option>
-                                @endforeach
-                            </select>
+                        {{-- Webinar --}}
+                        <div class="col-lg-4">
+                            <div class="form-group">
+                                <label class="k-label">{{ trans('panel.webinar') }}</label>
+                                <select name="webinar_id" class="form-control k-select select2">
+                                    <option value="" disabled selected>{{ trans('panel.select_course') }}</option>
+                                    @foreach($webinars as $webinar)
+                                        <option value="{{ $webinar->id }}">{{ $webinar->title }}</option>
+                                    @endforeach
+                                </select>
+                                <div class="invalid-feedback"></div>
+                            </div>
                         </div>
-                    </div>
 
-                    <div class="col-lg-3">
-                        <div class="form-group">
-                            <label class="k-label">{{ trans('panel.amount') }} (%)</label>
-                            <input type="text" name="percent" class="form-control k-input">
+                        {{-- Percent --}}
+                        <div class="col-lg-3">
+                            <div class="form-group">
+                                <label class="k-label">{{ trans('panel.amount') }} (%)</label>
+                                <input type="text" name="percent" class="form-control k-input">
+                                <div class="invalid-feedback"></div>
+                            </div>
                         </div>
-                    </div>
-                </div>
-            </div>
 
-            <div class="col-12 col-lg-5">
-                <div class="row">
-                    <div class="col-md-6">
-                        <div class="form-group">
-                            <label class="k-label">{{ trans('public.from') }}</label>
-                            <input type="date"
-                                    class="form-control k-input text-center"
-                                    name="from_date"
-                                    value="{{ request()->get('from') }}">
-                                    <!-- <span class="input-group-text kemetic-icon bg-gold text-black">
-                                        <i data-feather="calendar" width="18" height="18"></i>
-                                    </span> -->
-
-                                    <!-- <input type="text" name="from" autocomplete="off"
-                                        class="kemetic-input @if(request()->get('from')) datepicker @else datefilter @endif"
-                                        value="{{ request()->get('from','') }}"> -->
-                            <!-- <input type="text" name="from_date" class="k-input datetimepicker"> -->
-                        </div>
-                    </div>
-
-                    <div class="col-md-6">
-                        <div class="form-group">
-                            <label class="k-label">{{ trans('public.to') }}</label>
-                            <input type="date"
-                                    class="form-control k-input text-center"
-                                    name="to_date"
-                                    value="{{ request()->get('to') }}">
-
-                                <!-- <span class="input-group-text kemetic-icon bg-gold text-black">
-                                    <i data-feather="calendar" width="18" height="18"></i>
-                                </span> -->
-                                
-                                <!-- <input type="text" name="to" autocomplete="off"
-                                    class="kemetic-input @if(request()->get('to')) datepicker @else datefilter @endif"
-                                    value="{{ request()->get('to','') }}"> -->
-                            <!-- <input type="text" name="to_date" class="k-input datetimepicker"> -->
-                        </div>
                     </div>
                 </div>
-            </div>
 
-            <div class="col-12 col-lg-1 d-flex align-items-end">
-                <button type="submit" class="btn k-btn w-100">{{ trans('public.create') }}</button>
-            </div>
-        </form>
-    </div>
-</section>
+                <div class="col-12 col-lg-5">
+                    <div class="row">
 
-    @if(!empty($specialOffers) and $specialOffers->count() > 0)
+                        {{-- From Date --}}
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label class="k-label">{{ trans('public.from') }}</label>
+                                <input type="date"
+                                       name="from_date"
+                                       class="form-control k-input text-center"
+                                       value="{{ request()->get('from') }}">
+                                <div class="invalid-feedback"></div>
+                            </div>
+                        </div>
+
+                        {{-- To Date --}}
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label class="k-label">{{ trans('public.to') }}</label>
+                                <input type="date"
+                                       name="to_date"
+                                       class="form-control k-input text-center"
+                                       value="{{ request()->get('to') }}">
+                                <div class="invalid-feedback"></div>
+                            </div>
+                        </div>
+
+                    </div>
+                </div>
+
+                {{-- Submit --}}
+                <div class="col-12 col-lg-1 d-flex align-items-end">
+                    <button type="button" id="formSubmit" class="btn k-btn w-100">
+                        {{ trans('public.create') }}
+                    </button>
+                </div>
+
+            </form>
+        </div>
+    </section>
+
+    @if(!empty($specialOffers) && $specialOffers->count() > 0)
 
         <section class="mt-35">
             <div class="d-flex align-items-start align-items-md-center justify-content-between flex-column flex-md-row">
-                 <h2 class="k-section-title">{{ trans('panel.discounts') }}</h2>
+                <h2 class="k-section-title">{{ trans('panel.discounts') }}</h2>
 
                 <form action="" method="get" class="d-flex align-items-center flex-row-reverse flex-md-row justify-content-start justify-content-md-center mt-20 mt-md-0">
-                    <label class="cursor-pointer mb-0 mr-10 text-gray font-14 font-weight-500" for="activeDiscountsSwitch">{{ trans('panel.show_only_active_discounts') }}</label>
+                    <label class="cursor-pointer mb-0 mr-10 text-gray font-14 font-weight-500" for="activeDiscountsSwitch">
+                        {{ trans('panel.show_only_active_discounts') }}
+                    </label>
                     <div class="custom-control custom-switch">
-                        <input type="checkbox" name="active_discounts" class="js-panel-list-switch-filter custom-control-input" {{ request()->get('active_discounts', '') == 'on' ? 'checked' : '' }}
-                        id="activeDiscountsSwitch">
+                        <input type="checkbox"
+                               name="active_discounts"
+                               class="js-panel-list-switch-filter custom-control-input"
+                               {{ request()->get('active_discounts', '') == 'on' ? 'checked' : '' }}
+                               id="activeDiscountsSwitch">
                         <label class="custom-control-label" for="activeDiscountsSwitch"></label>
                     </div>
                 </form>
@@ -386,66 +399,79 @@
 
             <div class="panel-section-card py-20 px-25 mt-20">
                 <div class="row">
-                    <div class="col-12 ">
+                    <div class="col-12">
                         <div class="table-responsive">
                             <table class="custom-table text-center">
                                 <thead>
-                                <tr>
-                                    <th class="text-center text-gray">{{ trans('panel.name') }}</th>
-                                    <th class="text-center text-gray">{{ trans('panel.webinar') }}</th>
-                                    <th class="text-center text-gray">{{ trans('panel.amount') }}</th>
-                                    <th class="text-center text-gray">{{ trans('public.status') }}</th>
-                                    <th class="text-center text-gray">{{ trans('public.from') }}</th>
-                                    <th class="text-center text-gray">{{ trans('public.to') }}</th>
-                                    <th></th>
-                                </tr>
+                                    <tr>
+                                        <th class="text-center text-gray">{{ trans('panel.name') }}</th>
+                                        <th class="text-center text-gray">{{ trans('panel.webinar') }}</th>
+                                        <th class="text-center text-gray">{{ trans('panel.amount') }}</th>
+                                        <th class="text-center text-gray">{{ trans('public.status') }}</th>
+                                        <th class="text-center text-gray">{{ trans('public.from') }}</th>
+                                        <th class="text-center text-gray">{{ trans('public.to') }}</th>
+                                        <th></th>
+                                    </tr>
                                 </thead>
                                 <tbody>
-                                @foreach($specialOffers as $specialOffer)
-                                    <tr>
-                                        <td class="text-center align-middle text-dark-blue font-weight-500">{{ $specialOffer->name }}</td>
-                                        <td class="text-center align-middle">
-                                            <a href="{{ $specialOffer->webinar->getUrl() }}" class="text-dark-blue font-weight-500" target="_blank">{{ $specialOffer->webinar->title }}</a>
-                                        </td>
-                                        <td class="align-middle">
-                                            <span class="text-dark-blue font-weight-500">{{ $specialOffer->percent }}%</span>
-                                        </td>
-                                        <td class="align-middle">
-                                            @switch($specialOffer->status)
-                                                @case(\App\Models\SpecialOffer::$active)
-                                                <span class="text-primary font-weight-500">{{ trans('public.active') }}</span>
-
-                                                @break
-                                                @case(\App\Models\SpecialOffer::$inactive)
-                                                <span class="text-warning font-weight-500">{{ trans('public.inactive') }}</span>
-                                                @break
-                                            @endswitch
-                                        </td>
-                                        <td class="align-middle text-dark-blue font-weight-500">{{ dateTimeFormat($specialOffer->from_date, 'j M Y | H:i') }}</td>
-                                        <td class="align-middle text-dark-blue font-weight-500">{{ dateTimeFormat($specialOffer->to_date, 'j M Y | H:i') }}</td>
-                                        <td class="text-right align-middle">
-                                            @if($specialOffer->status != \App\Models\SpecialOffer::$inactive)
-                                                <div class="btn-group dropdown table-actions">
-                                                    <button type="button" class="btn-transparent dropdown-toggle"
-                                                            data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
-                                                        <i data-feather="more-vertical" height="20"></i>
-                                                    </button>
-                                                    <div class="dropdown-menu">
-                                                        <a href="/panel/marketing/special_offers/{{ $specialOffer->id }}/disable" type="button"
-                                                           class="delete-action btn-transparent">{{ trans('public.disable') }}</a>
+                                    @foreach($specialOffers as $specialOffer)
+                                        <tr>
+                                            <td class="text-center align-middle text-dark-blue font-weight-500">
+                                                {{ $specialOffer->name }}
+                                            </td>
+                                            <td class="text-center align-middle">
+                                                <a href="{{ $specialOffer->webinar->getUrl() }}"
+                                                   class="text-dark-blue font-weight-500"
+                                                   target="_blank">
+                                                    {{ $specialOffer->webinar->title }}
+                                                </a>
+                                            </td>
+                                            <td class="align-middle">
+                                                <span class="text-dark-blue font-weight-500">{{ $specialOffer->percent }}%</span>
+                                            </td>
+                                            <td class="align-middle">
+                                                @switch($specialOffer->status)
+                                                    @case(\App\Models\SpecialOffer::$active)
+                                                        <span class="text-primary font-weight-500">{{ trans('public.active') }}</span>
+                                                    @break
+                                                    @case(\App\Models\SpecialOffer::$inactive)
+                                                        <span class="text-warning font-weight-500">{{ trans('public.inactive') }}</span>
+                                                    @break
+                                                @endswitch
+                                            </td>
+                                            <td class="align-middle text-dark-blue font-weight-500">
+                                                {{ dateTimeFormat($specialOffer->from_date, 'j M Y | H:i') }}
+                                            </td>
+                                            <td class="align-middle text-dark-blue font-weight-500">
+                                                {{ dateTimeFormat($specialOffer->to_date, 'j M Y | H:i') }}
+                                            </td>
+                                            <td class="text-right align-middle">
+                                                @if($specialOffer->status != \App\Models\SpecialOffer::$inactive)
+                                                    <div class="btn-group dropdown table-actions">
+                                                        <button type="button"
+                                                                class="btn-transparent dropdown-toggle"
+                                                                data-toggle="dropdown"
+                                                                aria-haspopup="true"
+                                                                aria-expanded="false">
+                                                            <i data-feather="more-vertical" height="20"></i>
+                                                        </button>
+                                                        <div class="dropdown-menu">
+                                                            <a href="/panel/marketing/special_offers/{{ $specialOffer->id }}/disable"
+                                                               class="delete-action btn-transparent">
+                                                                {{ trans('public.disable') }}
+                                                            </a>
+                                                        </div>
                                                     </div>
-                                                </div>
-                                            @endif
-                                        </td>
-                                    </tr>
-                                @endforeach
+                                                @endif
+                                            </td>
+                                        </tr>
+                                    @endforeach
                                 </tbody>
                             </table>
                         </div>
                     </div>
                 </div>
             </div>
-
         </section>
 
         <div class="my-30">
@@ -454,13 +480,14 @@
 
     @else
 
-        @include(getTemplate() . '.includes.no-result',[
+        @include(getTemplate() . '.includes.no-result', [
             'file_name' => 'offer.png',
-            'title' => trans('panel.discount_no_result'),
-            'hint' =>  nl2br(trans('panel.discount_no_result_hint')) ,
+            'title'     => trans('panel.discount_no_result'),
+            'hint'      => nl2br(trans('panel.discount_no_result_hint')),
         ])
 
     @endif
+
 @endsection
 
 @push('scripts_bottom')
@@ -472,5 +499,6 @@
         var saveSuccessLang = '{{ trans('webinars.success_store') }}';
     </script>
 
+    {{-- This file handles #formSubmit click, $.post, success SweetAlert, and 422 errors --}}
     <script src="/assets/default/js/panel/marketing/special_offers.min.js"></script>
 @endpush

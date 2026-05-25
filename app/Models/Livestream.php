@@ -133,8 +133,34 @@ class Livestream extends Model
     {
         return $this->likes()->count();
     }
+    
     public function getCommentCountAttribute()
     {
         return $this->comments()->count();
+    }
+
+    public function getSavedCountAttribute()
+    {
+        return $this->savedItems()->count();
+    }
+
+    public function getShareCountAttribute()
+    {
+        return $this->share()->count();
+    }
+
+    public function getGiftCountAttribute()
+    {
+        return $this->gift()->count();
+    }
+
+    public function getReportCountAttribute()
+    {
+        return $this->reports()->count();
+    }
+
+    public function getReviewCountAttribute()
+    {
+        return $this->review()->count();
     }
 }

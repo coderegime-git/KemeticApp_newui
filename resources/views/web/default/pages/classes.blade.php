@@ -193,7 +193,7 @@
                       <span class="real">{{ trans('public.free') }}</span>
                   @endif
               </div>
-              <button class="course-cta"><a href="{{ $webinar->getUrl() }}">Enroll Now</a></button>
+              <a href="{{ $webinar->getUrl() }}" ><button type="button" class="course-cta">Enroll Now</button></a>
             </div>
            
           </div>

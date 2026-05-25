@@ -199,10 +199,10 @@ class Product extends Model implements TranslatableContract
         return $this->hasMany('App\Models\ProductSaved', 'product_id', 'id');
     }
 
-    public function productComments()
-    {
-        return $this->hasMany('App\Models\ProductComment', 'product_id', 'id');
-    }
+    // public function productComments()
+    // {
+    //     return $this->hasMany('App\Models\ProductComment', 'product_id', 'id');
+    // }
 
     public function sales($withoutRefunds = true)
     {

@@ -19,7 +19,11 @@
     <!-- Header -->
     <section class="profile-header">
       <div class="profile-pfp">
-        <img src="{{ $user->getAvatar(190) }}" alt="{{ $user["full_name"] }}"/>
+       <img src="{{ $user->getAvatar(190) 
+            ? (Str::startsWith($user->getAvatar(190), '/') ? $user->getAvatar(190) : '/' . $user->getAvatar(190))
+            : url('/getDefaultAvatar?item=' . ($user['id'] ?? '') . '&name=' . urlencode($user['full_name']) . '&size=190') 
+        }}" 
+            alt="{{ $user['full_name'] }}">
       </div>
 
       <div class="profile-head-info">
@@ -36,7 +40,7 @@
        @if(auth()->check() && auth()->id() != $user->id)
       <button type="button" id="followToggle" data-user-id="{{ $user['id'] }}" class="profile-follow">
         @if(!empty($authUserIsFollower) and $authUserIsFollower)
-            Unconnect
+            Disconnect
         @else
             Connect
         @endif
@@ -100,7 +104,7 @@
       <!-- Reels Grid -->
       <div class="tab-content active" id="reels-content">
         <section class="profile-grid">
-           @if(!empty($user->reels) and !$user->reels->isEmpty())
+           @if($user->reels && $user->reels->count() > 0)
              @foreach($user->reels as $reel)
           <a class="profile-card" href="#">
              <video class="reel-video" controls preload="metadata" poster="{{ url($reel->thumbnail_url) }}">
@@ -133,8 +137,8 @@
       <div class="tab-content" id="courses-content">
         <section class="profile-grid">
           @if($isWisdomKeeper)
-            @if(!empty($webinars) and !$webinars->isEmpty())
-              @foreach($webinars as $webinar)
+            @if(!empty($webinars) && $webinars->count() > 0)
+              @foreach($user->webinars as $webinar)
               <a class="profile-card" href="{{ $webinar->getUrl() }}">
                   <img src="{{ $webinar->getImage() }}" alt="{{ $webinar->title }}">
                 <div class="profile-badge"><span class="profile-star">★</span> {{ $webinar->like_count ?? 0 }}</div>
@@ -200,7 +204,7 @@
       <div class="tab-content" id="shop-content">
         <section class="profile-grid">
           @if($isWisdomKeeper)
-            @if(!empty($user->products) and !$user->products->isEmpty())
+           @if($user->products && $user->products->count() > 0)
               @foreach($user->products as $product)
                 <a class="profile-card" href="{{ $product->getUrl() }}">
                   <img src="{{ $product->thumbnail }}" class="img-cover" alt="{{ $product->title }}">
@@ -237,7 +241,7 @@
       <div class="tab-content" id="articles-content">
         <section class="profile-grid">
           @if($isWisdomKeeper)
-            @if(!empty($user->blog) and !$user->blog->isEmpty())
+            @if($user->blog && $user->blog->count() > 0)
               @foreach($user->blog as $post)
               <a class="profile-card" href="{{ $post->getUrl() }}">
                   <img src="{{ $post->image }}" class="img-cover" alt="{{ $post->title }}">
@@ -289,9 +293,15 @@
 
                   {{-- Reviewer info --}}
                   <div style="display:flex; align-items:center; gap:8px;">
-                    <img src="{{ $review->reviewer_avatar ?? '/assets/default/img/default/avatar-1.png' }}" 
+                    <img src="{{ $review->reviewer_avatar 
+                          ? (Str::startsWith($review->reviewer_avatar, '/') ? $review->reviewer_avatar : '/' . $review->reviewer_avatar)
+                          : url('/getDefaultAvatar?item=' . ($review->reviewer_id ?? '') . '&name=' . urlencode($review->reviewer_name) . '&size=36') 
+                      }}" 
+                          alt="{{ $review->reviewer_name }}" 
+                          style="width:36px; height:36px; border-radius:50%; object-fit:cover;">
+                    <!-- <img src="{{ $review->reviewer_avatar ?? url('/getDefaultAvatar?item=' . ($review->reviewer_id ?? '') . '&name=' . urlencode($review->reviewer_name) . '&size=36') }}" 
                         alt="{{ $review->reviewer_name }}"
-                        style="width:36px; height:36px; border-radius:50%; object-fit:cover;">
+                        style="width:36px; height:36px; border-radius:50%; object-fit:cover;"> -->
                     <span style="font-weight:600; font-size:14px;">{{ $review->reviewer_name }}</span>
                   </div>
 
@@ -439,9 +449,38 @@
 @push('scripts_bottom')
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/jquery-toast-plugin/1.3.2/jquery.toast.min.css">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery-toast-plugin/1.3.2/jquery.toast.min.js"></script>
+
 <script>
   document.addEventListener('DOMContentLoaded', function() {
     console.log('DOM loaded - initializing tabs');
+
+    let currentReelVideo = null;
+ 
+    /**
+     * Pause the currently playing reel (if any) and clear the reference.
+     */
+    function pauseCurrentReel() {
+      if (currentReelVideo) {
+        currentReelVideo.pause();
+        currentReelVideo = null;
+      }
+    }
+  
+    /**
+     * Attach play-listener to a single <video> element.
+     * When it starts playing, pause whatever was playing before it.
+     */
+    function attachReelListener(video) {
+      video.addEventListener('play', function () {
+        if (currentReelVideo && currentReelVideo !== video) {
+          currentReelVideo.pause();
+        }
+        currentReelVideo = video;
+      });
+    }
+  
+    // Attach to every reel video already in the DOM
+    document.querySelectorAll('.reel-video').forEach(attachReelListener);
 
     let currentStories = [];
     let currentStoryIndex = 0;
@@ -482,8 +521,12 @@
     showActiveTabContent();
     
     tabs.forEach(tab => {
+      if (tab.dataset.tabListenerAttached === '1') return;
+      tab.dataset.tabListenerAttached = '1';
       tab.addEventListener('click', () => {
+        pauseCurrentReel();
         console.log('Tab clicked:', tab.getAttribute('data-tab'));
+        
         
         // Remove active class from all tabs
         tabs.forEach(t => t.classList.remove('active'));
@@ -493,60 +536,75 @@
         
         // Show only the active tab content
         showActiveTabContent();
+        
       });
     });
     
      const addStoryBtn = document.getElementById('addStoryBtn');
-    const storyUploadModal = document.getElementById('storyUploadModal');
-    const closeUploadModal = document.getElementById('closeUploadModal');
-    const storyChooseBtn = document.getElementById('storyChooseBtn');
-    const storyFileInput = document.getElementById('storyFileInput');
-    const imagePreview = document.getElementById('imagePreview');
-    const videoPreview = document.getElementById('videoPreview');
-    const storyUploadForm = document.getElementById('storyUploadForm');
-    const uploadBtn = document.getElementById('uploadBtn');
-    const uploadProgress = document.getElementById('uploadProgress');
-    const uploadProgressBar = document.getElementById('uploadProgressBar');
-    const errorMessage = document.getElementById('errorMessage');
-    
+     const storyUploadModal = document.getElementById('storyUploadModal');
+     const closeUploadModal = document.getElementById('closeUploadModal');
+     const storyChooseBtn = document.getElementById('storyChooseBtn');
+     const storyFileInput = document.getElementById('storyFileInput');
+     const imagePreview = document.getElementById('imagePreview');
+     const videoPreview = document.getElementById('videoPreview');
+     const storyUploadForm = document.getElementById('storyUploadForm');
+     const uploadBtn = document.getElementById('uploadBtn');
+     const uploadProgress = document.getElementById('uploadProgress');
+     const uploadProgressBar = document.getElementById('uploadProgressBar');
+     const errorMessage = document.getElementById('errorMessage');
+     
     // Open upload modal
-    if (addStoryBtn) {
+    if (addStoryBtn && !addStoryBtn.dataset.listenerAttached) {
+      addStoryBtn.dataset.listenerAttached = '1';
       addStoryBtn.addEventListener('click', () => {
         storyUploadModal.classList.add('active');
       });
     }
     
     // Close upload modal
-    closeUploadModal.addEventListener('click', () => {
-      storyUploadModal.classList.remove('active');
-      resetUploadForm();
-    });
-
-    storyUploadModal.addEventListener('click', (e) => {
-      if (e.target === storyUploadModal) {
+    if (closeUploadModal && !closeUploadModal.dataset.listenerAttached) {
+      closeUploadModal.dataset.listenerAttached = '1';
+      closeUploadModal.addEventListener('click', () => {
         storyUploadModal.classList.remove('active');
         resetUploadForm();
-      }
-    });
+      });
+    }
 
-    document.addEventListener('keydown', (e) => {
-      if (e.key === 'Escape' && storyUploadModal.classList.contains('active')) {
-        storyUploadModal.classList.remove('active');
-        resetUploadForm();
-      }
-    });
+    if (storyUploadModal && !storyUploadModal.dataset.listenerAttached) {
+      storyUploadModal.dataset.listenerAttached = '1';
+      storyUploadModal.addEventListener('click', (e) => {
+        if (e.target === storyUploadModal) {
+          storyUploadModal.classList.remove('active');
+          resetUploadForm();
+        }
+      });
+    }
+
+    if (!window.storyKeydownListenerAttached) {
+      window.storyKeydownListenerAttached = true;
+      document.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape' && storyUploadModal && storyUploadModal.classList.contains('active')) {
+          storyUploadModal.classList.remove('active');
+          resetUploadForm();
+        }
+      });
+    }
     
     // Click on choose button
-    storyChooseBtn.addEventListener('click', () => {
-      document.getElementById('storyFileInput').click();
-    });
+    if (storyChooseBtn && !storyChooseBtn.dataset.listenerAttached) {
+      storyChooseBtn.dataset.listenerAttached = '1';
+      storyChooseBtn.addEventListener('click', (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        document.getElementById('storyFileInput').click();
+      });
+    }
     
     // Handle file selection
-    storyFileInput.addEventListener('change', handleFileChange);
-
-    // storyFileInput.addEventListener('change', function(e) {
-      
-    // });
+    if (storyFileInput && !storyFileInput.dataset.listenerAttached) {
+      storyFileInput.dataset.listenerAttached = '1';
+      storyFileInput.addEventListener('change', handleFileChange);
+    }
 
     function handleFileChange(e) {
       const file = e.target.files[0];
@@ -607,63 +665,66 @@
     }
     
     // Handle form submission
-    storyUploadForm.addEventListener('submit', async function(e) {
-      e.preventDefault();
-      
-      if (isUploading) return; 
-      if (!currentFileData) {
-        showError('Please select a file first');
-        return;
-      }
-
-      isUploading = true;
-      
-      const formData = new FormData();
-      formData.append('story', currentFileData, currentFileName);
-      formData.append('title', this.title.value);
-      formData.append('link', this.link.value);
-      formData.append('_token', '{{ csrf_token() }}');
-      
-      // Show progress bar
-      uploadProgress.classList.add('active');
-      uploadBtn.disabled = true;
-      uploadBtn.textContent = 'Uploading...';
-      
-      try {
-        const userId = {{ $user->id }}; // Get the current user ID
-        const response = await fetch(`/users/${userId}/story/upload`, {
-            method: 'POST',
-            headers: {
-                'X-Requested-With': 'XMLHttpRequest',
-                'Accept': 'application/json',
-            },
-            body: formData
-        });
+    if (storyUploadForm && !storyUploadForm.dataset.listenerAttached) {
+      storyUploadForm.dataset.listenerAttached = '1';
+      storyUploadForm.addEventListener('submit', async function(e) {
+        e.preventDefault();
         
-        const result = await response.json();
-        
-        if (result.success) {
-          // Upload successful
-          showSuccess('Story uploaded successfully!');
-          resetUploadForm();
-          storyUploadModal.classList.remove('active');
-          
-          // Reload stories section
-          loadUserStories();
-        } else {
-          showError(result.message || 'Upload failed. Please try again.');
+        if (isUploading) return; 
+        if (!currentFileData) {
+          showError('Please select a file first');
+          return;
         }
-      } catch (error) {
-        //console.error('Upload error:', error);
-        showError('Upload error:', error.message || 'An error occurred during upload.');
-      } finally {
-        isUploading = false;
-        uploadProgress.classList.remove('active');
-        uploadProgressBar.style.width = '0%';
-        uploadBtn.disabled = false;
-        uploadBtn.textContent = 'Upload Story';
-      }
-    });
+
+        isUploading = true;
+        
+        const formData = new FormData();
+        formData.append('story', currentFileData, currentFileName);
+        formData.append('title', this.title.value);
+        formData.append('link', this.link.value);
+        formData.append('_token', '{{ csrf_token() }}');
+        
+        // Show progress bar
+        uploadProgress.classList.add('active');
+        uploadBtn.disabled = true;
+        uploadBtn.textContent = 'Uploading...';
+        
+        try {
+          const userId = {{ $user->id }}; // Get the current user ID
+          const response = await fetch(`/users/${userId}/story/upload`, {
+              method: 'POST',
+              headers: {
+                  'X-Requested-With': 'XMLHttpRequest',
+                  'Accept': 'application/json',
+              },
+              body: formData
+          });
+          
+          const result = await response.json();
+          
+          if (result.success) {
+            // Upload successful
+            showSuccess('Story uploaded successfully!');
+            resetUploadForm();
+            storyUploadModal.classList.remove('active');
+            
+            // Reload stories section
+            loadUserStories();
+          } else {
+            showError(result.message || 'Upload failed. Please try again.');
+          }
+        } catch (error) {
+          //console.error('Upload error:', error);
+          showError('Upload error:', error.message || 'An error occurred during upload.');
+        } finally {
+          isUploading = false;
+          uploadProgress.classList.remove('active');
+          uploadProgressBar.style.width = '0%';
+          uploadBtn.disabled = false;
+          uploadBtn.textContent = 'Upload Story';
+        }
+      });
+    }
     
     // Handle progress for file upload (if needed for larger files)
     function updateProgressBar(percent) {
@@ -697,15 +758,19 @@
     }
     
     function resetUploadForm() {
-      const oldInput = document.getElementById('storyFileInput');
-      const newInput = oldInput.cloneNode(true);
-      oldInput.parentNode.replaceChild(newInput, oldInput);
+
+      // const oldInput = document.getElementById('storyFileInput');
+      // const newInput = oldInput.cloneNode(true);
+      // oldInput.parentNode.replaceChild(newInput, oldInput);
       
-      // Re-attach the change event to the new input
-      newInput.addEventListener('change', handleFileChange);
+      // // Re-attach the change event to the new input
+      // newInput.addEventListener('change', handleFileChange);
       
-      // Re-attach click to choose button
-      storyChooseBtn.onclick = () => newInput.click();
+      // // Re-attach click to choose button
+      // storyChooseBtn.onclick = () => newInput.click();
+
+      const fileInput = document.getElementById('storyFileInput');
+      fileInput.value = '';
 
       storyFileInput.value = '';
       imagePreview.src = '';
@@ -738,193 +803,250 @@
     const nextStoryBtn = document.getElementById('nextStory');
     
     // Load user stories
-    async function loadUserStories() {
-      try {
-        const response = await fetch(`{{ route("profile.stories", $user->id) }}`);
-        const result = await response.json();
-        
-        if (result.success) {
-          // Update stories section
-          // You can implement AJAX updating of stories here
-          location.reload(); // Simple reload for now
-        }
-      } catch (error) {
-        console.error('Error loading stories:', error);
-      }
-    }
-    
-    // Open story viewer when clicking on a story
-    document.querySelectorAll('.story-item').forEach(item => {
-      item.addEventListener('click', function() {
-        const storyId = this.getAttribute('data-story-id');
-        const mediaType = this.getAttribute('data-media-type');
-        const mediaUrl = this.getAttribute('data-media-url');
-        const title = this.getAttribute('data-title');
-        
-        // Mark as viewed
-        markStoryAsViewed(storyId);
-
-        openProfileModal(mediaType, mediaUrl);
-
-        // const modal = document.createElement('div');
-        // modal.style.cssText = `
-        //   position: fixed;
-        //   top: 0;
-        //   left: 0;
-        //   width: 100%;
-        //   height: 100%;
-        //   background: rgba(0,0,0,0.9);
-        //   z-index: 99999;
-        //   display: flex;
-        //   justify-content: center;
-        //   align-items: center;
-        // `;
-        
-        // modal.innerHTML = `
-        //   <div style="position: relative; max-width: 90%; max-height: 90vh;">
-        //     ${mediaType === 'image' 
-        //       ? `<img src="${mediaUrl}" style="max-width: 100%; max-height: 90vh;">`
-        //       : `<video src="${mediaUrl}" controls autoplay style="max-width: 100%; max-height: 90vh;"></video>`
-        //     }
-        //     <button style="position: absolute; top: -40px; right: 0; background: none; border: none; color: white; font-size: 30px; cursor: pointer;">×</button>
-        //   </div>
-        // `;
-        
-        // document.body.appendChild(modal);
-        
-        // // Close modal on click
-        // modal.querySelector('button').addEventListener('click', () => {
-        //   document.body.removeChild(modal);
-        // });
-        
-        // // Close on background click
-        // modal.addEventListener('click', (e) => {
-        //   if (e.target === modal) {
-        //     document.body.removeChild(modal);
-        //   }
-        // });
-        
-        // // Close on Escape key
-        // document.addEventListener('keydown', function closeOnEscape(e) {
-        //   if (e.key === 'Escape') {
-        //     document.body.removeChild(modal);
-        //     document.removeEventListener('keydown', closeOnEscape);
-        //   }
-        // });
-        
-        // Load all stories for this user
-        // loadAllStories().then(stories => {
-        //   if (stories.length > 0) {
-        //     currentStories = stories;
-        //     currentStoryIndex = stories.findIndex(s => s.id == storyId);
-        //     openStoryViewer();
-        //   }
-        // });
-      });
-    });
-    
-    async function loadAllStories() {
-      try {
-        const userId = {{ $user->id }};
-        const response = await fetch(`/users/${userId}/stories/all`);
-        if (!response.ok) {
-          throw new Error(`HTTP error! status: ${response.status}`);
-        }
-        const result = await response.json();
-        
-        if (result.success) {
-            return result.stories;
-        } else {
-            console.error('API Error:', result.message);
-            return [];
-        }
-      } catch (error) {
-        console.error('Error loading all stories:', error);
-        return [];
-      }
-    }
-    
-    async function markStoryAsViewed(storyId) {
-      try {
-          const userId = {{ $user->id }};
-          
-          // FIXED: Use correct URL and headers
-          const response = await fetch(`/users/${userId}/story/${storyId}/view`, {
-              method: 'POST',
-              headers: {
-                  'X-CSRF-TOKEN': '{{ csrf_token() }}',
-                  'Content-Type': 'application/json',
-                  'Accept': 'application/json'
-              }
-          });
-          
-          if (!response.ok) {
-              throw new Error(`HTTP error! status: ${response.status}`);
-          }
-          
+      async function loadUserStories() {
+        try {
+          const response = await fetch(`{{ route("profile.stories", $user->id) }}`);
           const result = await response.json();
           
-          if (!result.success) {
-              console.error('Failed to mark story as viewed:', result.message);
+          if (result.success) {
+            // Update stories section
+            // You can implement AJAX updating of stories here
+            location.reload(); // Simple reload for now
           }
-          
-          return result.success;
-      } catch (error) {
-          console.error('Error marking story as viewed:', error);
-          return false;
+        } catch (error) {
+          console.error('Error loading stories:', error);
+        }
       }
-  }
+    
+    // Open story viewer when clicking on a story
+      document.querySelectorAll('.story-item').forEach(item => {
+        if (item.dataset.listenerAttached === '1') return;
+        item.dataset.listenerAttached = '1';
+        item.addEventListener('click', function() {
+          pauseCurrentReel();
+          const storyId = this.getAttribute('data-story-id');
+          const mediaType = this.getAttribute('data-media-type');
+          const mediaUrl = this.getAttribute('data-media-url');
+          const title = this.getAttribute('data-title');
+          
+          // Mark as viewed
+          markStoryAsViewed(storyId);
 
-  function openProfileModal(mediaType, mediaUrl) {
-    const modal = document.getElementById("modal");
-    const media = document.getElementById("media");
-    const closeBtn = document.getElementById("close");
+          openProfileModal(mediaType, mediaUrl);
 
-    // Insert image or video
-    if (mediaType === "image") {
-        media.innerHTML = `<img src="${mediaUrl}" style="width:100%; max-height:90vh; object-fit: contain;" />`;
-    } else {
-        media.innerHTML = `<video src="${mediaUrl}" controls autoplay style="width:100%; max-height:90vh;object-fit: contain;"></video>`;
+          // const modal = document.createElement('div');
+          // modal.style.cssText = `
+          //   position: fixed;
+          //   top: 0;
+          //   left: 0;
+          //   width: 100%;
+          //   height: 100%;
+          //   background: rgba(0,0,0,0.9);
+          //   z-index: 99999;
+          //   display: flex;
+          //   justify-content: center;
+          //   align-items: center;
+          // `;
+          
+          // modal.innerHTML = `
+          //   <div style="position: relative; max-width: 90%; max-height: 90vh;">
+          //     ${mediaType === 'image' 
+          //       ? `<img src="${mediaUrl}" style="max-width: 100%; max-height: 90vh;">`
+          //       : `<video src="${mediaUrl}" controls autoplay style="max-width: 100%; max-height: 90vh;"></video>`
+          //     }
+          //     <button style="position: absolute; top: -40px; right: 0; background: none; border: none; color: white; font-size: 30px; cursor: pointer;">×</button>
+          //   </div>
+          // `;
+          
+          // document.body.appendChild(modal);
+          
+          // // Close modal on click
+          // modal.querySelector('button').addEventListener('click', () => {
+          //   document.body.removeChild(modal);
+          // });
+          
+          // // Close on background click
+          // modal.addEventListener('click', (e) => {
+          //   if (e.target === modal) {
+          //     document.body.removeChild(modal);
+          //   }
+          // });
+          
+          // // Close on Escape key
+          // document.addEventListener('keydown', function closeOnEscape(e) {
+          //   if (e.key === 'Escape') {
+          //     document.body.removeChild(modal);
+          //     document.removeEventListener('keydown', closeOnEscape);
+          //   }
+          // });
+          
+          // Load all stories for this user
+          // loadAllStories().then(stories => {
+          //   if (stories.length > 0) {
+          //     currentStories = stories;
+          //     currentStoryIndex = stories.findIndex(s => s.id == storyId);
+          //     openStoryViewer();
+          //   }
+          // });
+        });
+      });
+    
+      async function loadAllStories() {
+        try {
+          const userId = {{ $user->id }};
+          const response = await fetch(`/users/${userId}/stories/all`);
+          if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+          }
+          const result = await response.json();
+          
+          if (result.success) {
+              return result.stories;
+          } else {
+              console.error('API Error:', result.message);
+              return [];
+          }
+        } catch (error) {
+          console.error('Error loading all stories:', error);
+          return [];
+        }
+      }
+    
+      async function markStoryAsViewed(storyId) {
+        try {
+            const userId = {{ $user->id }};
+            
+            // FIXED: Use correct URL and headers
+            const response = await fetch(`/users/${userId}/story/${storyId}/view`, {
+                method: 'POST',
+                headers: {
+                    'X-CSRF-TOKEN': '{{ csrf_token() }}',
+                    'Content-Type': 'application/json',
+                    'Accept': 'application/json'
+                }
+            });
+            
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
+            
+            const result = await response.json();
+            
+            if (!result.success) {
+                console.error('Failed to mark story as viewed:', result.message);
+            }
+            
+            return result.success;
+        } catch (error) {
+            console.error('Error marking story as viewed:', error);
+            return false;
+        }
     }
 
-    // Show modal
-    modal.classList.add("open");
+    function openProfileModal(mediaType, mediaUrl) {
+      pauseCurrentReel();
+      const modal = document.getElementById("modal");
+      const media = document.getElementById("media");
+      const closeBtn = document.getElementById("close");
 
-    // Close button
-    closeBtn.onclick = () => {
-        modal.classList.remove("open");
-        media.innerHTML = ""; // clear media
-    };
+      // Insert image or video
+      if (mediaType === "image") {
+          media.innerHTML = `<img src="${mediaUrl}" style="width:100%; max-height:90vh; object-fit: contain;" />`;
+      } else {
+          media.innerHTML = `<video src="${mediaUrl}" controls autoplay style="width:100%; max-height:90vh;object-fit: contain;"></video>`;
+      }
 
-    // Close when clicking outside viewer
-    modal.onclick = e => {
-        if (e.target === modal) {
-            modal.classList.remove("open");
-            media.innerHTML = "";
-        }
-    };
+      // Show modal
+      modal.classList.add("open");
 
-    // ESC key close
-    document.addEventListener("keydown", function escClose(e) {
-        if (e.key === "Escape") {
-            modal.classList.remove("open");
-            media.innerHTML = "";
-            document.removeEventListener("keydown", escClose);
-        }
-    });
-}
+      // Close button
+      closeBtn.onclick = () => {
+          modal.classList.remove("open");
+          media.innerHTML = ""; // clear media
+      };
+
+      // Close when clicking outside viewer
+      modal.onclick = e => {
+          if (e.target === modal) {
+              modal.classList.remove("open");
+              media.innerHTML = "";
+          }
+      };
+
+      // ESC key close
+      document.addEventListener("keydown", function escClose(e) {
+          if (e.key === "Escape") {
+              modal.classList.remove("open");
+              media.innerHTML = "";
+              document.removeEventListener("keydown", escClose);
+          }
+      });
+    }
     
   });
 </script>
 
 <script>
-  var unFollowLang = 'Unconnect';
+  var unFollowLang = 'Disconnect';
   var followLang = 'Connect';
   // var unFollowLang = '{{ trans('panel.unfollow') }}';
   // var followLang = '{{ trans('panel.follow') }}';
   var reservedLang = '{{ trans('meeting.reserved') }}';
   var availableDays = {{ json_encode($times) }};
   var messageSuccessSentLang = '{{ trans('site.message_success_sent') }}';
+
+  document.addEventListener('DOMContentLoaded', function() {
+      const followToggle = document.getElementById('followToggle');
+      if (!followToggle || followToggle.dataset.followHandlerAttached === '1') {
+          return;
+      }
+
+      followToggle.dataset.followHandlerAttached = '1';
+
+      followToggle.addEventListener('click', async function (e) {
+          e.preventDefault();
+
+          const userId = this.getAttribute('data-user-id');
+          if (!userId) {
+              return;
+          }
+
+          if (this.disabled) {
+              return;
+          }
+
+          this.disabled = true;
+          this.classList.add('loadingbar');
+
+          try {
+              const response = await fetch('/users/' + userId + '/follow', {
+                  credentials: 'same-origin',
+                  headers: {
+                      'X-Requested-With': 'XMLHttpRequest',
+                      'Accept': 'application/json'
+                  }
+              });
+
+              if (!response.ok) {
+                  throw new Error('Request failed with status ' + response.status);
+              }
+
+              const result = await response.json();
+              if (result && result.code === 200) {
+                  if (result.follow) {
+                      this.textContent = unFollowLang;
+                  } else {
+                      this.textContent = followLang;
+                  }
+              }
+          } catch (err) {
+              console.error('Follow toggle failed:', err);
+          } finally {
+              this.disabled = false;
+              this.classList.remove('loadingbar');
+          }
+      });
+  });
 </script>
 
 <script src="/assets/default/vendors/persian-datepicker/persian-date.js"></script>

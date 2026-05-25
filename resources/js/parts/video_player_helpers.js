@@ -22,7 +22,12 @@ window.makeVideoPlayerHtml = function (path, storage, height, tagId) {
             }]
         };
     } else if (storage === "secure_host") {
-        html = '<iframe src="' + path + '" class="img-cover bg-gray200" frameborder="0" allowfullscreen="true" loading="lazy" allow="accelerometer;gyroscope;autoplay;encrypted-media;picture-in-picture;"></iframe>';
+        const isDirectVideo = path.indexOf('/store/') !== -1 || path.endsWith('.mp4') || path.endsWith('.webm') || path.endsWith('.mov') || path.endsWith('.ogg');
+        if (isDirectVideo) {
+            html = '<video id="' + tagId + '" oncontextmenu="return false;" controlsList="nodownload" class="video-js" controls preload="auto" width="100%" height="' + height + '"><source src="' + path + '" type="video/mp4"/></video>';
+        } else {
+            html = '<iframe src="' + path + '" class="img-cover bg-gray200" frameborder="0" allowfullscreen="true" loading="lazy" allow="accelerometer;gyroscope;autoplay;encrypted-media;picture-in-picture;"></iframe>';
+        }
     } else {
         html = '<video id="' + tagId + '" oncontextmenu="return false;" controlsList="nodownload" class="video-js" controls preload="auto" width="100%" height="' + height + '"><source src="' + path + '" type="video/mp4"/></video>';
     }
@@ -52,7 +57,8 @@ window.handleVideoByFileId = function (fileId, $contentEl, callback) {
                 $contentEl.html(html);
             }
 
-            if (storage !== "secure_host") {
+            const isIframe = html.indexOf('<iframe') !== -1;
+            if (!isIframe) {
                 fileVideoPlayer = videojs(videoTagId, options);
             }
 

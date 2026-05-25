@@ -46,6 +46,16 @@ class LoginController extends Controller
 
     public function showLoginForm()
     {
+        if (Auth::check()) {
+            if (Auth::user()->isAdmin()) {
+                return redirect(getAdminPanelUrl());
+            } else {
+                Auth::logout();
+                request()->session()->invalidate();
+                request()->session()->regenerateToken();
+            }
+        }
+
         $data = [
             'pageTitle' => trans('auth.login'),
         ];
@@ -92,6 +102,12 @@ class LoginController extends Controller
 
     public function login(Request $request)
     {
+        if (Auth::check()) {
+            Auth::logout();
+            $request->session()->invalidate();
+            $request->session()->regenerateToken();
+        }
+
         $rules = [
             'email' => 'required|email|exists:users,email,status,active',
             'password' => 'required|min:4',
@@ -108,6 +124,15 @@ class LoginController extends Controller
             $user = auth()->user();
 
             if (!empty($user)) {
+                if (!$user->isAdmin()) {
+                    Auth::logout();
+                    $request->session()->invalidate();
+                    $request->session()->regenerateToken();
+                    return redirect()->back()->withInput($request->only('email', 'remember'))->withErrors([
+                        'email' => 'Access denied. Only admin users can log in here.',
+                    ]);
+                }
+
                 $userLoginHistoryMixin = new UserLoginHistoryMixin();
                 $userLoginHistoryMixin->storeUserLoginHistory($user);
             }

@@ -265,7 +265,9 @@
       </h3>
       <div style="display:flex;flex-direction:column;gap:10px;margin-top:10px">
         @foreach($course->chapters as $chapter)
-          <div class="coursedetail-lesson" style="margin-top:8px"><span>{{ $chapter->title }}</span><button class="coursedetail-btn">Preview</button></div> 
+          <div class="coursedetail-lesson" style="margin-top:8px"><span>{{ $chapter->title }}</span>
+          <!-- <button class="coursedetail-btn">Preview</button> -->
+        </div> 
         @endforeach
       </div>
     </section>
@@ -331,39 +333,39 @@
             <div class="coursedetail-lesson" style="margin-top:8px"><span>{{ $chapterItem->file->title }}</span>
               
               @if(!empty($checkSequenceContent) and $sequenceContentHasError)
-                        <button
+                        <!-- <button
                             type="button"
                             class="coursedetail-btn btn-sm btn-gray flex-grow-1 disabled js-sequence-content-error-modal"
                             data-passed-error="{{ !empty($checkSequenceContent['all_passed_items_error']) ? $checkSequenceContent['all_passed_items_error'] : '' }}"
                             data-access-days-error="{{ !empty($checkSequenceContent['access_after_day_error']) ? $checkSequenceContent['access_after_day_error'] : '' }}"
-                        >{{ trans('public.play') }}</button>
+                        >{{ trans('public.play') }}</button> -->
                     @elseif($file->accessibility == 'paid')
                         @if(!empty($user) and $hasBought)
                             @if($file->downloadable)
-                                <a href="{{ $course->getUrl() }}/file/{{ $file->id }}/download">
+                                <!-- <a href="{{ $course->getUrl() }}/file/{{ $file->id }}/download">
                                    <button class="coursedetail-btn"> {{ trans('home.download') }}</button>
-                                </a>
+                                </a> -->
                             @else
-                                <a href="{{ $course->getLearningPageUrl() }}?type=file&item={{ $file->id }}" target="_blank">
+                                <!-- <a href="{{ $course->getLearningPageUrl() }}?type=file&item={{ $file->id }}" target="_blank">
                                   <button class="coursedetail-btn">  {{ trans('public.play') }}</button>
-                                </a>
+                                </a> -->
                             @endif
                         @else
-                            <button type="button" class="coursedetail-btn btn-sm btn-gray disabled {{ ((empty($user)) ? 'not-login-toast' : (!$hasBought ? 'not-access-toast' : '')) }}">
+                            <!-- <button type="button" class="coursedetail-btn btn-sm btn-gray disabled {{ ((empty($user)) ? 'not-login-toast' : (!$hasBought ? 'not-access-toast' : '')) }}">
                                 @if($file->downloadable)
                                     {{ trans('home.download') }}
                                 @else
                                     {{ trans('public.play') }}
                                 @endif
-                            </button>
+                            </button> -->
                         @endif
                     @else
                         @if($file->downloadable)
-                            <a href="{{ $course->getUrl() }}/file/{{ $file->id }}/download">
+                            <!-- <a href="{{ $course->getUrl() }}/file/{{ $file->id }}/download">
                                <button class="coursedetail-btn"> {{ trans('home.download') }}</button>
-                            </a>
+                            </a> -->
                         @else
-                            @if(!empty($user) and $hasBought)
+                            <!-- @if(!empty($user) and $hasBought)
                                 <a href="{{ $course->getLearningPageUrl() }}?type=file&item={{ $file->id }}" target="_blank">
                                   <button class="coursedetail-btn">   {{ trans('public.play') }}</button> 
                                 </a>
@@ -383,7 +385,7 @@
                                 <a href="{{ $file->file }}" target="_blank">
                                   <button class="coursedetail-btn">   {{ trans('public.play') }}</button>
                                 </a>
-                            @endif
+                            @endif -->
                         @endif
                     @endif</div>
             @endif

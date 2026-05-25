@@ -830,6 +830,34 @@ class BookController extends Controller
         }
     }
 
+    private function formatLuluValidationErrors(array $errors): string
+    {
+        if (empty($errors)) {
+            return 'An unknown validation error occurred.';
+        }
+
+        $messages = [];
+
+        foreach ($errors as $error) {
+            // Lulu errors can come as strings or as objects with a 'message' key
+            if (is_string($error)) {
+                $messages[] = $error;
+            } elseif (is_array($error)) {
+                if (!empty($error['message'])) {
+                    $messages[] = $error['message'];
+                } elseif (!empty($error['detail'])) {
+                    $messages[] = $error['detail'];
+                } elseif (!empty($error['field'])) {
+                    $messages[] = $error['field'] . ': ' . ($error['description'] ?? 'Invalid value');
+                } else {
+                    $messages[] = json_encode($error);
+                }
+            }
+        }
+
+        return implode(' | ', array_filter($messages)) ?: 'Validation failed with unknown errors.';
+    }
+
     public function getLuluAccessTokenUsingCurl()
     {
         

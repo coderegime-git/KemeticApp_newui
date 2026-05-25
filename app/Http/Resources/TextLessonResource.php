@@ -20,7 +20,8 @@ class TextLessonResource extends JsonResource
             'title' => $this->title,
             'image' => !empty($this->image)?url($this->image):'',   
             'can_view_error' => $this->canViewError(),
-            'auth_has_read' => $this->read,
+            // 'auth_has_read' => $this->read,
+            'auth_has_read' => true,
             //    'auth_has_access' => $this->auth_has_access,
             //    'user_has_access' => $this->user_has_access,
 

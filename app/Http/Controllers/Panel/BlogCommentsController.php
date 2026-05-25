@@ -31,6 +31,10 @@ class BlogCommentsController extends Controller
 
         $query = Comment::whereIn('blog_id', $blogIds);
 
+        $totalComments = clone $query;
+        $activeComments = clone $query;
+        $pendingComments = clone $query;
+
         $comments = $this->handleFilters($request, $query)->orderBy('created_at', 'desc')
             ->with([
                 'blog'
@@ -41,6 +45,9 @@ class BlogCommentsController extends Controller
             'pageTitle' => trans('panel.comments'),
             'posts' => $posts,
             'comments' => $comments,
+            'totalComments' => $totalComments->count(),
+            'activeComments' => $activeComments->where('status', 'active')->count(),
+            'pendingComments' => $pendingComments->where('status', 'pending')->count(),
         ];
 
         $blogId = $request->get('blog_id', null);

@@ -576,35 +576,34 @@ class UserController extends Controller
         $data = $request->all();
         $user = auth()->user();
 
-        if (!empty($data['user_id'])) {
-            $checkUser = User::find($data['user_id']);
+        $userId = !empty($data['user_id']) ? $data['user_id'] : $user->id;
+        $checkUser = User::find($userId);
 
-            if ((!empty($checkUser) and ($data['user_id'] == $user->id) or $checkUser->organ_id == $user->id)) {
-                $meta = UserMeta::where('id', $meta_id)
-                    ->where('user_id', $data['user_id'])
-                    ->where('name', $data['name'])
-                    ->first();
+        if (!empty($checkUser) and ($checkUser->id == $user->id or $checkUser->organ_id == $user->id)) {
+            $meta = UserMeta::where('id', $meta_id)
+                ->where('user_id', $userId)
+                ->where('name', $data['name'])
+                ->first();
 
-                if (!empty($meta)) {
-                    $meta->update([
-                        'value' => $data['value'],
-                        'institution' => $data['institution'] ?? null,
-                        'year' => $data['year'] ?? null,
-                        'organization' => $data['organization'] ?? null,
-                        'start_date' => $data['start_date'] ?? null,
-                        'end_date' => $data['end_date'] ?? null,
-                        'description' => $data['description'] ?? null,
-                    ]);
-
-                    return response()->json([
-                        'code' => 200
-                    ], 200);
-                }
+            if (!empty($meta)) {
+                $meta->update([
+                    'value' => $data['value'],
+                    'institution' => $data['institution'] ?? null,
+                    'year' => $data['year'] ?? null,
+                    'organization' => $data['organization'] ?? null,
+                    'start_date' => $data['start_date'] ?? null,
+                    'end_date' => $data['end_date'] ?? null,
+                    'description' => $data['description'] ?? null,
+                ]);
 
                 return response()->json([
-                    'code' => 403
+                    'code' => 200
                 ], 200);
             }
+
+            return response()->json([
+                'code' => 403
+            ], 200);
         }
 
         return response()->json([], 422);
@@ -615,14 +614,15 @@ class UserController extends Controller
         $data = $request->all();
         $user = auth()->user();
 
-        if (!empty($data['user_id'])) {
-            $checkUser = User::find($data['user_id']);
+        $userId = !empty($data['user_id']) ? $data['user_id'] : $user->id;
+        $checkUser = User::find($userId);
 
-            if (!empty($checkUser) and ($data['user_id'] == $user->id or $checkUser->organ_id == $user->id)) {
-                $meta = UserMeta::where('id', $meta_id)
-                    ->where('user_id', $data['user_id'])
-                    ->first();
+        if (!empty($checkUser) and ($checkUser->id == $user->id or $checkUser->organ_id == $user->id)) {
+            $meta = UserMeta::where('id', $meta_id)
+                ->where('user_id', $userId)
+                ->first();
 
+            if (!empty($meta)) {
                 $meta->delete();
                 $url = '/panel/setting';
                 $toastData = [
@@ -631,9 +631,6 @@ class UserController extends Controller
                     'status' => 'success'
                 ];
                 return redirect($url)->with(['toast' => $toastData]);
-                // return response()->json([
-                //     'code' => 200
-                // ], 200);
             }
         }
 
@@ -665,21 +662,21 @@ class UserController extends Controller
             $type = request()->get('type', null);
 
             if (!empty($from) and !empty($to)) {
-                $from = strtotime($from);
-                $to = strtotime($to);
+                $from = strtotime($from . ' 00:00:00');
+                $to = strtotime($to . ' 23:59:59');
 
                 $query->whereBetween('created_at', [$from, $to]);
             } else {
                 if (!empty($from)) {
-                    $from = strtotime($from);
+                    $from = strtotime($from . ' 00:00:00');
 
                     $query->where('created_at', '>=', $from);
                 }
 
                 if (!empty($to)) {
-                    $to = strtotime($to);
+                    $to = strtotime($to . ' 23:59:59');
 
-                    $query->where('created_at', '<', $to);
+                    $query->where('created_at', '<=', $to);
                 }
             }
 

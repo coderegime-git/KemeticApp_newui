@@ -120,10 +120,10 @@
             <div class="add-time-sheet row flex-column-reverse flex-lg-row align-items-center justify-content-center justify-content-lg-between">
                 <div class="clock-box col-12 col-lg-4 d-block position-relative d-flex align-items-center justify-content-center justify-content-lg-start">
                     <div class="from-clockpicker">
-                        <input type="hidden" class="form-control " value="AM">
+                        <input type="hidden" class="form-control " value="03:00AM">
                     </div>
                     <div class="to-clockpicker">
-                        <input type="hidden" class="form-control " value="AM">
+                        <input type="hidden" class="form-control " value="04:00AM">
                     </div>
                 </div>
                 <div class="col-12 col-lg-8">
@@ -388,11 +388,11 @@
 
     });
 
-    $('body').on('click', '#meetingSettingFormSubmit', function (e) {
+    $('body').on('submit', '#meetingSettingForm', function (e) {
         e.preventDefault();
 
-        const $this = $(this);
-        const $form = $this.closest('form');
+        const $form = $(this);
+        const $this = $form.find('#meetingSettingFormSubmit');
         const action = $form.attr('action');
         let data = serializeObjectByTag($form);
 
@@ -424,5 +424,5 @@
                 });
             }
         })
-    })
+    });
 })(jQuery);

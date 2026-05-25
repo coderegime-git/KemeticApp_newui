@@ -23,6 +23,31 @@ class RedirectIfAuthenticated
 
         foreach ($guards as $guard) {
             if (Auth::guard($guard)->check()) {
+                $adminPrefix = function_exists('getAdminPanelUrlPrefix') ? getAdminPanelUrlPrefix() : 'admin';
+                $adminLoginPath = ltrim($adminPrefix . '/login', '/');
+
+                // Case 1: Accessing Admin Login page while authenticated
+                if ($request->is($adminLoginPath) || $request->is('*' . $adminLoginPath)) {
+                    if (Auth::guard($guard)->user()->isAdmin()) {
+                        return redirect(function_exists('getAdminPanelUrl') ? getAdminPanelUrl() : '/admin');
+                    } else {
+                        // Log out non-admin users so they can log in as admin
+                        Auth::guard($guard)->logout();
+                        $request->session()->invalidate();
+                        $request->session()->regenerateToken();
+                        return $next($request);
+                    }
+                }
+
+                // Case 2: Accessing Frontend Login page while authenticated
+                if ($request->is('login') || $request->is('*/login')) {
+                    // Log out the active session so they can log in with a different account
+                    Auth::guard($guard)->logout();
+                    $request->session()->invalidate();
+                    $request->session()->regenerateToken();
+                    return $next($request);
+                }
+
                 return redirect(RouteServiceProvider::HOME);
             }
         }
