@@ -2,7 +2,7 @@
     @if($field->type == "input")
         <div class="form-group">
             <label class="input-label" for="code">{{ $field->title }}:</label>
-            <input type="text" name="fields[{{ $field->id }}]" class="form-control @error($field->id) is-invalid @enderror" value="{{ (!empty($values) and !empty($values[$field->id])) ? $values[$field->id] : old('fields.'.$field->id) }}">
+            <input type="text" name="fields[{{ $field->id }}]" class="form-control @error($field->id) is-invalid @enderror" value="{{ (!empty($values) and !empty($values[$field->id])) ? $values[$field->id] : old('fields.'.$field->id) }}" style="background-color: var(--k-bg); color: var(--k-text); border-color: var(--k-border);">
             @error($field->id)
             <div class="invalid-feedback">{{ $message }}</div>
             @enderror
@@ -11,7 +11,7 @@
     @elseif($field->type == "number")
         <div class="form-group">
             <label class="input-label" for="code">{{ $field->title }}:</label>
-            <input type="number" name="fields[{{ $field->id }}]" class="form-control @error($field->id) is-invalid @enderror" value="{{ (!empty($values) and !empty($values[$field->id])) ? $values[$field->id] : old('fields.'.$field->id) }}">
+            <input type="number" name="fields[{{ $field->id }}]" class="form-control @error($field->id) is-invalid @enderror" value="{{ (!empty($values) and !empty($values[$field->id])) ? $values[$field->id] : old('fields.'.$field->id) }}" style="background-color: var(--k-bg); color: var(--k-text); border-color: var(--k-border);">
             @error($field->id)
             <div class="invalid-feedback">{{ $message }}</div>
             @enderror
@@ -20,7 +20,7 @@
     @elseif($field->type == "textarea")
         <div class="form-group">
             <label class="input-label" for="code">{{ $field->title }}:</label>
-            <textarea rows="4" name="fields[{{ $field->id }}]" class="form-control @error($field->id) is-invalid @enderror">{{ (!empty($values) and !empty($values[$field->id])) ? $values[$field->id] : old('fields.'.$field->id) }}</textarea>
+            <textarea rows="4" name="fields[{{ $field->id }}]" class="form-control @error($field->id) is-invalid @enderror" style="background-color: var(--k-bg); color: var(--k-text); border-color: var(--k-border);">{{ (!empty($values) and !empty($values[$field->id])) ? $values[$field->id] : old('fields.'.$field->id) }}</textarea>
             @error($field->id)
             <div class="invalid-feedback">{{ $message }}</div>
             @enderror
@@ -31,11 +31,11 @@
             <label class="input-label">{{ $field->title }}</label>
             <div class="input-group">
                 <div class="input-group-prepend">
-                    <button type="button" class="input-group-text panel-file-manager" data-input="upload_{{ $field->id }}" data-preview="holder">
+                    <button type="button" class="input-group-text panel-file-manager" data-input="upload_{{ $field->id }}" data-preview="holder" style="background-color: var(--k-bg); border-color: var(--k-border);">
                         <i data-feather="arrow-up" width="18" height="18" class="text-white"></i>
                     </button>
                 </div>
-                <input type="text" name="fields[{{ $field->id }}]" id="upload_{{ $field->id }}" class="form-control @error($field->id) is-invalid @enderror" value="{{ (!empty($values) and !empty($values[$field->id])) ? $values[$field->id] : old('fields.'.$field->id) }}"/>
+                <input type="text" name="fields[{{ $field->id }}]" id="upload_{{ $field->id }}" class="form-control @error($field->id) is-invalid @enderror" value="{{ (!empty($values) and !empty($values[$field->id])) ? $values[$field->id] : old('fields.'.$field->id) }}" style="background-color: var(--k-bg); color: var(--k-text); border-color: var(--k-border);"/>
             </div>
 
             @error($field->id)
@@ -48,13 +48,13 @@
             <label class="input-label">{{ $field->title }}</label>
             <div class="input-group">
                 <div class="input-group-prepend">
-                            <span class="input-group-text" id="dateRangeLabel{{ $field->id }}">
+                            <span class="input-group-text" id="dateRangeLabel{{ $field->id }}" style="background-color: var(--k-bg); border-color: var(--k-border);">
                                 <i data-feather="calendar" width="18" height="18" class="text-white"></i>
                             </span>
                 </div>
 
                 <input type="text" name="fields[{{ $field->id }}]" class="form-control text-center datetimepicker @error($field->id) is-invalid @enderror"
-                       aria-describedby="dateRangeLabel{{ $field->id }}" autocomplete="off" value="{{ (!empty($values) and !empty($values[$field->id])) ? $values[$field->id] : old('fields.'.$field->id) }}"/>
+                       aria-describedby="dateRangeLabel{{ $field->id }}" autocomplete="off" value="{{ (!empty($values) and !empty($values[$field->id])) ? $values[$field->id] : old('fields.'.$field->id) }}" style="background-color: var(--k-bg); color: var(--k-text); border-color: var(--k-border);"/>
             </div>
 
             @error($field->id)

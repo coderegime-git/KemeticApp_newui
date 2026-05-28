@@ -19,10 +19,10 @@
             <img src="{{ $form->image }}" alt="{{ $form->heading_title }}" class="img-fluid">
         </div>
 
-        <h3 class="font-24 mt-30">{{ $form->heading_title }}</h3>
+        <h3 class="font-24 mt-30" style="color: var(--k-gold);">{{ $form->heading_title }}</h3>
     </div>
 
-    <div class="forms-body-welcome-message white-space-pre-wrap mt-15 font-14 text-gray">{!! $form->description !!}</div>
+    <div class="forms-body-welcome-message white-space-pre-wrap mt-15 font-14" style="color: var(--k-text);">{!! $form->description !!}</div>
 
     {{-- Inputs --}}
     <form action="/forms/{{ $form->url }}/store" method="post" class="mt-30">

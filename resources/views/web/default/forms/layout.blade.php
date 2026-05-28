@@ -2,6 +2,11 @@
 
 @push('styles_top')
     <link rel="stylesheet" href="/assets/default/vendors/daterangepicker/daterangepicker.min.css">
+    <style>
+        .daterangepicker {
+            z-index: 999999 !important;
+        }
+    </style>
 @endpush
 
 @section('content')
@@ -13,7 +18,7 @@
         </div>
     </div>
 
-    <div class="forms-body container bg-white p-20">
+    <div class="forms-body container p-20 mt-30 mb-30" style="background-color: var(--k-card); border-radius: var(--k-radius); border: 1px solid var(--k-border); color: var(--k-text);">
         @yield("formContent")
     </div>
 @endsection

@@ -3,6 +3,7 @@ namespace App\Http\Controllers\Api\Web;
 
 use App\Http\Controllers\Controller;
 use App\Models\Asset;
+use App\Models\LivestreamSetting;
 use Illuminate\Http\Request;
 
 class AssetController extends Controller
@@ -24,9 +25,17 @@ class AssetController extends Controller
                     })->values();
                 });
 
+            $livestreamSetting = LivestreamSetting::select('app_id', 'app_sign')->first();
+            
+            $data = $assets->toArray();
+            $data['livestream'] = $livestreamSetting ? [
+                'app_id'   => $livestreamSetting->app_id,
+                'app_sign' => $livestreamSetting->app_sign,
+            ] : [];
+
             return response()->json([
                 'success' => true,
-                'data' => $assets
+                'data' => $data
             ]);
 
         } catch (\Exception $e) {

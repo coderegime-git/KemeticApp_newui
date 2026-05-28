@@ -32,8 +32,9 @@
                         font-size: 30px;
                         letter-spacing: 8px;
                         font-weight: bold;
-                        color: #000;
-                        background: linear-gradient(45deg, #d4af37, #f7e98e);
+                        color: #ffffff !important;
+                        -webkit-text-fill-color: #ffffff !important;
+                        background: linear-gradient(45deg, #b8962e, #d4af37);
                         border-radius: 10px;
                         box-shadow: 0 0 10px rgba(212,175,55,0.5);
                     ">

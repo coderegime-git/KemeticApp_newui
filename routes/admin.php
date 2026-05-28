@@ -552,6 +552,15 @@ Route::group(['prefix' => $prefix, 'namespace' => 'Admin', 'middleware' => ['web
             Route::get('/{id}/sync', 'LivestreamController@sync');
         });
 
+        Route::prefix('livestream-settings')->group(function () {
+            Route::get('/', 'LivestreamSettingController@index');
+            Route::get('/create', 'LivestreamSettingController@create');
+            Route::post('/store', 'LivestreamSettingController@store');
+            Route::get('/{id}/edit', 'LivestreamSettingController@edit');
+            Route::post('/{id}/update', 'LivestreamSettingController@update');
+            Route::get('/{id}/delete', 'LivestreamSettingController@destroy');
+        });
+
         Route::group(['prefix' => 'asset'], function () {
             Route::get('/', 'AssetController@index');
             Route::post('/store', 'AssetController@store');

@@ -52,14 +52,222 @@ class LivestreamController extends Controller
         }
     }
 
+    // public function index(Request $request)
+    // {
+    //     $userId = $this->getUserIdFromToken($request);
+
+    //     $camera = $request->query('camera');
+    //     $platform = $request->query('platform');
+    //     $country = $request->query('country');
+        
+    //     if (!$userId) {
+    //         return response()->json([
+    //             'success' => false,
+    //             'message' => 'Unauthorized. Invalid or missing token.'
+    //         ], 401);
+    //     }
+
+    //     $count = Livestream::where('creator_id', $userId)
+    //         ->where('livestream_end', 'No')
+    //         ->orderBy('created_at', 'desc')
+    //         ->get();
+
+    //     if($count->count() == 0)
+    //     {
+    //         $originalName = $userId;
+            
+    //         $cleanName = preg_replace('/[^a-zA-Z0-9-_]/', '', $originalName);
+            
+    //         if (empty($cleanName)) {
+    //             $cleanName = 'channel';
+    //         }
+            
+    //         $channelName = $cleanName . '-' . Str::random(8);
+    //         $channelName = substr($channelName, 0, 128);
+            
+    //         $options = [
+    //             'type' => "BASIC",
+    //             'latencyMode' => "LOW",
+    //             'tags' => [
+    //                 'environment' => config('app.env'),
+    //                 'created_by' => 'laravel-system'
+    //             ]
+    //         ];
+            
+    //         $result = $this->ivsService->createChannel($channelName, $options);
+
+    //         if (!$result['success']) {
+    //             throw new \Exception('Failed to create IVS channel: ' . ($result['error'] ?? 'Unknown error'));
+    //         }
+            
+    //         $channelData = $result['channel'];
+    //         $streamKeyData = $result['streamKey'];
+
+    //         $ingestEndpoint = '';
+    //         if (isset($channelData['ingestEndpoint'])) {
+    //             $urlParts = parse_url($channelData['ingestEndpoint']);
+    //             $ingestEndpoint = $urlParts['host'] ?? '';
+    //         }
+            
+    //         $playbackUrl = '';
+    //         if (isset($channelData['playbackUrl'])) {
+    //             $urlParts = parse_url($channelData['playbackUrl']);
+    //             $playbackUrl = $urlParts['host'] ?? '';
+    //         }
+            
+    //         $ivsChannel = Livestream::create([
+    //             'channel_name' => $userId,
+    //             'channel_arn' => $channelData['arn'],
+    //             'ingest_endpoint' => $channelData['ingestEndpoint'],
+    //             'stream_key' => $streamKeyData['value'],
+    //             'stream_key_arn' => $streamKeyData['arn'],
+    //             'playback_url' => $channelData['playbackUrl'],
+    //             'channel_id' => $channelData['id'] ?? Str::random(16),
+    //             'region' => config('ivs.region'),
+    //             'type' => "BASIC",
+    //             'latency_mode' => "LOW",
+    //             'recording_configuration_arn' => null,
+    //             'creator_id' => $userId,
+    //             'tags' => $options['tags'],
+    //             'camera' => $camera ?? "Back",
+    //             'platform' => $platform ?? "Android",
+    //             'country' => $country ?? null,
+    //             'is_active' => true,
+    //             'livestream_end' => 'No',
+    //             'created_at' => time(),
+    //             'updated_at' => time(),
+    //         ]);
+
+    //         DB::commit();
+    //     }
+    //     else
+    //     {
+    //         LiveStream::where('creator_id', $userId)
+    //         ->update([
+    //             'camera' => $camera ?? "Back",
+    //             'platform' => $platform ?? "Android",
+    //             'updated_at' => time(),
+    //         ]);
+    //     }
+        
+    //     $livestreams = Livestream::where('creator_id', $userId)
+    //         ->orderBy('created_at', 'desc')
+    //         ->with(['creator' => function($query) {  // Changed from 'user' to 'creator'
+    //             $query->select('id', 'full_name', 'avatar', 'country_id');
+    //         }])
+    //         ->get()
+    //         ->map(function ($livestream) {
+    //         if ($livestream->creator) {  // Changed from 'user' to 'creator'
+    //             // Initialize country name variable
+    //             $countryName = null;
+                
+    //             // Get country name from Region table
+    //             if ($livestream->creator->country_id) {
+    //                 $country = Region::select('title')
+    //                                 ->where('id', $livestream->creator->country_id)
+    //                                 ->where('type', Region::$country)
+    //                                 ->first();
+                    
+    //                 if ($country) {
+    //                     $countryName = $country->title;
+    //                 }
+    //             }
+                
+    //             // Get country code from Country table
+    //             $countryCode = null;
+    //             if ($countryName) {
+    //                 $countryCode = Country::where('country_name', $countryName)->value('country_code');
+    //             }
+                
+    //             // Add the data to livestream object
+    //             $livestream->user_name = $livestream->creator->full_name ?? null;
+    //             $livestream->avatar = !empty($livestream->creator->avatar) ? url($livestream->creator->avatar) : "";
+    //             $livestream->user_country_code = $countryCode;
+                
+    //             // Remove the creator object if you don't need it anymore
+    //             unset($livestream->creator);
+    //         }
+    //         return $livestream;
+    //     });
+
+    //     return response()->json([
+    //         'success' => true,
+    //         'data' => $livestreams
+    //     ]);
+    // }
+
+    // public function delete(Request $request, $id)
+    // {
+    //     $userId = $this->getUserIdFromToken($request);
+        
+    //     if (!$userId) {
+    //         return response()->json([
+    //             'success' => false,
+    //             'message' => 'Unauthorized. Invalid or missing token.'
+    //         ], 401);
+    //     }
+
+    //     $livestream = Livestream::where('id', $id)
+    //         ->where('creator_id', $userId)
+    //         ->first();
+
+    //     $chattoken = IvsChatToken::where('livestream_id', $id)
+    //         ->where('user_id', $userId)
+    //         ->first();
+
+    //     if (!$livestream) {
+    //         return response()->json([
+    //             'success' => false,
+    //             'message' => 'Livestream channel not found or you do not have permission to delete it.'
+    //         ], 404);
+    //     }
+
+    //     try {
+    //         // In production, you would delete from AWS IVS here:
+    //        try {
+    //             $this->ivsService->deleteChannel($livestream->channel_arn);
+    //         } catch (\Exception $awsError) {
+    //             // Just log the error and continue
+    //             Log::warning('AWS deletion failed (channel might be already deleted): ' . $awsError->getMessage());
+    //         }
+
+    //         if($chattoken)
+    //         {
+    //             $this->ivsChatService->deleteRoom($chattoken->chat_room_arn);
+    //         }
+
+    //         IvsChatToken::where('livestream_id', $livestream->id)->delete();
+            
+    //         // Delete from database
+    //         $livestream->update([
+    //             'livestream_end' => 'Yes'
+    //         ]);
+    //         //$livestream->delete();
+
+    //         return response()->json([
+    //             'success' => true,
+    //             'message' => 'Livestream Ended successfully.',
+    //             'data' => [
+    //                 'id' => $id,
+    //                 'deleted' => true,
+    //                 'livestream_end' => 'Yes',
+    //                 'livestreamview_count' => $livestream->livestreamview_count ?? 0   
+    //             ]
+    //         ]);
+
+    //     } catch (\Exception $e) {
+    //         return response()->json([
+    //             'success' => false,
+    //             'message' => 'Failed to delete livestream channel.',
+    //             'error' => $e->getMessage()
+    //         ], 500);
+    //     }
+    // }
+
     public function index(Request $request)
     {
         $userId = $this->getUserIdFromToken($request);
 
-        $camera = $request->query('camera');
-        $platform = $request->query('platform');
-        $country = $request->query('country');
-        
         if (!$userId) {
             return response()->json([
                 'success' => false,
@@ -67,139 +275,55 @@ class LivestreamController extends Controller
             ], 401);
         }
 
-        $count = Livestream::where('creator_id', $userId)
+        $camera   = $request->query('camera');
+        $platform = $request->query('platform');
+        $country  = $request->query('country');
+
+        $existing = Livestream::where('creator_id', $userId)
+            ->where('livestream_end', 'No')
+            ->first();
+
+        if (!$existing) {
+            Livestream::create([
+                'creator_id'     => $userId,
+                'camera'         => $camera ?? 'Back',
+                'platform'       => $platform ?? 'Android',
+                'country'        => $country ?? null,
+                'livestream_end' => 'No',
+                'created_at'     => time(),
+                'updated_at'     => time(),
+            ]);
+        } else {
+            Livestream::where('creator_id', $userId)
+                ->where('livestream_end', 'No')
+                ->update([
+                    'camera'     => $camera ?? 'Back',
+                    'platform'   => $platform ?? 'Android',
+                    'updated_at' => time(),
+                ]);
+        }
+
+        $livestreams = Livestream::where('creator_id', $userId)
             ->where('livestream_end', 'No')
             ->orderBy('created_at', 'desc')
-            ->get();
-
-        if($count->count() == 0)
-        {
-            $originalName = $userId;
-            
-            $cleanName = preg_replace('/[^a-zA-Z0-9-_]/', '', $originalName);
-            
-            if (empty($cleanName)) {
-                $cleanName = 'channel';
-            }
-            
-            $channelName = $cleanName . '-' . Str::random(8);
-            $channelName = substr($channelName, 0, 128);
-            
-            $options = [
-                'type' => "BASIC",
-                'latencyMode' => "LOW",
-                'tags' => [
-                    'environment' => config('app.env'),
-                    'created_by' => 'laravel-system'
-                ]
-            ];
-            
-            $result = $this->ivsService->createChannel($channelName, $options);
-
-            if (!$result['success']) {
-                throw new \Exception('Failed to create IVS channel: ' . ($result['error'] ?? 'Unknown error'));
-            }
-            
-            $channelData = $result['channel'];
-            $streamKeyData = $result['streamKey'];
-
-            $ingestEndpoint = '';
-            if (isset($channelData['ingestEndpoint'])) {
-                $urlParts = parse_url($channelData['ingestEndpoint']);
-                $ingestEndpoint = $urlParts['host'] ?? '';
-            }
-            
-            $playbackUrl = '';
-            if (isset($channelData['playbackUrl'])) {
-                $urlParts = parse_url($channelData['playbackUrl']);
-                $playbackUrl = $urlParts['host'] ?? '';
-            }
-            
-            $ivsChannel = Livestream::create([
-                'channel_name' => $userId,
-                'channel_arn' => $channelData['arn'],
-                'ingest_endpoint' => $channelData['ingestEndpoint'],
-                'stream_key' => $streamKeyData['value'],
-                'stream_key_arn' => $streamKeyData['arn'],
-                'playback_url' => $channelData['playbackUrl'],
-                'channel_id' => $channelData['id'] ?? Str::random(16),
-                'region' => config('ivs.region'),
-                'type' => "BASIC",
-                'latency_mode' => "LOW",
-                'recording_configuration_arn' => null,
-                'creator_id' => $userId,
-                'tags' => $options['tags'],
-                'camera' => $camera ?? "Back",
-                'platform' => $platform ?? "Android",
-                'country' => $country ?? null,
-                'is_active' => true,
-                'livestream_end' => 'No',
-                'created_at' => time(),
-                'updated_at' => time(),
-            ]);
-
-            DB::commit();
-        }
-        else
-        {
-            LiveStream::where('creator_id', $userId)
-            ->update([
-                'camera' => $camera ?? "Back",
-                'platform' => $platform ?? "Android",
-                'updated_at' => time(),
-            ]);
-        }
-        
-        $livestreams = Livestream::where('creator_id', $userId)
-            ->orderBy('created_at', 'desc')
-            ->with(['creator' => function($query) {  // Changed from 'user' to 'creator'
+            ->with(['creator' => function ($query) {
                 $query->select('id', 'full_name', 'avatar', 'country_id');
             }])
             ->get()
             ->map(function ($livestream) {
-            if ($livestream->creator) {  // Changed from 'user' to 'creator'
-                // Initialize country name variable
-                $countryName = null;
-                
-                // Get country name from Region table
-                if ($livestream->creator->country_id) {
-                    $country = Region::select('title')
-                                    ->where('id', $livestream->creator->country_id)
-                                    ->where('type', Region::$country)
-                                    ->first();
-                    
-                    if ($country) {
-                        $countryName = $country->title;
-                    }
-                }
-                
-                // Get country code from Country table
-                $countryCode = null;
-                if ($countryName) {
-                    $countryCode = Country::where('country_name', $countryName)->value('country_code');
-                }
-                
-                // Add the data to livestream object
-                $livestream->user_name = $livestream->creator->full_name ?? null;
-                $livestream->avatar = !empty($livestream->creator->avatar) ? url($livestream->creator->avatar) : "";
-                $livestream->user_country_code = $countryCode;
-                
-                // Remove the creator object if you don't need it anymore
-                unset($livestream->creator);
-            }
-            return $livestream;
-        });
+                return $this->formatLivestreamData($livestream);
+            });
 
         return response()->json([
             'success' => true,
-            'data' => $livestreams
+            'data'    => $livestreams
         ]);
     }
 
     public function delete(Request $request, $id)
     {
         $userId = $this->getUserIdFromToken($request);
-        
+
         if (!$userId) {
             return response()->json([
                 'success' => false,
@@ -211,55 +335,34 @@ class LivestreamController extends Controller
             ->where('creator_id', $userId)
             ->first();
 
-        $chattoken = IvsChatToken::where('livestream_id', $id)
-            ->where('user_id', $userId)
-            ->first();
-
         if (!$livestream) {
             return response()->json([
                 'success' => false,
-                'message' => 'Livestream channel not found or you do not have permission to delete it.'
+                'message' => 'Livestream not found or you do not have permission to end it.'
             ], 404);
         }
 
         try {
-            // In production, you would delete from AWS IVS here:
-           try {
-                $this->ivsService->deleteChannel($livestream->channel_arn);
-            } catch (\Exception $awsError) {
-                // Just log the error and continue
-                Log::warning('AWS deletion failed (channel might be already deleted): ' . $awsError->getMessage());
-            }
-
-            if($chattoken)
-            {
-                $this->ivsChatService->deleteRoom($chattoken->chat_room_arn);
-            }
-
-            IvsChatToken::where('livestream_id', $livestream->id)->delete();
-            
-            // Delete from database
             $livestream->update([
-                'livestream_end' => 'Yes'
+                'livestream_end' => 'Yes',
+                'updated_at'     => time(),
             ]);
-            //$livestream->delete();
 
             return response()->json([
                 'success' => true,
-                'message' => 'Livestream Ended successfully.',
-                'data' => [
-                    'id' => $id,
-                    'deleted' => true,
-                    'livestream_end' => 'Yes',
-                    'livestreamview_count' => $livestream->livestreamview_count ?? 0   
+                'message' => 'Livestream ended successfully.',
+                'data'    => [
+                    'id'                   => $id,
+                    'livestream_end'       => 'Yes',
+                    'livestreamview_count' => $livestream->livestreamview_count ?? 0
                 ]
             ]);
 
         } catch (\Exception $e) {
             return response()->json([
                 'success' => false,
-                'message' => 'Failed to delete livestream channel.',
-                'error' => $e->getMessage()
+                'message' => 'Failed to end livestream.',
+                'error'   => $e->getMessage()
             ], 500);
         }
     }
@@ -416,7 +519,7 @@ class LivestreamController extends Controller
                 'users.avatar'
             )
             ->orderBy('lc.created_at', 'desc')
-            ->limit(50)
+            // ->limit(50)
             ->get()
         ->map(function ($comment) {
             // Get replies for each comment
@@ -472,7 +575,7 @@ class LivestreamController extends Controller
                 'users.avatar'
             )
             ->orderBy('livestream_review.created_at', 'desc')
-            ->limit(20) // Adjust as needed
+            // ->limit(20) // Adjust as needed
             ->get()
             ->map(function ($review) {
             return [
@@ -509,147 +612,223 @@ class LivestreamController extends Controller
             ->exists();
 
         // Get other livestreams with or without pagination
-        $otherLivestreamsQuery = Livestream::where('id', '!=', $id)
+        // $otherLivestreamsQuery = Livestream::where('id', '!=', $id)
+        //     ->where('livestream_end', 'No')
+        //     ->orderBy('created_at', 'desc')
+        //     ->with(['creator' => function($query) {
+        //         $query->select('id', 'full_name', 'avatar', 'country_id');
+        //     }]);
+
+        // $totalOtherLivestreams = $otherLivestreamsQuery->count();
+
+        // if ($usePagination) {
+        //     // Apply pagination
+        //     $otherLivestreams = $otherLivestreamsQuery
+        //         ->offset($dbOffset)
+        //         ->limit($perPage)
+        //         ->get();
+        // } else {
+        //     // Get all without pagination
+        //     $otherLivestreams = $otherLivestreamsQuery->get();
+        // }
+
+        // // Process selected livestream
+        // $selectedData = $this->processLivestreamData($selectedLivestream);
+        // $selectedData['is_liked'] = $selectedIsLiked;
+        // $selectedData['is_saved'] = $selectedIssaved;
+        // $selectedData['comments'] = $comments;
+        // $selectedData['reviews'] = $reviews;
+        // $selectedData['average_rating'] = round($avgRating, 1);
+        // $selectedData['user_reviewed'] = $userReviewed;
+        // $selectedData['is_selected'] = true;
+        // $selectedData['liked_by_current_user'] = $selectedIsLiked;
+
+        // // Process other livestreams
+        // $otherLivestreamsData = [];
+        // foreach ($otherLivestreams as $livestream) {
+        //     $livestreamData = $this->processLivestreamData($livestream);
+            
+        //     $isLiked = DB::table('livestream_like')
+        //         ->where('livestream_id', $livestream->id)
+        //         ->where('user_id', $userId)
+        //     ->exists();
+
+        //     $isSaved = DB::table('livestream_saved')
+        //     ->where('livestream_id', $livestream->id)
+        //     ->where('user_id', $userId)
+        //     ->exists(); 
+            
+        //     $livestreamData['is_liked'] = $isLiked;
+        //     $livestreamData['is_Saved'] = $isSaved;
+        //     $livestreamData['is_selected'] = false;
+        //     $livestreamData['liked_by_current_user'] = $isLiked;
+            
+        //     $otherLivestreamsData[] = $livestreamData;
+        // }
+
+        // // Create single array with selected first
+        // $resultArray = [$selectedData];
+        // foreach ($otherLivestreamsData as $livestream) {
+        //     $resultArray[] = $livestream;
+        // }
+
+        $otherQuery = Livestream::where('id', '!=', $id)
             ->where('livestream_end', 'No')
             ->orderBy('created_at', 'desc')
-            ->with(['creator' => function($query) {
+            ->with(['creator' => function ($query) {
                 $query->select('id', 'full_name', 'avatar', 'country_id');
             }]);
 
-        $totalOtherLivestreams = $otherLivestreamsQuery->count();
+        $totalOther = $otherQuery->count();
 
-        if ($usePagination) {
-            // Apply pagination
-            $otherLivestreams = $otherLivestreamsQuery
-                ->offset($dbOffset)
-                ->limit($perPage)
-                ->get();
-        } else {
-            // Get all without pagination
-            $otherLivestreams = $otherLivestreamsQuery->get();
-        }
+        $otherLivestreams = $usePagination
+            ? $otherQuery->offset($dbOffset)->limit($perPage)->get()
+            : $otherQuery->get();
 
-        // Process selected livestream
-        $selectedData = $this->processLivestreamData($selectedLivestream);
-        $selectedData['is_liked'] = $selectedIsLiked;
-        $selectedData['is_saved'] = $selectedIssaved;
-        $selectedData['comments'] = $comments;
-        $selectedData['reviews'] = $reviews;
-        $selectedData['average_rating'] = round($avgRating, 1);
-        $selectedData['user_reviewed'] = $userReviewed;
-        $selectedData['is_selected'] = true;
+        // Build selected data
+        $selectedData                        = $this->formatLivestreamData($selectedLivestream);
+        $selectedData['is_liked']            = $selectedIsLiked;
+        $selectedData['is_saved']            = $selectedIsSaved;
+        $selectedData['comments']            = $comments;
+        $selectedData['reviews']             = $reviews;
+        $selectedData['average_rating']      = round($avgRating, 1);
+        $selectedData['user_reviewed']       = $userReviewed;
+        $selectedData['is_selected']         = true;
         $selectedData['liked_by_current_user'] = $selectedIsLiked;
 
-        // Process other livestreams
-        $otherLivestreamsData = [];
-        foreach ($otherLivestreams as $livestream) {
-            $livestreamData = $this->processLivestreamData($livestream);
-            
-            $isLiked = DB::table('livestream_like')
-                ->where('livestream_id', $livestream->id)
-                ->where('user_id', $userId)
-            ->exists();
+        // Build other livestreams data
+        $otherData = $otherLivestreams->map(function ($livestream) use ($userId) {
+            $data = $this->formatLivestreamData($livestream);
 
-            $isSaved = DB::table('livestream_saved')
-            ->where('livestream_id', $livestream->id)
-            ->where('user_id', $userId)
-            ->exists(); 
-            
-            $livestreamData['is_liked'] = $isLiked;
-            $livestreamData['is_Saved'] = $isSaved;
-            $livestreamData['is_selected'] = false;
-            $livestreamData['liked_by_current_user'] = $isLiked;
-            
-            $otherLivestreamsData[] = $livestreamData;
-        }
+            $data['is_liked']              = DB::table('livestream_like')->where('livestream_id', $livestream->id)->where('user_id', $userId)->exists();
+            $data['is_saved']              = DB::table('livestream_saved')->where('livestream_id', $livestream->id)->where('user_id', $userId)->exists();
+            $data['is_selected']           = false;
+            $data['liked_by_current_user'] = $data['is_liked'];
 
-        // Create single array with selected first
-        $resultArray = [$selectedData];
-        foreach ($otherLivestreamsData as $livestream) {
-            $resultArray[] = $livestream;
-        }
+            return $data;
+        })->toArray();
 
         return response()->json([
             'success' => true,
-            'data' => [
-                'livestreams' => $resultArray,
-                'pagination' => [
-                    'current_offset' => $page,
-                    'per_page' => $perPage,
-                    'total_other_streams' => $totalOtherLivestreams,
-                    'has_more' => ($dbOffset + $perPage) < $totalOtherLivestreams,
-                    'next_offset' => ($dbOffset + $perPage) < $totalOtherLivestreams ? $page + 1 : null
+            'data'    => [
+                'livestreams' => array_merge([$selectedData], $otherData),
+                'pagination'  => [
+                    'current_offset'      => $page,
+                    'per_page'            => $perPage,
+                    'total_other_streams' => $totalOther,
+                    'has_more'            => $usePagination && ($dbOffset + $perPage) < $totalOther,
+                    'next_offset'         => ($usePagination && ($dbOffset + $perPage) < $totalOther) ? $page + 1 : null,
                 ]
             ]
         ]);
     }
 
-    private function processLivestreamData($livestream)
+    private function formatLivestreamData($livestream): array
     {
-        $result = [
-            'id' => $livestream->id,
-            'channel_name' => $livestream->channel_name,
-            'channel_arn' => $livestream->channel_arn,
-            'ingest_endpoint' => $livestream->ingest_endpoint,
-            'stream_key' => $livestream->stream_key,
-            'stream_key_arn' => $livestream->stream_key_arn,
-            'playback_url' => $livestream->playback_url,
-            'channel_id' => $livestream->channel_id,
-            'region' => $livestream->region,
-            'type' => $livestream->type,
-            'tags' => $livestream->tags,
-            'latency_mode' => $livestream->latency_mode,
-            'camera' => $livestream->camera,
-            'platform' => $livestream->platform,
-            'country' => $livestream->country,
-            'is_active' => $livestream->is_active,
-            'livestream_end' => $livestream->livestream_end,
-            'like_count' => $livestream->like_count ?? 0,
-            'comments_count' => $livestream->comments_count ?? 0,
-            'saved_count' => $livestream->saved_count ?? 0,
-            'share_count' => $livestream->share_count ?? 0,
-            'gift_count' => $livestream->gift_count ?? 0,
-            'report_count' => $livestream->report_count ?? 0,
-            'review_count' => $livestream->review_count ?? 0,
-            'livestreamview_count' => $livestream->livestreamview_count ?? 0,
-            'created_at' => $livestream->created_at,
-            'updated_at' => $livestream->updated_at,
-            'user_name' => null,
-            'avatar' => null,
-            'user_country_code' => null,
-            'creator_id' => $livestream->creator_id
-        ];
+        $creator     = $livestream->creator;
+        $countryCode = null;
 
-        if ($livestream->creator) {
-            // Initialize country name variable
-            $countryName = null;
-            
-            // Get country name from Region table
-            if ($livestream->creator->country_id) {
-                $country = Region::select('title')
-                    ->where('id', $livestream->creator->country_id)
-                    ->where('type', Region::$country)
-                    ->first();
-                
-                if ($country) {
-                    $countryName = $country->title;
-                }
-            }
-            
-            // Get country code from Country table
-            $countryCode = null;
+        if ($creator?->country_id) {
+            $countryName = Region::select('title')
+                ->where('id', $creator->country_id)
+                ->where('type', Region::$country)
+                ->value('title');
+
             if ($countryName) {
                 $countryCode = Country::where('country_name', $countryName)->value('country_code');
             }
-            
-            // Add the data to result
-            $result['user_name'] = $livestream->creator->full_name ?? null;
-            $result['avatar'] = !empty($livestream->creator->avatar) ? url($livestream->creator->avatar) : "";
-            $result['user_country_code'] = $countryCode;
         }
 
-        return $result;
+        return [
+            'id'                   => $livestream->id,
+            'camera'               => $livestream->camera,
+            'platform'             => $livestream->platform,
+            'country'              => $livestream->country,
+            'livestream_end'       => $livestream->livestream_end,
+            'like_count'           => $livestream->like_count ?? 0,
+            'comments_count'       => $livestream->comments_count ?? 0,
+            'saved_count'          => $livestream->saved_count ?? 0,
+            'share_count'          => $livestream->share_count ?? 0,
+            'gift_count'           => $livestream->gift_count ?? 0,
+            'report_count'         => $livestream->report_count ?? 0,
+            'review_count'         => $livestream->review_count ?? 0,
+            'livestreamview_count' => $livestream->livestreamview_count ?? 0,
+            'created_at'           => $livestream->created_at,
+            'updated_at'           => $livestream->updated_at,
+            'creator_id'           => $livestream->creator_id,
+            'user_id'              => $creator?->id,
+            'full_name'            => $creator?->full_name,
+            'avatar'               => !empty($creator?->avatar) ? url($creator->avatar) : '',
+            'user_country_code'    => $countryCode,
+        ];
     }
+
+    // private function processLivestreamData($livestream)
+    // {
+    //     $result = [
+    //         'id' => $livestream->id,
+    //         'channel_name' => $livestream->channel_name,
+    //         'channel_arn' => $livestream->channel_arn,
+    //         'ingest_endpoint' => $livestream->ingest_endpoint,
+    //         'stream_key' => $livestream->stream_key,
+    //         'stream_key_arn' => $livestream->stream_key_arn,
+    //         'playback_url' => $livestream->playback_url,
+    //         'channel_id' => $livestream->channel_id,
+    //         'region' => $livestream->region,
+    //         'type' => $livestream->type,
+    //         'tags' => $livestream->tags,
+    //         'latency_mode' => $livestream->latency_mode,
+    //         'camera' => $livestream->camera,
+    //         'platform' => $livestream->platform,
+    //         'country' => $livestream->country,
+    //         'is_active' => $livestream->is_active,
+    //         'livestream_end' => $livestream->livestream_end,
+    //         'like_count' => $livestream->like_count ?? 0,
+    //         'comments_count' => $livestream->comments_count ?? 0,
+    //         'saved_count' => $livestream->saved_count ?? 0,
+    //         'share_count' => $livestream->share_count ?? 0,
+    //         'gift_count' => $livestream->gift_count ?? 0,
+    //         'report_count' => $livestream->report_count ?? 0,
+    //         'review_count' => $livestream->review_count ?? 0,
+    //         'livestreamview_count' => $livestream->livestreamview_count ?? 0,
+    //         'created_at' => $livestream->created_at,
+    //         'updated_at' => $livestream->updated_at,
+    //         'user_name' => null,
+    //         'avatar' => null,
+    //         'user_country_code' => null,
+    //         'creator_id' => $livestream->creator_id
+    //     ];
+
+    //     if ($livestream->creator) {
+    //         // Initialize country name variable
+    //         $countryName = null;
+            
+    //         // Get country name from Region table
+    //         if ($livestream->creator->country_id) {
+    //             $country = Region::select('title')
+    //                 ->where('id', $livestream->creator->country_id)
+    //                 ->where('type', Region::$country)
+    //                 ->first();
+                
+    //             if ($country) {
+    //                 $countryName = $country->title;
+    //             }
+    //         }
+            
+    //         // Get country code from Country table
+    //         $countryCode = null;
+    //         if ($countryName) {
+    //             $countryCode = Country::where('country_name', $countryName)->value('country_code');
+    //         }
+            
+    //         // Add the data to result
+    //         $result['user_name'] = $livestream->creator->full_name ?? null;
+    //         $result['avatar'] = !empty($livestream->creator->avatar) ? url($livestream->creator->avatar) : "";
+    //         $result['user_country_code'] = $countryCode;
+    //     }
+
+    //     return $result;
+    // }
 
     public function livestreamendcheck(Request $request, $id)
     {

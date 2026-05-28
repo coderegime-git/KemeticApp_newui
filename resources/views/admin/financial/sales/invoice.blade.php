@@ -4,6 +4,9 @@
     <meta content="width=device-width, initial-scale=1, maximum-scale=1, shrink-to-fit=no" name="viewport">
     <title>{{ $pageTitle ?? '' }} </title>
     <meta name="csrf-token" content="{{ csrf_token() }}">
+    @if(!empty($generalSettings['fav_icon']))
+        <link rel="icon" href="{{ $generalSettings['fav_icon'] }}" type="image/png">
+    @endif
     <!-- General CSS File -->
     <link rel="stylesheet" href="/assets/admin/vendor/bootstrap/bootstrap.min.css"/>
     <link rel="stylesheet" href="/assets/vendors/fontawesome/css/all.min.css"/>
@@ -112,7 +115,7 @@
                                                                         @if(!empty($sale->amount))
                                                                             {{ handlePrice($sale->amount) }}
                                                                         @else
-                                                                            {{ trans('public.free') }}
+                                                                            {{ $sale->payment_method == 'manual' ? trans('public.manual') : trans('public.free') }}
                                                                         @endif
                                                                     </td>
                                                                     <td class="text-center">
@@ -126,7 +129,7 @@
                                                                         @if(!empty($sale->total_amount))
                                                                             {{ handlePrice($sale->total_amount) }}
                                                                         @else
-                                                                            0
+                                                                            {{ $sale->payment_method == 'manual' ? trans('public.manual') : 0 }}
                                                                         @endif
                                                                     </td>
                                                                 </tr>
@@ -166,7 +169,7 @@
                                                                         @if(!empty($sale->total_amount))
                                                                             {{ handlePrice($sale->total_amount) }}
                                                                         @else
-                                                                            -
+                                                                            {{ $sale->payment_method == 'manual' ? trans('public.manual') : '-' }}
                                                                         @endif
                                                                     </div>
                                                                 </div>

@@ -804,6 +804,23 @@ class BundleController extends Controller
         return response()->json($bundles, 200);
     }
 
+    public function exportExcel(Request $request)
+    {
+        $this->authorize('admin_bundles_export_excel');
+
+        $query = Bundle::query();
+
+        $query = $this->handleFilters($query, $request)
+            ->with(['teacher' => function ($qu) {
+                $qu->select('id', 'full_name');
+            }, 'sales']);
+
+        $bundles = $query->get();
+
+        $bundleExport = new \App\Exports\BundlesExport($bundles);
+
+        return \Maatwebsite\Excel\Facades\Excel::download($bundleExport, 'bundles.xlsx');
+    }
 
     public function approve(Request $request, $id)
     {

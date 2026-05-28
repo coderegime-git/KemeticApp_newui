@@ -79,6 +79,13 @@ class CoursePersonalNotesController extends Controller
                     );
 
                     return response()->download($filePath, $fileName, $headers);
+                } else {
+                    $toastData = [
+                        'title' => trans('public.request_failed'),
+                        'msg' => 'File not found',
+                        'status' => 'error'
+                    ];
+                    return back()->with(['toast' => $toastData]);
                 }
             }
         }

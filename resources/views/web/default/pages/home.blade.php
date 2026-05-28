@@ -892,7 +892,7 @@ main.home-container {
       @else
       <button class="btn" onclick="storeRedirectThenLogin()">BECOME A MEMBER</button>
       @endif
-      <div class="price">€1 / €10 / €33 • Unlimited access</div>
+      <div class="price">€10 / €33 • Unlimited access</div>
     </div>
 
     <main class="home-container">

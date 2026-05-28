@@ -258,6 +258,8 @@
     su.style.display = signIn ? 'none' : 'grid';
     ts.classList.toggle('active', signIn);
     tu.classList.toggle('active', !signIn);
+    
+    window.scrollTo({ top: 0, behavior: 'smooth' });
   }
   
   function togglePw(id, btn){
@@ -284,8 +286,22 @@
   }
   
 
-  // Auto-switch to signup if there are signup errors
+  // Auto-switch to signup if there are signup errors or hash
   document.addEventListener('DOMContentLoaded', function() {
+
+    if (window.location.hash === '#register' || window.location.pathname === '/register') {
+        switchTab('signup');
+    } else {
+        switchTab('signin');
+    }
+
+    window.addEventListener('hashchange', function() {
+        if (window.location.hash === '#register') {
+            switchTab('signup');
+        } else {
+            switchTab('signin');
+        }
+    });
 
     // Auto-switch to signup tab if any signup field has an error
     @if(

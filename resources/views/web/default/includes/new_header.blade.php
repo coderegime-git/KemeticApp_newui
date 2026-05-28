@@ -17,7 +17,9 @@
         </div>
         @else
           <div class="header-user">
-            <a href="/login" class="py-5 px-10 mr-10 text-dark-blue font-14">  {{ trans('auth.login') . ' / ' . trans('auth.register') }}</a>
+            <a href="/login" class="py-5 pl-10 pr-2 text-dark-blue font-14"><span id="header-login-text">{{ trans('auth.login') }}</span></a>
+            <span class="text-dark-blue font-14"> / </span>
+            <a href="/login#register" class="py-5 pr-10 pl-2 text-dark-blue font-14"><span id="header-register-text">{{ trans('auth.register') }}</span></a>
           </div>
         @endif
       </div>

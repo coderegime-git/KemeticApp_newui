@@ -176,7 +176,7 @@
                     @foreach($mediaTool as $media)
                     <tr>
                         <td class="text-left">{{ $media->name }}</td>
-                        <td class="text-left"><a href="{{ $media->link }}">Link</a></td>
+                        <td class="text-left"><a href="{{ $media->link }}" target="_blank">Link</a></td>
                         <td class="text-left"><i class="{{ $media->icon }}"></i></td>
                         <td>{{ \Carbon\Carbon::parse($media->created_at)->format('d M Y | H:i') }}</td>
                         <td>

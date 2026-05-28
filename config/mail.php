@@ -32,8 +32,8 @@ return [
         'host' => env('MAIL_HOST', 'smtp.office365.com'),
         'port' => env('MAIL_PORT', 465),
         'encryption' => env('MAIL_ENCRYPTION', 'ssl'),
-        'username' => env('MAIL_USERNAME', 'info@kemetic.app'),
-        'password' => env('MAIL_PASSWORD', '@BlackBeacon1984!'),
+        'username' => env('MAIL_USERNAME', 'no-reply@kemetic.app'),
+        'password' => env('MAIL_PASSWORD', '@citemek2024!'),
         'timeout' => null,
         'local_domain' => null,
 

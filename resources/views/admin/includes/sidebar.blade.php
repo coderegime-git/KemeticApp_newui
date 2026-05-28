@@ -51,7 +51,7 @@
             @endif
 
             @can('admin_webinars')
-                <li class="nav-item dropdown {{ (request()->is(getAdminPanelUrl('/webinars*', false)) and !request()->is(getAdminPanelUrl('/webinars/comments*', false))) ? 'active' : '' }}">
+                <li class="nav-item dropdown {{ ((request()->is(getAdminPanelUrl('/webinars*', false)) and !request()->is(getAdminPanelUrl('/webinars/comments*', false)) and !request()->is(getAdminPanelUrl('/webinars/course_forums*', false))) or request()->is(getAdminPanelUrl('/agora_history*', false))) ? 'active' : '' }}">
                     <a href="#" class="nav-link has-dropdown" data-toggle="dropdown">
                         <i class="fas fa-graduation-cap"></i>
                         <span>{{ trans('panel.classes') }}</span>
@@ -335,10 +335,12 @@
                 </li>
             @endcan
 
-
-
-
-
+            <li class="{{ (request()->is(getAdminPanelUrl('/livestream-settings', false))) ? 'active' : '' }}">
+                <a href="{{ getAdminPanelUrl() }}/livestream-settings" class="nav-link">
+                    <i class="fas fa-video"></i>
+                    <span>Livestream Settings</span>
+                </a>
+            </li>
 
             @if($authUser->can('admin_consultants_lists') or
                 $authUser->can('admin_appointments_lists')
@@ -1843,7 +1845,7 @@
                     </a>
                 </li>
 
-                <li class="nav-item {{ $settingClass ?? '' }}">
+                <li class="nav-item {{ (request()->is(getAdminPanelUrl('/app_version*', false))) ? 'active' : '' }}">
                     <a href="{{ getAdminPanelUrl() }}/app_version" class="nav-link">
                         <i class="fas fa-mobile-alt"></i>
                         <span>App Version</span>

@@ -1608,3 +1608,5 @@ li {
 .file-folder-tree input {
     margin-right: 5px;
 }
+
+.swal2-container { z-index: 99999 !important; }

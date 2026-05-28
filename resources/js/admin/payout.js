@@ -5,12 +5,12 @@
         let html = `<div id="payoutDetailsModal">
             <h3 class="section-title after-line font-20 text-dark-blue mb-3">${payoutDetailsLang}</h3>
             <div class="row justify-content-center">
-                <div class="w-75 js-modal-body">`;
+                <div class="w-100 js-modal-body">`;
 
         for (const item of items) {
             html += `<div class="d-flex align-items-center justify-content-between text-gray mt-2">
-                            <span class="font-weight-bold">${item.name}</span>
-                            <span>${item.value}</span>
+                            <span class="font-weight-bold">${item.name}:</span>
+                            <span class="text-right text-break">${item.value}</span>
                         </div>`;
         }
 

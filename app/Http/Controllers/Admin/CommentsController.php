@@ -121,7 +121,27 @@ class CommentsController extends Controller
         $status = $request->get('status', null);
 
         if (!empty($title)) {
-            $query->where('title', 'like', "%$title%");
+            $query->where(function ($q) use ($title) {
+                $q->where('comment', 'like', "%$title%");
+
+                if ($this->item == 'webinar') {
+                    $q->orWhereHas('webinar', function ($query) use ($title) {
+                        $query->whereTranslationLike('title', "%$title%");
+                    });
+                } elseif ($this->item == 'blog') {
+                    $q->orWhereHas('blog', function ($query) use ($title) {
+                        $query->whereTranslationLike('title', "%$title%");
+                    });
+                } elseif ($this->item == 'bundle') {
+                    $q->orWhereHas('bundle', function ($query) use ($title) {
+                        $query->whereTranslationLike('title', "%$title%");
+                    });
+                } elseif ($this->item == 'product') {
+                    $q->orWhereHas('product', function ($query) use ($title) {
+                        $query->whereTranslationLike('title', "%$title%");
+                    });
+                }
+            });
         }
 
         if (!empty($date)) {

@@ -1,272 +1,849 @@
-@extends(getTemplate().'.layouts.app1')
+@extends(getTemplate().'.layouts.app')
+
+@push('styles_top')
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+@endpush
 
 @section('content')
 
-    <link href="assets/default/css/app.css" rel="stylesheet" />
-    <link href="assets/assets/css/media-style3.css" rel="stylesheet" />
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
-    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-    
+<style>
+    /* ── GLOBAL ── */
+    :root {
+        --gold:        #F2C94C;
+        --gold-dim:    rgba(242,201,76,.15);
+        --gold-mid:    rgba(242,201,76,.35);
+        --surface:     #121212;
+        --surface-alt: #0a0a0a;
+        --border:      #262626;
+        --text-muted:  #888;
+        --text-sub:    #b5b5b5;
+        --text:        #eaeaea;
+        --radius-lg:   18px;
+        --radius-md:   14px;
+        --radius-sm:   10px;
+    }
 
-    <style>
-        .nav-pills .nav-link.active {
-                background-color: var(--primary) !important;
-            }
-            #cardsContainer{
-                    margin-right: 60px;
-            }
-            @media (max-Width:991px){
-                    #cardsContainer{
-                        margin-right: 0px;
-                }
-            }
-            .main_media_section{
-                    min-height: 100vh;
-            }
-            
-            #uploadModal{
-                z-index:99999;
-            }
+    body { background: #0a0a0a; color: var(--text); }
 
-    </style>
+    /* ── STAT SECTION ── */
+    .mk-stat-section { margin-top: 25px; }
 
-    <div class="sticky-btn-container btn btn-primary btn-sm" data-bs-toggle="modal" data-bs-target="#uploadModal" id="stickyBtn"  style="position: absolute; right: 70px;">
-        <i class="fas fa-plus"></i> Add Media
-    </div>
+    .mk-title {
+        font-size: 22px;
+        font-weight: 700;
+        color: var(--gold);
+        margin-bottom: 18px;
+        letter-spacing: .3px;
+    }
 
+    .mk-stat-card {
+        background: linear-gradient(180deg, var(--surface), var(--surface-alt));
+        border: 1px solid var(--border);
+        border-radius: var(--radius-lg);
+        padding: 26px 18px;
+    }
 
-    <div class="container-fluid my-4 pt-30 position-relative">
-    <div class="row main_media_section">
-        <!-- Left Sidebar (Categories) -->
-        <div class="col-4 col-md-2 position-absolute top-0 start-0 h-100 overflow-auto bg-light p-2" style="width: 250px;min-height:100vh">
-            <ul class="nav nav-pills flex-column" id="tabs">
-                <li class="nav-item">
-                    <a class="nav-link active" data-tab="all" href="#">All</a>
-                </li>
-                @foreach($categories as $category)
-                    <li class="nav-item">
-                        <a class="nav-link" data-tab="cat-{{ $category->id }}" href="#">{{ $category->title }}</a>
-                    </li>
+    .mk-stat-item {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 6px;
+    }
+
+    .mk-stat-icon {
+        width: 56px;
+        height: 56px;
+        border-radius: 50%;
+        background: var(--gold-dim);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 22px;
+        color: var(--gold);
+        margin-bottom: 4px;
+    }
+
+    .mk-stat-value {
+        font-size: 30px;
+        font-weight: 700;
+        color: var(--gold);
+    }
+
+    .mk-stat-label {
+        font-size: 13px;
+        color: var(--text-muted);
+    }
+
+    /* ── FILTER SECTION ── */
+    .mk-filter-card {
+        background: linear-gradient(180deg, var(--surface), var(--surface-alt));
+        border: 1px solid var(--border);
+        border-radius: var(--radius-lg);
+        padding: 26px 22px;
+    }
+
+    .mk-label {
+        font-size: 13px;
+        color: var(--text-sub);
+        margin-bottom: 6px;
+        display: block;
+    }
+
+    .mk-input-group {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        background: #0f0f0f;
+        border: 1px solid #2a2a2a;
+        border-radius: 12px;
+        padding: 10px 14px;
+    }
+
+    .mk-input-group i { color: var(--gold); }
+
+    .mk-input {
+        width: 100%;
+        background: transparent;
+        border: none;
+        color: #fff;
+        outline: none;
+        font-size: 14px;
+    }
+
+    .mk-select {
+        width: 100%;
+        background: #0f0f0f;
+        border: 1px solid #2a2a2a;
+        border-radius: 12px;
+        padding: 10px 14px;
+        color: #fff;
+        font-size: 14px;
+        outline: none;
+        appearance: none;
+        -webkit-appearance: none;
+        cursor: pointer;
+    }
+
+    .mk-select option { background: #0f0f0f; }
+
+    .mk-select-wrap {
+        position: relative;
+    }
+
+    .mk-select-wrap::after {
+        content: '\f107';
+        font-family: 'Font Awesome 6 Free';
+        font-weight: 900;
+        position: absolute;
+        right: 14px;
+        top: 50%;
+        transform: translateY(-50%);
+        color: var(--gold);
+        pointer-events: none;
+        font-size: 13px;
+    }
+
+    /* ── BUTTON ── */
+    .mk-btn {
+        background: linear-gradient(135deg, var(--gold), #d4af37);
+        border: none;
+        border-radius: var(--radius-md);
+        padding: 12px;
+        font-weight: 700;
+        color: #000;
+        transition: .3s ease;
+        cursor: pointer;
+    }
+
+    .mk-btn:hover {
+        background: linear-gradient(135deg, #d4af37, var(--gold));
+        transform: translateY(-2px);
+        box-shadow: 0 6px 20px rgba(242,201,76,.4);
+    }
+
+    .mk-btn-sm {
+        padding: 8px 16px;
+        font-size: 13px;
+        border-radius: var(--radius-sm);
+    }
+
+    /* ── SIDEBAR (left categories) ── */
+    .mk-sidebar {
+        background: linear-gradient(180deg, var(--surface), var(--surface-alt));
+        border: 1px solid var(--border);
+        border-radius: var(--radius-lg);
+        padding: 20px 14px;
+        position: sticky;
+        top: 90px;
+    }
+
+    .mk-nav-link {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        padding: 10px 14px;
+        border-radius: 12px;
+        color: var(--text-sub);
+        font-size: 14px;
+        font-weight: 500;
+        text-decoration: none;
+        transition: .25s ease;
+        margin-bottom: 4px;
+        cursor: pointer;
+    }
+
+    .mk-nav-link i { font-size: 13px; color: var(--gold); opacity: .5; transition: .25s; }
+
+    .mk-nav-link:hover,
+    .mk-nav-link.active {
+        background: var(--gold-dim);
+        color: var(--gold);
+    }
+
+    .mk-nav-link.active i,
+    .mk-nav-link:hover i { opacity: 1; }
+
+    /* ── CARD GRID ── */
+    .mk-card {
+        background: linear-gradient(180deg, var(--surface), var(--surface-alt));
+        border: 1px solid var(--border);
+        border-radius: var(--radius-lg);
+        overflow: hidden;
+        transition: .3s ease;
+        height: 100%;
+        display: flex;
+        flex-direction: column;
+    }
+
+    .mk-card:hover {
+        border-color: var(--gold-mid);
+        transform: translateY(-3px);
+        box-shadow: 0 12px 30px rgba(0,0,0,.4);
+    }
+
+    .mk-card-body {
+        padding: 20px 18px 14px;
+        flex: 1;
+    }
+
+    .mk-card-title {
+        font-size: 15px;
+        font-weight: 700;
+        color: #fff;
+        margin-bottom: 6px;
+    }
+
+    .mk-card-desc {
+        font-size: 13px;
+        color: var(--text-muted);
+        margin-bottom: 10px;
+        line-height: 1.5;
+    }
+
+    .mk-course-link {
+        font-size: 12px;
+        color: var(--gold);
+        text-decoration: none;
+        display: inline-flex;
+        align-items: center;
+        gap: 5px;
+        margin-bottom: 12px;
+        transition: .2s;
+    }
+
+    .mk-course-link:hover { color: #fff; }
+
+    .mk-video-wrap {
+        border-radius: 10px;
+        overflow: hidden;
+        background: #000;
+        aspect-ratio: 16/9;
+    }
+
+    .mk-video-wrap iframe,
+    .mk-video-wrap video {
+        width: 100%;
+        height: 100%;
+        display: block;
+        border: none;
+    }
+
+    .mk-card-footer {
+        padding: 12px 18px;
+        border-top: 1px solid var(--border);
+        display: flex;
+        gap: 10px;
+    }
+
+    .mk-download-btn {
+        flex: 1;
+        background: linear-gradient(135deg, var(--gold), #d4af37);
+        border: none;
+        border-radius: var(--radius-sm);
+        padding: 9px;
+        font-size: 13px;
+        font-weight: 700;
+        color: #000;
+        cursor: pointer;
+        transition: .3s ease;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 6px;
+    }
+
+    .mk-download-btn:hover {
+        transform: translateY(-1px);
+        box-shadow: 0 4px 14px rgba(242,201,76,.4);
+    }
+
+    .mk-share-btn {
+        flex: 1;
+        background: transparent;
+        border: 1px solid var(--gold-mid);
+        border-radius: var(--radius-sm);
+        padding: 9px;
+        font-size: 13px;
+        font-weight: 600;
+        color: var(--gold);
+        cursor: pointer;
+        transition: .3s ease;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 6px;
+    }
+
+    .mk-share-btn:hover {
+        background: var(--gold-dim);
+        border-color: var(--gold);
+    }
+
+    /* ── CATEGORY BADGE ── */
+    .mk-cat-badge {
+        display: inline-block;
+        background: var(--gold-dim);
+        color: var(--gold);
+        font-size: 11px;
+        font-weight: 600;
+        padding: 3px 10px;
+        border-radius: 20px;
+        margin-bottom: 8px;
+        letter-spacing: .3px;
+    }
+
+    /* ── RIGHT TOOLS SIDEBAR ── */
+    .mk-tools-sidebar {
+        background: linear-gradient(180deg, var(--surface), var(--surface-alt));
+        border: 1px solid var(--border);
+        border-radius: var(--radius-lg);
+        padding: 20px 16px;
+        position: sticky;
+        top: 90px;
+    }
+
+    .mk-tools-title {
+        font-size: 14px;
+        font-weight: 700;
+        color: var(--gold);
+        margin-bottom: 14px;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+    }
+
+    .mk-tool-item {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        padding: 9px 12px;
+        border-radius: 10px;
+        color: var(--text-sub);
+        font-size: 13px;
+        text-decoration: none;
+        transition: .25s;
+        margin-bottom: 4px;
+    }
+
+    .mk-tool-item i { color: var(--gold); opacity: .6; width: 16px; text-align: center; transition: .25s; }
+
+    .mk-tool-item:hover {
+        background: var(--gold-dim);
+        color: var(--gold);
+    }
+
+    .mk-tool-item:hover i { opacity: 1; }
+
+    /* ── UPLOAD MODAL ── */
+    .modal-content {
+        background: var(--surface);
+        border: 1px solid var(--border);
+        border-radius: var(--radius-lg);
+    }
+
+    .modal-header {
+        border-bottom: 1px solid var(--border);
+        padding: 18px 22px;
+    }
+
+    .modal-title {
+        color: var(--gold);
+        font-weight: 700;
+    }
+
+    .modal-body { padding: 22px; }
+
+    .modal-footer {
+        border-top: 1px solid var(--border);
+        padding: 14px 22px;
+    }
+
+    .mk-form-label {
+        font-size: 13px;
+        color: var(--text-sub);
+        margin-bottom: 6px;
+        display: block;
+    }
+
+    .mk-form-control {
+        width: 100%;
+        background: #0f0f0f;
+        border: 1px solid #2a2a2a;
+        border-radius: 12px;
+        padding: 10px 14px;
+        color: #fff;
+        font-size: 14px;
+        outline: none;
+        transition: .2s;
+    }
+
+    .mk-form-control:focus {
+        border-color: var(--gold-mid);
+        box-shadow: 0 0 0 3px rgba(242,201,76,.08);
+    }
+
+    .mk-form-control::placeholder { color: #555; }
+
+    textarea.mk-form-control { resize: vertical; min-height: 90px; }
+
+    select.mk-form-control option { background: #0f0f0f; }
+
+    .btn-close-custom {
+        background: transparent;
+        border: none;
+        color: var(--text-muted);
+        font-size: 18px;
+        cursor: pointer;
+        padding: 4px 8px;
+        border-radius: 8px;
+        transition: .2s;
+    }
+
+    .btn-close-custom:hover { color: var(--gold); background: var(--gold-dim); }
+
+    /* ── NO DATA ── */
+    .mk-no-data {
+        background: linear-gradient(180deg, var(--surface), var(--surface-alt));
+        border: 1px solid var(--border);
+        border-radius: var(--radius-lg);
+        padding: 50px 30px;
+        text-align: center;
+    }
+
+    .mk-no-data i {
+        font-size: 40px;
+        color: var(--gold);
+        opacity: .4;
+        margin-bottom: 16px;
+        display: block;
+    }
+
+    .mk-no-data h4 { color: var(--gold); font-size: 18px; margin-bottom: 8px; }
+    .mk-no-data p  { color: var(--text-muted); font-size: 14px; }
+
+    /* ── ADD MEDIA BTN ── */
+    .mk-add-btn {
+        position: fixed;
+        top: 80px;
+        right: 24px;
+        z-index: 999;
+        background: linear-gradient(135deg, var(--gold), #d4af37);
+        color: #000;
+        font-weight: 700;
+        font-size: 13px;
+        border: none;
+        border-radius: 12px;
+        padding: 10px 18px;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        box-shadow: 0 4px 18px rgba(242,201,76,.3);
+        transition: .3s;
+    }
+
+    .mk-add-btn:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 8px 24px rgba(242,201,76,.45);
+    }
+
+    /* ── MOBILE FOOTER TOOLS ── */
+    .mk-footer-tools {
+        background: linear-gradient(180deg, var(--surface), var(--surface-alt));
+        border-top: 1px solid var(--border);
+        padding: 18px;
+        margin-top: 30px;
+    }
+
+    .mk-footer-tools-title {
+        color: var(--gold);
+        font-weight: 700;
+        font-size: 14px;
+        margin-bottom: 12px;
+    }
+
+    .mk-footer-tool-item {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        color: var(--text-sub);
+        font-size: 13px;
+        padding: 6px 0;
+    }
+
+    .mk-footer-tool-item i { color: var(--gold); opacity: .7; }
+
+    /* ── ANIMATIONS ── */
+    @keyframes fadeInUp {
+        from { opacity: 0; transform: translateY(20px); }
+        to   { opacity: 1; transform: translateY(0); }
+    }
+
+    .card-item { animation: fadeInUp .4s ease both; }
+    .card-item:nth-child(1) { animation-delay: .05s; }
+    .card-item:nth-child(2) { animation-delay: .10s; }
+    .card-item:nth-child(3) { animation-delay: .15s; }
+    .card-item:nth-child(4) { animation-delay: .20s; }
+    .card-item:nth-child(5) { animation-delay: .25s; }
+    .card-item:nth-child(6) { animation-delay: .30s; }
+
+    /* ── RESPONSIVE ── */
+    @media (max-width: 991px) {
+        .mk-add-btn { top: auto; bottom: 20px; right: 20px; }
+        .mk-stat-value { font-size: 22px; }
+    }
+</style>
+
+{{-- Floating Add Media Button --}}
+<button class="mk-add-btn" data-bs-toggle="modal" data-bs-target="#uploadModal">
+    <i class="fas fa-plus"></i> Add Media
+</button>
+
+<div class="container-fluid py-4 px-3 px-md-4">
+    @if(session('success'))
+        <div class="alert alert-success">{{ session('success') }}</div>
+    @endif
+    @if($errors->any())
+        <div class="alert alert-danger">
+            <ul class="mb-0">
+                @foreach($errors->all() as $error)
+                    <li>{{ $error }}</li>
                 @endforeach
             </ul>
         </div>
+    @endif
 
-        <!-- Right Content Section -->
-        <div class="col-md-10 col-8 offset-4 offset-md-2 ps-4" >
-            <div class="row" id="cardsContainer" >
-                    <div class="col-12 text-center mt-5 d-none" id="noData">
-                        <h4 class="text-muted">No data found</h4>
+    {{-- ── STATISTICS ── --}}
+    <section class="mk-stat-section">
+        <h2 class="mk-title"><i class="fa-solid fa-chart-bar me-2" style="font-size:18px;opacity:.7"></i> Media Kit Overview</h2>
+        <div class="mk-stat-card">
+            <div class="row text-center g-3">
+                <div class="col-4">
+                    <div class="mk-stat-item">
+                        <div class="mk-stat-icon"><i class="fa-solid fa-photo-film"></i></div>
+                        <div class="mk-stat-value">{{ $mediaKit->count() }}</div>
+                        <div class="mk-stat-label">Total Media</div>
                     </div>
-                @foreach($mediaKit as $media)
-                    <div class="col-md-6 col-lg-4 mb-3 card-item" data-category="cat-{{ $media->category_id }}">
-                        <div class="card h-100 shadow-sm">
-                            <div class="card-body pb-0">
-                                <h5 class="mb-10">{{ $media->title }}</h5>
-                                <p class="mb-1">{{ \Illuminate\Support\Str::limit($media->description, 50, '...') }}</p>
-                                <a class="text-decoration-underline text-primary" href="{{ $media->course_link }}">Course Link</a>
+                </div>
+                <div class="col-4">
+                    <div class="mk-stat-item">
+                        <div class="mk-stat-icon"><i class="fa-solid fa-layer-group"></i></div>
+                        <div class="mk-stat-value">{{ $categories->count() }}</div>
+                        <div class="mk-stat-label">Categories</div>
+                    </div>
+                </div>
+                <div class="col-4">
+                    <div class="mk-stat-item">
+                        <div class="mk-stat-icon"><i class="fa-solid fa-screwdriver-wrench"></i></div>
+                        <div class="mk-stat-value">{{ $mediaTools->count() }}</div>
+                        <div class="mk-stat-label">Tools</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
 
+    {{-- ── MAIN LAYOUT ── --}}
+    <div class="row mt-4 g-4">
+
+        {{-- LEFT: Category Sidebar --}}
+        <div class="col-12 col-lg-2 d-none d-lg-block">
+            <div class="mk-sidebar">
+                <p class="mk-label mb-12" style="color:var(--gold);font-weight:700;font-size:13px;letter-spacing:.5px;text-transform:uppercase;">Categories</p>
+                <ul class="list-unstyled mb-0">
+                    <li>
+                        <a class="mk-nav-link active" data-tab="all" href="#">
+                            <i class="fa-solid fa-border-all"></i> All
+                        </a>
+                    </li>
+                    @foreach($categories as $category)
+                    <li>
+                        <a class="mk-nav-link" data-tab="cat-{{ $category->id }}" href="#">
+                            <i class="fa-solid fa-folder"></i> {{ $category->title }}
+                        </a>
+                    </li>
+                    @endforeach
+                </ul>
+            </div>
+        </div>
+
+        {{-- MOBILE: Category Tabs --}}
+        <div class="col-12 d-lg-none">
+            <div style="overflow-x:auto;white-space:nowrap;padding-bottom:4px;">
+                <a class="mk-nav-link active d-inline-flex" data-tab="all" href="#" style="display:inline-flex!important">
+                    <i class="fa-solid fa-border-all"></i> All
+                </a>
+                @foreach($categories as $category)
+                <a class="mk-nav-link d-inline-flex" data-tab="cat-{{ $category->id }}" href="#" style="display:inline-flex!important">
+                    <i class="fa-solid fa-folder"></i> {{ $category->title }}
+                </a>
+                @endforeach
+            </div>
+        </div>
+
+        {{-- CENTER: Media Cards --}}
+        <div class="col-12 col-lg-8">
+
+            {{-- No data --}}
+            <div class="mk-no-data d-none" id="noData">
+                <i class="fa-solid fa-photo-film"></i>
+                <h4>No Media Found</h4>
+                <p>No media available for this category yet.</p>
+            </div>
+
+            <div class="row g-3" id="cardsContainer">
+                @foreach($mediaKit as $media)
+                <div class="col-12 col-md-6 col-xl-4 card-item" data-category="cat-{{ $media->category_id }}">
+                    <div class="mk-card">
+                        <div class="mk-card-body">
+                            {{-- Category badge --}}
+                            @if(isset($media->category))
+                                <span class="mk-cat-badge">{{ $media->category->title ?? '' }}</span>
+                            @endif
+
+                            <h5 class="mk-card-title">{{ $media->title }}</h5>
+                            <p class="mk-card-desc">{{ \Illuminate\Support\Str::limit($media->description, 70, '...') }}</p>
+
+                            <a class="mk-course-link" href="{{ $media->course_link }}" target="_blank">
+                                <i class="fa-solid fa-link" style="font-size:11px;"></i> Course Link
+                            </a>
+
+                            {{-- Video --}}
+                            <div class="mk-video-wrap mt-2">
                                 @if(Str::contains($media->video_path, 'youtube.com'))
-                                    <iframe class="w-100" height="200" src="{{ asset($media->video_path) }}" frameborder="0" allowfullscreen></iframe>
+                                    <iframe src="{{ $media->video_path }}" frameborder="0" allowfullscreen></iframe>
                                 @else
-                                    <video class="w-100" height="200" controls>
+                                    <video controls>
                                         <source src="{{ $media->video_path }}" type="video/mp4">
                                         Your browser does not support the video tag.
                                     </video>
                                 @endif
                             </div>
-                            <div class="card-footer bg-transparent border-top d-flex justify-content-between gap10">
-                                <button class="btn btn-primary btn-sm w-50 download-btn" data-url="{{ asset($media->video_path) }}">
-                                    <i class="fas fa-download"></i> Download
-                                </button>
+                        </div>
 
-                                <button class="js-share-blog icon-box btn btn-secondary btn-sm w-50"><i class="fa-solid fa-share"></i> Share</button>
-                            </div>
+                        <div class="mk-card-footer">
+                            <button class="mk-download-btn download-btn" data-url="{{ asset($media->video_path) }}">
+                                <i class="fas fa-download"></i> Download
+                            </button>
+                            <button class="mk-share-btn js-share-blog">
+                                <i class="fa-solid fa-share-nodes"></i> Share
+                            </button>
                         </div>
                     </div>
+                </div>
                 @endforeach
+            </div>
+        </div>
+
+        {{-- RIGHT: Tools Sidebar --}}
+        <div class="col-12 col-lg-2 d-none d-lg-block">
+            <div class="mk-tools-sidebar">
+                <div class="mk-tools-title">
+                    <i class="fa-solid fa-screwdriver-wrench"></i> Tools & Resources
+                </div>
+                <ul class="list-unstyled mb-0">
+                    @foreach($mediaTools as $mediaTool)
+                    <li>
+                        <a href="{{ $mediaTool->link }}" class="mk-tool-item" target="_blank">
+                            <i class="{{ $mediaTool->icon }}"></i>
+                            <span>{{ $mediaTool->name }}</span>
+                        </a>
+                    </li>
+                    @endforeach
+                </ul>
+            </div>
+        </div>
+
+    </div>{{-- /row --}}
+</div>
+
+
+{{-- ── UPLOAD MODAL ── --}}
+<div class="modal fade" id="uploadModal" tabindex="-1" aria-labelledby="uploadModalLabel" aria-hidden="true" style="z-index:99999">
+    <div class="modal-dialog modal-lg modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="uploadModalLabel">
+                    <i class="fa-solid fa-cloud-arrow-up me-2" style="opacity:.8"></i> Upload Media
+                </h5>
+                <button type="button" class="btn-close-custom" data-bs-dismiss="modal">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <div class="modal-body">
+                <form action="/create-media" method="POST" enctype="multipart/form-data">
+                    @csrf
+                    <div class="row g-3">
+                        <div class="col-md-6 col-12">
+                            <label class="mk-form-label">Category</label>
+                            <select name="category" class="mk-form-control" required>
+                                <option value="">Select Category</option>
+                                @foreach($categories as $category)
+                                    <option value="{{ $category->id }}">{{ $category->title }}</option>
+                                @endforeach
+                            </select>
+                        </div>
+
+                        <div class="col-md-6 col-12">
+                            <label class="mk-form-label">Title</label>
+                            <input type="text" name="title" class="mk-form-control" placeholder="Enter media title" required>
+                        </div>
+
+                        <div class="col-12">
+                            <label class="mk-form-label">Description</label>
+                            <textarea name="description" class="mk-form-control" placeholder="Describe this media..." required></textarea>
+                        </div>
+
+                        <div class="col-12">
+                            <label class="mk-form-label">Course Link (Optional)</label>
+                            <div class="mk-input-group">
+                                <i class="fa-solid fa-link" style="font-size:13px;"></i>
+                                <input type="url" name="courseLink" class="mk-input" placeholder="https://...">
+                            </div>
+                        </div>
+
+                        <div class="col-12">
+                            <label class="mk-form-label">Upload Video</label>
+                            <input type="file" name="video" class="mk-form-control" accept="video/mp4,video/webm,video/ogg" required
+                                   style="padding:8px 14px;cursor:pointer;">
+                        </div>
+                    </div>
+
+                    <div class="modal-footer mt-3 px-0 pb-0">
+                        <button type="button" class="mk-share-btn mk-btn-sm" data-bs-dismiss="modal" style="min-width:90px;">
+                            Close
+                        </button>
+                        <button type="submit" class="mk-download-btn mk-btn-sm" style="min-width:120px;max-width:160px;">
+                            <i class="fas fa-cloud-upload-alt"></i> Upload
+                        </button>
+                    </div>
+                </form>
             </div>
         </div>
     </div>
 </div>
 
 
-    <!-- Sidebar -->
-    <aside class="sidebar d-none px-1 d-lg-block" id="sidebar" style="position: absolute; right: 0; top: 203px;">
-        <div class="vertical_text h-100">
-            <h5 class="text-center h-100">
-                <span class="my-10"><i class="fa-solid fa-screwdriver-wrench"></i></span> Tools & Resources
-            </h5>
-            <p class="h-100">
-                <span>
-                    @foreach($mediaTools as $mediaIcon)
-                    <i class="{{$mediaIcon->icon}}"></i> 
-                    @endforeach
-                </span>
-            </p>
-        </div>
-        <ul class="list-unstyled d-flex flex-wrap gap10 flex-column">
-            @foreach($mediaTools as $mediaTool)
-            {{-- <li><i class="fas fa-pen-nib"></i> AI Writing</li>
-            <li><i class="fas fa-video"></i> Video Editing</li>
-            <li><i class="fas fa-bullhorn"></i> Marketing Tools</li>
-            <li><i class="fas fa-envelope"></i> Email Templates</li> --}}
-            <li><i class="{{$mediaTool->icon}}"></i><a href="{{$mediaTool->link}}" class="text-white"> {{$mediaTool->name}}</a></li>
-            @endforeach
-        </ul>
-    </aside>
-    
-    <div class="modal fade" id="uploadModal" tabindex="-1" aria-labelledby="uploadModalLabel" aria-hidden="true">
-        <div class="modal-dialog modal-lg">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h5 class="modal-title" id="uploadModalLabel">Upload Media</h5>
-                    <button type="button" class="btn-close border-0 bg-transparent" data-bs-dismiss="modal" aria-label="Close">
-                        <i class="fas fa-times"></i>
-                    </button>
-                </div>
-                <div class="modal-body">
-                    <!-- Form Inside Modal -->
-                    <form action="/create-media" method="POST" enctype="multipart/form-data">
-                        <div class="row">
-                            <div class="col-md-6 col-12">
-                                <label for="category" class="upload-kit-label">Category:</label>
-                                <select id="category" name="category" class="upload-kit-input form-control" required>
-                                    <option value="">Select Category</option>
-                                    @foreach($categories as $category)
-                                        <option value="{{$category->id}}">{{$category->title}}</option>
-                                    @endforeach
-                                </select>
-                            </div>
-    
-                            <div class="col-md-6 col-12">
-                                <label for="title" class="upload-kit-label">Title:</label>
-                                <input type="text" id="title" name="title" class="upload-kit-input form-control" required>
-                            </div>
-    
-                            <div class="col-12">
-                                <label for="description" class="upload-kit-label">Description:</label>
-                                <textarea id="description" name="description" class="upload-kit-input form-control" rows="4" required></textarea>
-                            </div>
-    
-                            <div class="col-12">
-                                <label for="courseLink" class="upload-kit-label">Course Link:</label>
-                                <input type="text" id="courseLink" name="courseLink" class="upload-kit-input form-control" required>
-                            </div>
-    
-                            <div class="col-12">
-                                <label for="video" class="upload-kit-label">Upload Video:</label>
-                                <input type="file" required id="video" name="video" class="upload-kit-input form-control" accept="video/mp4,video/webm,video/ogg">
-                            </div>
-                        </div>
-    
-                        <div class="modal-footer">
-                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
-                            <button type="submit" class="btn btn-primary">
-                                <i class="fas fa-upload"></i> Upload
-                            </button>
-                        </div>
-                    </form>
-                </div>
-            </div>
-        </div>
+{{-- ── MOBILE FOOTER TOOLS ── --}}
+<div class="mk-footer-tools d-lg-none">
+    <div class="mk-footer-tools-title">
+        <i class="fa-solid fa-screwdriver-wrench me-2"></i> Tools & Resources
     </div>
-
-    <!-- Footer Sidebar for Mobile -->
-    <footer class="d-lg-none mt-4 footer-sidebar py-20">
-        <div class="container">
-            <div class="footerbar">
-                <h5 class="font-weight-bold mb-20">
-                    <span class="mr-1"><i class="fa-solid fa-screwdriver-wrench"></i></span> Tools & Resources
-                </h5>
-                <ul class="list-unstyled d-flex flex-wrap gap10 justify-content-between">
-                    <li><i class="fas fa-pen-nib"></i> AI Writing</li>
-                    <li><i class="fas fa-video"></i> Video Editing</li>
-                    <li><i class="fas fa-bullhorn"></i> Marketing Tools</li>
-                    <li><i class="fas fa-envelope"></i> Email Templates</li>
-                </ul>
-            </div>
+    <div class="row g-2">
+        @foreach($mediaTools as $mediaTool)
+        <div class="col-6 col-sm-4">
+            <a href="{{ $mediaTool->link }}" class="mk-footer-tool-item text-decoration-none">
+                <i class="{{ $mediaTool->icon }}"></i>
+                <span>{{ $mediaTool->name }}</span>
+            </a>
         </div>
-    </footer>
+        @endforeach
+    </div>
+</div>
+
 
 @endsection
+
 @include('web.default.blog.share_media_kit_modal')
+
+@push('scripts_bottom')
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+<script src="/assets/default/js/parts/blog.min.js"></script>
+
 <script>
-   document.addEventListener("DOMContentLoaded", function () {
-    const tabs = document.querySelectorAll(".nav-link");
-    const cards = document.querySelectorAll(".card-item");
-    const noData = document.getElementById("noData");
+document.addEventListener("DOMContentLoaded", function () {
+
+    /* ── CATEGORY FILTER ── */
+    const tabs    = document.querySelectorAll(".mk-nav-link");
+    const cards   = document.querySelectorAll(".card-item");
+    const noData  = document.getElementById("noData");
 
     tabs.forEach(tab => {
-        tab.addEventListener("click", function (event) {
-            event.preventDefault();
-            let selectedTab = this.getAttribute("data-tab");
+        tab.addEventListener("click", function (e) {
+            e.preventDefault();
+            const selected = this.getAttribute("data-tab");
 
-            // Remove 'active' class from all tabs and add to the clicked tab
             tabs.forEach(t => t.classList.remove("active"));
             this.classList.add("active");
 
-            let hasVisibleCards = false; // Track if any card is visible
-
+            let visible = 0;
             cards.forEach(card => {
-                if (selectedTab === "all" || card.getAttribute("data-category") === selectedTab) {
-                    card.style.display = "block";
-                    hasVisibleCards = true; // At least one card is shown
-                } else {
-                    card.style.display = "none";
-                }
+                const show = selected === "all" || card.getAttribute("data-category") === selected;
+                card.style.display = show ? "block" : "none";
+                if (show) visible++;
             });
 
-            // Show "No Data Found" only if no cards are visible
-            noData.classList.toggle("d-none", hasVisibleCards);
+            noData.classList.toggle("d-none", visible > 0);
         });
     });
-});
 
-
-
-// Sidebar & Sticky Button Scroll Effect
-window.addEventListener("scroll", function () {
-    const sidebar = document.getElementById("sidebar");
-    const stickyBtn = document.getElementById("stickyBtn");
-    const scrollY = window.scrollY;
-    const triggerPoint = 130;
-    const isMobile = window.innerWidth < 991;
-
-    if (scrollY >= triggerPoint) {
-        sidebar.style.position = "fixed";
-        sidebar.style.top = isMobile ? "80px" : "80px";
-        stickyBtn.style.position = "fixed";
-        stickyBtn.style.top = isMobile ? "80px" : "80px";
-    } else {
-        sidebar.style.position = "absolute";
-        sidebar.style.top = isMobile ? "250px" : "203px"; 
-        stickyBtn.style.position = "absolute";
-        stickyBtn.style.top = isMobile ? "250px" : "203px";
-    }
-});
-
-document.addEventListener("DOMContentLoaded", function () {
-    const downloadButtons = document.querySelectorAll(".download-btn");
-
-    downloadButtons.forEach(button => {
-        button.addEventListener("click", function () {
-            const fileUrl = this.getAttribute("data-url");
-
-            if (fileUrl) {
-                const link = document.createElement("a");
-                link.href = fileUrl;
-                link.download = fileUrl.split('/').pop(); // Extract filename
-                document.body.appendChild(link);
-                link.click();
-                document.body.removeChild(link);
-            } else {
-                alert("File not found!");
-            }
+    /* ── DOWNLOAD ── */
+    document.querySelectorAll(".download-btn").forEach(btn => {
+        btn.addEventListener("click", function () {
+            const url = this.getAttribute("data-url");
+            if (!url) { alert("File not found!"); return; }
+            const a = document.createElement("a");
+            a.href = url;
+            a.download = url.split('/').pop();
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
         });
     });
-});
 
+    /* ── VIDEO PAUSE OTHERS ── */
+    const videos = document.querySelectorAll("video");
+    videos.forEach(video => {
+        video.addEventListener("play", function() {
+            videos.forEach(v => {
+                if (v !== this) {
+                    v.pause();
+                }
+            });
+        });
+    });
+
+});
 </script>
-<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
-<script src="/assets/default/js/parts/blog.min.js"></script>
+@endpush

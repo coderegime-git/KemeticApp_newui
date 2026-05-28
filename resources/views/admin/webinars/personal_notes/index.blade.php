@@ -118,7 +118,7 @@
                                             @if(!empty(getFeaturesSettings('course_notes_attachment')))
                                                 <td class="align-middle">
                                                     @if(!empty($personalNote->attachment))
-                                                        <a href="/course/personal-notes/{{ $personalNote->id }}/download-attachment" class="btn btn-sm btn-gray200">{{ trans('home.download') }}</a>
+                                                        <a href="{{ getAdminPanelUrl() }}/webinars/personal-notes/{{ $personalNote->id }}/download-attachment" class="btn btn-sm btn-gray200">{{ trans('home.download') }}</a>
                                                     @else
                                                         -
                                                     @endif

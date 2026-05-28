@@ -24,4 +24,22 @@ class Geo
             (float) ($parts[1] ?? 0),
         ];
     }
+
+    public static function getST_AsTextFromBinary($binary)
+    {
+        // like => POINT(36.36822190085111 59.52341079711915)
+
+        $coordinates = unpack('x/x/x/x/corder/Ltype/dlat/dlon', $binary);
+
+        try {
+            $point = 'POINT(';
+            $point .= $coordinates['lat'];
+            $point .= ' ' . $coordinates['lon'];
+            $point .= ')';
+
+            return $point;
+        } catch (\Exception $e) {
+
+        }
+    }
 }

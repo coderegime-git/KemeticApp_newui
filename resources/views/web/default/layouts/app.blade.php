@@ -290,7 +290,11 @@
                             <img src="{{ $authUser->getAvatar() }}" class="img-cover rounded-circle" alt="{{ $authUser->full_name }}" width="50" onerror="this.src='https://placehold.co/40x40?text=K'">
                             </div>
                             @else
-                            <div> <a href="/login" class="py-5 px-10 mr-10 text-dark-blue font-14">  {{ trans('auth.login') . ' / ' . trans('auth.register') }}</a></div>
+                            <div>
+                                <a href="/login" class="py-5 pr-2 text-dark-blue font-14"><span class="header-login-text">{{ trans('auth.login') }}</span></a>
+                                <span class="text-dark-blue font-14"> / </span>
+                                <a href="/login#register" class="py-5 pl-2 mr-10 text-dark-blue font-14"><span class="header-register-text">{{ trans('auth.register') }}</span></a>
+                            </div>
                             @endif
 
                             <!-- NOTIFICATION POPOVER -->

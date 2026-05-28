@@ -11,6 +11,31 @@
       display: block;
     }
 
+    /* Scrollable Box for Tab Contents */
+    .profile-grid {
+      max-height: 65vh;
+      overflow-y: auto;
+      padding-right: 8px;
+    }
+    
+    /* Custom Scrollbar for better design */
+    .profile-grid::-webkit-scrollbar {
+      width: 6px;
+    }
+    
+    .profile-grid::-webkit-scrollbar-track {
+      background: rgba(255, 255, 255, 0.05); 
+      border-radius: 10px;
+    }
+    
+    .profile-grid::-webkit-scrollbar-thumb {
+      background: rgba(255, 215, 105, 0.5); 
+      border-radius: 10px;
+    }
+    
+    .profile-grid::-webkit-scrollbar-thumb:hover {
+      background: #ffd769; 
+    }
    
   </style>
 

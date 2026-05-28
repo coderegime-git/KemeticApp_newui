@@ -14,18 +14,18 @@ class Livestream extends Model
     public $timestamps = false;
 
     protected $fillable = [
-        'channel_name',
-        'channel_arn',
-        'ingest_endpoint',
-        'stream_key',
-        'stream_key_arn',
-        'playback_url',
-        'channel_id',
-        'region',
-        'type',
-        'is_active',
-        'recording_configuration_arn',
-        'tags',
+        // 'channel_name',
+        // 'channel_arn',
+        // 'ingest_endpoint',
+        // 'stream_key',
+        // 'stream_key_arn',
+        // 'playback_url',
+        // 'channel_id',
+        // 'region',
+        // 'type',
+        // 'is_active',
+        // 'recording_configuration_arn',
+        // 'tags',
         'camera',
         'platform',
         'country',
@@ -36,39 +36,39 @@ class Livestream extends Model
         'deleted_at'
     ];
 
-    protected $casts = [
-        'is_active' => 'boolean',
-        'tags' => 'array'
-    ];
+    // protected $casts = [
+    //     'is_active' => 'boolean',
+    //     'tags' => 'array'
+    // ];
 
     // Helper method to get full playback URL
-    public function getFullPlaybackUrlAttribute()
-    {
-        return "https://{$this->playback_url}/index.m3u8";
-    }
+    // public function getFullPlaybackUrlAttribute()
+    // {
+    //     return "https://{$this->playback_url}/index.m3u8";
+    // }
 
     public function creator()
     {
         return $this->belongsTo(User::class, 'creator_id');
     }
 
-    // Helper method to get RTMPS URL
-    public function getRtmpsUrlAttribute()
-    {
-        return "rtmps://{$this->ingest_endpoint}:443/app/";
-    }
+    // // Helper method to get RTMPS URL
+    // public function getRtmpsUrlAttribute()
+    // {
+    //     return "rtmps://{$this->ingest_endpoint}:443/app/";
+    // }
 
-    // Helper method to get RTMP URL
-    public function getRtmpUrlAttribute()
-    {
-        return "rtmp://{$this->ingest_endpoint}:1935/app/";
-    }
+    // // Helper method to get RTMP URL
+    // public function getRtmpUrlAttribute()
+    // {
+    //     return "rtmp://{$this->ingest_endpoint}:1935/app/";
+    // }
 
-    // Scope for active channels
-    public function scopeActive($query)
-    {
-        return $query->where('is_active', true);
-    }
+    // // Scope for active channels
+    // public function scopeActive($query)
+    // {
+    //     return $query->where('is_active', true);
+    // }
 
     public function likes()
     {
@@ -80,10 +80,10 @@ class Livestream extends Model
         return $this->hasMany(LivestreamComment::class, 'livestream_id')->where('reply_id','0');
     }
 
-    public function author()
-    {
-        return $this->belongsTo('App\User', 'author_id', 'id');
-    }
+    // public function author()
+    // {
+    //     return $this->belongsTo('App\User', 'author_id', 'id');
+    // }
 
     public function reports()
     {

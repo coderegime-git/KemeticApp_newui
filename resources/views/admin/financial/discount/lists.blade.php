@@ -16,6 +16,7 @@
             <section class="card">
                 <div class="card-body">
                     <form class="mb-0">
+                        <input type="hidden" name="instructor_coupons" value="{{ request()->get('instructor_coupons') }}">
                         <div class="row">
                             <div class="col-md-4">
                                 <div class="form-group">
