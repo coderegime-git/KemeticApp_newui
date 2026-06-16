@@ -441,7 +441,7 @@
 
                         {{-- TITLE --}}
                         <div class="kemetic-field">
-                            <label>{{ trans('public.title') }}</label>
+                            <label>{{ trans('public.title') }} <span class="text-danger">*</span></label>
                             <input type="text"
                                    name="ajax[{{ !empty($assignment) ? $assignment->id : 'new' }}][title]"
                                    class="kemetic-input js-ajax-title"
@@ -451,7 +451,7 @@
 
                         {{-- DESCRIPTION --}}
                         <div class="kemetic-field">
-                            <label>{{ trans('public.description') }}</label>
+                            <label>{{ trans('public.description') }} <span class="text-danger">*</span></label>
                             <textarea class="kemetic-textarea js-ajax-description"
                                       name="ajax[{{ !empty($assignment) ? $assignment->id : 'new' }}][description]">{{ !empty($assignment) ? $assignment->description : '' }}</textarea>
                             <div class="invalid-feedback"></div>
@@ -459,7 +459,7 @@
 
                         {{-- GRADE / PASS GRADE --}}
                         <div class="kemetic-field">
-                            <label>{{ trans('quiz.grade') }}</label>
+                            <label>{{ trans('quiz.grade') }} <span class="text-danger">*</span></label>
                             <input type="text"
                                    class="kemetic-input js-ajax-grade"
                                    name="ajax[{{ !empty($assignment) ? $assignment->id : 'new' }}][grade]"
@@ -468,7 +468,7 @@
                         </div>
 
                         <div class="kemetic-field">
-                            <label>{{ trans('update.pass_grade') }}</label>
+                            <label>{{ trans('update.pass_grade') }} <span class="text-danger">*</span></label>
                             <input type="text"
                                    class="kemetic-input js-ajax-pass_grade"
                                    name="ajax[{{ !empty($assignment) ? $assignment->id : 'new' }}][pass_grade]"

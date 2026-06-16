@@ -96,9 +96,9 @@ Route::group(['namespace' => 'Auth', 'middleware' => ['check_mobile_app', 'share
     Route::get('/facebook/callback', 'SocialiteController@handleFacebookCallback');
     Route::get('/reff/{code}', 'ReferralController@referral');
 
-    Route::get('/login/verify-otp',  'LoginController@showLoginOtpForm');
+    Route::get('/login/verify-otp', 'LoginController@showLoginOtpForm');
     Route::post('/login/verify-otp', 'LoginController@verifyLoginOtp');
-    Route::get('/login/resend-otp',  'LoginController@resendLoginOtp');
+    Route::get('/login/resend-otp', 'LoginController@resendLoginOtp');
 
     Route::get('/register/verify-otp', 'RegisterController@showRegisterOtpForm');
     Route::post('/register/verify-otp', 'RegisterController@verifyRegisterOtp');
@@ -136,7 +136,7 @@ Route::group(['namespace' => 'Web', 'middleware' => ['check_mobile_app', 'impers
     });
 
     Route::get('/panel_membership', 'HomeController@membership1');
-    
+
     // Route::post('/membership1/store-redirect1', function () {
     //     if (!auth()->check()) {
     //         session(['membership1_after_login' => url('/panel_membership')]);
@@ -198,7 +198,7 @@ Route::group(['namespace' => 'Web', 'middleware' => ['check_mobile_app', 'impers
 
             Route::post('/direct-payment', 'WebinarController@directPayment');
 
-            
+
 
             Route::group(['prefix' => 'personal-notes'], function () {
                 Route::get('/{id}/download-attachment', 'CoursePersonalNotesController@downloadAttachment');
@@ -210,14 +210,14 @@ Route::group(['namespace' => 'Web', 'middleware' => ['check_mobile_app', 'impers
         Route::get('/', 'CertificateValidationController@index');
         Route::post('/validate', 'CertificateValidationController@checkValidate');
     });
-    
+
 
     Route::group(['middleware' => 'web.auth'], function () {
 
         Route::group(['prefix' => 'cart'], function () {
-                Route::post('/store', 'CartManagerController@store');
-                Route::get('/{id}/delete', 'CartManagerController@destroy');
-            });
+            Route::post('/store', 'CartManagerController@store');
+            Route::get('/{id}/delete', 'CartManagerController@destroy');
+        });
     });
 
     Route::group(['middleware' => 'web.auth'], function () {
@@ -271,7 +271,7 @@ Route::group(['namespace' => 'Web', 'middleware' => ['check_mobile_app', 'impers
 
     Route::group(['prefix' => 'cart'], function () {
         Route::get('/', 'CartController@index')->name('cart');
-        Route::get('/checkout', function(){
+        Route::get('/checkout', function () {
             return redirect()->route('cart');
         });
         Route::post('/checkout', 'CartController@checkout')->name('checkout');
@@ -431,18 +431,18 @@ Route::group(['namespace' => 'Web', 'middleware' => ['check_mobile_app', 'impers
         });
     });
 
-    Route::get('/cj-products',           [CJProductController::class, 'index'])->name('cj.products.index');
-    Route::get('/cj-products/{pid}',     [CJProductController::class, 'show'])->name('cj.products.show');
-    
+    Route::get('/cj-products', [CJProductController::class, 'index'])->name('cj.products.index');
+    Route::get('/cj-products/{pid}', [CJProductController::class, 'show'])->name('cj.products.show');
+
     // ── CJ JSON API (used by Blade views via AJAX) ───────────────
     Route::prefix('api/cj')->group(function () {
-        Route::get('/products',          [CJProductController::class, 'apiList']);
-        Route::get('/products/{pid}',    [CJProductController::class, 'apiDetail']);
-        Route::get('/variants/{pid}',    [CJProductController::class, 'apiVariants']);
-        Route::get('/inventory/{pid}',   [CJProductController::class, 'apiInventory']);
-        Route::get('/reviews/{pid}',     [CJProductController::class, 'apiReviews']);
-        Route::get('/categories',        [CJProductController::class, 'apiCategories']);
-        Route::post('/add-to-mine',      [CJProductController::class, 'addToMyProducts'])->middleware('auth');
+        Route::get('/products', [CJProductController::class, 'apiList']);
+        Route::get('/products/{pid}', [CJProductController::class, 'apiDetail']);
+        Route::get('/variants/{pid}', [CJProductController::class, 'apiVariants']);
+        Route::get('/inventory/{pid}', [CJProductController::class, 'apiInventory']);
+        Route::get('/reviews/{pid}', [CJProductController::class, 'apiReviews']);
+        Route::get('/categories', [CJProductController::class, 'apiCategories']);
+        Route::post('/add-to-mine', [CJProductController::class, 'addToMyProducts'])->middleware('auth');
     });
 
     Route::get('/reward-products', 'RewardProductsController@index');
@@ -534,7 +534,7 @@ Route::group(['namespace' => 'Web', 'middleware' => ['check_mobile_app', 'impers
     Route::get('/upload-media', 'HomeController@upload_media');
     Route::post('/create-media', 'HomeController@create_media');
 
-   
+
 
     /* reels */
     //	Route::get('/reels', [App\Http\Controllers\ReelController::class, 'index'])->name('reels.index');

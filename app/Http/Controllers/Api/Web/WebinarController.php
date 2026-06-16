@@ -583,6 +583,10 @@ class WebinarController extends Controller
 
         // Livestream
         $data['livestream'] = Livestream::where('livestream_end', 'No')
+            ->when($user, function ($query) use ($user) {
+                $query->where('creator_id', '!=', $user->id);
+                $query->where('created_at', '>=', time() - 86400); // Show livestreams from the last 24 hour
+            })
             ->orderBy('created_at', 'desc')
             ->with(['creator' => function($query) {
                 $query->select('id', 'full_name', 'avatar', 'country_id');
@@ -613,8 +617,9 @@ class WebinarController extends Controller
                 
                 // Add the data to livestream object
                 $livestream->user_name = $livestream->creator->full_name ?? null;
-                $livestream->avatar = !empty($livestream->creator->avatar) ? url($livestream->creator->avatar) : "";
                 $livestream->user_country_code = $countryCode;
+                $avatarPath = $livestream->creator->getAvatar();
+                $livestream->avatar = $avatarPath ? url($avatarPath) : "";
                 
                 // Remove the creator object if you don't need it anymore
                 unset($livestream->creator);
@@ -624,301 +629,6 @@ class WebinarController extends Controller
 
         return apiResponse2(1, 'retrieved', trans('api.public.retrieved'), $data);
     }
-
-    // public function getWebinarsCombined(Request $request)
-    // {
-    //     $userId = $this->getUserIdFromToken($request);
-
-    //     $offset = $request->has('offset') ? (int) $request->get('offset') : null;
-    //     $limit  = $request->has('limit') ? (int) $request->get('limit') : null;
-
-    //     $usePagination = !is_null($offset) && !is_null($limit);
-
-    //     $dbOffset = $usePagination ? ($offset * $limit) : null;
-        
-    //     $data = [];
-    //     $sort = $request->get('sort', 'newest');
-    //     $categorySlug = $request->get('category', null);
-    //     $isFree = filter_var($request->get('free', false), FILTER_VALIDATE_BOOLEAN);
-    //     $categoryId = null;
-
-    //     // Get category ID if slug is provided
-    //     if ($categorySlug) {
-    //         $category = Category::where('id', $categorySlug)->first();
-    //         if ($category) {
-    //             $categoryId = $category->id;
-    //         }
-    //     }
-
-    //     // Base query for regular webinars with filters
-    //     $webinarsQuery = Webinar::where('status', Webinar::$active)
-    //         ->where('private', false);
-
-    //     // Apply category filter
-    //     if ($categoryId) {
-    //         $webinarsQuery->where('category_id', $categoryId);
-    //     }
-
-    //     // Apply free filter
-    //     if ($isFree) {
-    //         $webinarsQuery->where(function($query) {
-    //             $query->where('price', 0)
-    //                 ->orWhere('price', null);
-    //         });
-    //     }
-
-    //     if ($userId) {
-    //         // Get user's like statistics by webinar category
-    //         $userLikesByCategory = DB::table('webinar_like')
-    //             ->join('webinars', 'webinar_like.webinar_id', '=', 'webinars.id')
-    //             ->where('webinar_like.user_id', $userId)
-    //             ->whereNotNull('webinars.category_id')
-    //             ->select(
-    //                 'webinars.category_id',
-    //                 DB::raw('COUNT(*) as likes')
-    //             )
-    //             ->groupBy('webinars.category_id')
-    //             ->orderByDesc('likes')
-    //             ->get();
-
-    //         if ($userLikesByCategory->isNotEmpty()) {
-    //             // Build CASE statement for ordering
-    //             $caseStatements = [];
-    //             foreach ($userLikesByCategory as $index => $category) {
-    //                 $caseStatements[] = "WHEN category_id = {$category->category_id} THEN {$index}";
-    //             }
-                
-    //             // Add other categories
-    //             $caseStatements[] = "WHEN category_id IS NOT NULL THEN " . count($userLikesByCategory);
-    //             $caseStatements[] = "WHEN category_id IS NULL THEN " . (count($userLikesByCategory) + 1);
-                
-    //             $caseSql = "CASE " . implode(' ', $caseStatements) . " END";
-                
-    //             $webinarsQuery->orderByRaw($caseSql);
-    //         }
-    //     }
-
-    //     // Apply sorting
-    //     switch ($sort) {
-    //         case 'newest':
-    //             $webinarsQuery->orderBy('created_at', 'desc');
-    //             break;
-    //         case 'oldest':
-    //             $webinarsQuery->orderBy('created_at', 'asc');
-    //             break;
-    //         default:
-    //             $webinarsQuery->orderBy('created_at', 'desc');
-    //     }
-
-    //     $totalCourses = $webinarsQuery->count();
-
-    //     if ($usePagination) {
-    //         $webinarsQuery->offset($dbOffset)->limit($limit);
-    //     }
-
-    //     // Get regular webinars
-    //     $webinars = $webinarsQuery->with([
-    //         'teacher:id,full_name,avatar', 
-    //         'reviews' => fn($q) => $q->where('status', 'active'), 
-    //         'tickets', 
-    //         'feature',
-    //         'likes',
-    //         'savedcourse'
-    //     ])
-    //     // ->offset($dbOffset)
-    //     // ->limit($limit)
-    //     ->get()
-    //     ->map(function ($course) use ($userId){
-    //         // Add proper null checking for thumbnail
-
-    //         $isLiked = $course->likes->contains('user_id', $userId);
-             
-    //         $isSaved = $course->savedcourse->contains('user_id', $userId);
-
-    //         if (!empty($course->thumbnail)) {
-    //             $course->thumbnail = url($course->thumbnail);
-    //         }
-            
-    //         // Add proper null checking for image_cover
-    //         if (!empty($course->image_cover)) {
-    //             $course->image_cover = url($course->image_cover);
-    //         }
-            
-    //         // Add proper null checking for teacher avatar
-    //         if ($course->teacher && !empty($course->teacher->avatar)) {
-    //             $course->teacher->avatar = url($course->teacher->avatar);
-    //         }
-
-    //         $course->is_liked = $isLiked;
-    //         $course->is_saved = $isSaved;
-            
-    //         return $course;
-    //     });
-        
-    //     $bestSaleWebinarsIds = Sale::whereNotNull('webinar_id')
-    //     ->select(DB::raw('COUNT(id) as cnt,webinar_id'))
-    //     ->groupBy('webinar_id')
-    //     ->orderBy('cnt', 'DESC')
-    //     ->limit(1)
-    //     ->pluck('webinar_id')
-    //     ->toArray();
-
-    //     $bestSaleWebinars = Webinar::whereIn('id', $bestSaleWebinarsIds)
-    //         ->where('status', Webinar::$active)
-    //         ->where('private', false)
-    //         ->with([
-    //             'teacher' => function ($qu) {
-    //                 $qu->select('id', 'full_name', 'avatar');
-    //             },
-    //             'reviews' => function ($query) {
-    //                 $query->where('status', 'active');
-    //             },
-    //             'sales',
-    //             'tickets',
-    //             'feature'
-    //         ])
-    //     ->limit(1)
-    //     ->get()
-    //     ->map(function ($bestSaleWebinars) {
-    //         // Add proper null checking
-    //         if (!empty($bestSaleWebinars->thumbnail)) {
-    //             $bestSaleWebinars->thumbnail = url($bestSaleWebinars->thumbnail);
-    //         }
-            
-    //         if (!empty($bestSaleWebinars->image_cover)) {
-    //             $bestSaleWebinars->image_cover = url($bestSaleWebinars->image_cover);
-    //         }
-            
-    //         if ($bestSaleWebinars->teacher && !empty($bestSaleWebinars->teacher->avatar)) {
-    //             $bestSaleWebinars->teacher->avatar = url($bestSaleWebinars->teacher->avatar);
-    //         }
-            
-    //         return $bestSaleWebinars;
-    //     });
-
-       
-
-    //     $bestRateWebinars = Webinar::join('webinar_reviews', 'webinars.id', '=', 'webinar_reviews.webinar_id')
-    //     ->select('webinars.*', 'webinar_reviews.rates', 'webinar_reviews.status', DB::raw('avg(rates) as avg_rates'))
-    //     ->where('webinars.status', 'active')
-    //     ->where('webinars.private', false)
-    //     ->where('webinar_reviews.status', 'active')
-    //     ->groupBy('teacher_id')
-    //     ->orderBy('avg_rates', 'desc')
-    //     ->with([
-    //         'teacher' => function ($qu) {
-    //             $qu->select('id', 'full_name', 'avatar');
-    //         }
-    //     ])
-    //     ->limit(1)
-    //     //->limit(6)
-    //     ->get()
-    //     ->map(function ($bestRateWebinars) {
-    //         // Add proper null checking
-    //         if (!empty($bestRateWebinars->thumbnail)) {
-    //             $bestRateWebinars->thumbnail = url($bestRateWebinars->thumbnail);
-    //         }
-            
-    //         if (!empty($bestRateWebinars->image_cover)) {
-    //             $bestRateWebinars->image_cover = url($bestRateWebinars->image_cover);
-    //         }
-            
-    //         if ($bestRateWebinars->teacher && !empty($bestRateWebinars->teacher->avatar)) {
-    //             $bestRateWebinars->teacher->avatar = url($bestRateWebinars->teacher->avatar);
-    //         }
-            
-    //         return $bestRateWebinars;
-    //     });
-
-    //     $liveClassesQuery = Webinar::where('status', 'active')
-    //         ->where('type', 'webinar')
-    //         ->where('private', false);
-
-    //     // Apply category filter to live classes if needed
-    //     if ($categoryId) {
-    //         $liveClassesQuery->where('category_id', $categoryId);
-    //     }
-
-    //     // Apply free filter to live classes if needed
-    //     if ($isFree) {
-    //         $liveClassesQuery->where(function($query) {
-    //             $query->where('price', 0)
-    //             ->orWhere('price', null);
-    //         });
-    //     }
-        
-    //     $newestLiveClasses = clone $liveClassesQuery;
-    //     $newestLiveClasses = $newestLiveClasses->orderBy('created_at', 'desc')
-    //         ->with([
-    //             'teacher:id,full_name,avatar', 
-    //             'reviews' => fn($q) => $q->where('status', 'active'), 
-    //             'tickets', 
-    //             'feature'
-    //         ])
-    //     ->get()
-    //     ->map(function ($liveClass) {
-    //         // Add proper null checking
-    //         if (!empty($liveClass->thumbnail)) {
-    //             $liveClass->thumbnail = url($liveClass->thumbnail);
-    //         }
-            
-    //         if (!empty($liveClass->image_cover)) {
-    //             $liveClass->image_cover = url($liveClass->image_cover);
-    //         }
-            
-    //         if ($liveClass->teacher && !empty($liveClass->teacher->avatar)) {
-    //             $liveClass->teacher->avatar = url($liveClass->teacher->avatar);
-    //         }
-            
-    //         return $liveClass;
-    //     });
-
-    //     // Top Rated Live Classes
-    //     $topRatedLiveClasses = Webinar::join('webinar_reviews', 'webinars.id', '=', 'webinar_reviews.webinar_id')
-    //         ->select('webinars.*', 'webinar_reviews.rates', 'webinar_reviews.status', DB::raw('avg(rates) as avg_rates'))
-    //         ->where('webinars.status', 'active')
-    //         ->where('webinars.type', 'webinar')
-    //         ->where('webinars.private', false)
-    //         ->where('webinar_reviews.status', 'active')
-    //         ->groupBy('webinars.id')
-    //         ->orderBy('avg_rates', 'desc')
-    //         ->with([
-    //             'teacher:id,full_name,avatar', 
-    //             'reviews' => fn($q) => $q->where('status', 'active'), 
-    //             'tickets', 
-    //             'feature'
-    //         ])
-    //     ->get()
-    //     ->map(function ($liveClass) {
-    //         // Add proper null checking
-    //         if (!empty($liveClass->thumbnail)) {
-    //             $liveClass->thumbnail = url($liveClass->thumbnail);
-    //         }
-            
-    //         if (!empty($liveClass->image_cover)) {
-    //             $liveClass->image_cover = url($liveClass->image_cover);
-    //         }
-            
-    //         if ($liveClass->teacher && !empty($liveClass->teacher->avatar)) {
-    //             $liveClass->teacher->avatar = url($liveClass->teacher->avatar);
-    //         }
-            
-    //         return $liveClass;
-    //     });
-
-    //     $data['course'] = $webinars;
-    //     $data['bestrate'] = $bestRateWebinars;
-    //     $data['bestsale'] = $bestSaleWebinars;
-    //     $data['newest_live_classes'] = $newestLiveClasses;
-    //     $data['top_rated_live_classes'] = $topRatedLiveClasses;
-    //     $data['course_meta'] = [
-    //         'offset' => $offset,
-    //         'limit' => $limit,
-    //         'has_more' => (($dbOffset + $limit) < $totalCourses)
-    //     ];
-
-    //     return apiResponse2(1, 'retrieved', trans('api.public.retrieved'), $data);
-    // }
 
     public function getWebinarsCombined(Request $request)
     {
@@ -2262,7 +1972,7 @@ class WebinarController extends Controller
 
         return response()->json([
             'status' => 'success',
-            'message' => 'Comment added successfully',
+            'message' => 'Comment added successfully',  
             'data' => $formattedComment
         ], 201);
     }

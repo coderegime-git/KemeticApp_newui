@@ -289,6 +289,11 @@ class PaymentController extends Controller
             ->first();
 
         if (!$order) {
+            \Illuminate\Support\Facades\Log::warning('Order not found!', [
+                'order_id' => $orderId,
+                'user_id' => $userid
+            ]);
+
             $toastData = [
                 'title' => trans('cart.fail_purchase'),
                 'msg' => trans('cart.order_not_found'),
@@ -523,72 +528,81 @@ class PaymentController extends Controller
             
         } else {
             foreach ($order->orderItems as $orderItem) {
-                $sale = Sale::createSales($orderItem, $order->payment_method);
+                try {
+                    $sale = Sale::createSales($orderItem, $order->payment_method);
 
-                if (!empty($orderItem->reserve_meeting_id)) {
-                    $reserveMeeting = ReserveMeeting::where('id', $orderItem->reserve_meeting_id)->first();
-                    $reserveMeeting->update([
-                        'sale_id' => $sale->id,
-                        'reserved_at' => time()
+                    if (!empty($orderItem->reserve_meeting_id)) {
+                        $reserveMeeting = ReserveMeeting::where('id', $orderItem->reserve_meeting_id)->first();
+                        $reserveMeeting->update([
+                            'sale_id' => $sale->id,
+                            'reserved_at' => time()
+                        ]);
+
+                        $reserver = $reserveMeeting->user;
+
+                        if ($reserver) {
+                            $this->handleMeetingReserveReward($reserver);
+                        }
+                    }
+
+                    if (!empty($orderItem->gift_id)) {
+                        $gift = $orderItem->gift;
+
+                        $gift->update([
+                            'status' => 'active'
+                        ]);
+
+                        $gift->sendNotificationsWhenActivated($orderItem->total_amount);
+                    }
+
+                    if (!empty($orderItem->subscribe_id)) {
+                        Accounting::createAccountingForSubscribe($orderItem, $type);
+                    } elseif (!empty($orderItem->promotion_id)) {
+                        Accounting::createAccountingForPromotion($orderItem, $type);
+                    } elseif (!empty($orderItem->registration_package_id)) {
+                        Accounting::createAccountingForRegistrationPackage($orderItem, $type);
+
+                        if (!empty($orderItem->become_instructor_id)) {
+                            BecomeInstructor::where('id', $orderItem->become_instructor_id)
+                                ->update([
+                                    'package_id' => $orderItem->registration_package_id
+                                ]);
+                        }
+                    } elseif (!empty($orderItem->installment_payment_id)) {
+                        Accounting::createAccountingForInstallmentPayment($orderItem, $type);
+
+                        $this->updateInstallmentOrder($orderItem, $sale);
+                    } else {
+                        // webinar and meeting and product and bundle
+
+                        Accounting::createAccounting($orderItem, $type);
+                        TicketUser::useTicket($orderItem);
+
+                        if (!empty($orderItem->product_id)) {
+                            try {
+                                $this->updateProductOrder($sale, $orderItem, $order);
+                            } catch (\Throwable $e) {
+                                Log::error('setPaymentAccounting: updateProductOrder failed for orderItem #' . $orderItem->id . ': ' . $e->getMessage());
+                            }
+                        }
+
+                        if(!empty($orderItem->book_id))
+                        {
+                            $this->updateBookOrder($sale, $orderItem);
+                        }
+                    }
+                } catch (\Throwable $e) {
+                    // Loop continues to next orderItem
+                    Log::error('setPaymentAccounting: failed for orderItem #' . $orderItem->id . ': ' . $e->getMessage(), [
+                        'trace' => $e->getTraceAsString(),
                     ]);
-
-                    $reserver = $reserveMeeting->user;
-
-                    if ($reserver) {
-                        $this->handleMeetingReserveReward($reserver);
-                    }
-                }
-
-                if (!empty($orderItem->gift_id)) {
-                    $gift = $orderItem->gift;
-
-                    $gift->update([
-                        'status' => 'active'
-                    ]);
-
-                    $gift->sendNotificationsWhenActivated($orderItem->total_amount);
-                }
-
-                if (!empty($orderItem->subscribe_id)) {
-                    Accounting::createAccountingForSubscribe($orderItem, $type);
-                } elseif (!empty($orderItem->promotion_id)) {
-                    Accounting::createAccountingForPromotion($orderItem, $type);
-                } elseif (!empty($orderItem->registration_package_id)) {
-                    Accounting::createAccountingForRegistrationPackage($orderItem, $type);
-
-                    if (!empty($orderItem->become_instructor_id)) {
-                        BecomeInstructor::where('id', $orderItem->become_instructor_id)
-                            ->update([
-                                'package_id' => $orderItem->registration_package_id
-                            ]);
-                    }
-                } elseif (!empty($orderItem->installment_payment_id)) {
-                    Accounting::createAccountingForInstallmentPayment($orderItem, $type);
-
-                    $this->updateInstallmentOrder($orderItem, $sale);
-                } else {
-                    // webinar and meeting and product and bundle
-
-                    Accounting::createAccounting($orderItem, $type);
-                    TicketUser::useTicket($orderItem);
-
-                    if (!empty($orderItem->product_id)) {
-                        $this->updateProductOrder($sale, $orderItem, $order);
-                    }
-
-                    if(!empty($orderItem->book_id))
-                    {
-                        $this->updateBookOrder($sale, $orderItem);
-                    }
-                }
+                }    
             }
 
             // Set Cashback Accounting For All Order Items
             $cashbackAccounting->setAccountingForOrderItems($order->orderItems);
             Cart::emptyCart($order->user_id);
         }
-
-        
     }
 
     private function handleLuluPrintJobAfterPayment($order)
@@ -889,8 +903,18 @@ class PaymentController extends Controller
             $orderId = session()->get($this->order_session_key, null);
             session()->forget($this->order_session_key);
         }
+        
+        session()->forget('ck_dummy_country_id');
+        session()->save();
 
         $user = auth()->user();
+
+        if ($user) {
+            $user->update(['currency' => 'EUR']);
+        }
+        if (request()->cookie('user_currency') == 'INR') {
+            \Illuminate\Support\Facades\Cookie::queue('user_currency', 'EUR', 30 * 24 * 60);
+        }
         
         if(!$user){
             if (session()->has('device_id')) {
@@ -915,6 +939,10 @@ class PaymentController extends Controller
 
         if (!$order) {
             return redirect('/cart')->with('error', 'Order not found');
+        }
+
+        if ($request->has('canceled') && $order->status == Order::$pending) {
+            $order->update(['status' => Order::$fail]);
         }
 
         // Check if this is a subscription order
@@ -1059,7 +1087,11 @@ class PaymentController extends Controller
 
         $productOrder = ProductOrder::find($orderItem->product_order_id);
         if ($productOrder) {
-            $this->fulfilCJProductIfNeeded($productOrder, $orderItem, $order);
+            try {
+                $this->fulfilCJProductIfNeeded($productOrder, $orderItem, $order);
+            } catch (\Throwable $e) {
+                Log::error('updateProductOrder: CJ fulfilment failed for orderItem #' . $orderItem->id . ': ' . $e->getMessage());
+            }
         }
 
         // if ($product and $product->is_cj_product) {
@@ -1067,10 +1099,14 @@ class PaymentController extends Controller
         // }
 
         if ($product and $product->getAvailability() < 1) {
-            $notifyOptions = [
-                '[p.title]' => $product->title,
-            ];
-            sendNotification('product_out_of_stock', $notifyOptions, $product->creator_id);
+            try {
+                $notifyOptions = [
+                    '[p.title]' => $product->title,
+                ];
+                sendNotification('product_out_of_stock', $notifyOptions, $product->creator_id);
+            } catch (\Throwable $e) {
+                Log::error('updateProductOrder: stock notification failed for product #' . $product->id . ': ' . $e->getMessage());
+            }
         }
     }
 
@@ -1285,11 +1321,15 @@ class PaymentController extends Controller
             ]);
  
             // ── Notify admin / seller ──────────────────────────────
-            sendNotification('new_store_order', [
-                '[p.title]' => $product->title ?? ($specs['cj_name'] ?? 'CJ Product'),
-                '[amount]'  => handlePrice($orderItem->total_amount),
-                '[u.name]'  => $buyer->full_name ?? '',
-            ], 1);
+            try {
+                sendNotification('new_store_order', [
+                    '[p.title]' => $product->title ?? ($specs['cj_name'] ?? 'CJ Product'),
+                    '[amount]'  => handlePrice($orderItem->total_amount),
+                    '[u.name]'  => $buyer->full_name ?? '',
+                ], 1);
+            } catch (\Throwable $e) {
+                Log::warning('CJ Fulfil: sendNotification failed for orderItem #' . $orderItem->id . ': ' . $e->getMessage());
+            }    
  
         } catch (\Throwable $e) {
             // Never let CJ failure break the local payment confirmation
@@ -1325,13 +1365,19 @@ class PaymentController extends Controller
                 if ($installment) {
                     if ($installment->needToVerify()) {
                         $status = 'pending_verification';
-
-                        sendNotification("installment_verification_request_sent", $notifyOptions, $installmentOrder->user_id);
-                        sendNotification("admin_installment_verification_request_sent", $notifyOptions, 1); // Admin
+                        try {
+                            sendNotification("installment_verification_request_sent", $notifyOptions, $installmentOrder->user_id);
+                            sendNotification("admin_installment_verification_request_sent", $notifyOptions, 1); // Admin
+                        } catch (\Throwable $e) {
+                            Log::warning('updateInstallmentOrder: verification notification failed: ' . $e->getMessage());
+                        }
                     } else {
                         $status = 'open';
-
-                        sendNotification("paid_installment_upfront", $notifyOptions, $installmentOrder->user_id);
+                        try {
+                            sendNotification("paid_installment_upfront", $notifyOptions, $installmentOrder->user_id);
+                        } catch (\Throwable $e) {
+                            Log::warning('updateInstallmentOrder: upfront notification failed: ' . $e->getMessage());
+                        }
                     }
 
                     $installmentOrder->update([
@@ -1362,10 +1408,13 @@ class PaymentController extends Controller
 
 
             if ($installmentPayment->type == 'step') {
-                sendNotification("paid_installment_step", $notifyOptions, $installmentOrder->user_id);
-                sendNotification("paid_installment_step_for_admin", $notifyOptions, 1); // For Admin
+                try {
+                    sendNotification("paid_installment_step", $notifyOptions, $installmentOrder->user_id);
+                    sendNotification("paid_installment_step_for_admin", $notifyOptions, 1); // For Admin
+                } catch (\Throwable $e) {
+                    Log::warning('updateInstallmentOrder: step notification failed: ' . $e->getMessage());
+                }
             }
-
         }
     }
 

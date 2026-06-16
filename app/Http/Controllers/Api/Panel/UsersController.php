@@ -13,7 +13,9 @@ use App\Models\Reward;
 use App\Models\RewardAccounting;
 use App\Models\UserMeta;
 use App\Models\Follow;
-
+use App\Models\UserBank;
+use App\Models\UserSelectedBank;
+use App\Models\UserSelectedBankSpecification;
 use App\Models\UserZoomApi;
 use App\User;
 use App\Models\UserStory;
@@ -83,6 +85,10 @@ class UsersController extends Controller
                 $story->media_url = url($story->media_url);  
                 return $story;
             });
+        }
+
+        if (!$user) {
+            return apiResponse2(0, 'unauthenticated', trans('api.public.unauthenticated'), []);
         }
 
         return apiResponse2(
@@ -479,9 +485,9 @@ class UsersController extends Controller
     public function update(Request $request)
     {
         $available_inputs = [
+            'full_name',
             'first_name',
             'last_name',
-            'full_name',
             'language',
             'email',
             'mobile',
@@ -505,6 +511,8 @@ class UsersController extends Controller
         $meta = ['address', 'gender', 'age'];
 
         $user = apiAuth();
+        
+        // dd(getOfflineBanksTitle());
 
         validateParam($request->all(), [
             'full_name' => 'string',
@@ -518,9 +526,9 @@ class UsersController extends Controller
             'newsletter' => 'boolean',
             // 'password' => 'required|string|min:6',
 
-            'account_type' => Rule::in(getOfflineBanksTitle()),
-            'iban' => 'required_with:account_type',
-            'account_id' => 'required_with:account_type',
+            // 'account_type' => Rule::in(getOfflineBanksTitle()),
+            // 'iban' => 'required_with:account_type',
+            // 'account_id' => 'required_with:account_type',
             // 'identity_scan' => 'required_with:account_type',
 
             'bio' => 'nullable|string|min:3|max:48',
@@ -559,6 +567,43 @@ class UsersController extends Controller
             }
         }
 
+        if ($request->has('account_type')) {
+            UserSelectedBank::where('user_id', $user->id)->delete();
+
+            $userSelectedBank = UserSelectedBank::create([
+                'user_id'      => $user->id,
+                'user_bank_id' => '6'
+            ]);
+
+            $specMap = [
+                16 => $request->input('iban'),       // Account number/ Iban number
+                22 => $request->input('account_id'), // Routing number
+            ];
+
+            foreach ($specMap as $specificationId => $value) {
+                if (!empty($value)) {
+                    UserSelectedBankSpecification::updateOrCreate(
+                        [
+                            'user_selected_bank_id'      => $userSelectedBank->id,
+                            'user_bank_specification_id' => $specificationId,
+                        ],
+                        ['value' => $value]
+                    );
+                }
+            }
+    
+            // ── Save identity_scan & certificate files ────────────────────────────
+            if ($request->file('identity_scan')) {
+                $storage = new UploadFileManager($request->file('identity_scan'));
+                $user->update(['identity_scan' => $storage->storage_path]);
+            }
+    
+            if ($request->file('certificate')) {
+                $storage = new UploadFileManager($request->file('certificate'));
+                $user->update(['certificate' => $storage->storage_path]);
+            }
+        }
+
 
         if (!$user->isUser()) {
             if ($request->has('zoom_jwt_token') and !empty($request->input('zoom_jwt_token'))) {
@@ -586,6 +631,80 @@ class UsersController extends Controller
 
 
         return apiResponse2(1, 'updated', trans('api.public.updated'));
+    }
+
+    public function getFinancialDetails()
+    {
+        $user = apiAuth();
+ 
+        if (!$user) {
+            return apiResponse2(0, 'unauthenticated', trans('api.public.unauthenticated'));
+        }
+ 
+        $userSelectedBank = UserSelectedBank::where('user_id', $user->id)
+            ->with(['userBank.specifications', 'specifications.specification'])
+            ->first();
+ 
+        $bankDetails = null;
+        if ($userSelectedBank) {
+            $bankDetails = [
+                'bank_id'        => $userSelectedBank->user_bank_id,
+                'bank_name'      => $userSelectedBank->userBank->title ?? null,
+                'specifications' => $userSelectedBank->specifications->map(function ($spec) {
+                    return [
+                        'id'    => $spec->user_bank_specification_id,
+                        'title' => $spec->specification->title ?? null,
+                        'value' => $spec->value,
+                    ];
+                })
+            ];
+        }
+ 
+        return apiResponse2(
+            1,
+            'retrieved',
+            trans('api.public.retrieved'),
+            [
+                'account_type'  => $user->type,
+                'iban'          => $user->iban,
+                'account_id'    => $user->account_id,
+                'identity_scan' => $user->identity_scan ? url($user->identity_scan) : null,
+                'certificate'   => $user->certificate   ? url($user->certificate)   : null,
+                'address'       => $user->address,
+                'selected_bank' => $bankDetails,
+            ]
+        );
+    }
+ 
+    /**
+     * GET  /api/user/banks-list
+     * Returns all available banks with their specification fields
+     */
+    public function getBanksList()
+    {
+        $banks = UserBank::with('specifications')
+            ->orderBy('created_at', 'desc')
+            ->get()
+            ->map(function ($bank) {
+                return [
+                    'id'             => $bank->id,
+                    'title'          => $bank->title,
+                    'specifications' => $bank->specifications->map(function ($spec) {
+                        return [
+                            'id'       => $spec->id,
+                            'title'    => $spec->title,
+                            'required' => $spec->required ?? false,
+                        ];
+                    })
+                ];
+            });
+ 
+        return apiResponse2(
+            1,
+            'retrieved',
+            trans('api.public.retrieved'),
+            ['banks' => $banks]
+        );
     }
 
     private function handleNewsletter($email, $user_id, $joinNewsletter)

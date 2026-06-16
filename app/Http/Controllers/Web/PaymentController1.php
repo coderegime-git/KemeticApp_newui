@@ -1371,7 +1371,8 @@ class PaymentController extends Controller
             'order' => $order,
         ];
         
-        return view('web.default.cart.status_pay', $data);
+        $data['step'] = 5;
+        return view('web.default.cart.newcart', $data);
         //return view('web.default.cart.order_confirmation', $data);
     }
 

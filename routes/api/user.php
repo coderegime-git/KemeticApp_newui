@@ -199,6 +199,8 @@ Route::group([], function () {
         Route::put('/password', ['uses' => 'UsersController@updatePassword', 'middleware' => 'api.request.type']);
         Route::put('/', ['uses' => 'UsersController@update']);
         Route::post('/images', ['uses' => 'UsersController@updateImages']);
+        Route::get('/financial-details', 'UsersController@getFinancialDetails');
+        Route::get('/banks-list', 'UsersController@getBanksList');
 
         Route::post('/story', ['uses' => 'UsersController@uploadStory']);
         Route::delete('/story/{storyId}', ['uses' => 'UsersController@deleteStory']);

@@ -14,16 +14,16 @@ class AssetController extends Controller
             $assets = Asset::select('id', 'title', 'path', 'type', 'user_id')
                 ->get()
                 ->groupBy('type')
-                ->map(function ($typeAssets) {
-                    return $typeAssets->map(function ($asset) {
-                        return [
-                            'id' => $asset->id,
-                            'title' => $asset->title,
-                            'url' => $asset->file_url,
-                            'user_id' => $asset->user_id
-                        ];
-                    })->values();
-                });
+            ->map(function ($typeAssets) {
+                return $typeAssets->map(function ($asset) {
+                    return [
+                        'id' => $asset->id,
+                        'title' => $asset->title,
+                        'url' => $asset->file_url,
+                        'user_id' => $asset->user_id
+                    ];
+                })->values();
+            });
 
             $livestreamSetting = LivestreamSetting::select('app_id', 'app_sign')->first();
             
@@ -32,6 +32,11 @@ class AssetController extends Controller
                 'app_id'   => $livestreamSetting->app_id,
                 'app_sign' => $livestreamSetting->app_sign,
             ] : [];
+            
+            $data['Stripe'] = [
+                'stripe_key'   => env('STRIPE_KEY_DEV'), // only on server
+                'stripe_secret' => env('STRIPE_SECRET_DEV'), // only on server
+            ];
 
             return response()->json([
                 'success' => true,

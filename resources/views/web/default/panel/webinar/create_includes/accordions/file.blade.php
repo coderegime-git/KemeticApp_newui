@@ -536,7 +536,7 @@ select.kemetic-control option {
 
                     {{-- ── Title ── --}}
                     <div class="kemetic-form-group">
-                        <label class="kemetic-label">{{ trans('public.title') }}</label>
+                        <label class="kemetic-label">{{ trans('public.title') }} <span class="text-danger">*</span></label>
                         <input type="text"
                                name="ajax[{{ !empty($file) ? $file->id : 'new' }}][title]"
                                class="kemetic-control js-ajax-title"
@@ -625,7 +625,7 @@ select.kemetic-control option {
 
                     {{-- ── File Path (non-S3) ── --}}
                     <div class="js-file-path-input kemetic-form-group {{ (!empty($file) and $file->storage == 's3') ? 'd-none' : '' }}">
-                        <label class="kemetic-label">{{ trans('webinars.file_upload_placeholder') }}</label>
+                        <label class="kemetic-label">{{ trans('webinars.file_upload_placeholder') }} <span class="text-danger">*</span></label>
                         <div class="kemetic-input-group">
                             <button type="button"
                                     class="kemetic-input-addon panel-file-manager"
@@ -645,7 +645,7 @@ select.kemetic-control option {
 
                     {{-- ── S3 File Upload ── --}}
                     <div class="js-s3-file-path-input kemetic-form-group {{ (!empty($file) and $file->storage == 's3') ? '' : 'd-none' }}">
-                        <label class="kemetic-label">{{ trans('update.choose_file') }}</label>
+                        <label class="kemetic-label">{{ trans('update.choose_file') }} <span class="text-danger">*</span></label>
                         <div class="kemetic-input-group">
                             <span class="kemetic-input-addon">
                                 <i data-feather="upload" width="16" height="16"></i>
@@ -669,7 +669,7 @@ select.kemetic-control option {
                     <div class="js-file-type-volume kemetic-form-group ">
                         <div class="kemetic-two-col">
                             <div class="js-file-type-field">
-                                <label class="kemetic-label">{{ trans('webinars.file_type') }}</label>
+                                <label class="kemetic-label">{{ trans('webinars.file_type') }} <span class="text-danger">*</span></label>
                                 <select name="ajax[{{ !empty($file) ? $file->id : 'new' }}][file_type]"
                                         class="kemetic-control js-ajax-file_type">
                                     <option value="">{{ trans('webinars.select_file_type') }}</option>

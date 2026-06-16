@@ -893,6 +893,25 @@ class HomeController extends Controller
                 });
         }
 
+        $totalCount = User::whereIn('role_name', [Role::$teacher, Role::$organization])
+            ->where('status', 'active')
+            ->where(function ($query) {
+                $query->where('ban', false)
+                    ->orWhere(function ($query) {
+                        $query->whereNotNull('ban_end_at')
+                            ->where('ban_end_at', '<', time());
+                    });
+            })->count();
+            
+        $totalWisdomSeekers = $totalCount;
+        if ($totalCount >= 1000) {
+            $totalWisdomSeekers = floor($totalCount / 1000) . 'K+';
+        }
+        $homeActiveSubscribe = null;
+        if (auth()->check()) {
+            $homeActiveSubscribe = \App\Models\Subscribe::getActiveSubscribe(auth()->id());
+        }
+
         $data = [
             'pageTitle' => $pageTitle,
             'pageDescription' => $pageDescription,
@@ -926,6 +945,8 @@ class HomeController extends Controller
             'rewardProgramSection' => $rewardProgramSection ?? null,
             'becomeInstructorSection' => $becomeInstructorSection ?? null,
             'forumSection' => $forumSection ?? null,
+            'totalWisdomSeekers' => $totalWisdomSeekers,
+            'homeActiveSubscribe' => $homeActiveSubscribe,
         ];
         
         return view(getTemplate() . '.pages.home', $data);

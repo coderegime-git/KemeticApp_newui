@@ -210,14 +210,15 @@ class CartController extends Controller
                 'deliveryEstimateTime' => $deliveryEstimateTime,
                 'totalCashbackAmount' => $totalCashbackAmount,
                 'cartDiscount' => $cartDiscount,
-                'countries' => $countries
+                'countries' => $countries,
+                'paymentChannels' => \App\Models\PaymentChannel::where('status', 'active')->get()
             ];
     
             if (!$isGuest) {
                 $data = array_merge($data, $this->getLocationsData($user));
             }
     
-            return view('web.default.cart.cart', $data);
+            return view('web.default.cart.newcart', $data);
         }
     
         // Empty cart view
@@ -697,6 +698,13 @@ class CartController extends Controller
                     'totalCashbackAmount' => $totalCashbackAmount,
                     'previousUrl' => url()->previous(),
                 ];
+                if ($request->ajax()) {
+                    return response()->json([
+                        'status' => 200,
+                        'order_id' => $order->id,
+                        'msg' => 'success'
+                    ]);
+                }
                 return view(getTemplate() . '.cart.payment', $data);
             } else {
                 return $this->handlePaymentOrderWithZeroTotalAmount($order);
@@ -721,11 +729,11 @@ class CartController extends Controller
         }
 
         if(!$user_as_a_guest){
-            $user->update([
+            \Illuminate\Support\Facades\DB::table('users')->where('id', $user->id)->update([
                 'first_name' => $data['first_name'] ?? $user->first_name,
                 'last_name' => $data['last_name'] ?? $user->last_name,
                 'mobile' => $data['phone'] ?? $user->mobile,
-                'country_id' => $data['country_id'] ?? $user->country_id,
+                'country_id' => !empty($data['country_id']) ? $data['country_id'] : $user->country_id,
                 'province_name' => $data['province_name'] ?? $user->province_name,
                 'city_name' => $data['city_name'] ?? $user->city_name,
                 'district_name' => $data['district_name'] ?? $user->district_name,
@@ -772,19 +780,21 @@ class CartController extends Controller
     public function createOrderAndOrderItems(Request $request, $carts, $calculate, $user, $user_as_a_guest, $discountCoupon = null)
     {
         $data = $request->all();
+        \Illuminate\Support\Facades\Log::info('createOrderAndOrderItems Data:', $data);
 
         if(!$user_as_a_guest){
-            $user->update([
-                'mobile' => $data['phone'] ?? $user->mobile,
-                'first_name' => $data['first_name'] ?? $user->first_name,
-                'last_name' => $data['last_name'] ?? $user->last_name,
-                'country_id' => $data['country_id'] ?? $user->country_id,
+            // Use raw DB update to guarantee fields are saved (bypasses any Eloquent observer/mass-assignment issues)
+            \Illuminate\Support\Facades\DB::table('users')->where('id', $user->id)->update([
+                'mobile'        => $data['phone']         ?? $user->mobile,
+                'first_name'    => $data['first_name']    ?? $user->first_name,
+                'last_name'     => $data['last_name']     ?? $user->last_name,
+                'country_id'    => !empty($data['country_id']) ? $data['country_id'] : $user->country_id,
                 'province_name' => $data['province_name'] ?? $user->province_name,
-                'city_name' => $data['city_name'] ?? $user->city_name,
+                'city_name'     => $data['city_name']     ?? $user->city_name,
                 'district_name' => $data['district_name'] ?? $user->district_name,
-                'zip_code' => $data['zip_code'] ?? $user->zip_code,
-                'house_no' => $data['house_no'] ?? $user->house_no,
-                'address' => $data['address'] ?? $user->address,
+                'zip_code'      => $data['zip_code']      ?? $user->zip_code,
+                'house_no'      => $data['house_no']      ?? $user->house_no,
+                'address'       => $data['address']       ?? $user->address,
             ]);
         }
         else{

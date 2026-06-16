@@ -568,19 +568,19 @@
                 };
                 // ──────────────────────────────────────────────────────────────────────────
 
-                if (isMobile && !popupDontShow && (isAndroid || isIOS) && !isNewsletterPage && !isPanelMembershipPage 
-                    && !isMembershipPage && !isLoginPage) {
-                    if (isAndroid) {
-                        document.getElementById('android-container').style.display = 'block';
-                    } else if (isIOS) {
-                        document.getElementById('ios-container').style.display = 'block';
-                    }
+                // if (isMobile && !popupDontShow && (isAndroid || isIOS) && !isNewsletterPage && !isPanelMembershipPage 
+                //     && !isMembershipPage && !isLoginPage) {
+                //     if (isAndroid) {
+                //         document.getElementById('android-container').style.display = 'block';
+                //     } else if (isIOS) {
+                //         document.getElementById('ios-container').style.display = 'block';
+                //     }
 
-                    setTimeout(function () {
-                        const popup = document.getElementById('app-popup');
-                        if (popup) popup.style.display = 'flex';
-                    }, 100);
-                }
+                //     setTimeout(function () {
+                //         const popup = document.getElementById('app-popup');
+                //         if (popup) popup.style.display = 'flex';
+                //     }, 100);
+                // }
 
                 // ─── DEEP LINK HANDLER ────────────────────────────────────────────────────
                 function openDeepLink(schemeUrl, storeUrl) {

@@ -31,11 +31,12 @@ class FirebaseService
     /**
      * Send notification to single FCM token
      */
-    public function sendToToken($token, $title, $body, $data = [])
+    public function sendToToken($token, $title, $body, $data = [], $options = [])
     {
         $message = CloudMessage::withTarget('token', $token)
             ->withNotification(Notification::create($title, $body))
-            ->withData($data);
+            ->withData($data)
+            ->withAndroidConfig($this->buildAndroidConfig($options));
 
         return $this->messaging->send($message);
     }
@@ -43,12 +44,29 @@ class FirebaseService
     /**
      * Send notification to multiple FCM tokens
      */
-    public function sendToMultipleTokens(array $tokens, $title, $body, $data = [])
+    public function sendToMultipleTokens(array $tokens, $title, $body, $data = [], $options = [])
     {
         $message = CloudMessage::new()
             ->withNotification(Notification::create($title, $body))
-            ->withData($data);
+            ->withData($data)
+            ->withAndroidConfig($this->buildAndroidConfig($options));
 
         return $this->messaging->sendMulticast($message, $tokens);
+    }
+
+    private function buildAndroidConfig(array $options = []): array
+    {
+        $isSos     = $options['is_sos']     ?? false;
+        $channelId = $options['channel_id'] ?? ($isSos ? 'basic_channel'   : 'basic_channel');
+        $sound     = $options['sound']      ?? ($isSos ? 'notification_sound'     : 'notification_sound');
+
+        return [
+            'priority'     => 'high',
+            'notification' => [
+                'channel_id'    => $channelId,
+                'sound'         => $sound,
+                'default_sound' => false,
+            ],
+        ];
     }
 }

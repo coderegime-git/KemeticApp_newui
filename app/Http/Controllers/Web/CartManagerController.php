@@ -570,6 +570,20 @@ class CartManagerController extends Controller
             }
         }
 
+        /* If the request came from our fetch() (AJAX), return JSON so no redirect happens */
+        if (request()->ajax() || request()->wantsJson() || request()->header('X-Requested-With') === 'XMLHttpRequest') {
+            return response()->json(['success' => true, 'msg' => 'Item removed from cart.']);
+        }
+
+        /* If a redirect_to URL was passed, use it (e.g. back to payment step=4) */
+        if (request()->get('redirect_to')) {
+            return redirect(request()->get('redirect_to'))->with(['toast' => [
+                'title'  => 'Cart Removed Successfully',
+                'msg'    => 'Item removed from cart.',
+                'status' => 'success',
+            ]]);
+        }
+
         return back()->with(['toast' => [
             'title'  => 'Cart Removed Successfully',
             'msg'    => 'Item removed from cart.',

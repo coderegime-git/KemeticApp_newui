@@ -1,131 +1,320 @@
-@extends(getTemplate().'.layouts.app')
-<style>
-  :root{
-    --bg:#0b0b0f;            /* royal dark purple ~ near black */
-    --panel:#141420;
-    --ink:#ffffff;
-    --muted:#cfcfe4;
-    --accent:#ffd769;        /* gold */
-    --line:rgba(255,255,255,.12);
-    --success:#22c55e;
-    --shadow:0 18px 50px rgba(0,0,0,.45);
-    --radius:18px;
-  }
-  *{box-sizing:border-box}
-  body{
-    margin:0; background:radial-gradient(1200px 600px at 70% -10%, #231a3a 0%, #120f1d 45%, var(--bg) 100%);
-    color:var(--ink); font:16px/1.55 system-ui, -apple-system, Segoe UI, Roboto, Inter, "Helvetica Neue", Arial, "Noto Sans", "Apple Color Emoji", "Segoe UI Emoji";
-  }
-  .wrap{max-width:1140px; margin:32px auto; padding:0 24px}
-  header{display:flex; align-items:center; justify-content:space-between; margin-bottom:22px}
-  .brand{display:flex; align-items:center; gap:12px; font-weight:800; letter-spacing:.3px}
-  .brand .mark{width:34px; height:34px; border-radius:10px; background:conic-gradient(from 120deg, #7c3aed, #22d3ee, #a3e635, #facc15, #f472b6, #7c3aed); box-shadow:0 0 0 3px rgba(255,255,255,.06)}
-  .top-actions{display:flex; gap:10px}
-  .pill{
-    display:inline-flex; align-items:center; gap:10px;
-    padding:10px 14px; border-radius:999px; background:rgba(255,255,255,.06);
-    color:var(--ink); border:1px solid var(--line); cursor:pointer; user-select:none;
-  }
-  .pill[aria-pressed="true"]{ background:rgba(255,215,105,.14); border-color:rgba(255,215,105,.5); color:var(--accent) }
-
-  .confirm-card{
-    display:grid; grid-template-columns:1fr 360px; gap:22px;
-    background:linear-gradient(180deg, rgba(255,255,255,.04), rgba(255,255,255,.02));
-    border:1px solid var(--line); border-radius:var(--radius); box-shadow:var(--shadow);
-    padding:28px;
-  }
-  @media (max-width:900px){ .confirm-card{grid-template-columns:1fr} }
-
-  .hero{
-    background: radial-gradient(600px 260px at 10% -20%, rgba(124,58,237,.35), transparent 60%);
-    border-radius:14px; padding:26px; min-height:220px; position:relative; overflow:hidden;
-  }
-  .hero .check{
-    width:64px; height:64px; border-radius:50%;
-    background:rgba(34,197,94,.15); display:grid; place-items:center; border:1px solid rgba(34,197,94,.5);
-    color:var(--success); font-size:34px; margin-bottom:12px;
-  }
-  h1{margin:10px 0 4px; font-size:34px; letter-spacing:.2px}
-  .sub{color:var(--muted); font-size:18px; margin:0 0 16px}
-  .cta{
-    display:inline-flex; align-items:center; justify-content:center; gap:10px;
-    padding:14px 22px; border-radius:999px; background:var(--accent); color:#1a1400;
-    font-weight:800; border:none; cursor:pointer; box-shadow:0 10px 24px rgba(255,215,105,.25);
-  }
-  .cta:hover{ filter:brightness(1.05) }
-
-  .aside{
-    background:rgba(255,255,255,.04); border:1px solid var(--line);
-    border-radius:14px; padding:18px;
-  }
-  .aside h3{margin:6px 0 10px; font-size:16px; color:var(--muted)}
-  .kpi{display:flex; align-items:center; justify-content:space-between; padding:10px 0; border-bottom:1px dashed var(--line)}
-  .kpi:last-child{border-bottom:0}
-  .kpi strong{font-size:18px}
-  .mono{font-variant-numeric:tabular-nums; font-weight:700}
-
-  .receipt{
-    margin-top:22px; background:rgba(255,255,255,.04); border:1px solid var(--line);
-    border-radius:14px; overflow:hidden;
-  }
-  .table{width:100%; border-collapse:collapse}
-  .table th, .table td{padding:14px 16px; text-align:left}
-  .table thead{background:rgba(255,255,255,.05); color:var(--muted)}
-  .table tbody tr{border-top:1px solid var(--line)}
-  .table tfoot tr{border-top:1px solid var(--line); background:rgba(255,215,105,.06)}
-  .table tfoot td{font-weight:900}
-  .meta{display:grid; grid-template-columns:repeat(4,1fr); gap:14px; padding:18px}
-  .meta .cell{background:rgba(255,255,255,.03); border:1px solid var(--line); border-radius:10px; padding:12px}
-  .meta .label{color:var(--muted); font-size:12px; text-transform:uppercase; letter-spacing:.6px; margin-bottom:6px}
-  @media (max-width:900px){ .meta{grid-template-columns:1fr 1fr} }
-
-  .footer-actions{display:flex; gap:12px; padding:20px 18px; border-top:1px solid var(--line); background:rgba(255,255,255,.02)}
-  .link-btn, .ghost{
-    display:inline-flex; align-items:center; gap:10px; padding:12px 16px; border-radius:12px; text-decoration:none; font-weight:700;
-  }
-  .link-btn{ background:rgba(255,215,105,.14); color:var(--accent); border:1px solid rgba(255,215,105,.45) }
-  .ghost{ background:rgba(255,255,255,.05); color:var(--ink); border:1px solid var(--line) }
-
-  /* Chakra hint accents for fun */
-  .chakra{display:flex; gap:6px; margin-top:8px}
-  .dot{width:8px; height:8px; border-radius:50%}
-  .c1{background:#ff5959}.c2{background:#ffb84d}.c3{background:#ffe34d}.c4{background:#7bd66f}.c5{background:#4dd8ff}.c6{background:#7a7cff}.c7{background:#e57aff}
-</style>
+@extends(getTemplate() . '.layouts.app')
 
 @section('content')
+  <style>
+    /* =========================================================
+         KEMETIC CHECKOUT  –  status_pay.blade.php  (Step 4)
+         Desktop-first, uses the normal app layout/sidebar
+         ========================================================= */
+    :root {
+      --ck-purple: #9B35FF;
+      --ck-gold: #D4AF37;
+      --ck-gold2: #FFE28A;
+      --ck-muted: #A89EC4;
+      --ck-text: #F0ECF8;
+      --ck-border: rgba(255, 255, 255, .10);
+      --ck-danger: #FF6B6B;
+      --ck-green: #19D45B;
+      --ck-surface: rgba(18, 14, 31, .8);
+    }
 
+    /* Checkout wrapper — normal flow, dark background */
+    .ck-wrap {
+      width: 100%;
+      background: radial-gradient(ellipse 130% 50% at 50% -10%, #2A0C52 0%, #0D0B14 70%);
+      min-height: 100vh;
+      color: var(--ck-text);
+      font-family: Arial, Helvetica, sans-serif;
+      padding: 32px 20px 80px;
+    }
 
-    @if(!empty($order) && $order->status === \App\Models\Order::$paid)
-        <div class="no-result default-no-result my-50 d-flex align-items-center justify-content-center flex-column">
-            <div class="no-result-logo">
-                <img src="/assets/default/img/no-results/search.png" alt="">
-            </div>
-            <div class="d-flex align-items-center flex-column mt-30 text-center">
-                <h2>{{ trans('cart.success_pay_title') }}</h2>
-                <p class="mt-5 text-center">{!! trans('cart.success_pay_msg') !!}</p>
+    .ck-inner {
+      max-width: 1100px;
+      margin: 0 auto;
+    }
 
-                <a href="academyapp://payment-success" class="btn btn-sm btn-primary mt-20 d-flex d-sm-none">{{ trans('public.redirect_to_app') }}</a>
+    /* Header */
+    .ck-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 24px;
+    }
 
-                <a href="/panel" class="btn btn-sm btn-primary mt-20 d-none d-sm-flex">{{ trans('public.my_panel') }}</a>
-            </div>
+    .ck-back-btn {
+      width: 40px;
+      height: 40px;
+      border-radius: 12px;
+      border: 1px solid rgba(212, 175, 55, .45);
+      background: rgba(18, 14, 31, .8);
+      color: var(--ck-gold);
+      font-size: 24px;
+      line-height: 1;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      text-decoration: none;
+    }
+
+    .ck-logo {
+      color: var(--ck-gold);
+      font-size: 26px;
+      font-weight: 900;
+      letter-spacing: 4px;
+    }
+
+    .ck-secure-badge {
+      border: 1px solid rgba(212, 175, 55, .45);
+      color: var(--ck-gold);
+      background: rgba(18, 14, 31, .8);
+      border-radius: 12px;
+      padding: 8px 16px;
+      font-size: 13px;
+    }
+
+    /* Step indicator */
+    .ck-step-label {
+      font-size: 14px;
+      color: var(--ck-muted);
+      margin-bottom: 12px;
+    }
+
+    .ck-steps {
+      display: flex;
+      flex-direction: row;
+      align-items: flex-start;
+      justify-content: center;
+      gap: 0;
+      margin-bottom: 32px;
+      position: relative;
+      max-width: 600px;
+    }
+
+    .ck-steps::before {
+      content: '';
+      position: absolute;
+      top: 16px;
+      left: 24px;
+      right: 24px;
+      height: 1px;
+      background: var(--ck-border);
+      z-index: 0;
+    }
+
+    .ck-step {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 6px;
+      z-index: 1;
+      flex: 1;
+    }
+
+    .ck-step-circle {
+      width: 34px;
+      height: 34px;
+      border-radius: 50%;
+      border: 2px solid rgba(255, 255, 255, .18);
+      background: #120E1F;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 13px;
+      font-weight: 700;
+      color: rgba(255, 255, 255, .35);
+      transition: all .25s;
+    }
+
+    .ck-step.done .ck-step-circle {
+      background: rgba(155, 53, 255, .2);
+      border-color: var(--ck-purple);
+      color: var(--ck-purple);
+    }
+
+    .ck-step.active .ck-step-circle {
+      background: var(--ck-purple);
+      border-color: var(--ck-purple);
+      color: #fff;
+      box-shadow: 0 0 18px rgba(155, 53, 255, .65);
+    }
+
+    .ck-step-name {
+      font-size: 11px;
+      color: rgba(255, 255, 255, .28);
+      text-align: center;
+      white-space: nowrap;
+    }
+
+    .ck-step.active .ck-step-name,
+    .ck-step.done .ck-step-name {
+      color: var(--ck-text);
+    }
+
+    /* Status card container */
+    .ck-status-container {
+      max-width: 500px;
+      margin: 0 auto;
+    }
+
+    /* Status card */
+    .ck-status-card {
+      background: var(--ck-surface);
+      border: 1px solid var(--ck-border);
+      border-radius: 18px;
+      padding: 40px 30px 30px;
+      text-align: center;
+      backdrop-filter: blur(12px);
+      margin-bottom: 20px;
+    }
+
+    .ck-sparkle {
+      font-size: 40px;
+      display: block;
+      margin-bottom: 20px;
+    }
+
+    .ck-status-card h2 {
+      font-size: 24px;
+      font-weight: 800;
+      color: var(--ck-gold);
+      margin: 0 0 12px;
+    }
+
+    .ck-status-card p {
+      font-size: 15px;
+      color: var(--ck-muted);
+      line-height: 1.65;
+      margin: 0 0 30px;
+    }
+
+    .ck-status-card.failed h2 {
+      color: var(--ck-danger);
+    }
+
+    /* Buttons */
+    .ck-cta {
+      display: block;
+      width: 100%;
+      border: none;
+      border-radius: 14px;
+      padding: 17px;
+      background: linear-gradient(135deg, var(--ck-gold), var(--ck-gold2));
+      color: #0D0B14;
+      font-size: 16px;
+      font-weight: 900;
+      letter-spacing: 1px;
+      text-align: center;
+      text-decoration: none;
+      cursor: pointer;
+      text-transform: uppercase;
+      transition: filter .2s;
+      margin-bottom: 12px;
+    }
+
+    .ck-cta:hover {
+      filter: brightness(1.08);
+      color: #0D0B14;
+    }
+
+    .ck-cta.ghost {
+      background: rgba(255, 255, 255, .06);
+      color: var(--ck-text);
+      border: 1px solid var(--ck-border);
+    }
+
+    /* Trust bar */
+    .ck-trust {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      background: rgba(255, 255, 255, .04);
+      border: 1px solid var(--ck-border);
+      border-radius: 10px;
+      padding: 12px 16px;
+      font-size: 12px;
+      color: var(--ck-muted);
+    }
+  </style>
+
+  <div class="ck-wrap">
+    <div class="ck-inner">
+
+      {{-- HEADER --}}
+      <header class="ck-header">
+        <a href="javascript:void(0)" class="ck-back-btn" style="visibility:hidden; cursor:default;">&#8249;</a>
+        <div class="ck-logo">KEMETIC</div>
+        <div class="ck-secure-badge">&#128274; Secure</div>
+      </header>
+
+      {{-- STEP 4: ALL DONE --}}
+      <div class="ck-step-label">Step 4 of 4</div>
+      <div class="ck-steps">
+        <div class="ck-step done">
+          <div class="ck-step-circle">1</div><span class="ck-step-name">Review</span>
         </div>
-    @endif
-
-    @if(!empty($order) && $order->status === \App\Models\Order::$fail)
-        <div class="no-result status-failed my-50 d-flex align-items-center justify-content-center flex-column">
-            <div class="no-result-logo">
-                <img src="/assets/default/img/no-results/failed_pay.png" alt="">
-            </div>
-            <div class="d-flex align-items-center flex-column mt-30 text-center">
-                <h2>{{ trans('cart.failed_pay_title') }}</h2>
-                <p class="mt-5 text-center">{!! nl2br(trans('cart.failed_pay_msg')) !!}</p>
-
-                <a href="academyapp://payment-failed" class="btn btn-sm btn-primary mt-20 d-flex d-sm-none">{{ trans('public.redirect_to_app') }}</a>
-
-                <a href="/panel" class="btn btn-sm btn-primary mt-20 d-none d-sm-flex" style="margin-bottom: 10px;">{{ trans('public.my_panel') }}</a>
-            </div>
+        <div class="ck-step done">
+          <div class="ck-step-circle">2</div><span class="ck-step-name">Info</span>
         </div>
-    @endif
+        <div class="ck-step done">
+          <div class="ck-step-circle">3</div><span class="ck-step-name">Details</span>
+        </div>
+        <div class="ck-step active">
+          <div class="ck-step-circle">4</div><span class="ck-step-name">Done</span>
+        </div>
+      </div>
 
+      <div class="ck-status-container">
+        {{-- SUCCESS --}}
+        @if(!empty($order) && $order->status === \App\Models\Order::$paid)
+          <div class="ck-status-card">
+            <span class="ck-sparkle">&#10024;</span>
+            <h2>{{ trans('cart.success_pay_title') }}</h2>
+            <p>{!! trans('cart.success_pay_msg') !!}</p>
 
+            <a href="academyapp://payment-success" class="ck-cta d-flex d-sm-none" style="justify-content:center;">
+              {{ trans('public.redirect_to_app') }}
+            </a>
+            <a href="/" class="ck-cta d-none d-sm-block">
+              {{ trans('public.redirect_to_app') }}
+            </a>
+          </div>
+        @endif
+
+        {{-- FAILED --}}
+        @if(!empty($order) && $order->status === \App\Models\Order::$fail)
+          <div class="ck-status-card failed">
+            <span class="ck-sparkle">&#9888;&#65039;</span>
+            <h2>{{ trans('cart.failed_pay_title') }}</h2>
+            <p>{!! nl2br(trans('cart.failed_pay_msg')) !!}</p>
+
+            <!-- <a href="/cart?step=3" class="ck-cta" style="margin-bottom: 15px;">
+              Try Again
+            </a> -->
+
+            <!-- <a href="academyapp://payment-failed" class="ck-cta ghost d-flex d-sm-none" style="justify-content:center;">
+              {{ trans('public.redirect_to_app') }}
+            </a> -->
+            <a href="/cart" class="ck-cta ghost d-none d-sm-block">
+             Go to Cart
+            </a>
+          </div>
+        @endif
+
+        <div class="ck-trust">
+          <span>&#128274; 100% Secure</span>
+          <span>Stripe Protected</span>
+          <span>SSL</span>
+        </div>
+      </div>
+
+    </div>
+  </div>
+  
+  <script>
+    // Ensure the Stripe back-button trap is fully cleared as soon as we reach the status page
+    try {
+      sessionStorage.removeItem('ck_went_to_stripe');
+    } catch (e) {}
+  </script>
 @endsection

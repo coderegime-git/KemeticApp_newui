@@ -186,18 +186,20 @@
                         @endif
 
                         <div class="kemetic-form-group">
-                            <label class="kemetic-label">{{ trans('public.title') }}</label>
+                            <label class="kemetic-label">{{ trans('public.title') }} <span class="text-danger">*</span></label>
                             <input type="text"
                                    name="ajax[{{ !empty($faq) ? $faq->id : 'new' }}][title]"
                                    class="kemetic-input js-ajax-title"
                                    value="{{ !empty($faq) ? $faq->title : '' }}">
+                            <div class="invalid-feedback"></div>
                         </div>
 
                         <div class="kemetic-form-group">
-                            <label class="kemetic-label">{{ trans('public.answer') }}</label>
+                            <label class="kemetic-label">{{ trans('public.answer') }} <span class="text-danger">*</span></label>
                             <textarea name="ajax[{{ !empty($faq) ? $faq->id : 'new' }}][answer]"
                                       class="kemetic-input js-ajax-answer"
                                       rows="5">{{ !empty($faq) ? $faq->answer : '' }}</textarea>
+                            <div class="invalid-feedback"></div>
                         </div>
                     </div>
                 </div>

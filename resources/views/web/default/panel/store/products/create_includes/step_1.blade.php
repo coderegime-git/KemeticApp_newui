@@ -303,6 +303,43 @@
     background-repeat: no-repeat;
 }
 
+
+/* Summernote Modal Fixes */
+.note-modal .modal-content {
+    background-color: #121212 !important;
+    color: #fff !important;
+    border: 1px solid rgba(242,201,76,0.3);
+}
+.note-modal .modal-header {
+    border-bottom: 1px solid rgba(242,201,76,0.25);
+}
+.note-modal .modal-title, .note-modal label, .note-modal label small {
+    color: #f2c94c !important;
+}
+.note-modal .text-muted {
+    color: #c9b26d !important;
+}
+.note-modal .close {
+    color: #fff !important;
+    opacity: 1 !important;
+    background: transparent !important;
+    text-shadow: none !important;
+    border: none !important;
+}
+.note-modal .form-control {
+    background: #0e0e0e !important;
+    border: 1px solid rgba(242,201,76,0.3) !important;
+    color: #fff !important;
+}
+.note-modal .btn-primary {
+    background: linear-gradient(135deg, #f2c94c, #caa63c) !important;
+    color: #000 !important;
+    border: none !important;
+}
+.note-modal .checkbox input {
+    margin-right: 5px;
+}
+
 </style>
 @endpush
 
@@ -310,6 +347,15 @@
     <div class="col-12 col-md-4 mt-20">
 
         <div class="kemetic-card">
+
+            @if(!empty($product) && $product->is_cj_product && !empty($product->cj_vid))
+                <div class="mb-20">
+                    <button type="button" class="btn btn-primary btn-sm w-100 js-resync-cj-product" data-product-id="{{ $product->id }}">
+                        <i class="fa fa-sync-alt mr-2"></i> Resynchronize from CJ Dropshipping
+                    </button>
+                    <p class="font-12 text-muted mt-5" style="color: #9ca3af !important;">Fetch the latest product details, variants, and stock from CJ Dropshipping.</p>
+                </div>
+            @endif
 
             {{-- LANGUAGE --}}
             @if(!empty(getGeneralSettings('content_translate')))
@@ -423,19 +469,19 @@
 
 {{-- Ordering --}}
 <div class="row mt-20">
-    <div class="col-6">
+    <div class="col-12 col-md-6">
         <div class="k-form-card">
-            <div class="form-group d-flex align-items-center k-switch">
+            <div class="form-group d-flex align-items-center justify-content-between k-switch">
                 <label class="input-label mb-0 cursor-pointer" for="orderingSwitch">
                     {{ trans('update.enable_ordering') }}
                 </label>
-                <div class="ml-30 custom-control custom-switch">
+                <div class="custom-control custom-switch">
                     <input type="checkbox" name="ordering" class="custom-control-input"
                            id="orderingSwitch" {{ (!empty($product) && $product->ordering) ? 'checked' : '' }}>
-                    <label class="custom-control-label" for="orderingSwitch"></label>
+                    <label class="custom-control-label cursor-pointer" for="orderingSwitch"></label>
                 </div>
             </div>
-            <p class="k-help">{{ trans('update.create_product_enable_ordering_hint') }}</p>
+            <p class="k-help mt-1">{{ trans('update.create_product_enable_ordering_hint') }}</p>
         </div>
     </div>
 </div>
@@ -458,6 +504,80 @@
                 $(document).on('click', '.note-modal .close, .note-modal [data-dismiss="modal"]', function() {
                     $(this).closest('.modal').modal('hide');
                 });
+
+                const $resyncBtn = $('.js-resync-cj-product');
+
+                function triggerResync(productId, $btn) {
+                    $btn.addClass('loadingbar primary').prop('disabled', true);
+                    $.ajax({
+                        url: '/panel/store/products/' + productId + '/resync-cj',
+                        type: 'POST',
+                        data: {
+                            _token: '{{ csrf_token() }}',
+                            locale: $('select[name="locale"]').val()
+                        },
+                        success: function(response) {
+                            if (response.code == 200) {
+                                Swal.fire('Success', response.message, 'success').then(() => {
+                                    window.location.reload();
+                                });
+                            }
+                        },
+                        error: function(err) {
+                            $btn.removeClass('loadingbar primary').prop('disabled', false);
+                            let msg = 'Failed to resynchronize product.';
+                            if (err.responseJSON && err.responseJSON.message) {
+                                msg = err.responseJSON.message;
+                            }
+                            Swal.fire('Error', msg, 'error');
+                        }
+                    });
+                }
+
+                if ($resyncBtn.length) {
+                    const productId = $resyncBtn.data('product-id');
+                    const urlParams = new URLSearchParams(window.location.search);
+                    
+                    // Auto-prompt ONLY when coming from the index Edit click (?resync_prompt=1)
+                    if (urlParams.get('resync_prompt') === '1') {
+                        // Remove param from URL so browser back/reload doesn't retrigger
+                        const cleanUrl = window.location.pathname;
+                        history.replaceState(null, '', cleanUrl);
+
+                        Swal.fire({
+                            title: 'Resynchronize Product?',
+                            html: `
+                                <p>Do you want to fetch the latest details, variants, and stock from CJ Dropshipping?</p>
+                                <p style="color: #e74c3c; font-weight: 600;">This will overwrite the title, description, and update variants/stock from CJ Dropshipping.</p>
+                            `,
+                            icon: 'question',
+                            showCancelButton: true,
+                            confirmButtonText: 'Yes, resync it!',
+                            cancelButtonText: 'No, skip'
+                        }).then((result) => {
+                            if (result.value) {
+                                triggerResync(productId, $resyncBtn);
+                            }
+                        });
+                    }
+
+                    // Manual button click (always available)
+                    $(document).on('click', '.js-resync-cj-product', function(e) {
+                        e.preventDefault();
+                        Swal.fire({
+                            title: 'Are you sure?',
+                            html: '<p style="color: #e74c3c; font-weight: 600;">This will overwrite the title, description, and update variants/stock from CJ Dropshipping.</p>',
+                            icon: 'warning',
+                            showCancelButton: true,
+                            confirmButtonText: 'Yes, resync it!',
+                            cancelButtonText: 'Cancel'
+                        }).then((result) => {
+                            if (result.value) {
+                                triggerResync(productId, $resyncBtn);
+                            }
+                        });
+                    });
+                }
             });
         </script>
     @endpush

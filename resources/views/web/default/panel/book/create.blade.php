@@ -67,6 +67,12 @@
     color: #fff;
 }
 
+/* Summernote error highlight */
+.note-editor.border-danger {
+    border: 1px solid #dc3545 !important;
+    border-radius: 16px;
+}
+
 /* Save button */
 .kemetic-save-btn {
     background: linear-gradient(135deg, #f2c94c, #caa63c);
@@ -254,13 +260,14 @@
                 </div>
             </div>
 
+            {{-- PRINT ONLY FIELDS --}}
             <div id="print_fields" class="print-fields" style="{{ (!empty($book) && $book->type == 'Print') ? '' : 'display: none;' }}">
                 <div class="form-group">
                     <label class="input-label">Pages</label>
                     <input type="text" id="page_count" name="page_count"
                             class="form-control @error('page_count') is-invalid @enderror"
                             value="{{ !empty($book) ? $book->page_count : old('page_count') }}"
-                            placeholder="0" required onchange="calculateLuluPrice()">
+                            placeholder="0" onchange="calculateLuluPrice()">
                     @error('page_count')
                     <div class="invalid-feedback">{{ $message }}</div>
                     @enderror
@@ -271,7 +278,7 @@
                     <input type="text" id="shipping_price" name="shipping_price"
                             class="form-control @error('shipping_price') is-invalid @enderror"
                             value="{{ !empty($book) ? $book->shipping_price : old('shipping_price', '14.85') }}"
-                            placeholder="{{ trans('public.0_for_free') }}" required readonly>
+                            placeholder="{{ trans('public.0_for_free') }}" readonly>
                     @error('shipping_price')
                     <div class="invalid-feedback">{{ $message }}</div>
                     @enderror
@@ -282,7 +289,7 @@
                     <input type="text" id="print_price" name="print_price"
                             class="form-control @error('print_price') is-invalid @enderror"
                             value="{{ !empty($book) ? $book->print_price : old('print_price') }}"
-                            placeholder="{{ trans('public.0_for_free') }}" required readonly>
+                            placeholder="{{ trans('public.0_for_free') }}" readonly>
                     @error('print_price')
                     <div class="invalid-feedback">{{ $message }}</div>
                     @enderror
@@ -305,7 +312,7 @@
                 <input type="text" id="platform_price" name="platform_price"
                         class="form-control @error('platform_price') is-invalid @enderror"
                         value="{{ !empty($book) ? $book->platform_price : old('platform_price') }}"
-                        placeholder="0" required readonly>
+                        placeholder="0" readonly>
                 @error('platform_price')
                 <div class="invalid-feedback">{{ $message }}</div>
                 @enderror
@@ -316,35 +323,39 @@
                 <input type="text" id="total_price" name="price"
                         class="form-control @error('price') is-invalid @enderror"
                         value="{{ !empty($book) ? $book->price : old('price') }}"
-                        placeholder="{{ trans('public.0_for_free') }}" required readonly>
+                        placeholder="{{ trans('public.0_for_free') }}" readonly>
                 @error('price')
                 <div class="invalid-feedback">{{ $message }}</div>
                 @enderror
             </div>
 
-            
-
-            {{-- DESCRIPTION --}}
+            {{-- DESCRIPTION — unique id: summernote_description --}}
             <div class="form-group mt-20">
                 <label class="input-label">{{ trans('public.description') }}</label>
-                <textarea id="summernote"
+                <textarea id="summernote_description"
                           name="description"
                           class="form-control @error('description') is-invalid @enderror">
-{!! (!empty($book) ) ? $book->description : old('description') !!}
+{!! (!empty($book)) ? $book->description : old('description') !!}
                 </textarea>
+                <div class="invalid-feedback" id="description_error" style="display:none;">
+                    The description field is required.
+                </div>
                 @error('description')
                 <div class="invalid-feedback">{{ $message }}</div>
                 @enderror
             </div>
 
-            {{-- CONTENT --}}
+            {{-- CONTENT — unique id: summernote_content --}}
             <div class="form-group mt-20">
                 <label class="input-label">{{ trans('admin/main.content') }}</label>
-                <textarea id="summernote"
+                <textarea id="summernote_content"
                           name="content"
                           class="form-control @error('content') is-invalid @enderror">
 {!! (!empty($book)) ? $book->content : old('content') !!}
                 </textarea>
+                <div class="invalid-feedback" id="content_error" style="display:none;">
+                    The content field is required.
+                </div>
                 @error('content')
                 <div class="invalid-feedback">{{ $message }}</div>
                 @enderror
@@ -365,180 +376,227 @@
 
 @push('scripts_bottom')
 <script src="/assets/vendors/summernote/summernote-bs4.min.js"></script>
-<script src="/vendor/laravel-filemanager/js/stand-alone-button.js"></script>
 <script>
-    // Initialize file manager for images only
-    $(document).ready(function() {
-        if($.fn.filemanager) {
-            $('.panel-file-manager-image').filemanager('image', {
-                prefix: '/laravel-filemanager'
-            });
 
-            $('.panel-file-manager-pdf').filemanager('pdf', {
-                prefix: '/laravel-filemanager'
-            });
-        }
+$(document).ready(function () {
+
+    // ── File managers ──────────────────────────────────────────────────────
+    if ($.fn.filemanager) {
+        $('.panel-file-manager-image').filemanager('image', {
+            prefix: '/laravel-filemanager'
+        });
+    }
+    $('.panel-file-manager-pdf').filemanager('pdf', {
+        prefix: '/laravel-filemanager'
     });
 
-    // Fix for Summernote modals close button in Bootstrap 5
-    document.addEventListener('click', function(e) {
-        if (e.target.closest('.note-modal .close')) {
-            const modal = e.target.closest('.note-modal');
-            if (modal) {
-                $(modal).modal('hide');
+    // ── Summernote: description ────────────────────────────────────────────
+    $('#summernote_description').summernote({
+        height: 250,
+        callbacks: {
+            onChange: function () {
+                $('textarea[name="description"]').val(
+                    $('#summernote_description').summernote('code')
+                );
             }
         }
     });
 
-    document.addEventListener('DOMContentLoaded', function() {
-        togglePrintFields();
-        calculateTotalPrice();
+    // ── Summernote: content ────────────────────────────────────────────────
+    $('#summernote_content').summernote({
+        height: 250,
+        callbacks: {
+            onChange: function () {
+                $('textarea[name="content"]').val(
+                    $('#summernote_content').summernote('code')
+                );
+            }
+        }
     });
 
-    function togglePrintFields() {
-        
-        const bookType = document.getElementById('book_type').value;
-        const printFields = document.getElementById('print_fields');
-        const pageCountInput = document.getElementById('page_count');
-        const shippingPriceInput = document.getElementById('shipping_price');
-        const printPriceInput = document.getElementById('print_price');
-        
-        if (bookType === 'Print') {
-            printFields.style.display = 'block';
-            
-            // Make print-related fields required for print books
-            pageCountInput.required = true;
-            shippingPriceInput.required = true;
-            printPriceInput.required = true;
-            shippingPriceInput.value = '14.85'; // Default shipping price
-            calculatePlatformFee();
+    // ── Initial state ──────────────────────────────────────────────────────
+    togglePrintFields();
+    calculateTotalPrice();
+});
 
+// ── Fix Summernote modal close button (Bootstrap 5) ────────────────────────
+document.addEventListener('click', function (e) {
+    if (e.target.closest('.note-modal .close')) {
+        var modal = e.target.closest('.note-modal');
+        if (modal) $(modal).modal('hide');
+    }
+});
+
+// ── Show / hide print-only fields ─────────────────────────────────────────
+function togglePrintFields() {
+    var bookType          = document.getElementById('book_type').value;
+    var printFields       = document.getElementById('print_fields');
+    var pageCountInput    = document.getElementById('page_count');
+    var shippingPriceInput = document.getElementById('shipping_price');
+    var printPriceInput   = document.getElementById('print_price');
+
+    if (bookType === 'Print') {
+        printFields.style.display    = 'block';
+        pageCountInput.required      = true;
+        shippingPriceInput.required  = true;
+        printPriceInput.required     = true;
+        shippingPriceInput.value     = '14.85';
+        calculatePlatformFee();
+    } else {
+        printFields.style.display    = 'none';
+        pageCountInput.value         = '';
+        pageCountInput.required      = false;
+        shippingPriceInput.value     = '';
+        shippingPriceInput.required  = false;
+        printPriceInput.value        = '';
+        printPriceInput.required     = false;
+        calculatePlatformFee();
+        calculateTotalPrice();
+    }
+}
+
+// ── Fetch Lulu print price ─────────────────────────────────────────────────
+async function calculateLuluPrice() {
+    var bookType = document.getElementById('book_type').value;
+    if (bookType !== 'Print') return;
+
+    var pagesInput     = document.getElementById('page_count');
+    var printPriceInput = document.getElementById('print_price');
+    var bookPriceInput  = document.getElementById('book_price');
+    var pages          = pagesInput.value;
+
+    if (!pages || pages < 1) {
+        alert('Please enter a valid number of pages (minimum 1)');
+        pagesInput.focus();
+        return;
+    }
+
+    try {
+        var response = await fetch('/panel/book/luluprice', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
+            },
+            body: JSON.stringify({ pages: pages })
+        });
+
+        var data = await response.json();
+
+        if (data.success) {
+            printPriceInput.value = data.print_price.toFixed(2);
+            if (bookPriceInput.value != '0') {
+                calculatePlatformFee();
+            }
         } else {
-            printFields.style.display = 'none';
-            
-            // Clear and disable print-related fields for non-print books
-            pageCountInput.value = '';
-            pageCountInput.required = false;
-            
-            shippingPriceInput.value = '';
-            shippingPriceInput.required = false;
-            
-            printPriceInput.value = '';
-            printPriceInput.required = false;
-            calculatePlatformFee();
-            // Recalculate total price with zero values
-            calculateTotalPrice();
+            alert('Error calculating print price: ' + (data.message || 'Unknown error'));
         }
+    } catch (error) {
+        console.error('Error:', error);
+        alert('Network error. Please check your connection and try again.');
     }
+}
 
-    async function calculateLuluPrice() {
+// ── Calculate platform fee (10% of total) ─────────────────────────────────
+function calculatePlatformFee() {
+    var shipping    = parseFloat(document.getElementById('shipping_price').value) || 0;
+    var print       = parseFloat(document.getElementById('print_price').value)    || 0;
+    var book        = parseFloat(document.getElementById('book_price').value)      || 0;
+    var fee         = (shipping + print + book) * 0.10;
 
-         const bookType = document.getElementById('book_type').value;
-        
-        // Only calculate Lulu price for Print books
-        if (bookType !== 'Print') {
+    document.getElementById('platform_price').value = fee.toFixed(2);
+    calculateTotalPrice();
+}
+
+// ── Calculate total price ──────────────────────────────────────────────────
+function calculateTotalPrice() {
+    var shipping = parseFloat(document.getElementById('shipping_price').value)  || 0;
+    var print    = parseFloat(document.getElementById('print_price').value)     || 0;
+    var platform = parseFloat(document.getElementById('platform_price').value)  || 0;
+    var book     = parseFloat(document.getElementById('book_price').value)      || 0;
+
+    document.getElementById('total_price').value = Math.round(shipping + print + book + platform);
+}
+
+// ── Live recalculate on book price change ──────────────────────────────────
+document.getElementById('book_price').addEventListener('input', calculatePlatformFee);
+
+// ── Form submit with full validation ──────────────────────────────────────
+document.getElementById('bookForm').addEventListener('submit', function (e) {
+    e.preventDefault();
+
+    // Sync Summernote HTML into hidden textareas before validating
+    $('textarea[name="description"]').val($('#summernote_description').summernote('code'));
+    $('textarea[name="content"]').val($('#summernote_content').summernote('code'));
+
+    var firstError = null;
+
+    // ── 1. Validate all native required fields ─────────────────────────
+    var self = this;
+    self.querySelectorAll('[required]').forEach(function (field) {
+        // Skip fields inside hidden print_fields when type is not Print
+        if (field.offsetParent === null) {
+            field.classList.remove('is-invalid');
             return;
         }
 
-        const pagesInput = document.getElementById('page_count');
-        const printPriceInput = document.getElementById('print_price');
-        const bookPriceInput = document.getElementById('book_price');
-        
-        const pages = pagesInput.value;
-        
-        if (!pages || pages < 1) {
-            alert('Please enter a valid number of pages (minimum 1)');
-            pagesInput.focus();
-            return;
-        }
-        
-        try {
-            // Make AJAX call to get Lulu price
-            const response = await fetch('/panel/book/luluprice', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
-                },
-                body: JSON.stringify({
-                    pages: pages
-                })
-            });
-            
-            const data = await response.json();
-            
-            if (data.success) {
-                const printPrice = data.print_price;
-                
-                // Update print price field
-                printPriceInput.value = printPrice.toFixed(2);
-                
-                // Auto-calculate platform fee and total
-                //calculatePlatformFee();
-                
-                // Auto-fill book price suggestion
-                if (bookPriceInput.value != '0') {
-                    //const suggestedPrice = (printPrice * 1.5).toFixed(2); // 50% markup suggestion
-                    //bookPriceInput.value = suggestedPrice;
-                    //bookPriceInput.placeholder = 'Suggested: ' + suggestedPrice;
-                    calculatePlatformFee();
-                }
-            } else {
-                alert('Error calculating print price: ' + (data.message || 'Unknown error'));
-            }
-        } catch (error) {
-            console.error('Error:', error);
-            alert('Network error. Please check your connection and try again.');
-        } finally {
-            // Hide loading spinner
-            printPriceLoading.style.display = 'none';
-        }
-    }
-
-    // Function to calculate platform fee (10% of book price)
-    function calculatePlatformFee() {
-
-        const shippingPrice = parseFloat(document.getElementById('shipping_price').value) || 0;
-        const printPrice = parseFloat(document.getElementById('print_price').value) || 0;
-        const bookPriceInput = parseFloat(document.getElementById('book_price').value) || 0;
-        const platformFeeInput = document.getElementById('platform_price');
-        
-        const totalPrice = shippingPrice + printPrice + bookPriceInput;
-        const platformFee = totalPrice * 0.10; // 10% platform fee
-        
-        platformFeeInput.value = platformFee.toFixed(2);
-        
-        // Recalculate total price
-        calculateTotalPrice();
-    }
-
-    // Function to calculate total price
-    function calculateTotalPrice() {
-
-        const shippingPrice = parseFloat(document.getElementById('shipping_price').value) || 0;
-        const printPrice = parseFloat(document.getElementById('print_price').value) || 0;
-        const platformFee = parseFloat(document.getElementById('platform_price').value) || 0;
-        const bookPriceInput = parseFloat(document.getElementById('book_price').value) || 0;
-        const totalPriceInput = document.getElementById('total_price');
-        
-        const totalPrice = shippingPrice + printPrice + bookPriceInput + platformFee;
-        totalPriceInput.value = Math.round(totalPrice);
-        // totalPriceInput.value = totalPrice.toFixed(2);
-    }
-
-    // Add event listeners for manual triggers
-    document.getElementById('book_price').addEventListener('input', calculatePlatformFee)
-
-    document.getElementById('bookForm').addEventListener('submit', function(e) {
-        if (this.checkValidity()) {
-            Swal.fire({
-                html: '<div class="d-flex align-items-center justify-content-center py-20"><div class="spinner-border text-primary" role="status"></div><span class="ml-15 font-16">Please wait...</span></div>',
-                showConfirmButton: false,
-                allowOutsideClick: false,
-                allowEscapeKey: false,
-                width: '20rem'
-            });
+        if (!field.value.trim()) {
+            field.classList.add('is-invalid');
+            if (!firstError) firstError = field;
+        } else {
+            field.classList.remove('is-invalid');
         }
     });
+
+    // ── 2. Validate Summernote Description ────────────────────────────
+    var descRaw   = $('textarea[name="description"]').val() || '';
+    var descText  = descRaw.replace(/<[^>]*>/g, '').trim();
+    var descEditor = $('#summernote_description').closest('.form-group').find('.note-editor');
+    var descErrorEl = document.getElementById('description_error');
+
+    if (!descText) {
+        descEditor.addClass('border-danger');
+        descErrorEl.style.display = 'block';
+        if (!firstError) firstError = descEditor[0];
+    } else {
+        descEditor.removeClass('border-danger');
+        descErrorEl.style.display = 'none';
+    }
+
+    // ── 3. Validate Summernote Content ────────────────────────────────
+    var contentRaw   = $('textarea[name="content"]').val() || '';
+    var contentText  = contentRaw.replace(/<[^>]*>/g, '').trim();
+    var contentEditor = $('#summernote_content').closest('.form-group').find('.note-editor');
+    var contentErrorEl = document.getElementById('content_error');
+
+    if (!contentText) {
+        contentEditor.addClass('border-danger');
+        contentErrorEl.style.display = 'block';
+        if (!firstError) firstError = contentEditor[0];
+    } else {
+        contentEditor.removeClass('border-danger');
+        contentErrorEl.style.display = 'none';
+    }
+
+    // ── 4. If any errors, scroll to first and stop ─────────────────────
+    if (firstError) {
+        firstError.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        return;
+    }
+
+    // ── 5. All valid — show loader and submit ──────────────────────────
+    Swal.fire({
+        html: '<div class="d-flex align-items-center justify-content-center py-20">' +
+              '<div class="spinner-border text-primary" role="status"></div>' +
+              '<span class="ml-15 font-16">Please wait...</span></div>',
+        showConfirmButton: false,
+        allowOutsideClick: false,
+        allowEscapeKey: false,
+        width: '20rem'
+    });
+
+    this.submit();
+});
+
 </script>
 @endpush

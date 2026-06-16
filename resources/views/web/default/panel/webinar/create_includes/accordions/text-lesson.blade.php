@@ -255,6 +255,22 @@
     background: var(--k-gold) !important;
     color: #000 !important;
 }
+/* MULTIPLE SELECT TAGS (PILLS) */
+.select2-container--default .select2-selection--multiple .select2-selection__choice {
+    background-color: var(--k-gold) !important;
+    border: 1px solid var(--k-border) !important;
+    color: #111 !important;
+    border-radius: 4px;
+    margin-top: 6px;
+}
+.select2-container--default .select2-selection--multiple .select2-selection__choice__remove {
+    color: #111 !important;
+    margin-right: 5px;
+}
+.select2-container--default .select2-selection--multiple .select2-selection__choice__remove:hover {
+    color: #000 !important;
+    background: transparent !important;
+}
 .select2-dropdown {
     background: #1a1a1a !important;
     border: 1px solid var(--k-border) !important;
@@ -267,6 +283,60 @@
     align-items: center;
     gap: 10px;
     padding-top: 10px;
+}
+
+/* =====================================================
+   MACOS / SAFARI FIX
+   Sortable parent <li> with cursor:move blocks pointer-events
+   and -webkit-user-select on child inputs/textareas in Safari.
+   Force all form elements inside text_lesson-form to be
+   always interactive.
+====================================================== */
+.text_lesson-form {
+    position: relative;
+    z-index: 2;
+}
+
+.text_lesson-form input,
+.text_lesson-form textarea,
+.text_lesson-form select,
+.text_lesson-form label,
+.text_lesson-form button,
+.text_lesson-form .kemetic-input,
+.text_lesson-form .kemetic-radio,
+.text_lesson-form .kemetic-switch {
+    position: relative;
+    z-index: 3;
+    pointer-events: auto !important;
+    -webkit-user-select: text !important;
+    user-select: text !important;
+    touch-action: auto !important;
+    cursor: auto;
+}
+
+.text_lesson-form button,
+.text_lesson-form .kemetic-btn-primary,
+.text_lesson-form .kemetic-btn-danger,
+.text_lesson-form .kemetic-file-btn,
+.text_lesson-form label.kemetic-switch {
+    cursor: pointer !important;
+}
+
+.text_lesson-form .select2-container {
+    position: relative;
+    z-index: 4;
+    pointer-events: auto !important;
+    touch-action: auto !important;
+}
+
+/* Ensure select2 dropdown renders above everything */
+.select2-dropdown {
+    z-index: 99999 !important;
+}
+
+/* Fix kemetic-collapse-body so it doesn't inherit grab cursor */
+.kemetic-collapse-body {
+    cursor: default;
 }
 
 </style>
@@ -395,7 +465,7 @@
 
                         <!-- TITLE -->
                         <div class="kemetic-group">
-                            <label class="kemetic-label">{{ trans('public.title') }}</label>
+                            <label class="kemetic-label">{{ trans('public.title') }} <span class="text-danger">*</span></label>
                             <input type="text"
                                    name="ajax[{{ !empty($textLesson) ? $textLesson->id : 'new' }}][title]"
                                    class="kemetic-input js-ajax-title"
@@ -405,7 +475,7 @@
 
                         <!-- STUDY TIME -->
                         <div class="kemetic-group">
-                            <label class="kemetic-label">{{ trans('public.study_time') }} (Min)</label>
+                            <label class="kemetic-label">{{ trans('public.study_time') }} (Min) <span class="text-danger">*</span></label>
                             <input type="number"
                                    name="ajax[{{ !empty($textLesson) ? $textLesson->id : 'new' }}][study_time]"
                                    class="kemetic-input js-ajax-study_time"
@@ -464,28 +534,26 @@
                                 $textLessonAttachmentsFileIds = [];
                             }
                         @endphp
+                        @if(!empty($webinar->files) && count($webinar->files) > 0)
                         <div class="kemetic-group">
                             <label class="kemetic-label">{{ trans('public.attachments') }}</label>
                             <select class="js-ajax-attachments kemetic-input attachments-select2"
                                     multiple
                                     name="ajax[{{ !empty($textLesson) ? $textLesson->id : 'new' }}][attachments]">
-                                <option></option>
-
-                                @if(!empty($webinar->files))
-                                    @foreach($webinar->files as $filesInfo)
-                                        <option value="{{ $filesInfo->id }}"
-                                            @if(!empty($textLesson) and in_array($filesInfo->id,$textLessonAttachmentsFileIds)) selected @endif>
-                                            {{ $filesInfo->title }}
-                                        </option>
-                                    @endforeach
-                                @endif
+                                @foreach($webinar->files as $filesInfo)
+                                    <option value="{{ $filesInfo->id }}"
+                                        @if(!empty($textLesson) and in_array($filesInfo->id,$textLessonAttachmentsFileIds)) selected @endif>
+                                        {{ $filesInfo->title }}
+                                    </option>
+                                @endforeach
                             </select>
                         </div>
+                        @endif
 
 
                         <!-- SUMMARY -->
                         <div class="kemetic-group">
-                            <label class="kemetic-label">{{ trans('public.summary') }}</label>
+                            <label class="kemetic-label">{{ trans('public.summary') }} <span class="text-danger">*</span></label>
                             <textarea class="kemetic-input js-ajax-summary" rows="6"
                                       name="ajax[{{ !empty($textLesson) ? $textLesson->id : 'new' }}][summary]">
                                 {{ !empty($textLesson) ? $textLesson->summary : '' }}
@@ -497,7 +565,7 @@
                     <!-- CONTENT -->
                     <div class="col-12">
                         <div class="kemetic-group">
-                            <label class="kemetic-label">{{ trans('public.content') }}</label>
+                            <label class="kemetic-label">{{ trans('public.content') }} <span class="text-danger">*</span></label>
 
                             <div class="content-summernote js-ajax-file_path">
                                 <textarea class="js-content-summernote kemetic-input {{ !empty($textLesson) ? 'js-content-'.$textLesson->id : '' }}">

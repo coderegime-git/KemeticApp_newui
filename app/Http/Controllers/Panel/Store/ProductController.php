@@ -444,13 +444,13 @@ class ProductController extends Controller
                 'description' => $data['description'],
             ]);
         } elseif ($currentStep == 2) {
-            $data['cj_shipping_price'] = !empty($data['cj_shipping_price']) ? convertPriceToDefaultCurrency($data['cj_shipping_price']) : null;
-            $data['cj_your_price'] = !empty($data['cj_your_price']) ? convertPriceToDefaultCurrency($data['cj_your_price']) : null;
-            $data['platform_price'] = !empty($data['platform_price']) ? convertPriceToDefaultCurrency($data['platform_price']) : null;
-            $data['earning_price'] = !empty($data['earning_price']) ? convertPriceToDefaultCurrency($data['earning_price']) : null;
-            $data['own_platform_price'] = !empty($data['own_platform_price']) ? convertPriceToDefaultCurrency($data['own_platform_price']) : null;
-            $data['price'] = !empty($data['price']) ? convertPriceToDefaultCurrency($data['price']) : null;
-            $data['delivery_fee'] = !empty($data['delivery_fee']) ? convertPriceToDefaultCurrency($data['delivery_fee']) : null;
+            $data['cj_shipping_price'] = !empty($data['cj_shipping_price']) ? $data['cj_shipping_price'] : null;
+            $data['cj_your_price'] = !empty($data['cj_your_price']) ? $data['cj_your_price'] : null;
+            $data['platform_price'] = !empty($data['platform_price']) ? $data['platform_price'] : null;
+            $data['earning_price'] = !empty($data['earning_price']) ? $data['earning_price'] : null;
+            $data['own_platform_price'] = !empty($data['own_platform_price']) ? $data['own_platform_price'] : null;
+            $data['price'] = !empty($data['price']) ? $data['price'] : null;
+            $data['delivery_fee'] = !empty($data['delivery_fee']) ? $data['delivery_fee'] : null;
 
             if ($product->is_cj_product) {
                 $cjProduct = $this->cjService->getProductDetail($product->cj_vid);
@@ -460,8 +460,9 @@ class ProductController extends Controller
 
                     foreach ($cjProduct['variants'] as $v) {
                         $cjVPrice = (float) ($v['variantSellPrice'] ?? $v['sellPrice'] ?? 0);
+                        $cjVPriceVat = $cjVPrice * 1.20; // 20% VAT applied to base price
                         // Calculate final selling price for this specific variant
-                        $variantSellPrice = ceil(($cjVPrice + $shipping + $earning) / 0.9);
+                        $variantSellPrice = ceil(($cjVPriceVat + $shipping + $earning) / 0.9);
 
                         ProductCjVariant::where('product_id', $product->id)
                             ->where('vid', $v['vid'])
@@ -780,4 +781,76 @@ class ProductController extends Controller
         return response()->json([], 422);
     }
 
+    public function resyncCj(Request $request, $id)
+    {
+        $this->authorize("panel_products_create");
+        $user = auth()->user();
+
+        if (!$user->checkCanAccessToStore() || (!$user->isTeacher() and !$user->isOrganization())) {
+            return response()->json(['code' => 403, 'message' => 'Unauthorized'], 403);
+        }
+
+        $product = Product::where('id', $id)
+            ->where('creator_id', $user->id)
+            ->first();
+
+        if (empty($product) || !$product->is_cj_product || empty($product->cj_vid)) {
+            return response()->json(['code' => 404, 'message' => 'Product not found or not a CJ Product'], 404);
+        }
+
+        $cjProductDetails = $this->cjService->getProductDetail($product->cj_vid);
+
+        if (empty($cjProductDetails)) {
+            return response()->json(['code' => 500, 'message' => 'Failed to fetch details from CJ Dropshipping'], 500);
+        }
+
+        // Update product translations (title, description, summary)
+        $locale = $request->get('locale', app()->getLocale());
+        
+        ProductTranslation::updateOrCreate([
+            'product_id' => $product->id,
+            'locale' => mb_strtolower($locale),
+        ], [
+            'title' => $cjProductDetails['productNameEn'] ?? $product->title,
+            'seo_description' => mb_substr($cjProductDetails['productNameEn'] ?? $product->seo_description, 0, 160),
+            'summary' => mb_substr(strip_tags($cjProductDetails['description'] ?? $product->summary), 0, 255),
+            'description' => $cjProductDetails['description'] ?? $product->description,
+        ]);
+
+        // Resync Variants
+        if (!empty($cjProductDetails['variants'])) {
+            foreach ($cjProductDetails['variants'] as $v) {
+                $existingVariant = \App\Models\ProductCjVariant::where('product_id', $product->id)
+                                    ->where('vid', $v['vid'])
+                                    ->first();
+                if ($existingVariant) {
+                    $existingVariant->update([
+                        'variant_name' => $v['variantNameEn'] ?? $v['variantKey'] ?? 'Variant',
+                        'variant_key' => $v['variantKey'] ?? '',
+                        'variant_sku' => $v['variantSku'] ?? '',
+                        'variant_image' => $v['variantImage'] ?? null,
+                    ]);
+                } else {
+                    \App\Models\ProductCjVariant::create([
+                        'product_id' => $product->id,
+                        'cj_pid' => $product->cj_vid,
+                        'vid' => $v['vid'],
+                        'variant_name' => $v['variantNameEn'] ?? $v['variantKey'] ?? 'Variant',
+                        'variant_key' => $v['variantKey'] ?? '',
+                        'variant_sku' => $v['variantSku'] ?? '',
+                        'sell_price' => $v['variantSellPrice'] ?? $v['sellPrice'] ?? $cjProductDetails['sellPrice'] ?? 0,
+                        'variant_image' => $v['variantImage'] ?? null,
+                        'is_selected' => false,
+                        'created_at' => time(),
+                        'updated_at' => time(),
+                    ]);
+                }
+            }
+        }
+
+        return response()->json([
+            'code' => 200,
+            'message' => 'Product resynchronized successfully!'
+        ], 200);
+    }
 }

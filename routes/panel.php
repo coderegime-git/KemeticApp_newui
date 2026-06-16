@@ -394,6 +394,7 @@ Route::group(['namespace' => 'Panel', 'prefix' => 'panel', 'middleware' => ['imp
                 Route::post('/{id}/update', 'ProductController@update');
                 Route::get('/{id}/delete', 'ProductController@destroy');
                 Route::post('/{id}/getContentItemByLocale', 'ProductController@getContentItemByLocale');
+                Route::post('/{id}/resync-cj', 'ProductController@resyncCj');
 
                 Route::group(['prefix' => 'filters'], function () {
                     Route::get('/get-by-category-id/{categoryId}', 'ProductFilterController@getByCategoryId');

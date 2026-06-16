@@ -848,6 +848,540 @@ main.home-container {
   .fix-note strong { color: #fff; }
   .badge-bug  { display:inline-block; background:#ff3b30; color:#fff;  font-size:11px; font-weight:800; padding:2px 8px; border-radius:999px; margin-right:4px; }
   .badge-fix  { display:inline-block; background:#34c759; color:#000; font-size:11px; font-weight:800; padding:2px 8px; border-radius:999px; margin-right:4px; }
+
+@import url('https://fonts.googleapis.com/css2?family=Cinzel:wght@600;700;900&family=Raleway:wght@400;500;600;700;800;900&display=swap');
+
+/* ── SECTION 1: FUNNEL ── */
+.kh-funnel{
+  position:relative;
+  background:linear-gradient(135deg,#0d0618 0%,#1a0b2e 40%,#0f0820 100%);
+  overflow:hidden;
+  font-family:'Raleway',sans-serif;
+}
+
+/* LEFT CHAKRA COLUMN */
+.kh-chakra-col{
+  position:absolute;
+  left:14px;
+  top:20%;
+  transform:translateY(-50%);
+  display:flex;
+  flex-direction:column;
+  gap:14px;
+  z-index:10;
+}
+.kh-chakra-col .ch{
+  width:36px;height:36px;
+  border-radius:50%;
+  display:flex;align-items:center;justify-content:center;
+  font-size:18px;
+  border:2px solid;
+  cursor:pointer;
+  transition:transform .2s;
+  background:rgba(0,0,0,.4);
+  backdrop-filter:blur(4px);
+}
+.kh-chakra-col .ch:hover{transform:scale(1.2)}
+.ch-r{border-color:#ff1744;box-shadow:0 0 12px rgba(255,23,68,.5);color:#ff1744}
+.ch-o{border-color:#ff6d00;box-shadow:0 0 12px rgba(255,109,0,.5);color:#ff6d00}
+.ch-y{border-color:#ffd600;box-shadow:0 0 12px rgba(255,214,0,.5);color:#ffd600}
+.ch-g{border-color:#00e676;box-shadow:0 0 12px rgba(0,230,118,.5);color:#00e676}
+.ch-b{border-color:#00b0ff;box-shadow:0 0 12px rgba(0,176,255,.5);color:#00b0ff}
+.ch-i{border-color:#651fff;box-shadow:0 0 12px rgba(101,31,255,.5);color:#651fff}
+.ch-v{border-color:#e040fb;box-shadow:0 0 12px rgba(224,64,251,.5);color:#e040fb}
+
+/* HERO */
+.kh-hero{
+  min-height:440px;
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  align-items:center;
+  padding:50px 60px 50px 80px;
+  position:relative;
+  overflow:hidden;
+}
+.kh-hero::before{
+  content:'';
+  position:absolute;
+  inset:0;
+  background:
+    radial-gradient(ellipse 60% 80% at 70% 50%, rgba(120,40,200,.18) 0%, transparent 65%),
+    radial-gradient(ellipse 40% 60% at 30% 50%, rgba(212,175,55,.06) 0%, transparent 60%);
+  pointer-events:none;
+}
+
+/* STAR PARTICLES */
+.kh-hero::after{
+  content:'';
+  position:absolute;
+  inset:0;
+  background-image:
+    radial-gradient(1px 1px at 15% 20%, rgba(255,255,255,.7) 0%, transparent 100%),
+    radial-gradient(1px 1px at 85% 15%, rgba(255,255,255,.6) 0%, transparent 100%),
+    radial-gradient(1px 1px at 25% 75%, rgba(255,255,255,.5) 0%, transparent 100%),
+    radial-gradient(1px 1px at 75% 80%, rgba(255,255,255,.4) 0%, transparent 100%),
+    radial-gradient(1.5px 1.5px at 50% 10%, rgba(212,175,55,.8) 0%, transparent 100%),
+    radial-gradient(1px 1px at 90% 50%, rgba(255,255,255,.5) 0%, transparent 100%);
+  pointer-events:none;
+}
+
+.kh-hero-left{position:relative;z-index:2}
+.kh-step{
+  display:inline-flex;align-items:center;gap:8px;
+  color:var(--gold);
+  border:1px solid rgba(212,175,55,.5);
+  border-radius:999px;
+  padding:7px 16px;
+  font-size:11px;
+  font-weight:800;
+  letter-spacing:2px;
+  margin-bottom:22px;
+  background:rgba(212,175,55,.07);
+  backdrop-filter:blur(4px);
+}
+.kh-step::before{content:'✦';font-size:10px}
+
+.kh-hero h1{
+  font-family:'Cinzel',serif;
+  font-size:clamp(32px,4.5vw,62px);
+  line-height:1.08;
+  margin:0 0 18px;
+  color:#fff;
+  font-weight:900;
+}
+.kh-hero h1 em{
+  color:var(--gold);
+  font-style:normal;
+  display:block;
+  text-shadow:0 0 40px rgba(212,175,55,.4);
+}
+
+.kh-hero-sub{
+  font-size:16px;
+  line-height:1.6;
+  color:rgba(255,255,255,.8);
+  margin:0 0 28px;
+  max-width:480px;
+}
+
+.kh-actions{display:flex;gap:14px;flex-wrap:wrap;margin-bottom:28px}
+
+.kh-btn{
+  display:inline-flex;align-items:center;justify-content:center;gap:8px;
+  min-height:50px;padding:0 26px;
+  border-radius:10px;
+  font-weight:800;
+  font-size:15px;
+  letter-spacing:.3px;
+  cursor:pointer;border:none;
+  transition:transform .15s,box-shadow .15s,filter .15s;
+  font-family:'Raleway',sans-serif;
+}
+.kh-btn:hover{transform:translateY(-2px)}
+
+.kh-gold{
+  background:linear-gradient(135deg,#c9991a,#e8bb30,#f5d060,#d4a020);
+  color:#0a0612!important;
+  box-shadow:0 4px 24px rgba(212,175,55,.45);
+  border:1px solid rgba(255,210,80,.3);
+}
+.kh-gold:hover{box-shadow:0 8px 32px rgba(212,175,55,.6)}
+
+.kh-outline{
+  background:rgba(255,255,255,.05);
+  border:1px solid rgba(212,175,55,.4)!important;
+  color:#fff!important;
+}
+.kh-outline:hover{background:rgba(255,255,255,.09)}
+
+.kh-purple-btn{
+  background:linear-gradient(135deg,#6b1fb5,#9b3de8);
+  color:#fff!important;
+  box-shadow:0 4px 20px rgba(107,31,181,.5);
+}
+
+/* SOCIAL PROOF ROW */
+.kh-proof-row{
+  display:flex;align-items:center;gap:12px;
+  font-size:14px;color:rgba(255,255,255,.8);
+}
+.kh-avatars{display:flex}
+.kh-avatars span{
+  width:32px;height:32px;border-radius:50%;
+  border:2px solid var(--dark);
+  background:linear-gradient(135deg,#7b4f2e,#c8956c);
+  margin-left:-8px;
+  display:flex;align-items:center;justify-content:center;
+  font-size:12px;
+  overflow:hidden;
+}
+.kh-avatars span:first-child{margin-left:0}
+.kh-proof-row strong{color:var(--gold)}
+
+/* HERO RIGHT – image area */
+.kh-hero-right{
+  position:relative;z-index:2;
+  display:flex;align-items:center;justify-content:flex-end;
+  height:100%;
+}
+.kh-hero-right img{
+  width:100%;max-width:560px;
+  height:620px;
+  object-fit:cover;
+  filter:drop-shadow(0 0 40px rgba(180,80,255,.3));
+  border-radius:24px;
+}
+
+/* RIGHT SIDE CHAKRA STAR ROW (horizontal, bottom of hero) */
+.kh-star-row{
+  display:flex;align-items:center;justify-content:flex-end;
+  gap:14px;
+  padding:10px 60px 10px 80px;
+  background:rgba(10,6,18,.6);
+  border-top:1px solid rgba(212,175,55,.1);
+  border-bottom:1px solid rgba(212,175,55,.1);
+}
+.kh-star-item{
+  display:flex;align-items:center;justify-content:center;
+  width:32px;height:32px;
+  border-radius:50%;
+  font-size:15px;
+  border:1px solid;
+  cursor:pointer;
+  transition:transform .2s;
+}
+.kh-star-item:hover{transform:scale(1.25)}
+
+/* DIVIDER LINE ORNAMENT */
+.kh-divider{
+  display:flex;align-items:center;gap:0;
+  width:100%;
+}
+.kh-divider-line{flex:1;height:1px;background:linear-gradient(90deg,transparent,var(--edge),transparent)}
+.kh-divider-icon{color:var(--gold);font-size:16px;padding:0 10px;opacity:.8}
+
+/* ── EXPLORE BAND ── */
+.kh-explore{
+  padding:36px 60px 40px 80px;
+  background:linear-gradient(180deg,#120920,#0d0618);
+  border-top:1px solid var(--edgefaint);
+}
+.kh-explore-head{
+  display:flex;align-items:center;gap:20px;
+  margin-bottom:28px;
+}
+.kh-explore-head .kh-step{margin-bottom:0}
+.kh-explore-title-row{
+  flex:1;
+  display:flex;align-items:center;gap:12px;
+}
+.kh-explore-title-row::before,
+.kh-explore-title-row::after{
+  content:'';flex:1;height:1px;
+  background:linear-gradient(90deg,rgba(212,175,55,.3),transparent);
+}
+.kh-explore-title-row::after{
+  background:linear-gradient(270deg,rgba(212,175,55,.3),transparent);
+}
+.kh-explore h2{
+  font-family:'Cinzel',serif;
+  font-size:clamp(20px,2.5vw,30px);
+  color:var(--gold);
+  white-space:nowrap;
+  letter-spacing:1px;
+  font-weight:700;
+}
+
+.kh-features-grid{
+  display:grid;
+  grid-template-columns:repeat(6,1fr);
+  gap:16px;
+}
+
+.kh-feat{
+  padding:28px 16px 22px;
+  border-radius:16px;
+  text-align:center;
+  border:1px solid;
+  background:rgba(255,255,255,.03);
+  cursor:pointer;
+  transition:transform .2s,box-shadow .2s;
+  position:relative;
+  overflow:hidden;
+}
+.kh-feat::before{
+  content:'';
+  position:absolute;inset:0;
+  background:radial-gradient(ellipse at 50% 0%,var(--feat-glow,rgba(212,175,55,.1)) 0%,transparent 70%);
+  pointer-events:none;
+}
+.kh-feat:hover{transform:translateY(-5px);box-shadow:0 12px 32px rgba(0,0,0,.4)}
+
+.kh-feat-icon{font-size:42px;margin-bottom:14px;display:block;line-height:1}
+.kh-feat-name{font-size:15px;font-weight:800;margin-bottom:8px;letter-spacing:.3px}
+.kh-feat-desc{font-size:12.5px;color:rgba(255,255,255,.7);line-height:1.45}
+
+.kf-courses {border-color:rgba(155,61,232,.6);--feat-glow:rgba(155,61,232,.15)}
+.kf-courses .kh-feat-name{color:#b06aff}
+.kf-articles{border-color:rgba(255,140,0,.6);--feat-glow:rgba(255,140,0,.15)}
+.kf-articles .kh-feat-name{color:#ff9500}
+.kf-books  {border-color:rgba(0,176,255,.6);--feat-glow:rgba(0,176,255,.15)}
+.kf-books .kh-feat-name{color:#00b0ff}
+.kf-live   {border-color:rgba(0,230,118,.6);--feat-glow:rgba(0,230,118,.15)}
+.kf-live .kh-feat-name{color:#00e676}
+.kf-reels  {border-color:rgba(255,61,128,.6);--feat-glow:rgba(255,61,128,.15)}
+.kf-reels .kh-feat-name{color:#ff4081}
+.kf-community{border-color:rgba(212,175,55,.6);--feat-glow:rgba(212,175,55,.15)}
+.kf-community .kh-feat-name{color:var(--gold)}
+
+/* ── JOIN BAND ── */
+.kh-join{
+  padding:36px 60px 44px 80px;
+  background:linear-gradient(180deg,#0d0618,#120920);
+  border-top:1px solid var(--edgefaint);
+}
+.kh-join-head{
+  display:flex;align-items:center;gap:20px;
+  margin-bottom:30px;
+}
+.kh-join-title-row{
+  flex:1;
+  display:flex;align-items:center;gap:12px;
+}
+.kh-join-title-row::before,
+.kh-join-title-row::after{
+  content:'';flex:1;height:1px;
+  background:linear-gradient(90deg,rgba(212,175,55,.3),transparent);
+}
+.kh-join-title-row::after{
+  background:linear-gradient(270deg,rgba(212,175,55,.3),transparent);
+}
+.kh-join h2{
+  font-family:'Cinzel',serif;
+  font-size:clamp(20px,2.5vw,30px);
+  color:var(--gold);
+  white-space:nowrap;
+  letter-spacing:1px;
+  font-weight:700;
+}
+
+.kh-plans-grid{
+  max-width:800px;margin:0 auto 28px;
+  display:grid;grid-template-columns:1fr 1fr;
+  gap:20px;
+}
+
+.kh-plan{
+  position:relative;
+  text-align:center;
+  padding:34px 28px;
+  border-radius:18px;
+  background:rgba(255,255,255,.03);
+  border:1px solid rgba(255,255,255,.14);
+  overflow:hidden;
+}
+.kh-plan::before{
+  content:'';
+  position:absolute;inset:0;
+  background:radial-gradient(ellipse at 50% 100%,rgba(120,40,200,.12) 0%,transparent 70%);
+  pointer-events:none;
+}
+
+/* DECORATIVE ANKH/EYE WATERMARK */
+.kh-plan-watermark{
+  position:absolute;
+  font-size:90px;
+  opacity:.04;
+  bottom:-10px;right:-10px;
+  line-height:1;
+  pointer-events:none;
+}
+
+.kh-plan-featured{
+  border-color:rgba(212,175,55,.7)!important;
+  box-shadow:0 0 40px rgba(212,175,55,.12),inset 0 0 40px rgba(212,175,55,.04);
+  background:rgba(212,175,55,.05)!important;
+}
+
+.kh-plan-badge{
+  position:absolute;top:-1px;left:50%;transform:translateX(-50%);
+  background:var(--gold);color:#0a0612;
+  padding:5px 18px;border-radius:0 0 12px 12px;
+  font-size:11px;font-weight:900;letter-spacing:1.5px;text-transform:uppercase;
+  white-space:nowrap;
+}
+
+.kh-plan h3{
+  font-family:'Cinzel',serif;
+  font-size:18px;font-weight:700;
+  margin:0 0 14px;
+  color:var(--gold);letter-spacing:.5px;
+}
+
+.kh-plan-price{
+  font-family:'Cinzel',serif;
+  font-size:62px;font-weight:900;
+  color:#fff;line-height:1;
+  margin-bottom:8px;
+}
+.kh-plan-price sub{font-size:28px;vertical-align:super}
+
+.kh-plan p{color:rgba(255,255,255,.7);font-size:14px;margin:0 0 22px}
+
+.kh-benefits-row{
+  display:flex;justify-content:center;gap:28px;flex-wrap:wrap;
+  font-size:13.5px;color:rgba(255,255,255,.85);
+  padding:0 60px 0 80px;
+}
+.kh-benefits-row span{display:flex;align-items:center;gap:7px}
+.kh-benefits-row span::before{content:'✓';color:var(--gold);font-weight:900;font-size:14px}
+
+/* ── RESPONSIVE ── */
+@media(max-width:900px){
+  .kh-chakra-col{
+    display:flex;
+    position:absolute;
+    flex-direction:column;
+    left:6px;
+    top:10%;
+    transform:translateY(-50%);
+    gap:10px;
+    z-index:10;
+  }
+  .kh-chakra-col .ch{
+    width:28px;
+    height:28px;
+    font-size:13px;
+  }
+  .kh-hero{
+    grid-template-columns:1fr;
+    padding:30px 44px 40px;
+    min-height:auto;
+    text-align:center;
+  }
+  .kh-hero-sub{margin:0 auto 28px}
+  .kh-actions{justify-content:center}
+  .kh-proof-row{justify-content:center}
+  .kh-hero-right{display:block; margin-top:30px;}
+  .kh-star-row{padding:10px 24px;justify-content:center}
+  .kh-explore,.kh-join{padding:28px 20px}
+  .kh-features-grid{grid-template-columns:repeat(3,1fr)}
+  .kh-plans-grid{grid-template-columns:1fr}
+  .kh-benefits-row{padding:0 20px}
+}
+@media(max-width:600px){
+  .kh-features-grid{grid-template-columns:repeat(2,1fr)}
+  .kh-hero h1{font-size:32px}
+  .kh-actions{flex-direction:column;align-items:stretch}
+  .kh-btn{width:100%}
+}
+
+/* SECTION 2 CSS */
+.kh-transform-section{
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:0;
+  margin:24px 0;
+  overflow:hidden;
+  border-radius:24px;
+  border:1px solid rgba(212,175,55,.35);
+  background:linear-gradient(180deg,#120A1F,#050308);
+}
+
+.kh-transform-image{
+  min-height:620px;
+  background:
+    linear-gradient(90deg,rgba(5,3,8,.05),rgba(5,3,8,.85)),
+    url('https://kemetic.app/store/1/6a227224e1c90.PNG');
+  background-size:cover;
+  background-position:center;
+}
+
+.kh-transform-content{
+  padding:46px 34px;
+  color:#fff;
+}
+
+.kh-transform-content h2{
+  font-size:clamp(34px,5vw,58px);
+  line-height:1.05;
+  margin:16px 0 22px;
+  color:#fff;
+}
+
+.kh-transform-content h2 span,
+.kh-transform-content strong{
+  color:#D4AF37;
+}
+
+.kh-transform-content p{
+  font-size:17px;
+  line-height:1.65;
+  color:rgba(255,255,255,.86);
+  margin:0 0 16px;
+}
+
+.kh-transform-icons{
+  display:flex;
+  flex-wrap:wrap;
+  gap:10px;
+  margin:24px 0;
+}
+
+.kh-transform-icons span{
+  padding:10px 14px;
+  border-radius:999px;
+  background:rgba(255,255,255,.06);
+  border:1px solid rgba(212,175,55,.25);
+  color:#fff;
+  font-size:14px;
+}
+
+.kh-transform-cta{
+  margin-top:26px;
+  padding:26px;
+  text-align:center;
+  border-radius:22px;
+  background:rgba(255,255,255,.05);
+  border:1px solid rgba(212,175,55,.35);
+}
+
+.kh-transform-cta h3{
+  color:#D4AF37;
+  font-size:30px;
+  margin:0 0 8px;
+}
+
+.kh-transform-cta p{
+  margin:0 0 18px;
+  color:#fff;
+}
+
+.kh-transform-cta small{
+  display:block;
+  margin-top:12px;
+  color:rgba(255,255,255,.72);
+}
+
+@media(max-width:820px){
+  .kh-transform-section{
+    grid-template-columns:1fr;
+    border-radius:20px;
+  }
+
+  .kh-transform-image{
+    min-height:360px;
+  }
+
+  .kh-transform-content{
+    padding:32px 18px;
+  }
+
+  .kh-transform-icons{
+    display:grid;
+    grid-template-columns:1fr 1fr;
+  }
+}
 </style>
     
 <!-- <header class="home-topnav"> -->
@@ -881,19 +1415,355 @@ main.home-container {
       </div>
     </div> -->
 
-    <div class="home-membership-cta">
-      <div class="title">Awaken and Ascend</div>
-      <div class="desc">
-        Dive into the ancient wisdom of Kemet. Align your chakras and join a global community
-        of Seekers and Wisdom Keepers.
+    <section class="kh-funnel">
+
+      <!-- LEFT CHAKRA COLUMN -->
+      <div class="kh-chakra-col">
+        <div class="ch ch-r">✶</div>
+        <div class="ch ch-o">✶</div>
+        <div class="ch ch-y">✶</div>
+        <div class="ch ch-g">✶</div>
+        <div class="ch ch-b">✶</div>
+        <div class="ch ch-i">✶</div>
+        <div class="ch ch-v">✶</div>
       </div>
-       @if(auth()->check())
-      <button class="btn" onclick="location.href='/membership'">UPGRADE</button>
-      @else
-      <button class="btn" onclick="storeRedirectThenLogin()">BECOME A MEMBER</button>
-      @endif
-      <div class="price">€10 / €33 • Unlimited access</div>
-    </div>
+
+      <!-- HERO -->
+      <div class="kh-hero">
+        <div class="kh-hero-left">
+          <div class="kh-step">01 • DISCOVER</div>
+ 
+          <h1>
+            Unlock the 
+            <em>Wisdom</em>
+            of the Mystery Schools
+          </h1>
+
+          <p class="kh-hero-sub">
+            From the teachings of Moses and Yeshua to the wisdom of the ancient Pharaohs, the search for knowledge has connected seekers across generations.<br><br>
+            Kemetic App unites mystery teachings and wisdom traditions from Africa, Asia, Europe, North America, South America, Australia, and Oceania, creating a modern Mystery School where seekers can explore courses, books, articles, livestreams, and communities from around the globe.
+          </p>
+
+          <div class="kh-actions">
+            @if(auth()->check())
+              <button class="kh-btn kh-gold" onclick="location.href='/membership'">👑 Become A Member</button>
+               <a onclick="location.href='/membership'" class="kh-btn kh-outline">▶ Explore Platform</a>
+            @else
+              <button class="kh-btn kh-gold" onclick="storeRedirectThenLogin()">👑 Become A Member</button>
+              <a onclick="storeRedirectThenLogin()" class="kh-btn kh-outline">▶ Explore Platform</a>
+            @endif
+           
+          </div>
+
+          <div class="kh-proof-row">
+            <div class="kh-avatars">
+              <span style="background:linear-gradient(135deg,#8b5e3c,#d4936a)">👤</span>
+              <span style="background:linear-gradient(135deg,#3c5e8b,#6a93d4)">👤</span>
+              <span style="background:linear-gradient(135deg,#5e8b3c,#93d46a)">👤</span>
+              <span style="background:linear-gradient(135deg,#8b3c5e,#d46a93)">👤</span>
+              <span style="background:linear-gradient(135deg,#6b3c8b,#a36ad4)">👤</span>
+            </div>
+            <span><strong>{{ $totalWisdomSeekers }}</strong> Wisdom Seekers Worldwide</span>
+          </div>
+        </div>
+
+        <div class="kh-hero-right">
+          <img
+            src="https://kemetic.app/store/1/6a227224e1c90.PNG"
+            alt="Kemetic Wisdom Keepers"
+            onerror="this.src='data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 width=%22500%22 height=%22400%22><rect fill=%22%231a0b2e%22 width=%22500%22 height=%22400%22/><text x=%2250%25%22 y=%2250%25%22 fill=%22%23D4AF37%22 font-size=%2228%22 text-anchor=%22middle%22 dy=%22.3em%22>Your Hero Image Here</text></svg>'"
+          >
+        </div>
+      </div>
+
+      <!-- STAR / CHAKRA ROW (bottom of hero) -->
+      <div class="kh-star-row">
+        <span class="kh-star-item" style="border-color:#ff1744;color:#ff1744;box-shadow:0 0 8px rgba(255,23,68,.4)">✶</span>
+        <span class="kh-star-item" style="border-color:#ff6d00;color:#ff6d00;box-shadow:0 0 8px rgba(255,109,0,.4)">✶</span>
+        <span class="kh-star-item" style="border-color:#ffd600;color:#ffd600;box-shadow:0 0 8px rgba(255,214,0,.4)">✶</span>
+        <span class="kh-star-item" style="border-color:#00e676;color:#00e676;box-shadow:0 0 8px rgba(0,230,118,.4)">✶</span>
+        <span class="kh-star-item" style="border-color:#00b0ff;color:#00b0ff;box-shadow:0 0 8px rgba(0,176,255,.4)">✶</span>
+        <span class="kh-star-item" style="border-color:#651fff;color:#651fff;box-shadow:0 0 8px rgba(101,31,255,.4)">✶</span>
+        <span class="kh-star-item" style="border-color:#e040fb;color:#e040fb;box-shadow:0 0 8px rgba(224,64,251,.4)">✶</span>
+        <span style="color:var(--gold);font-size:18px;opacity:.6">👑</span>
+      </div>
+
+      <!-- 02 EXPLORE -->
+      <div id="kh-explore" class="kh-explore">
+        <div class="kh-explore-head">
+          <div class="kh-step" style="margin-bottom:0">02 • EXPLORE</div>
+          <div class="kh-explore-title-row">
+            <h2>What You Unlock With Membership</h2>
+          </div>
+        </div>
+
+        <div class="kh-features-grid">
+          <div class="kh-feat kf-courses">
+            <span class="kh-feat-icon">🎓</span>
+            <div class="kh-feat-name">Courses</div>
+            <div class="kh-feat-desc">Learn from Wisdom Keepers.</div>
+          </div>
+          <div class="kh-feat kf-articles">
+            <span class="kh-feat-icon">📖</span>
+            <div class="kh-feat-name">Articles</div>
+            <div class="kh-feat-desc">Read deep wisdom teachings.</div>
+          </div>
+          <div class="kh-feat kf-books">
+            <span class="kh-feat-icon">📚</span>
+            <div class="kh-feat-name">Books</div>
+            <div class="kh-feat-desc">Access sacred scrolls.</div>
+          </div>
+          <div class="kh-feat kf-live">
+            <span class="kh-feat-icon">📡</span>
+            <div class="kh-feat-name">Livestreams</div>
+            <div class="kh-feat-desc">Join live classes and events.</div>
+          </div>
+          <div class="kh-feat kf-reels">
+            <span class="kh-feat-icon">🎬</span>
+            <div class="kh-feat-name">Reels</div>
+            <div class="kh-feat-desc">Swipe through wisdom drops.</div>
+          </div>
+          <div class="kh-feat kf-community">
+            <span class="kh-feat-icon">🌍</span>
+            <div class="kh-feat-name">Community</div>
+            <div class="kh-feat-desc">Connect with global Seekers.</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 03 JOIN -->
+      <div id="memberShip" class="kh-join">
+        <div class="kh-join-head">
+          <div class="kh-step" style="margin-bottom:0">03 • JOIN</div>
+          <div class="kh-join-title-row">
+            <h2>Simple Membership</h2>
+          </div>
+        </div>
+
+        @php
+          $yearlySubscribe   = collect($subscribes)->firstWhere('days', 365);
+          $lifetimeSubscribe = collect($subscribes)->firstWhere('days', 100000);
+        @endphp
+
+        {{-- Hidden payment forms --}}
+        @if($yearlySubscribe)
+          <form action="/panel/financial/recurringPay-subscribes?auto_redirect=1" method="post"
+                id="khFormYearly" style="display:none;">
+            {{ csrf_field() }}
+            <input name="currency" value="EUR" type="hidden">
+            <input name="amount"   value="{{ $yearlySubscribe->price }}" type="hidden">
+            <input name="id"       value="{{ $yearlySubscribe->id }}" type="hidden">
+          </form>
+        @endif
+        @if($lifetimeSubscribe)
+          <form action="/panel/financial/recurringPay-subscribes?auto_redirect=1" method="post"
+                id="khFormLifetime" style="display:none;">
+            {{ csrf_field() }}
+            <input name="currency" value="EUR" type="hidden">
+            <input name="amount"   value="{{ $lifetimeSubscribe->price }}" type="hidden">
+            <input name="id"       value="{{ $lifetimeSubscribe->id }}" type="hidden">
+          </form>
+        @endif
+
+        @php
+          $hasLifetime = $homeActiveSubscribe && $homeActiveSubscribe->days == 100000;
+          $hasAnySubscription = !empty($homeActiveSubscribe);
+        @endphp
+
+        <div class="kh-plans-grid">
+          <!-- Yearly -->
+          @if($yearlySubscribe)
+            @php
+              $isYearlyActive = $homeActiveSubscribe && $homeActiveSubscribe->id == $yearlySubscribe->id;
+            @endphp
+            <div class="kh-plan">
+              <div class="kh-plan-watermark">☥</div>
+              <h3>Yearly Access</h3>
+              <div class="kh-plan-price"><sub>€</sub>10</div>
+              <p>Full access for 12 months</p>
+              
+              @if($isYearlyActive)
+                <button class="kh-btn kh-purple-btn" style="width:100%;background:#d9534f;" onclick="location.href='/membership'">Manage / Cancel</button>
+              @elseif($hasLifetime)
+                <button class="kh-btn kh-purple-btn" disabled style="opacity:.5;cursor:not-allowed;width:100%">Already Lifetime</button>
+              @elseif($hasAnySubscription)
+                <button class="kh-btn kh-purple-btn" style="width:100%" onclick="location.href='/membership'">Upgrade</button>
+              @else
+                @if(auth()->check())
+                  <button class="kh-btn kh-purple-btn" style="width:100%" onclick="document.getElementById('khFormYearly').submit()">Get Started</button>
+                @else
+                  <button class="kh-btn kh-purple-btn" style="width:100%" onclick="storeRedirectThenLogin(document.getElementById('khFormYearly'))">Get Started</button>
+                @endif
+              @endif
+            </div>
+          @endif
+
+          <!-- Lifetime -->
+          @if($lifetimeSubscribe)
+            @php
+              $isLifetimeActive = $homeActiveSubscribe && $homeActiveSubscribe->days == 100000;
+            @endphp
+            <div class="kh-plan kh-plan-featured">
+              <div class="kh-plan-badge">BEST VALUE</div>
+              <div class="kh-plan-watermark">𓂀</div>
+              <h3>Lifetime Access</h3>
+              <div class="kh-plan-price"><sub>€</sub>33</div>
+              <p>One-time payment • Forever access</p>
+              
+              @if($isLifetimeActive)
+                <button class="kh-btn kh-gold" disabled style="opacity:.5;cursor:not-allowed;width:100%">Lifetime Activated</button>
+              @elseif($hasAnySubscription)
+                <button class="kh-btn kh-gold" style="width:100%" onclick="location.href='/membership'">Upgrade</button>
+              @else
+                @if(auth()->check())
+                  <button class="kh-btn kh-gold" style="width:100%" onclick="document.getElementById('khFormLifetime').submit()">Get Lifetime Access</button>
+                @else
+                  <button class="kh-btn kh-gold" style="width:100%" onclick="storeRedirectThenLogin(document.getElementById('khFormLifetime'))">Get Lifetime Access</button>
+                @endif
+              @endif
+            </div>
+          @endif
+        </div>
+
+        <div class="kh-benefits-row">
+          <span>Unlimited access</span>
+          <span>New content</span>
+          <span>PDFs &amp; books</span>
+          <span>Livestreams</span>
+          <span>Cancel anytime</span>
+        </div>
+      </div>
+
+    </section>
+
+    <!-- 04 WISDOM -->
+    <section class="kh-transform-section" style="margin-bottom: 24px;">
+
+      <div class="kh-transform-image" style="background-image: linear-gradient(90deg,rgba(5,3,8,.05),rgba(5,3,8,.85)), url('https://kemetic.app/store/1/6a227224e1c90.PNG');"></div>
+
+      <div class="kh-transform-content">
+
+        <div class="kh-step">04 • WISDOM</div>
+
+        <h2>
+          The Wisdom <span>Was Never Lost</span>
+        </h2>
+
+        <p>
+          Long before modern schools, universities, and institutions existed, seekers traveled great distances to study within the ancient Mystery Schools. These centers of learning were said to teach far more than reading and writing. Students explored philosophy, nature, mathematics, health, consciousness, leadership, and the deeper questions of human existence.
+        </p>
+
+        <p>
+          The goal was not simply to prepare people for a job.<br>
+          The goal was to prepare people for life.
+        </p>
+
+        <p>
+          Over time, much of this wisdom became fragmented across different cultures, traditions, and teachings around the world. Today, knowledge is scattered across countless books, teachers, courses, and communities, making it difficult for seekers to find a single place to begin their journey.
+        </p>
+
+        <p>
+          <strong>Kemetic App was created to change that.</strong>
+        </p>
+
+        <p>
+          We have brought together wisdom traditions, personal development teachings, holistic health, spiritual studies, ancient philosophies, books, articles, courses, livestreams, and communities from across Africa, Asia, Europe, North America, South America, and Oceania into one platform designed for modern seekers.
+        </p>
+
+        <p>
+          Whether you are searching for knowledge, personal growth, higher consciousness, or a community of like-minded individuals, your journey begins here.
+        </p>
+
+        <p style="margin-top:20px;margin-bottom:10px;">Explore our growing collection of:</p>
+
+        <div class="kh-transform-icons" style="margin-bottom:20px;">
+          <a href="https://kemetic.app/blog" style="color: inherit; text-decoration: none;">📖 Articles</a>
+          <a href="https://kemetic.app/classes?sort=newest" style="color: inherit; text-decoration: none;">🎓 Courses</a>
+          <a href="https://kemetic.app/book" style="color: inherit; text-decoration: none;">📚 Books</a>
+          <a href="https://kemetic.app/products" style="color: inherit; text-decoration: none;">🛍️ Products</a>
+          <a href="https://kemetic.app/reels" style="color: inherit; text-decoration: none;">🎬 Videos</a>
+        </div>
+
+        <div class="kh-transform-cta">
+          <p style="margin-bottom: 20px;">Access thousands of resources, connect with seekers worldwide, and continue your journey through the modern Mystery School.</p>
+          
+          <h3>Begin Your Journey Today</h3>
+
+          @if(auth()->check())
+            <button class="kh-btn kh-gold" onclick="location.href='/membership'">
+              👑 Become A Member
+            </button>
+          @else
+            <button class="kh-btn kh-gold" onclick="storeRedirectThenLogin()">
+              👑 Become A Member
+            </button>
+          @endif
+        </div>
+
+      </div>
+
+    </section>
+
+    <!-- 05 TRANSFORM -->
+    <section class="kh-transform-section">
+
+      <div class="kh-transform-content">
+
+        <div class="kh-step">05 • TRANSFORM</div>
+
+        <h2>
+          The Day Everything <span>Started To Make Sense</span>
+        </h2>
+
+        <p>
+          For years she searched everywhere. One video here. One book there.
+          One article on another website. The knowledge was scattered.
+        </p>
+
+        <p>
+          Then she discovered <strong>Kemetic App</strong>.
+        </p>
+
+        <p>
+          For the first time, courses, articles, books, livestreams, reels,
+          and Wisdom Keepers were all in one place.
+        </p>
+
+        <p>
+          Instead of feeling lost, she found direction.
+          Instead of consuming random information, she began building wisdom.
+        </p>
+
+        <div class="kh-transform-icons">
+          <span>🎓 Courses</span>
+          <span>📖 Articles</span>
+          <span>📚 Books</span>
+          <span>📡 Live</span>
+          <span>🎬 Reels</span>
+        </div>
+
+        <div class="kh-transform-cta">
+          <h3>Your Journey Starts Here</h3>
+          <p>Join {{ $totalWisdomSeekers }} Wisdom Seekers Worldwide</p>
+
+          @if(auth()->check())
+            <button class="kh-btn kh-gold" onclick="location.href='/membership'">
+              👑 Become A Member
+            </button>
+          @else
+            <button class="kh-btn kh-gold" onclick="storeRedirectThenLogin()">
+              👑 Become A Member
+            </button>
+          @endif
+
+          <small>Unlock courses, articles, books, livestreams, videos and more.</small>
+        </div>
+
+      </div>
+
+      <div class="kh-transform-image"></div>
+
+    </section>
 
     <main class="home-container">
       <!-- HERO: Course Spotlight -->

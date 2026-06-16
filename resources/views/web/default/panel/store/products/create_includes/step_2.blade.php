@@ -359,19 +359,38 @@
             @if(!empty($cjProduct))
                 @php
                     // Use cjPrice from controller if available, else fallback to product sellPrice
-                    $baseCjPrice = (float)($cjPrice ?? $cjProduct['sellPrice'] ?? 0);
-                    $defaultShipping = 0;
-                    // Initial total calculation: (Price + Shipping + Earning) / 0.9
-                    $initialSubtotal = $baseCjPrice + $defaultShipping;
-                    $initialTotal = $initialSubtotal / 0.9;
+                    $baseCjPrice     = (float)($cjPrice ?? $cjProduct['sellPrice'] ?? 0);
+
+                    // Displayed base price = original + 20% VAT
+                    $baseCjPriceVat  = round($baseCjPrice * 1.20, 2);
+
+                    // Shipping: simple tier based on ORIGINAL price (no extra %)
+                    $autoShipping    = $baseCjPrice > 0 ? (int)(ceil($baseCjPrice / 10) * 10) : 0;
+
+                    // Initial total calculation: (VAT base + Shipping) / 0.9
+                    $initialSubtotal = $baseCjPriceVat + $autoShipping;
+                    $initialTotal    = $initialSubtotal / 0.9;
                 @endphp
                 <div class="kemetic-card mb-20 shadow-sm" style="background: rgba(212,175,55,0.05); border: 1px dashed #d4af37;">
                     <h5 class="k-section-title font-16 mb-15">CJ Dropshipping Pricing</h5>
                     
+                    {{-- VAT Notice Banner --}}
+                    <!-- <div id="cjVatNotice" class="d-flex align-items-start mb-15 p-10 rounded" style="background:rgba(242,201,76,0.10); border:1px solid rgba(242,201,76,0.40);">
+                        <span style="font-size:18px; margin-right:8px;">⚠️</span>
+                        <div>
+                            <strong class="text-gold font-13">20% VAT Applied to CJ Base Price</strong>
+                            <p class="mb-0 font-11 text-gray" id="cjVatNoticeText">
+                                CJ cost <span class="text-white" id="cjOriginalPriceLabel">{{ $currency }}{{ number_format($baseCjPrice, 2) }}</span>
+                                + 20% VAT = <span class="text-gold font-weight-bold" id="cjVatPriceLabel">{{ $currency }}{{ number_format($baseCjPriceVat, 2) }}</span> (used as base price)
+                            </p>
+                        </div>
+                    </div> -->
+
                     <div class="row">
                         <div class="col-12 mb-15">
-                            <span class="d-block text-gray font-12">CJ Base Price</span>
-                            <span class="font-18 font-weight-bold text-white" id="cjBasePriceDisplay">{{ $currency }}{{ number_format($baseCjPrice, 2) }}</span>
+                            <span class="d-block text-gray font-12">CJ Base Price <small class="text-gold">(incl. 20% VAT)</small></span>
+                            <span class="font-18 font-weight-bold text-gold" id="cjBasePriceDisplay">{{ $currency }}{{ number_format($baseCjPriceVat, 2) }}</span>
+                            <input type="hidden" id="cjOriginalPriceRaw" value="{{ $baseCjPrice }}">
                         </div>
                     </div>
 
@@ -395,18 +414,21 @@
                                 <tbody>
                                     @foreach($cjProduct['variants'] as $v)
                                         @php 
-                                            $vPrice = (float)($v['variantSellPrice'] ?? $v['sellPrice'] ?? 0); 
-                                            $vShipping = (float)($product->cj_shipping_price ?? 0);
-                                            $vEarning = (float)($product->cj_your_price ?? 0);
-                                            $vSubtotal = $vPrice + $vShipping + $vEarning;
-                                            $vFinal = ceil($vSubtotal / 0.9);
-                                            $vFee = $vFinal * 0.1;
+                                            $vPrice      = (float)($v['variantSellPrice'] ?? $v['sellPrice'] ?? 0);
+                                            // VAT-adjusted display price
+                                            $vPriceVat   = round($vPrice * 1.20, 2);
+                                            // Shipping: simple tier on ORIGINAL price
+                                            $vShipping   = $vPrice > 0 ? (int)(ceil($vPrice / 10) * 10) : 0;
+                                            $vEarning    = (float)($product->cj_your_price ?? 0);
+                                            $vSubtotal   = $vPriceVat + $vShipping + $vEarning;
+                                            $vFinal      = ceil($vSubtotal / 0.9);
+                                            $vFee        = $vFinal * 0.1;
                                         @endphp
-                                        <tr class="{{ ($cjVariantId == $v['vid']) ? 'bg-gold-transparent' : '' }} variant-row" data-base-price="{{ $vPrice }}">
+                                        <tr class="{{ ($cjVariantId == $v['vid']) ? 'bg-gold-transparent' : '' }} variant-row" data-base-price="{{ $vPrice }}" data-base-price-vat="{{ $vPriceVat }}">
                                             <td class="pl-10" style="max-width: 200px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;" title="{{ $v['variantNameEn'] ?? 'Variant' }}">
                                                 {{ !empty($v['variantKey']) ? $v['variantKey'] : ($v['variantNameEn'] ?? 'Variant') }}
                                             </td>
-                                            <td class="v-base-price">{{ $currency }}{{ number_format($vPrice, 2) }}</td>
+                                            <td class="v-base-price" title="Original: {{ $currency }}{{ number_format($vPrice, 2) }}">{{ $currency }}{{ number_format($vPriceVat, 2) }} </td>
                                             <td class="v-shipping-price">{{ $currency }}{{ number_format($vShipping, 2) }}</td>
                                             <td class="v-earning-price">{{ $currency }}{{ number_format($vEarning, 2) }}</td>
                                             <td class="v-fee-price">{{ $currency }}{{ number_format($vFee, 2) }}</td>
@@ -429,13 +451,18 @@
                         <div class="col-6">
                             <div class="form-group">
                                 <label class="kemetic-label">Shipping Price</label>
-                                <input type="number" id="cjShippingPrice" name="cj_shipping_price" step="0.01" class="kemetic-input" placeholder="0.00" value="{{ (!empty($product) && !empty($product->cj_shipping_price)) ? convertPriceToUserCurrency($product->cj_shipping_price) : old('cj_shipping_price', '0.00') }}">
+                                <input type="number" id="cjShippingPrice" name="cj_shipping_price" step="1"
+                                       class="kemetic-input"
+                                       placeholder="0"
+                                       value="{{ $autoShipping }}"
+                                       readonly
+                                       style="opacity: 0.5; cursor: not-allowed; pointer-events: none; background: #0a0a0a;">
                             </div>
                         </div>
                         <div class="col-6">
                             <div class="form-group">
                                 <label class="kemetic-label">Earning price</label>
-                                <input type="number" id="userMargin" name="cj_your_price" step="0.01" class="kemetic-input" placeholder="0.00" value="{{ (!empty($product) && !empty($product->cj_your_price)) ? convertPriceToUserCurrency($product->cj_your_price) : old('cj_your_price', '0.00') }}">
+                                <input type="number" id="userMargin" name="cj_your_price" step="0.01" class="kemetic-input" placeholder="0" value="{{ (!empty($product) && isset($product->cj_your_price)) ? $product->cj_your_price : old('cj_your_price', '0') }}">
                             </div>
                         </div>
                     </div>
@@ -447,7 +474,7 @@
                         </div>
                         <div class="col-6">
                             <span class="d-block text-gray font-11">Platform Fee (10%)</span>
-                            <input type="number" id="platformprice" name="platform_price" step="0.01" class="kemetic-input" placeholder="0.00" value="{{ (!empty($product) && !empty($product->platform_price)) ? convertPriceToUserCurrency($product->platform_price) : old('platform_price') }}">
+                            <input type="number" id="platformprice" name="platform_price" step="0.01" class="kemetic-input" placeholder="0" value="{{ (!empty($product) && isset($product->platform_price)) ? $product->platform_price : old('platform_price') }}">
                         </div>
                     </div>
 
@@ -466,7 +493,7 @@
                         <div class="form-group">
                             <label class="input-label">{{ trans('update.delivery_fee') }}</label>
                             <input type="number" name="delivery_fee" data-price-input
-                                value="{{ (!empty($product) && isset($product->delivery_fee)) ? convertPriceToUserCurrency($product->delivery_fee) : old('delivery_fee') }}"
+                                value="{{ (!empty($product) && isset($product->delivery_fee)) ? $product->delivery_fee : old('delivery_fee') }}"
                                 class="form-control @error('delivery_fee') is-invalid @enderror">
                         </div>
                     @endif
@@ -483,13 +510,13 @@
             @if(empty($cjProduct))
                 <div class="form-group">
                     <label class="input-label">Earning {{ trans('public.price') }} ({{ $currency }})</label>
-                    <input id="computedEarningPrice" name="earning_price" type="text" class="form-control" value="{{ (!empty($product) && isset($product->earning_price)) ? convertPriceToUserCurrency($product->earning_price) : old('earning_price', '0.00') }}">
+                    <input id="computedEarningPrice" name="earning_price" type="text" class="form-control" value="{{ (!empty($product) && isset($product->earning_price)) ? $product->earning_price : old('earning_price', '0') }}">
                     <p class="font-12 text-gray mt-10">- Earning amount for this product.</p>
                 </div>
 
                 <div class="form-group">
                     <label class="input-label">Platform {{ trans('public.price') }} (10%)</label>
-                    <input id="computedPlatformFee" name="own_platform_price" type="text" class="form-control" value="{{ (!empty($product) && isset($product->own_platform_price)) ? convertPriceToUserCurrency($product->own_platform_price) : old('own_platform_price', '0.00') }}" readonly>
+                    <input id="computedPlatformFee" name="own_platform_price" type="text" class="form-control" value="{{ (!empty($product) && isset($product->own_platform_price)) ? $product->own_platform_price : old('own_platform_price', '0') }}" readonly>
                     <p class="font-12 text-gray mt-10">- Platform fee is 10% of the earning price.</p>
                 </div>
             @endif
@@ -498,7 +525,7 @@
              <div class="form-group">
                 <label class="input-label">{{ trans('public.price') }} ({{ $currency }})</label>
                 <input type="number" name="price" id="finalPriceInput" data-price-input
-                       value="{{ (!empty($product) && isset($product->price)) ? convertPriceToUserCurrency($product->price) : (!empty($cjProduct) ? ceil($cjPrice * 1.10) : old('price')) }}"
+                       value="{{ (!empty($product) && isset($product->price)) ? $product->price : (!empty($cjProduct) ? ceil($cjPrice * 1.10) : old('price')) }}"
                        class="form-control @error('price') is-invalid @enderror">
                 @error('price')<div class="invalid-feedback">{{ $message }}</div>@enderror
             </div>
@@ -676,104 +703,117 @@
 
             @if(!empty($cjProduct))
                 let currentCjPrice = {{ $baseCjPrice }};
-                const $shippingInput = $('#cjShippingPrice');
-                const $earningInput = $('#userMargin');
+                const $shippingInput    = $('#cjShippingPrice');
+                const $earningInput     = $('#userMargin');
                 const $platformFeeInput = $('#platformprice');
-                const $finalPriceInput = $('#finalPriceInput');
-                const $subtotalSpan = $('#pricingSubtotal');
-                const $totalPriceSpan = $('#calculatedTotalPriceText');
+                const $finalPriceInput  = $('#finalPriceInput');
+                const $subtotalSpan     = $('#pricingSubtotal');
+                const $totalPriceSpan   = $('#calculatedTotalPriceText');
                 const $basePriceDisplay = $('#cjBasePriceDisplay');
-                const $basePriceHidden = $('#cjBasePriceHidden');
+                const $basePriceHidden  = $('#cjBasePriceHidden');
+
+                /**
+                 * CJ Shipping — simple tier on ORIGINAL CJ price (no extra %):
+                 *   base ₹0.01–₹10   → shipping ₹10
+                 *   base ₹10.01–₹20  → shipping ₹20
+                 *   base ₹20.01–₹30  → shipping ₹30  … etc.
+                 */
+                function calcCjAutoShipping(basePrice) {
+                    if (basePrice <= 0) return 0;
+                    return Math.ceil(basePrice / 10) * 10;
+                }
+
+                /** Display price = original + 20% VAT */
+                function calcVatPrice(basePrice) {
+                    return parseFloat((basePrice * 1.20).toFixed(2));
+                }
+
+                /** Update the VAT notice banner text */
+                function updateVatNotice(originalPrice) {
+                    var vatPrice = calcVatPrice(originalPrice);
+                    $('#cjOriginalPriceLabel').text(currency + originalPrice.toFixed(2));
+                    $('#cjVatPriceLabel').text(currency + vatPrice.toFixed(2));
+                }
 
                 function updateCjPricing() {
-                    let shipping = parseFloat($shippingInput.val()) || 0;
-                    let earning = parseFloat($earningInput.val()) || 0;
-                    
-                    // Update main calculation
-                    let baseCost = currentCjPrice + shipping;
-                    let totalCost = baseCost + earning;
+                    // VAT-adjusted base price (what we use in totals)
+                    let vatBase  = calcVatPrice(currentCjPrice);
+                    // Shipping: simple tier on ORIGINAL price
+                    let shipping = calcCjAutoShipping(currentCjPrice);
+                    $shippingInput.val(shipping);
+
+                    let earning  = parseFloat($earningInput.val()) || 0;
+
+                    // Main calculation: vatBase + shipping + earning
+                    let totalCost  = vatBase + shipping + earning;
                     let finalTotal = totalCost > 0 ? Math.ceil(totalCost / (1 - PLATFORM_FEE_PERCENTAGE)) : 0;
-                    let platformFee = parseFloat((finalTotal * PLATFORM_FEE_PERCENTAGE).toFixed(2));
+                    let platformFee = Math.round(finalTotal * PLATFORM_FEE_PERCENTAGE);
 
                     $subtotalSpan.text(currency + totalCost.toFixed(2));
                     $totalPriceSpan.text(currency + finalTotal);
                     $finalPriceInput.val(finalTotal);
-                    $platformFeeInput.val(platformFee.toFixed(2));
+                    $platformFeeInput.val(platformFee);
 
-                    // Update all variants in the table breakdown
+                    // Update VAT display
+                    $basePriceDisplay.text(currency + vatBase.toFixed(2));
+                    updateVatNotice(currentCjPrice);
+
+                    // Update all variant rows in the table
                     $('.variant-row').each(function() {
-                        let base = parseFloat($(this).data('base-price')) || 0;
-                        let vSubtotal = base + shipping + earning;
-                        let vFinal = vSubtotal > 0 ? Math.ceil(vSubtotal / (1 - PLATFORM_FEE_PERCENTAGE)) : 0;
-                        let vFee = parseFloat((vFinal * PLATFORM_FEE_PERCENTAGE).toFixed(2));
+                        let base      = parseFloat($(this).data('base-price')) || 0;
+                        let vVatBase  = calcVatPrice(base);
+                        let vShipping = calcCjAutoShipping(base);
+                        let vSubtotal = vVatBase + vShipping + earning;
+                        let vFinal    = vSubtotal > 0 ? Math.ceil(vSubtotal / (1 - PLATFORM_FEE_PERCENTAGE)) : 0;
+                        let vFee      = Math.round(vFinal * PLATFORM_FEE_PERCENTAGE);
 
-                        $(this).find('.v-shipping-price').text(currency + shipping.toFixed(2));
+                        $(this).find('.v-base-price').html(currency + vVatBase.toFixed(2));
+                        $(this).find('.v-shipping-price').text(currency + vShipping.toFixed(2));
                         $(this).find('.v-earning-price').text(currency + earning.toFixed(2));
                         $(this).find('.v-fee-price').text(currency + vFee.toFixed(2));
-                        $(this).find('.v-sell-price').text(currency + vFinal.toFixed(2));
+                        $(this).find('.v-sell-price').text(currency + vFinal);
                     });
                 }
 
                 function updateEarningFromFinalPrice() {
                     let finalPrice = parseFloat($finalPriceInput.val()) || 0;
-                    let shipping = parseFloat($shippingInput.val()) || 0;
-                    let baseCost = currentCjPrice + shipping;
+                    let vatBase    = calcVatPrice(currentCjPrice);
+                    let shipping   = calcCjAutoShipping(currentCjPrice);
+                    let baseCost   = vatBase + shipping;
 
                     if (finalPrice > 0) {
-                        let platformFee = parseFloat((finalPrice * PLATFORM_FEE_PERCENTAGE).toFixed(2));
-                        let earning = finalPrice - platformFee - baseCost;
+                        let platformFee = Math.round(finalPrice * PLATFORM_FEE_PERCENTAGE);
+                        let earning     = Math.round(finalPrice - platformFee - baseCost);
                         if (earning >= 0) {
-                            $earningInput.val(earning.toFixed(2));
+                            $earningInput.val(earning);
                         }
-                        $platformFeeInput.val(platformFee.toFixed(2));
+                        $platformFeeInput.val(platformFee);
                     }
                     updateCjPricing();
                 }
 
+                // When user clicks "Use" on a variant, update base price + recalc
                 $('.use-variant-price').on('click', function() {
                     const price = parseFloat($(this).data('price'));
                     currentCjPrice = price;
-                    
-                    // Update displays
-                    $basePriceDisplay.text(currency + price.toFixed(2));
                     $basePriceHidden.val(price);
-                    
-                    // Highlight row
+
                     $('.use-variant-price').closest('tr').removeClass('bg-gold-transparent');
                     $(this).closest('tr').addClass('bg-gold-transparent');
-                    
+
                     updateCjPricing();
                 });
 
-                $shippingInput.on('input', updateCjPricing);
+                // Earning input triggers recalc; shipping is auto-only (readonly)
                 $earningInput.on('input', updateCjPricing);
                 $finalPriceInput.on('input', updateEarningFromFinalPrice);
 
-                if (!$earningInput.val() || $earningInput.val() === '0.00') {
-                    $earningInput.val((currentCjPrice * 0.10).toFixed(2));
+                if (!$earningInput.val() || $earningInput.val() === '0' || $earningInput.val() === '0.00') {
+                    $earningInput.val(Math.round(currentCjPrice * 0.10));
                 }
-                updateCjPricing();
+                updateCjPricing(); // run on page load
             @endif
 
-                // function initializePricing() {
-                //     if (!$earningInput.val() || $earningInput.val() === '0.00') {
-                //         let suggestedEarning = cjPrice * 0.10;
-                //         $earningInput.val(suggestedEarning.toFixed(2));
-                //     }
-                //     if (!$shippingInput.val() || $shippingInput.val() === '0.00') {
-                //         $shippingInput.val('0.00');
-                //     }
-                //     let shipping = parseFloat($shippingInput.val()) || 0;
-                //     let earning = parseFloat($earningInput.val()) || 0;
-                //     let subtotal = cjPrice + shipping + earning;
-                //     let platformFee = subtotal * PLATFORM_FEE_PERCENTAGE;
-
-                //     if (!$platformFeeInput.val() || $platformFeeInput.val() === '0.00') {
-                //         $platformFeeInput.val(platformFee.toFixed(2));
-                //     }
-                //     updateCjPricing();
-                // }
-                // initializePricing();
             @if(empty($cjProduct))
 
                 const $ncjEarningInput  = $('#computedEarningPrice');   // editable earning
@@ -785,13 +825,14 @@
                     let earning     = parseFloat($ncjEarningInput.val())  || 0;
                     let delivery    = parseFloat($ncjDeliveryInput.val()) || 0;
                     
-                    let platformFee = parseFloat((earning * PLATFORM_FEE_PERCENTAGE).toFixed(2));
-                    let total       = Math.ceil(earning + delivery + platformFee);
+                    let baseTotal   = earning + delivery;
+                    let platformFee = Math.round(baseTotal * PLATFORM_FEE_PERCENTAGE);
+                    let total       = Math.ceil(baseTotal + platformFee);
                     
                     // Adjust platform fee to match the ceiled total, maintaining exact earning
-                    platformFee = parseFloat((total - earning - delivery).toFixed(2));
+                    platformFee = total - earning - delivery;
 
-                    $ncjPlatformInput.val(platformFee.toFixed(2));
+                    $ncjPlatformInput.val(Math.round(platformFee));
                     $ncjPriceInput.val(total);
                 }
 
@@ -799,15 +840,16 @@
                     let total       = parseFloat($ncjPriceInput.val()) || 0;
                     let delivery    = parseFloat($ncjDeliveryInput.val()) || 0;
                     
-                    let earning     = (total - delivery) / (1 + PLATFORM_FEE_PERCENTAGE);
-                    let platformFee = total - earning - delivery;
+                    let baseTotal   = total / (1 + PLATFORM_FEE_PERCENTAGE);
+                    let earning     = Math.round(baseTotal - delivery);
+                    let platformFee = total - baseTotal;
                     
                     if (earning >= 0) {
-                        $ncjEarningInput.val(earning.toFixed(2));
+                        $ncjEarningInput.val(earning);
                     } else {
-                        $ncjEarningInput.val('0.00');
+                        $ncjEarningInput.val('0');
                     }
-                    $ncjPlatformInput.val(platformFee.toFixed(2));
+                    $ncjPlatformInput.val(Math.round(platformFee));
                 }
 
                 $ncjEarningInput.on('input', updateNonCjPricing);

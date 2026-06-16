@@ -285,7 +285,7 @@
 
                     {{-- Title --}}
                     <div class="kemetic-form-group">
-                        <label class="kemetic-label">{{ trans('quiz.quiz_title') }}</label>
+                        <label class="kemetic-label">{{ trans('quiz.quiz_title') }} <span class="text-danger">*</span></label>
                         <input type="text"
                                name="ajax[{{ !empty($quiz) ? $quiz->id : 'new' }}][title]"
                                value="{{ $quiz->title ?? old('title') }}"
@@ -317,7 +317,7 @@
 
                     {{-- Pass Mark --}}
                     <div class="kemetic-form-group">
-                        <label class="kemetic-label">{{ trans('quiz.pass_mark') }}</label>
+                        <label class="kemetic-label">{{ trans('quiz.pass_mark') }} <span class="text-danger">*</span></label>
                         <input type="number"
                                name="ajax[{{ !empty($quiz) ? $quiz->id : 'new' }}][pass_mark]"
                                value="{{ $quiz->pass_mark ?? old('pass_mark') }}"

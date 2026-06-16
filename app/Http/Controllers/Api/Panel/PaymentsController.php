@@ -13,7 +13,6 @@ use App\Models\Sale;
 use App\Models\TicketUser;
 use App\PaymentChannels\ChannelManager;
 use App\User;
-use App\Models\AdReel;
 use App\Models\Country;
 use App\Models\Book;
 use App\Models\BookOrder;
@@ -23,11 +22,12 @@ use App\Models\BecomeInstructor;
 use App\Models\Region;
 use App\Models\Product;
 use App\Models\Reward;
+use App\Models\AdReel;
 use App\Models\RewardAccounting;
 use App\Models\Subscribe;
 use Stripe\Stripe;
 use Stripe\Webhook;
-
+use Stripe\PaymentIntent;
 use Aws\S3\S3Client;
 use Aws\S3\Exception\S3Exception;
 use App\Services\PdfResizerService;
@@ -44,8 +44,6 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Redirect;
 use Illuminate\Support\Facades\URL;
 
-
-
 class PaymentsController extends Controller
 {
     protected $order_session_key;
@@ -60,7 +58,7 @@ class PaymentsController extends Controller
 
         $pdfResizer = new PdfResizerService();
         $this->pdfResizer = $pdfResizer;
-        $this->cj = new CJDropshippingService();
+        $this->cj         = new CJDropshippingService();
         // Laragon certificate path - adjust if different
         $this->laragonCertPath = "C:/laragon/etc/ssl/cert.pem";
 
@@ -304,6 +302,44 @@ class PaymentsController extends Controller
         }
     }
 
+
+    public function paymentnewrequest(Request $request)
+    {
+        \Log::info('paymentnewrequest called', $request->all());
+
+        $user = apiAuth();
+        if (!$user) {
+            return response()->json(['success' => false, 'message' => 'Unauthorized'], 401);
+        }
+
+        $order = Order::where('id', $request->order_id)
+        ->where('user_id', $user->id)
+        ->where('status', Order::$pending)
+        ->first();
+
+        if (!$order) {
+            \Log::error('Order not found', ['order_id' => $request->order_id, 'user_id' => $user->id]);
+            return response()->json(['success' => false, 'message' => 'Order not found']);
+        }
+
+        Stripe::setApiKey(env('STRIPE_SECRET_DEV')); // only on server
+
+        $paymentIntent = PaymentIntent::create([
+            'amount'   => (int) ($order->total_amount * 100), // ← total_amount not total
+            'currency' => strtolower(currency()),             // ← use your app currency helper
+            'metadata' => ['order_id' => $order->id],
+            'automatic_payment_methods' => ['enabled' => true],
+        ]);
+
+        // Store the payment intent ID on the order
+        $order->update(['payment_intent_id' => $paymentIntent->id]);
+
+        return response()->json([
+            'client_secret' => $paymentIntent->client_secret,
+            'payment_intent_id' => $paymentIntent->id,
+        ]);
+    }
+
     public function paymentsubscribeRequest(Request $request)
     {
         $user = apiAuth();
@@ -383,10 +419,48 @@ class PaymentsController extends Controller
         }
     }
 
+    public function paymentnewVerify(Request $request)
+    {
+        $user = apiAuth() ?? auth()->user();
+        if (!$user) {
+            return response()->json(['success' => false, 'message' => 'Unauthorized'], 401);
+        }
+
+        $order = Order::where('id', $request->order_id)
+            ->where('user_id', $user->id)
+            ->first();
+
+        if (!$order) {
+            return response()->json(['success' => false, 'message' => 'Order not found']);
+        }
+
+        if (empty($order->payment_intent_id)) {
+            return response()->json(['success' => false, 'message' => 'No payment intent on this order']);
+        }
+
+        try {
+            Stripe::setApiKey(env('STRIPE_SECRET_DEV'));
+
+            // Read the pi_id we stored — don't trust what Flutter sends
+            $paymentIntent = PaymentIntent::retrieve($order->payment_intent_id);
+
+            if ($paymentIntent->status === 'succeeded') {
+                $order->update(['status' => Order::$paying]);
+                return $this->paymentOrderAfterVerify($order);
+            }
+
+            $order->update(['status' => Order::$fail]);
+            return response()->json(['success' => false, 'message' => 'Payment not completed']);
+        } catch (\Exception $exception) {
+            dd($exception->getMessage());
+            return apiResponse2(0, 'gateway_error', trans('api.payment.gateway_error'));
+        }
+    }
+
     public function paymentVerify(Request $request, $gateway)
     {
-        Log::info('paymentVerify CONTROLLER API: ', $request->all());
-        Log::info('gateway NAME API: ', [$gateway]);
+        \Log::info('paymentVerify CONTROLLER API: ', $request->all());
+        \Log::info('gateway NAME API: ', [$gateway]);
         $paymentChannel = PaymentChannel::where('class_name', $gateway)
             ->where('status', 'active')
             ->first();
@@ -415,8 +489,8 @@ class PaymentsController extends Controller
     public function recurringPaymentVerify(Request $request, $gateway)
     {
         // echo 1;die;
-        Log::info('paymentVerify CONTROLLER : ', $request->all());
-        Log::info('gateway NAME : ', [$gateway]);
+        \Log::info('paymentVerify CONTROLLER : ', $request->all());
+        \Log::info('gateway NAME : ', [$gateway]);
         $paymentChannel = PaymentChannel::where('class_name', $gateway)
             ->where('status', 'active')
             ->first();
@@ -446,13 +520,13 @@ class PaymentsController extends Controller
             //    dd($order);
             // Log::info('paymentOrderAfterVerify: ', [$order]);
             if ($order->status == Order::$paying) {
-                // Log::info('paymentOrderAfterVerify paying: ', [$order]);
+                
                 $this->setPaymentAccounting($order);
                 // dd('after setPaymentAccounting');
                 $order->update(['status' => Order::$paid]);
-                // dd($order->status);
+                \Log::info('lulu checks: ', [$order]);
                 if ($order->status == Order::$paid) {
-                    // dd('before handleLuluPrintJobAfterPayment');
+                    \Log::info('lulu check: ', [$order]);
                     $this->handleLuluPrintJobAfterPayment($order);
                 }
             } else {
@@ -577,21 +651,19 @@ class PaymentsController extends Controller
                 }
 
             }
-
             if (!is_numeric($order->user_id)) {
                 Cart::emptyWithoutLoginCart($order->user_id);
             } else {
                 Cart::emptyCart($order->user_id);
             }
         }
-        
+       
 
     }
 
     private function handleLuluPrintJobAfterPayment($order)
     {
         try {
-            // Check if order contains book products
             foreach ($order->orderItems as $orderItem) {
                 if (!empty($orderItem->book_id)) {
                     // dd('before getLuluPriceUsingCurl');
@@ -607,11 +679,11 @@ class PaymentsController extends Controller
 
     private function getLuluPriceUsingCurl($bookid, $userid, $token = null)
     {
-        // dd('getLuluPriceUsingCurl', $bookid, $userid, $token);
         if (!$token) {
             // dd('toekn');
             $token = $this->getLuluAccessTokenUsingCurl();
         }
+        Log::info("lulu check4: " . $token);
         // dd($token);
         // dd($token);
 
@@ -656,9 +728,7 @@ class PaymentsController extends Controller
 
         // } catch (\Exception $e) {
         //     Log::error("S3 Upload failed: " . $e->getMessage());
-        // } 
-
-
+        // }
 
         // $pdfurl = "https://studiocaribbean.com/400page.pdf";
         // $pdfpathurl = "https://kemetic.app/store/1/Where-the-Crawdads-Sing.pdf";
@@ -682,59 +752,50 @@ class PaymentsController extends Controller
         // dd($bookid);
         $book = Book::where('id', $bookid)->where('type', 'Print')->first();
 
-        // dd($book);
+       
         if (!$book) {
             throw new \Exception("Book not found with ID: $bookid");
         }
         
-        $user = User::select(
-            'id',
-            'full_name',
-            'email',
-            'mobile',
-            'country_id',
-            'province_name',
-            'city_name',
-            'address',
-            'zip_code'
-        )->find($userid);
-        // dd($user);
+        $user = User::select('id', 'full_name', 'email', 'mobile', 'country_id', 'province_name', 
+                            'city_name', 'address', 'zip_code')
+        ->find($userid);
+                    
         if (!$user) {
             throw new \Exception("User not found with ID: $userid");
         }
 
         if ($user->country_id) {
             $country = Region::select('title')
-                ->where('id', $user->country_id)
-                ->where('type', Region::$country)
-                ->first();
-
+                            ->where('id', $user->country_id)
+                            ->where('type', Region::$country)
+                            ->first();
+            
             if ($country) {
                 $countryName = $country->title;
             }
         }
 
         $countrycode = Country::where('country_name', $countryName)->value('country_code');
-        // 4. FORMAT PHONE
         $phone = $user->mobile ?: '+1 206 555 0100';
         if (!str_starts_with($phone, '+')) {
             $phone = '+1' . preg_replace('/[^0-9]/', '', $phone);
         }
 
         $printurl = 'https://api.lulu.com/print-jobs/';
-
+        
         $quantity = 1;
 
-        $address = $user->address;
+        $address = $user->house_no . ' ' . $user->address;
 
         // If address is longer than 30 chars, split intelligently
         if (strlen($address) > 30) {
             // Find the last space before position 30
             $splitPos = strrpos(substr($address, 0, 31), ' ');
-
+            
             // If no space found, force split at 30
             $splitPos = $splitPos ?: 30;
-
+            
             $street1 = substr($address, 0, $splitPos);
             $street2 = trim(substr($address, $splitPos));
         } else {
@@ -750,12 +811,10 @@ class PaymentsController extends Controller
                     "external_id" => "item-reference-1",
                     "printable_normalization" => [
                         "cover" => [
-                            // "source_url" => "https://kemetic.app/store/lulu/cover/cover_1777529086.pdf",
-                            // "source_url" => url($book->cover_pdf),
+                            "source_url" => url($book->cover_pdf),
                         ],
                         "interior" => [
-                            // "source_url" => "https://kemetic.app/store/lulu/interior/interior_1777529012.pdf",
-                            // "source_url" => url($book->url),
+                            "source_url" => url($book->url),
                             "page_count" => $book->page_count // You need to add the correct page count
                         ],
                         "pod_package_id" => "0600X0900BWSTDPB060UW444MXX"
@@ -786,8 +845,52 @@ class PaymentsController extends Controller
             "shipping_level" => "MAIL"
         ];
 
-        // dd($data);
+        Log::info("lulu check11: " , [$data]);
 
+        $data = [
+            "contact_email" => $user->email ?: "info@kemetic.app",
+            "external_id" => "Kemetic APP",
+            "line_items" => [
+                [
+                    "external_id" => "item-reference-1",
+                    "printable_normalization" =>[
+                        "cover" => [
+                            // "source_url" => "https://kemetic.app/store/lulu/cover/cover_1777529086.pdf",
+                            "source_url" => url($book->cover_pdf),
+                        ],
+                        "interior" => [
+                            // "source_url" => "https://kemetic.app/store/lulu/interior/interior_1777529012.pdf",
+                            "source_url" => url($book->url),
+                            "page_count" => $book->page_count // You need to add the correct page count
+                        ],
+                        "pod_package_id" => "0600X0900BWSTDPB060UW444MXX"
+                    ],
+                    "title" => $book->title,
+                    "quantity" => 1, 
+                ]
+            ],
+            "production_delay" => 120,
+            "shipping_address" => [
+                "city" =>  $user->city_name,
+                "country_code" => $countrycode,
+                "name" => $user->full_name,
+                "phone_number" => $phone,
+                "state_code" => $user->province_name,
+                "postcode" => $user->zip_code,
+                "street1" => $street1,
+                "street2" => $street2
+
+                // "city" => "L\u00fcbeck",
+                // "country_code" => "GB",
+                // "name" => "Kemetic User",
+                // "phone_number" => "844-212-0689",
+                // "state_code" => "PO1 3AX",
+                // "postcode" => "",
+                // "street1" => "Holstenstr. 48"
+            ],
+            "shipping_level" => "MAIL"
+        ];
+        
         $printcurl = curl_init();
         curl_setopt_array($printcurl, [
             CURLOPT_URL => $printurl,
@@ -831,9 +934,7 @@ class PaymentsController extends Controller
             \Log::error("Certificate path used: " . ($this->laragonCertPath ?? 'none'));
             \Log::error("File exists: " . (file_exists($this->laragonCertPath) ? 'Yes' : 'No'));
         }
-
-        // dd($data);
-        // dd($response);
+        Log::info("lulu check13: " . $response);
 
         $responseData = json_decode($response, true);
 
@@ -1318,7 +1419,6 @@ class PaymentsController extends Controller
                     TicketUser::useTicket($orderItem);
                 }
             }
-
             Cart::emptyCart($order->user_id);
         }
 

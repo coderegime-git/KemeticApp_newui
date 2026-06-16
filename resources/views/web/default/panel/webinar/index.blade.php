@@ -80,7 +80,10 @@ section {
 
 .webinar-card .image-box {
     width: 260px;
+    min-width: 260px;
+    height: 180px;
     position: relative;
+    flex-shrink: 0;
 }
 
 .webinar-card img {

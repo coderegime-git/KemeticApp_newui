@@ -173,16 +173,47 @@ class User extends Model implements JWTSubject
     }
 
 
+    // public function getFinancialAttribute()
+    // {
+    //     return [
+    //         'account_type' => $this->type,
+    //         'iban' => $this->iban,
+    //         'account_id' => $this->account_id,
+    //         'identity_scan' => ($this->identity_scan) ? url($this->identity_scan) : null,
+    //         'certificate' => ($this->certificate) ? url($this->certificate) : null,
+    //         'address' => $this->address,
+
+    //     ];
+    // }
+
     public function getFinancialAttribute()
     {
-        return [
-            'account_type' => $this->type,
-            'iban' => $this->iban,
-            'account_id' => $this->account_id,
-            'identity_scan' => ($this->identity_scan) ? url($this->identity_scan) : null,
-            'certificate' => ($this->certificate) ? url($this->certificate) : null,
-            'address' => $this->address,
+        // Get selected bank specs (iban & account_id stored in specifications)
+        $userSelectedBank = \App\Models\UserSelectedBank::where('user_id', $this->id)->first();
 
+        $iban      = $this->iban;      // fallback to users table column
+        $accountId = $this->account_id; // fallback to users table column
+
+        if ($userSelectedBank) {
+            $ibanSpec = \App\Models\UserSelectedBankSpecification::where('user_selected_bank_id', $userSelectedBank->id)
+                ->where('user_bank_specification_id', 16) // Account number/ Iban number
+                ->first();
+
+            $accountIdSpec = \App\Models\UserSelectedBankSpecification::where('user_selected_bank_id', $userSelectedBank->id)
+                ->where('user_bank_specification_id', 22) // Routing number
+                ->first();
+
+            $iban      = $ibanSpec->value      ?? $iban;
+            $accountId = $accountIdSpec->value ?? $accountId;
+        }
+
+        return [
+            'account_type'  => $userSelectedBank->user_bank_id ?? $this->type,
+            'iban'          => $iban,
+            'account_id'    => $accountId,
+            'identity_scan' => ($this->identity_scan) ? url($this->identity_scan) : null,
+            'certificate'   => ($this->certificate)   ? url($this->certificate)   : null,
+            'address'       => $this->address,
         ];
     }
 
