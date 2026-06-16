@@ -272,7 +272,7 @@
             <h2>{{ trans('cart.success_pay_title') }}</h2>
             <p>{!! trans('cart.success_pay_msg') !!}</p>
 
-            <a href="academyapp://payment-success" class="ck-cta d-flex d-sm-none" style="justify-content:center;">
+            <a href="/" class="ck-cta d-flex d-sm-none" style="justify-content:center;">
               {{ trans('public.redirect_to_app') }}
             </a>
             <a href="/" class="ck-cta d-none d-sm-block">
@@ -292,11 +292,11 @@
               Try Again
             </a> -->
 
-            <!-- <a href="academyapp://payment-failed" class="ck-cta ghost d-flex d-sm-none" style="justify-content:center;">
-              {{ trans('public.redirect_to_app') }}
-            </a> -->
+            <a href="/cart" class="ck-cta ghost d-flex d-sm-none" style="justify-content:center;">
+             Proceed to checkout
+            </a>
             <a href="/cart" class="ck-cta ghost d-none d-sm-block">
-             Go to Cart
+             Proceed to checkout
             </a>
           </div>
         @endif
