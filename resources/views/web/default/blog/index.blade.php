@@ -84,13 +84,16 @@
 
     <!-- Search + Categories -->
     <div class="article-row">
-      <form action="/blog" method="get">
+      <form action="/blog" method="get" id="searchSection">
         @if(!empty($selectedCategory))
           <input type="hidden" name="category_id" value="{{ $selectedCategory->id }}">
         @endif
         <div class="article-search">
           <span style="color:var(--gold);font-weight:900">🔎</span>
           <input  type="text" name="search"  value="{{ request()->get('search') }}" placeholder="{{ trans('home.blog_search_placeholder') }}">
+          @if(request()->get('search'))
+            <button type="button" onclick="clearSearch(this)" style="background: transparent; border: none; color: #999; font-size: 16px; cursor: pointer; padding: 0 10px; margin-right: 5px;">✕</button>
+          @endif
           <button type="submit" class="article-pill">{{ trans('home.find') }}</button>
           <!-- ⚙️ Filters  onclick="alert('Open filters')" -->
         </div>
@@ -195,3 +198,27 @@
     <div class="article-sp"></div>
   </div>
 @endsection
+@push('scripts_bottom')
+<script>
+function clearSearch(button) {
+    var form = button.closest('form');
+    if (form) {
+        var input = form.querySelector('input[name="search"]');
+        if (input) {
+            input.value = '';
+        }
+        form.submit();
+    }
+}
+
+document.addEventListener("DOMContentLoaded", function() {
+    const urlParams = new URLSearchParams(window.location.search);
+    if(urlParams.has('search') || urlParams.has('category_id') || urlParams.has('page')) {
+        const searchSection = document.getElementById('searchSection');
+        if(searchSection) {
+            searchSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }
+    }
+});
+</script>
+@endpush

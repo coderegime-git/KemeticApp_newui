@@ -212,7 +212,7 @@
       {{-- HEADER --}}
       <header class="ck-header">
         <a href="javascript:void(0)" id="ckBackBtn" class="ck-back-btn">&#8249;</a>
-        <div class="ck-logo">KEMETIC</div>
+        <!-- <div class="ck-logo">KEMETIC</div> -->
         <div class="ck-secure-badge">&#128274; Secure</div>
       </header>
 
@@ -322,22 +322,7 @@
                   @endforeach
                 </section>
 
-                {{-- Legal Confirmation --}}
-                <section class="ck-section">
-                  <h2 class="ck-section-title">Legal Confirmation</h2>
-                  <label style="display:flex;align-items:center;gap:10px;margin-bottom:12px;cursor:pointer;">
-                    <input type="checkbox" class="legal-checkbox" required style="width:18px;height:18px;accent-color:var(--ck-purple);">
-                    <span style="font-size:14px;color:var(--ck-text);">I agree to the <a href="/pages/Terms-and-Conditions" target="_blank" style="color:var(--ck-gold);">Terms &amp; Conditions</a>.</span>
-                  </label>
-                  <label style="display:flex;align-items:center;gap:10px;margin-bottom:12px;cursor:pointer;">
-                    <input type="checkbox" class="legal-checkbox" required style="width:18px;height:18px;accent-color:var(--ck-purple);">
-                    <span style="font-size:14px;color:var(--ck-text);">I understand the <a href="/pages/refund-policy" target="_blank" style="color:var(--ck-gold);">Refund &amp; Shipping Policy</a>.</span>
-                  </label>
-                  <label style="display:flex;align-items:center;gap:10px;cursor:pointer;">
-                    <input type="checkbox" class="legal-checkbox" required style="width:18px;height:18px;accent-color:var(--ck-purple);">
-                    <span style="font-size:14px;color:var(--ck-text);">I want to receive order updates and Kemetic App notifications.</span>
-                  </label>
-                </section>
+
 
                 {{-- Need Help? --}}
                 <section class="ck-section">
@@ -621,6 +606,23 @@
                   </div>
                 </section>
 
+                {{-- Legal Confirmation (moved from Step 1) --}}
+                <section class="ck-section" id="legalSection">
+                  <h2 class="ck-section-title">Legal Confirmation</h2>
+                  <p style="font-size:13px;color:var(--ck-muted);margin:0 0 16px;">Please confirm the following before completing your payment.</p>
+                  <label style="display:flex;align-items:center;gap:10px;margin-bottom:12px;cursor:pointer;">
+                    <input type="checkbox" class="legal-checkbox" id="legal1" style="width:18px;height:18px;accent-color:var(--ck-purple);">
+                    <span style="font-size:14px;color:var(--ck-text);">I agree to the <a href="/pages/Terms-and-Conditions" target="_blank" style="color:var(--ck-gold);">Terms &amp; Conditions</a>.</span>
+                  </label>
+                  <label style="display:flex;align-items:center;gap:10px;margin-bottom:12px;cursor:pointer;">
+                    <input type="checkbox" class="legal-checkbox" id="legal2" style="width:18px;height:18px;accent-color:var(--ck-purple);">
+                    <span style="font-size:14px;color:var(--ck-text);">I understand the <a href="/pages/refund-policy" target="_blank" style="color:var(--ck-gold);">Refund &amp; Shipping Policy</a>.</span>
+                  </label>
+                  <label style="display:flex;align-items:center;gap:10px;cursor:pointer;">
+                    <input type="checkbox" class="legal-checkbox" id="legal3" style="width:18px;height:18px;accent-color:var(--ck-purple);">
+                    <span style="font-size:14px;color:var(--ck-text);">I want to receive order updates and Kemetic App notifications.</span>
+                  </label>
+                </section>
 
               </div>
 
@@ -948,9 +950,22 @@
         });
       }
 
-      /* Step 3 → Stripe → Done: validate shipping, create order, submit to Stripe */
+      /* Step 3 → Stripe → Done: validate legal checkboxes, shipping fields, create order, submit to Stripe */
       if (nextBtn3) {
         nextBtn3.addEventListener('click', function() {
+
+          /* ── 1. Check Legal checkboxes first ── */
+          var legalCheckboxes = document.querySelectorAll('#panel3 .legal-checkbox');
+          var allLegalChecked = true;
+          legalCheckboxes.forEach(function(cb) { if (!cb.checked) allLegalChecked = false; });
+          if (!allLegalChecked) {
+            window.showToast('⚠️ Please agree to all legal confirmations before proceeding to payment.');
+            var legalSec = document.getElementById('legalSection');
+            if (legalSec) legalSec.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            return;
+          }
+
+          /* ── 2. Validate shipping address fields ── */
           var ok = true;
           ['shipping_country', 'province', 'city', 'house_no', 'address', 'zip'].forEach(function(id) {
             var el = document.getElementById(id);

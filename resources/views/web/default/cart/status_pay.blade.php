@@ -243,7 +243,7 @@
       {{-- HEADER --}}
       <header class="ck-header">
         <a href="javascript:void(0)" class="ck-back-btn" style="visibility:hidden; cursor:default;">&#8249;</a>
-        <div class="ck-logo">KEMETIC</div>
+        <!-- <div class="ck-logo">KEMETIC</div> -->
         <div class="ck-secure-badge">&#128274; Secure</div>
       </header>
 

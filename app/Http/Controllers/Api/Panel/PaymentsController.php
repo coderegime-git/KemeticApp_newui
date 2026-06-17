@@ -250,7 +250,6 @@ class PaymentsController extends Controller
             ],
         ]);
 
-
         $gateway = $request->input('gateway_id');
         $orderId = $request->input('order_id');
 
@@ -265,7 +264,6 @@ class PaymentsController extends Controller
             $reserveMeeting = ReserveMeeting::where('id', $orderItem->reserve_meeting_id)->first();
             $reserveMeeting->update(['locked_at' => time()]);
         }
-
 
         $paymentChannel = PaymentChannel::where('id', $gateway)
             ->where('status', 'active')
@@ -322,12 +320,30 @@ class PaymentsController extends Controller
             return response()->json(['success' => false, 'message' => 'Order not found']);
         }
 
-        Stripe::setApiKey(env('STRIPE_SECRET_DEV')); // only on server
+        $currency = strtolower($request->input('currency') ?: currency());
+    
+        // Flutter sends the already-converted total (e.g. 9.20 EUR)
+        // If not provided, fall back to order total_amount
+        $amount = $request->input('amount')
+            ? (int) round((float) $request->input('amount') * 100)
+            : (int) ($order->total_amount * 100);
+
+        \Log::info('Creating PaymentIntent', [
+            'currency' => $currency,
+            'amount'   => $amount,
+            'order_id' => $order->id,
+        ]);
+
+        Stripe::setApiKey(env('STRIPE_SECRET')); // only on server
 
         $paymentIntent = PaymentIntent::create([
-            'amount'   => (int) ($order->total_amount * 100), // ← total_amount not total
-            'currency' => strtolower(currency()),             // ← use your app currency helper
-            'metadata' => ['order_id' => $order->id],
+            'amount'   => $amount,
+            'currency' => $currency,             // ← use your app currency helper
+            'metadata' => 
+            [
+                'order_id' => $order->id,
+                'user_id'  => $user->id,
+            ],
             'automatic_payment_methods' => ['enabled' => true],
         ]);
 
@@ -335,8 +351,11 @@ class PaymentsController extends Controller
         $order->update(['payment_intent_id' => $paymentIntent->id]);
 
         return response()->json([
+            'success'            => true,
             'client_secret' => $paymentIntent->client_secret,
             'payment_intent_id' => $paymentIntent->id,
+            'currency'           => $currency,
+            'amount'             => $amount,
         ]);
     }
 
@@ -439,7 +458,7 @@ class PaymentsController extends Controller
         }
 
         try {
-            Stripe::setApiKey(env('STRIPE_SECRET_DEV'));
+            Stripe::setApiKey(env('STRIPE_SECRET'));
 
             // Read the pi_id we stored — don't trust what Flutter sends
             $paymentIntent = PaymentIntent::retrieve($order->payment_intent_id);
@@ -452,7 +471,9 @@ class PaymentsController extends Controller
             $order->update(['status' => Order::$fail]);
             return response()->json(['success' => false, 'message' => 'Payment not completed']);
         } catch (\Exception $exception) {
-            dd($exception->getMessage());
+            Log::error('Payment verify failed: ' . $exception->getMessage(), [
+                'trace' => $exception->getTraceAsString(),
+            ]);
             return apiResponse2(0, 'gateway_error', trans('api.payment.gateway_error'));
         }
     }
@@ -474,7 +495,27 @@ class PaymentsController extends Controller
             return $this->paymentOrderAfterVerify($order);
 
         } catch (\Exception $exception) {
-            dd($exception->getMessage());
+            // $user = auth()->user() ?? apiAuth();
+            // if(!$user){
+            //     if (session()->has('device_id')) {
+            //         $userid = session('device_id');
+            //     }
+            //     if ($request->has('device_id') && $request->device_id != '') {
+            //         $userid = $request->device_id;
+            //     } 
+            // }else{
+            //     $userid = $user->id;
+            // }
+            // $order = Order::where('id', $request->input('order_id'))
+            // ->where('user_id', $userid)
+            // ->first();
+
+            // return $this->paymentOrderAfterVerify($order);
+            // dd('Payment verification failed: ' . $exception->getMessage());
+
+            Log::error('Payment verify failed: ' . $exception->getMessage(), [
+                'trace' => $exception->getTraceAsString(),
+            ]);
             // $toastData = [
             //     'title' => trans('cart.fail_purchase'),
             //     'msg' => trans('cart.gateway_error'),
@@ -584,72 +625,82 @@ class PaymentsController extends Controller
             $cashbackAccounting->rechargeWallet($order);
         } else {
             foreach ($order->orderItems as $orderItem) {
+                try {
+                    if (!is_numeric($order->user_id)) {
+                        $guestname = User::where('device_id_or_ip_address', $order->user_id)->first();
+                        $orderItem->full_name = $guestname->full_name;
+                    }
+                    // dd($orderItem, $order->payment_method);
+                    $sale = Sale::createSales($orderItem, $order->payment_method);
+                    // dd('after createSales');
 
-                if (!is_numeric($order->user_id)) {
-                    $guestname = User::where('device_id_or_ip_address', $order->user_id)->first();
-                    $orderItem->full_name = $guestname->full_name;
-                }
-                // dd($orderItem, $order->payment_method);
-                $sale = Sale::createSales($orderItem, $order->payment_method);
-                // dd('after createSales');
+                    if (!empty($orderItem->reserve_meeting_id)) {
+                        $reserveMeeting = ReserveMeeting::where('id', $orderItem->reserve_meeting_id)->first();
+                        $reserveMeeting->update([
+                            'sale_id' => $sale->id,
+                            'reserved_at' => time()
+                        ]);
 
-                if (!empty($orderItem->reserve_meeting_id)) {
-                    $reserveMeeting = ReserveMeeting::where('id', $orderItem->reserve_meeting_id)->first();
-                    $reserveMeeting->update([
-                        'sale_id' => $sale->id,
-                        'reserved_at' => time()
+                        $reserver = $reserveMeeting->user;
+
+                        if ($reserver) {
+                            $this->handleMeetingReserveReward($reserver);
+                        }
+                    }
+
+                    if (!empty($orderItem->gift_id)) {
+                        // $gift = $orderItem->gift;
+
+                        // $gift->update([
+                        //     'status' => 'active'
+                        // ]);
+
+                        //$gift->sendNotificationsWhenActivated($orderItem->total_amount);
+                    }
+
+                    if (!empty($orderItem->subscribe_id)) {
+                        Accounting::createAccountingForSubscribe($orderItem, $type);
+                    } elseif (!empty($orderItem->promotion_id)) {
+                        Accounting::createAccountingForPromotion($orderItem, $type);
+                    } elseif (!empty($orderItem->registration_package_id)) {
+                        Accounting::createAccountingForRegistrationPackage($orderItem, $type);
+
+                        if (!empty($orderItem->become_instructor_id)) {
+                            BecomeInstructor::where('id', $orderItem->become_instructor_id)
+                                ->update([
+                                    'package_id' => $orderItem->registration_package_id
+                                ]);
+                        }
+                    } elseif (!empty($orderItem->installment_payment_id)) {
+                        Accounting::createAccountingForInstallmentPayment($orderItem, $type);
+
+                        $this->updateInstallmentOrder($orderItem, $sale);
+                    } else {
+
+                        // webinar and meeting and product and bundle
+
+                        Accounting::createAccounting($orderItem, $type);
+                        TicketUser::useTicket($orderItem);
+
+                        if (!empty($orderItem->product_id)) {
+                            try {
+                                $this->updateProductOrder($sale, $orderItem, $order);
+                            } catch (\Throwable $e) {
+                                Log::error('setPaymentAccounting: updateProductOrder failed for orderItem #' . $orderItem->id . ': ' . $e->getMessage());
+                            }
+                        }
+
+                        if (!empty($orderItem->book_id)) {
+                            $this->updateBookOrder($sale, $orderItem);
+                        }
+                    }
+                } catch (\Throwable $e) {
+                    // This orderItem failed but the LOOP CONTINUES to next orderItem
+                    Log::error('setPaymentAccounting: failed for orderItem #' . $orderItem->id . ': ' . $e->getMessage(), [
+                        'trace' => $e->getTraceAsString(),
                     ]);
-
-                    $reserver = $reserveMeeting->user;
-
-                    if ($reserver) {
-                        $this->handleMeetingReserveReward($reserver);
-                    }
+                    // Do NOT re-throw — next iteration will still run
                 }
-
-                if (!empty($orderItem->gift_id)) {
-                    // $gift = $orderItem->gift;
-
-                    // $gift->update([
-                    //     'status' => 'active'
-                    // ]);
-
-                    //$gift->sendNotificationsWhenActivated($orderItem->total_amount);
-                }
-
-                if (!empty($orderItem->subscribe_id)) {
-                    Accounting::createAccountingForSubscribe($orderItem, $type);
-                } elseif (!empty($orderItem->promotion_id)) {
-                    Accounting::createAccountingForPromotion($orderItem, $type);
-                } elseif (!empty($orderItem->registration_package_id)) {
-                    Accounting::createAccountingForRegistrationPackage($orderItem, $type);
-
-                    if (!empty($orderItem->become_instructor_id)) {
-                        BecomeInstructor::where('id', $orderItem->become_instructor_id)
-                            ->update([
-                                'package_id' => $orderItem->registration_package_id
-                            ]);
-                    }
-                } elseif (!empty($orderItem->installment_payment_id)) {
-                    Accounting::createAccountingForInstallmentPayment($orderItem, $type);
-
-                    $this->updateInstallmentOrder($orderItem, $sale);
-                } else {
-
-                    // webinar and meeting and product and bundle
-
-                    Accounting::createAccounting($orderItem, $type);
-                    TicketUser::useTicket($orderItem);
-
-                    if (!empty($orderItem->product_id)) {
-                        $this->updateProductOrder($sale, $orderItem, $order);
-                    }
-
-                    if (!empty($orderItem->book_id)) {
-                        $this->updateBookOrder($sale, $orderItem);
-                    }
-                }
-
             }
             if (!is_numeric($order->user_id)) {
                 Cart::emptyWithoutLoginCart($order->user_id);
@@ -657,8 +708,6 @@ class PaymentsController extends Controller
                 Cart::emptyCart($order->user_id);
             }
         }
-       
-
     }
 
     private function handleLuluPrintJobAfterPayment($order)
@@ -1082,15 +1131,22 @@ class PaymentsController extends Controller
 
         $productOrder = ProductOrder::find($orderItem->product_order_id);
         if ($productOrder) {
-
-            $this->fulfilCJProductIfNeeded($productOrder, $orderItem, $order);
+            try {
+                $this->fulfilCJProductIfNeeded($productOrder, $orderItem, $order);
+            } catch (\Throwable $e) {
+                Log::error('updateProductOrder: CJ fulfilment threw unexpectedly for orderItem #' . $orderItem->id . ': ' . $e->getMessage());
+            }
         }
 
         if ($product and $product->getAvailability() < 1) {
-            $notifyOptions = [
-                '[p.title]' => $product->title,
-            ];
-            sendNotification('product_out_of_stock', $notifyOptions, $product->creator_id);
+            try {
+                $notifyOptions = [
+                    '[p.title]' => $product->title,
+                ];
+                sendNotification('product_out_of_stock', $notifyOptions, $product->creator_id);
+            } catch (\Throwable $e) {
+                Log::error('updateProductOrder: stock notification failed for product #' . $product->id . ': ' . $e->getMessage());
+            }
         }
     }
 
@@ -1307,11 +1363,15 @@ class PaymentsController extends Controller
             ]);
 
             // ── Notify admin / seller ──────────────────────────────
-            sendNotification('new_store_order', [
-                '[p.title]' => $product->title ?? ($specs['cj_name'] ?? 'CJ Product'),
-                '[amount]' => handlePrice($orderItem->total_amount),
-                '[u.name]' => $buyer->full_name ?? '',
-            ], 1);
+            try {
+                sendNotification('new_store_order', [
+                    '[p.title]' => $product->title ?? ($specs['cj_name'] ?? 'CJ Product'),
+                    '[amount]' => handlePrice($orderItem->total_amount),
+                    '[u.name]' => $buyer->full_name ?? '',
+                ], 1);
+            } catch (\Throwable $e) {
+                Log::warning('CJ Fulfil: sendNotification failed for orderItem #' . $orderItem->id . ' — fulfilment itself succeeded. Error: ' . $e->getMessage());
+            }
 
         } catch (\Throwable $e) {
             // Never let CJ failure break the local payment confirmation
@@ -1347,13 +1407,19 @@ class PaymentsController extends Controller
                 if ($installment) {
                     if ($installment->needToVerify()) {
                         $status = 'pending_verification';
-
-                        sendNotification("installment_verification_request_sent", $notifyOptions, $installmentOrder->user_id);
-                        sendNotification("admin_installment_verification_request_sent", $notifyOptions, 1); // Admin
+                        try {
+                            sendNotification("installment_verification_request_sent", $notifyOptions, $installmentOrder->user_id);
+                            sendNotification("admin_installment_verification_request_sent", $notifyOptions, 1); // Admin
+                        } catch (\Throwable $e) {
+                            Log::warning('updateInstallmentOrder: verification notification failed: ' . $e->getMessage());
+                        }
                     } else {
                         $status = 'open';
-
-                        sendNotification("paid_installment_upfront", $notifyOptions, $installmentOrder->user_id);
+                        try {
+                            sendNotification("paid_installment_upfront", $notifyOptions, $installmentOrder->user_id);
+                        } catch (\Throwable $e) {
+                            Log::warning('updateInstallmentOrder: upfront notification failed: ' . $e->getMessage());
+                        }
                     }
 
                     $installmentOrder->update([
@@ -1384,8 +1450,12 @@ class PaymentsController extends Controller
 
 
             if ($installmentPayment->type == 'step') {
-                sendNotification("paid_installment_step", $notifyOptions, $installmentOrder->user_id);
-                sendNotification("paid_installment_step_for_admin", $notifyOptions, 1); // For Admin
+                try {
+                    sendNotification("paid_installment_step", $notifyOptions, $installmentOrder->user_id);
+                    sendNotification("paid_installment_step_for_admin", $notifyOptions, 1); // For Admin
+                } catch (\Throwable $e) {
+                    Log::warning('updateInstallmentOrder: step notification failed: ' . $e->getMessage());
+                }
             }
 
         }

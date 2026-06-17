@@ -44,6 +44,7 @@ class RegisterController extends Controller
     */
 
     use RegistersUsers;
+
     protected array $blockedEmailDomains = [
         // Disposable / Temporary
         'mailinator.com', '10minutemail.com', 'guerrillamail.com', 'temp-mail.org',
@@ -352,100 +353,103 @@ class RegisterController extends Controller
 
         return redirect('/register/verify-otp')->with(['toast' => $toastData]);
 
-        // $registerMethod = getGeneralSettings('register_method') ?? 'mobile';
+       // $registerMethod = getGeneralSettings('register_method') ?? 'mobile';
 
-        // $value = $request->get($registerMethod);
-        // if ($registerMethod == 'mobile') {
-        //     $value = $request->get('country_code') . ltrim($request->get('mobile'), '0');
-        // }
+       // $value = $request->get($registerMethod);
+       // if ($registerMethod == 'mobile') {
+       //     $value = $request->get('country_code') . ltrim($request->get('mobile'), '0');
+       // }
 
-        // $referralCode = $request->get('referral_code', null);
-        // if (!empty($referralCode)) {
-        //     session()->put('referralCode', $referralCode);
-        // }
+        //$referralCode = $request->get('referral_code', null);
+       // if (!empty($referralCode)) {
+         //   session()->put('referralCode', $referralCode);
+       // }
 
-        // $verificationController = new VerificationController();
-        // $checkConfirmed = $verificationController->checkConfirmed($user, $registerMethod, $value);
+       // $verificationController = new VerificationController();
+       // $checkConfirmed = $verificationController->checkConfirmed($user, $registerMethod, $value);
 
-        // $referralCode = $request->get('referral_code', null);
+       // $referralCode = $request->get('referral_code', null);
 
-        // if ($checkConfirmed['status'] == 'send') {
-        //     if (!empty($referralCode)) {
-        //         session()->put('referralCode', $referralCode);
-        //     }
-        //     return redirect('/verification');
+       // if ($checkConfirmed['status'] == 'send') {
+         //   if (!empty($referralCode)) {
+           //     session()->put('referralCode', $referralCode);
+           // }
+           // return redirect('/verification');
 
-        // } elseif ($checkConfirmed['status'] == 'verified') {
-        //     $this->guard()->login($user);
+        //} elseif ($checkConfirmed['status'] == 'verified') {
+          //  $this->guard()->login($user);
 
-        //     $enableRegistrationBonus = false;
-        //     $registrationBonusAmount = null;
-        //     $registrationBonusSettings = getRegistrationBonusSettings();
-        //     if (!empty($registrationBonusSettings['status']) and !empty($registrationBonusSettings['registration_bonus_amount'])) {
-        //         $enableRegistrationBonus = true;
-        //         $registrationBonusAmount = $registrationBonusSettings['registration_bonus_amount'];
-        //     }
+            //$enableRegistrationBonus = false;
+           // $registrationBonusAmount = null;
+           // $registrationBonusSettings = getRegistrationBonusSettings();
+           // if (!empty($registrationBonusSettings['status']) and !empty($registrationBonusSettings['registration_bonus_amount'])) {
+             //   $enableRegistrationBonus = true;
+               // $registrationBonusAmount = $registrationBonusSettings['registration_bonus_amount'];
+            //}
 
 
-        //     $user->update([
-        //         'status' => User::$active,
-        //         'enable_registration_bonus' => $enableRegistrationBonus,
-        //         'registration_bonus_amount' => $registrationBonusAmount,
-        //     ]);
+           // $user->update([
+             //   'status' => User::$active,
+               // 'enable_registration_bonus' => $enableRegistrationBonus,
+               // 'registration_bonus_amount' => $registrationBonusAmount,
+           // ]);
 
-        //     // if (!empty($referralCode)) {
-        //     //     Affiliate::storeReferral($user, $referralCode);
-        //     // }
+            // if (!empty($referralCode)) {
+            //     Affiliate::storeReferral($user, $referralCode);
+            // }
 
-        //     // $registrationBonusAccounting = new RegistrationBonusAccounting();
-        //     // $registrationBonusAccounting->storeRegistrationBonusInstantly($user);
+            // $registrationBonusAccounting = new RegistrationBonusAccounting();
+            // $registrationBonusAccounting->storeRegistrationBonusInstantly($user);
 
-        //     // Flag to differ the codes to dashboard controller
-        //     session()->put('user_just_registered', $user->id);
+            // Flag to differ the codes to dashboard controller
+           // session()->put('user_just_registered', $user->id);
 
-        //     if (session()->has('membership1_after_login')) {
-        //         $redirectUrl = session()->pull('membership1_after_login');
-        //         return redirect($redirectUrl);
-        //     }
+           // if (session()->has('membership1_after_login')) {
+             //   $redirectUrl = session()->pull('membership1_after_login');
+               // return redirect($redirectUrl);
+           // }
 
-        //     if (session()->has('membership_after_login')) {
-        //         $redirectUrl = session()->pull('membership_after_login');
-        //         return redirect($redirectUrl);
-        //     }
+           // if (session()->has('membership_after_login')) {
+           //     $redirectUrl = session()->pull('membership_after_login');
+             //   return redirect($redirectUrl);
+           // }
             
-        //     // dd($data);
-        //     if ($response = $this->registered($request, $user)) {
-        //         // return $response;
-        //         if ($request->wantsJson())
-        //             return $response;
-        //         else
-        //             if (session()->has('membership1_after_login')) {
-        //                 $redirectUrl = session()->pull('membership1_after_login');
-        //                 return redirect($redirectUrl);
-        //             }
+            // dd($data);
+           // if ($response = $this->registered($request, $user)) {
+                // return $response;
+               // if ($request->wantsJson())
+             //       
+                 //  
 
-        //             if (session()->has('membership_after_login')) {
-        //                 $redirectUrl = session()->pull('membership_after_login');
-        //                 return redirect($redirectUrl);
-        //             }
+// return $response;
+               // else
+                 //   if (session()->has('membership1_after_login')) {
+                   //     $redirectUrl = session()->pull('membership1_after_login');
+                     //   return redirect($redirectUrl);
+                   // }
 
-        //             redirect()->route('homepage');
-        //     }
+                   // if (session()->has('membership_after_login')) {
+                    //    $redirectUrl = session()->pull('membership_after_login');
+                  //      return redirect($redirectUrl);
+                //    }
+                    
+              //      redirect()->route('homepage');
+            //}
 
-        //     if (session()->has('membership1_after_login')) {
-        //         $redirectUrl = session()->pull('membership1_after_login');
-        //         return redirect($redirectUrl);
-        //     }
+           // if (session()->has('membership1_after_login')) {
+               // $redirectUrl = session()->pull('membership1_after_login');
+             //   return redirect($redirectUrl);
+           // }
 
-        //     if (session()->has('membership_after_login')) {
-        //         $redirectUrl = session()->pull('membership_after_login');
-        //         return redirect($redirectUrl);
-        //     }
+           // if (session()->has('membership_after_login')) {
+             //   $redirectUrl = session()->pull('membership_after_login');
+               // return redirect($redirectUrl);
+           // }
 
-        //     return $request->wantsJson()
-        //         ? new JsonResponse([], 201)
-        //         : redirect()->route('homepage');
-        // }
+           // return $request->wantsJson()
+           //     ? new JsonResponse([], 201)
+         //       : redirect()->route('homepage');
+       // }
     }
 
     public function showRegisterOtpForm()
@@ -630,6 +634,7 @@ class RegisterController extends Controller
         return back()->with(['toast' => $toastData]);
     }
 
+
     protected function registered(Request $request, $user)
     {
 
@@ -645,7 +650,6 @@ class RegisterController extends Controller
             $redirectUrl = session()->pull('membership_after_login');
             return redirect($redirectUrl);
         }
-
         //new add 05-02
         if (session()->has('redirect_to_checkout')) {
             $checkoutData = session('redirect_to_checkout');

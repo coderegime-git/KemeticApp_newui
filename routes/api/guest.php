@@ -93,6 +93,7 @@ Route::group([], function () {
         Route::post('/{id}/report', ['uses' => 'AdReelController@report','middleware' => 'api.auth']);
         Route::post('/{id}/view', ['uses' => 'AdReelController@view','middleware' => 'api.auth']);
         Route::delete('/comment/{commentId}', ['uses' => 'AdReelController@deleteComment','middleware' => 'api.auth']);
+        Route::post('/{id}', ['uses' => 'AdReelController@destroy','middleware' => 'api.auth']);
     });
 
     Route::prefix('asset')->group(function () {

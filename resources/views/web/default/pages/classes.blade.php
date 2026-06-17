@@ -106,13 +106,16 @@
     </div>
   </section>
   <div class="shop-sp"></div>
-  <form action="/classes" method="get">
+  <form action="/classes" method="get" id="searchSection">
      @if(!empty($selectedCategory))
           <input type="hidden" name="category_id" value="{{ $selectedCategory->id }}">
       @endif
     <div class="shop-search">
       <span style="color:var(--gold);font-weight:900">🔎</span>
       <input type="text" name="search" class="form-control border-0" value="{{ request()->get('search') }}" placeholder="What are you looking for?"/>
+      @if(request()->get('search'))
+        <button type="button" onclick="clearSearch(this)" class="shop-ghost" style="color:#999;">✕</button>
+      @endif
       <button class="shop-ghost">{{ trans('home.find') }}</button>
     </div>
   </form>
@@ -299,5 +302,25 @@ function filterLiveClasses(filterType) {
         document.getElementById('topRatedLiveClasses').style.display = 'grid';
     }
 }
+function clearSearch(button) {
+    var form = button.closest('form');
+    if (form) {
+        var input = form.querySelector('input[name="search"]');
+        if (input) {
+            input.value = '';
+        }
+        form.submit();
+    }
+}
+
+document.addEventListener("DOMContentLoaded", function() {
+    const urlParams = new URLSearchParams(window.location.search);
+    if(urlParams.has('search') || urlParams.has('category_id') || urlParams.has('page')) {
+        const searchSection = document.getElementById('searchSection');
+        if(searchSection) {
+            searchSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }
+    }
+});
 </script>
 @endpush

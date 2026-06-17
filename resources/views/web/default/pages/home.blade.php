@@ -2677,6 +2677,13 @@ if (typeof feather !== 'undefined') {
         for (const s of document.querySelectorAll('.home-scroller')) {
             s.addEventListener('wheel', (e) => {
                 if (Math.abs(e.deltaY) > Math.abs(e.deltaX)) {
+                    const atLeft = s.scrollLeft <= 0;
+                    const atRight = Math.abs(s.scrollWidth - s.clientWidth - s.scrollLeft) < 1;
+                    
+                    if ((e.deltaY < 0 && atLeft) || (e.deltaY > 0 && atRight)) {
+                        return;
+                    }
+                    
                     s.scrollLeft += e.deltaY;
                     e.preventDefault();
                 }

@@ -17,6 +17,6 @@ class ReferralController extends Controller
             Cookie::queue('referral_code', $code, 24 * 60);
         }
 
-        return redirect('/register');
+        return redirect('/login');
     }
 }

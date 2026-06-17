@@ -462,5 +462,34 @@ class AdReelController extends Controller
             'visibleInDiscoveryTabs' => $plan->is_membership
         ]);
     }
+    public function destroy(Request $request, $id)
+    {
+        $user = auth('api')->user();
+        $userId = $user->id;
+        
+        if (!$userId) {
+            return response()->json(['error' => 'Unauthorized'], 401);
+        }
+
+        $reel = AdReel::findOrFail($id);
+        
+        // Ensure the user owns this FMD
+        if ($reel->user_id != $userId) {
+            return response()->json(['error' => 'Unauthorized to delete this FMD'], 403);
+        }
+
+        // Delete the associated video file if it exists
+        $videoPath = public_path('store/reels/videos/' . $reel->media_image);
+        if (file_exists($videoPath) && !empty($reel->media_image)) {
+            unlink($videoPath);
+        }
+
+        $reel->delete();
+
+        return response()->json([
+            'status' => 'success',
+            'message' => 'FMD deleted successfully'
+        ]);
+    }
 }
 

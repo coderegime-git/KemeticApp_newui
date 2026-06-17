@@ -450,7 +450,7 @@ input[type="file"]::file-selector-button:hover {
   </section>
 
   <!-- GLOBAL -->
-  <section>
+  <section id="searchSection">
     <div class="d-flex justify-content-between align-items-center mb-4">
       <div>
         <!-- 🌍 Global -->
@@ -750,6 +750,16 @@ input[type="file"]::file-selector-button:hover {
       if(Math.abs(e.deltaY)>Math.abs(e.deltaX)){ s.scrollLeft+=e.deltaY; e.preventDefault(); }
     }, {passive:false});
   });
+
+  document.addEventListener("DOMContentLoaded", function() {
+      const urlParams = new URLSearchParams(window.location.search);
+      if(urlParams.has('page')) {
+          const searchSection = document.getElementById('searchSection');
+          if(searchSection) {
+              searchSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
+          }
+      }
+  });
 </script>
 <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/jquery-toast-plugin/1.3.2/jquery.toast.min.css">
@@ -855,6 +865,32 @@ document.addEventListener('DOMContentLoaded', function() {
   // Handle form submission with progress
   const uploadForm = document.getElementById('uploadForm');
   const uploadProgress = document.getElementById('uploadProgress');
+  
+  // Clear modal fields on close
+  const uploadModal = document.getElementById('uploadModal');
+  if (uploadModal) {
+    uploadModal.addEventListener('hidden.bs.modal', function() {
+      if (uploadForm) {
+        uploadForm.reset();
+      }
+      if (videoPreview) {
+        videoPreview.classList.add('d-none');
+        const videoElement = videoPreview.querySelector('video');
+        if (videoElement) {
+          videoElement.pause();
+          const sourceElement = videoElement.querySelector('source');
+          if (sourceElement) {
+            sourceElement.removeAttribute('src');
+          }
+          videoElement.load();
+        }
+      }
+      if (uploadProgress) {
+        uploadProgress.style.width = '0%';
+        uploadProgress.textContent = '0%';
+      }
+    });
+  }
   
   if (uploadForm) {
     uploadForm.addEventListener('submit', function(e) {

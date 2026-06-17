@@ -4,7 +4,7 @@
 
 <div class="course-banner">
   <div class="course-wrap">
-    <span>Unlock unlimited Courses, Reels & Livestreams — €1/month or €10/year</span>
+    <span>Unlock unlimited Courses, Reels & Livestreams — €10/year or €33/Lifetime</span>
       @if(auth()->check())
           <button class="course-btn"><a href="/membership">Join Now</a></button>
         @else
@@ -74,10 +74,13 @@
   
 
   <div class="shop-sp"></div>
-  <form action="/classes" method="get">
+  <form action="/classes" method="get" id="searchSection">
     <div class="shop-search">
       <span style="color:var(--gold);font-weight:900">🔎</span>
       <input type="text" name="search" class="form-control border-0" value="{{ request()->get('search') }}" placeholder="What are you looking for?"/>
+      @if(request()->get('search'))
+        <button type="button" onclick="clearSearch(this)" class="shop-ghost" style="color:#999;">✕</button>
+      @endif
       <button class="shop-ghost">{{ trans('home.find') }}</button>
     </div>
   </form>
@@ -157,3 +160,27 @@
 
 </main>
 @endsection
+@push('scripts_bottom')
+<script>
+function clearSearch(button) {
+    var form = button.closest('form');
+    if (form) {
+        var input = form.querySelector('input[name="search"]');
+        if (input) {
+            input.value = '';
+        }
+        form.submit();
+    }
+}
+
+document.addEventListener("DOMContentLoaded", function() {
+    const urlParams = new URLSearchParams(window.location.search);
+    if(urlParams.has('search') || urlParams.has('category_id') || urlParams.has('page')) {
+        const searchSection = document.getElementById('searchSection');
+        if(searchSection) {
+            searchSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }
+    }
+});
+</script>
+@endpush

@@ -71,13 +71,16 @@
       <div class="shop-sp"></div>
 
     <!-- Search -->
-    <form action="{{ (!empty($isRewardProducts) and $isRewardProducts) ? '/reward-products' : '/products' }}" method="get">
+    <form action="{{ (!empty($isRewardProducts) and $isRewardProducts) ? '/reward-products' : '/products' }}" method="get" id="searchSection">
       <div class="shop-search">
         <span style="color:var(--gold);font-weight:900">🔎</span>
         @if(!empty($selectedCategory))
          <input type="hidden" name="category_id" value="{{ $selectedCategory->id }}">
          @endif
         <input type="text" name="search" class="form-control border-0" value="{{ request()->get('search') }}" placeholder="What are you looking for?"/>
+        @if(request()->get('search'))
+          <button type="button" onclick="clearSearch(this)" class="shop-ghost" style="color:#999;">✕</button>
+        @endif
         <button class="shop-ghost">{{ trans('home.find') }}</button>
       </div>
     </form>
@@ -354,3 +357,25 @@
 <script src="{{ url('/assets/default/js/parts/video_player_helpers.min.js') }}"></script>
 <script src="{{ url('/assets/default/js/parts/webinar_show.min.js') }}"></script>
 <script src="{{ url('/assets/default/js/parts/blog.min.js') }}"></script>
+<script>
+function clearSearch(button) {
+    var form = button.closest('form');
+    if (form) {
+        var input = form.querySelector('input[name="search"]');
+        if (input) {
+            input.value = '';
+        }
+        form.submit();
+    }
+}
+
+document.addEventListener("DOMContentLoaded", function() {
+    const urlParams = new URLSearchParams(window.location.search);
+    if(urlParams.has('search') || urlParams.has('category_id') || urlParams.has('page')) {
+        const searchSection = document.getElementById('searchSection');
+        if(searchSection) {
+            searchSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }
+    }
+});
+</script>
