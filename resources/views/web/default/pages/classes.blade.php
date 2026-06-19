@@ -4,7 +4,7 @@
 
 <div class="course-banner">
   <div class="course-wrap">
-    <span>Unlock unlimited Courses, Reels & Livestreams — €1/month or €10/year</span>
+    <span>Unlock unlimited Courses, Reels & Livestreams — €10/year or €33/Lifetime</span>
       @if(auth()->check())
           <button class="course-btn"><a href="/membership">Join Now</a></button>
         @else
@@ -191,12 +191,12 @@
             <div class="shop-row-end">
               <div class="shop-price-row">
                   @if(!empty($webinar->price) and $webinar->price > 0)
-                    <span class="real">{{ handlePrice($webinar->price, true, true, false, null, true, 'store') }}</span>
+                    <span class="real">{{ handlePrice($webinar->price, true, true, false, null, true) }}</span>
                   @else
                       <span class="real">{{ trans('public.free') }}</span>
                   @endif
               </div>
-              <a href="{{ $webinar->getUrl() }}" ><button type="button" class="course-cta">Enroll Now</button></a>
+              <a href="{{ $webinar->getUrl() }}"><button type="button" class="course-cta">Enroll Now</button></a>
             </div>
            
           </div>

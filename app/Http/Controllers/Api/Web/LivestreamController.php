@@ -5,7 +5,7 @@ namespace App\Http\Controllers\Api\Web;
 use App\Http\Controllers\Api\Objects\UserObj;
 use App\Http\Controllers\Controller;
 use App\Models\Api\Book;
-use App\Models\Api\User;
+// use App\Models\Api\User;
 use App\Models\Livestream;
 use App\Models\BookTranslation;
 use App\Models\Region;
@@ -14,21 +14,23 @@ use App\Models\LivestreamComment;
 use App\Services\IvsService;
 use App\Models\IvsChatToken;
 use App\Services\IvsChatService;
+use App\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Facades\Log;
 use \Illuminate\Support\Str;
 
 class LivestreamController extends Controller
 {
-    protected $ivsService;
+    // protected $ivsService;
 
-    public function __construct(IvsService $ivsService, IvsChatService $ivsChatService)
-    {
-        $this->ivsService = $ivsService;
-        $this->ivsChatService = $ivsChatService;
-    }
+    // public function __construct(IvsService $ivsService, IvsChatService $ivsChatService)
+    // {
+    //     $this->ivsService = $ivsService;
+    //     $this->ivsChatService = $ivsChatService;
+    // }
     
     private function getUserIdFromToken(Request $request)
     {
@@ -86,8 +88,17 @@ class LivestreamController extends Controller
     //         $channelName = substr($channelName, 0, 128);
             
     //         $options = [
-    //             'type' => "BASIC",
-    //             'latencyMode' => "LOW",
+    //             'type' => "ADVANCED_HD",
+    //             'latencyMode' => "NORMAL",
+    //             'preset' => "HIGHER_BANDWIDTH_DELIVERY",
+
+    //             'insecureIngest' => false,
+
+    //             // 'multitrackInputConfiguration' => [
+    //             //     'enabled'           => true,
+    //             //     'maximumResolution' => "FULL_HD",  // allows high bitrate input
+    //             // ],
+                
     //             'tags' => [
     //                 'environment' => config('app.env'),
     //                 'created_by' => 'laravel-system'
@@ -268,12 +279,15 @@ class LivestreamController extends Controller
     {
         $userId = $this->getUserIdFromToken($request);
 
-        if (!$userId) {
+         if (!$userId) {
             return response()->json([
                 'success' => false,
                 'message' => 'Unauthorized. Invalid or missing token.'
             ], 401);
         }
+
+        $startTime = microtime(true);
+        \Log::info('[Livestream@index] START user: ' . $userId, ['time' => round((microtime(true) - $startTime) * 1000, 2) . 'ms']);
 
         $camera   = $request->query('camera');
         $platform = $request->query('platform');
@@ -303,6 +317,8 @@ class LivestreamController extends Controller
                 ]);
         }
 
+        \Log::info('[Livestream@index] AFTER create/update user: ' . $userId, ['time' => round((microtime(true) - $startTime) * 1000, 2) . 'ms']);
+
         $livestreams = Livestream::where('creator_id', $userId)
             ->where('livestream_end', 'No')
             ->orderBy('created_at', 'desc')
@@ -313,11 +329,14 @@ class LivestreamController extends Controller
             ->map(function ($livestream) {
                 return $this->formatLivestreamData($livestream);
             });
+        \Log::info('[Livestream@index] BEFORE response user: ' . $userId, ['time' => round((microtime(true) - $startTime) * 1000, 2) . 'ms']);
 
         return response()->json([
             'success' => true,
             'data'    => $livestreams
         ]);
+
+        \Log::info('[Livestream@details] end response user: ' . $userId, ['time' => round((microtime(true) - $startTime) * 1000, 2) . 'ms']);
     }
 
     public function delete(Request $request, $id)
@@ -367,87 +386,6 @@ class LivestreamController extends Controller
         }
     }
 
-    public function livechat(Request $request, $id)
-    {
-        $userId = $this->getUserIdFromToken($request);
-
-        if (!$userId) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Unauthorized. Invalid or missing token.'
-            ], 401);
-        }
-
-        $livestream = Livestream::find($id);
-        if (!$livestream) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Livestream not found'
-            ], 404);
-        }
-        
-        // $roomArn   = 'arn:aws:ivschat:us-east-1:585130011235:room/ygddYITgmm7N';
-        // $roomTitle = 'portalschat';
-
-        $existing = IvsChatToken::where('livestream_id', $livestream->id)
-            ->latest()
-            ->first();
-
-        if ($existing) {
-            $arn = $existing->chat_room_arn;
-            $title = $existing->chat_room_title;
-        }
-        else
-        {
-            $room = $this->ivsChatService->createRoom($livestream->id);
-            $arn = $room['arn'];
-            $title = $room['title'];
-        }
-
-        // Create token (180 mins, full permissions)
-        $tokenData = $this->ivsChatService->createChatToken(
-            $arn,
-            $userId
-        );
-
-        $expiresAtTimestamp = strtotime($tokenData['expires_at']);
-
-        $chatToken = IvsChatToken::create([
-            'user_id' => $userId,
-            'livestream_id' => $id,
-            'chat_room_arn' => $arn,
-            'chat_room_title' => $title,
-            'chat_token' => $tokenData['token'],
-            'capabilities' => $tokenData['capabilities'],
-            'expires_at' => $expiresAtTimestamp,
-            'created_at' => time(),
-            'updated_at' => time(),
-        ]);
-
-        $updatedChatTokenCount = IvsChatToken::where('livestream_id', $livestream->id)->count();
-
-        Livestream::where('id', $livestream->id)->update([
-            'livestreamview_count' => $updatedChatTokenCount
-        ]);
-        
-        // $livestream->update([
-        //     'livestreamview_count' => $updatedChatTokenCount
-        // ]);
-
-        return response()->json([
-            'success' => true,
-            'data' => [
-                'livestream_id' => $id,
-                'chat_token' => $chatToken->chat_token,
-                'room_arn' => $arn,
-                'room_title' => $title,
-                'capabilities' => $chatToken->capabilities,
-                'expires_at' => $chatToken->expires_at,
-                'view_count' => $updatedChatTokenCount,
-            ]
-        ]);
-    }
-
     public function details(Request $request, $id)
     {
         $userId = $this->getUserIdFromToken($request);
@@ -458,6 +396,9 @@ class LivestreamController extends Controller
                 'message' => 'Unauthorized. Invalid or missing token.'
             ], 401);
         }
+
+        $startTime = microtime(true);
+        \Log::info('[Livestream@details] @date ' . date('Y-m-d H:i:s') . ' START user: ' . $userId, ['time' => round((microtime(true) - $startTime) * 1000, 2) . 'ms']);
 
         // Get selected livestream
         $selectedLivestream = Livestream::where('id', $id)
@@ -522,12 +463,14 @@ class LivestreamController extends Controller
             // ->limit(50)
             ->get()
         ->map(function ($comment) {
+             $user = User::find($comment->user_id);
             // Get replies for each comment
             $replies = DB::table('livestream_comment as lc')
                 ->where('lc.reply_id', $comment->id)
                 ->join('users', 'lc.user_id', '=', 'users.id')
                 ->select(
                     'lc.id',
+                    'lc.user_id',
                     'lc.content',
                     'lc.created_at',
                     'users.full_name',
@@ -536,13 +479,14 @@ class LivestreamController extends Controller
                 ->orderBy('lc.created_at', 'asc')
                 ->get()
                 ->map(function ($reply) {
+                   $replyUser = User::find($reply->user_id);
                     return [
                         'id'         => $reply->id,
                         'content'    => $reply->content,
                         'created_at' => $reply->created_at,
                         'user' => [
                             'full_name' => $reply->full_name,
-                            'avatar'    => !empty($reply->avatar) ? url($reply->avatar) : null,
+                            'avatar'    => $replyUser ? url($replyUser->getAvatar()) : null,
                         ],
                     ];
                 });
@@ -555,7 +499,7 @@ class LivestreamController extends Controller
                 'created_at' => $comment->created_at,
                 'user' => [
                     'full_name' => $comment->full_name,
-                    'avatar'    => !empty($comment->avatar) ? url($comment->avatar) : null,
+                    'avatar'    => $user ? url($user->getAvatar()) : null,
                 ],
                 'replies' => $replies,
             ];
@@ -578,6 +522,7 @@ class LivestreamController extends Controller
             // ->limit(20) // Adjust as needed
             ->get()
             ->map(function ($review) {
+                $reviewUser = User::find($review->user_id);
             return [
                 'id' => $review->id,
                 'user_id' => $review->user_id,
@@ -586,7 +531,7 @@ class LivestreamController extends Controller
                 'rating' => $review->rating,
                 'created_at' => $review->created_at,
                 'username' => $review->full_name,
-                'avatar' => !empty($review->avatar) ? url($review->avatar) : null
+                'avatar' => $reviewUser ? url($reviewUser->getAvatar()) : null
             ];
         });
 
@@ -606,7 +551,7 @@ class LivestreamController extends Controller
             ->where('user_id', $userId)
             ->exists();
 
-        $selectedIssaved = DB::table('livestream_saved')
+        $selectedIsSaved = DB::table('livestream_saved')
             ->where('livestream_id', $id)
             ->where('user_id', $userId)
             ->exists();
@@ -696,6 +641,9 @@ class LivestreamController extends Controller
         $selectedData['is_selected']         = true;
         $selectedData['liked_by_current_user'] = $selectedIsLiked;
 
+        \Log::info('[Livestream@details] @date ' . date('Y-m-d H:i:s') . ' LOOP START user: ' . $userId, ['count' => $otherLivestreams->count(), 'time' => round((microtime(true) - $startTime) * 1000, 2) . 'ms']);
+
+
         // Build other livestreams data
         $otherData = $otherLivestreams->map(function ($livestream) use ($userId) {
             $data = $this->formatLivestreamData($livestream);
@@ -707,6 +655,11 @@ class LivestreamController extends Controller
 
             return $data;
         })->toArray();
+
+        \Log::info('[Livestream@details] @date ' . date('Y-m-d H:i:s') . ' LOOP END user: ' . $userId, ['time' => round((microtime(true) - $startTime) * 1000, 2) . 'ms']);
+
+        \Log::info('[Livestream@details] @date ' . date('Y-m-d H:i:s') . ' BEFORE response user: ' . $userId, ['time' => round((microtime(true) - $startTime) * 1000, 2) . 'ms']);
+
 
         return response()->json([
             'success' => true,
@@ -721,6 +674,8 @@ class LivestreamController extends Controller
                 ]
             ]
         ]);
+        \Log::info('[Livestream@details] @date ' . date('Y-m-d H:i:s') . ' end response user: ' . $userId, ['time' => round((microtime(true) - $startTime) * 1000, 2) . 'ms']);
+
     }
 
     private function formatLivestreamData($livestream): array
@@ -738,6 +693,8 @@ class LivestreamController extends Controller
                 $countryCode = Country::where('country_name', $countryName)->value('country_code');
             }
         }
+
+        $creatorUser = $creator ? User::find($creator->id) : null;
 
         return [
             'id'                   => $livestream->id,
@@ -758,10 +715,331 @@ class LivestreamController extends Controller
             'creator_id'           => $livestream->creator_id,
             'user_id'              => $creator?->id,
             'full_name'            => $creator?->full_name,
-            'avatar'               => !empty($creator?->avatar) ? url($creator->avatar) : '',
+            'avatar'               => $creatorUser ? url($creatorUser->getAvatar()) : '',
+            // 'avatar'               => !empty($creator?->avatar) ? url($creator->avatar) : '',
             'user_country_code'    => $countryCode,
         ];
     }
+
+    // public function livechat(Request $request, $id)
+    // {
+    //     $userId = $this->getUserIdFromToken($request);
+
+    //     if (!$userId) {
+    //         return response()->json([
+    //             'success' => false,
+    //             'message' => 'Unauthorized. Invalid or missing token.'
+    //         ], 401);
+    //     }
+
+    //     $livestream = Livestream::find($id);
+    //     if (!$livestream) {
+    //         return response()->json([
+    //             'success' => false,
+    //             'message' => 'Livestream not found'
+    //         ], 404);
+    //     }
+        
+    //     // $roomArn   = 'arn:aws:ivschat:us-east-1:585130011235:room/ygddYITgmm7N';
+    //     // $roomTitle = 'portalschat';
+
+    //     $existing = IvsChatToken::where('livestream_id', $livestream->id)
+    //         ->latest()
+    //         ->first();
+
+    //     if ($existing) {
+    //         $arn = $existing->chat_room_arn;
+    //         $title = $existing->chat_room_title;
+    //     }
+    //     else
+    //     {
+    //         $room = $this->ivsChatService->createRoom($livestream->id);
+    //         $arn = $room['arn'];
+    //         $title = $room['title'];
+    //     }
+
+    //     // Create token (180 mins, full permissions)
+    //     $tokenData = $this->ivsChatService->createChatToken(
+    //         $arn,
+    //         $userId
+    //     );
+
+    //     $expiresAtTimestamp = strtotime($tokenData['expires_at']);
+
+    //     $chatToken = IvsChatToken::create([
+    //         'user_id' => $userId,
+    //         'livestream_id' => $id,
+    //         'chat_room_arn' => $arn,
+    //         'chat_room_title' => $title,
+    //         'chat_token' => $tokenData['token'],
+    //         'capabilities' => $tokenData['capabilities'],
+    //         'expires_at' => $expiresAtTimestamp,
+    //         'created_at' => time(),
+    //         'updated_at' => time(),
+    //     ]);
+
+    //     $updatedChatTokenCount = IvsChatToken::where('livestream_id', $livestream->id)->count();
+
+    //     Livestream::where('id', $livestream->id)->update([
+    //         'livestreamview_count' => $updatedChatTokenCount
+    //     ]);
+        
+    //     // $livestream->update([
+    //     //     'livestreamview_count' => $updatedChatTokenCount
+    //     // ]);
+
+    //     return response()->json([
+    //         'success' => true,
+    //         'data' => [
+    //             'livestream_id' => $id,
+    //             'chat_token' => $chatToken->chat_token,
+    //             'room_arn' => $arn,
+    //             'room_title' => $title,
+    //             'capabilities' => $chatToken->capabilities,
+    //             'expires_at' => $chatToken->expires_at,
+    //             'view_count' => $updatedChatTokenCount,
+    //         ]
+    //     ]);
+    // }
+
+    // public function details(Request $request, $id)
+    // {
+    //     $userId = $this->getUserIdFromToken($request);
+
+    //     if (!$userId) {
+    //         return response()->json([
+    //             'success' => false,
+    //             'message' => 'Unauthorized. Invalid or missing token.'
+    //         ], 401);
+    //     }
+
+    //     // Get selected livestream
+    //     $selectedLivestream = Livestream::where('id', $id)
+    //         ->where('livestream_end', 'No')
+    //         ->with(['creator' => function($query) {
+    //             $query->select('id', 'full_name', 'avatar', 'country_id');
+    //         }])
+    //         ->first();
+
+    //     if (!$selectedLivestream) {
+    //         return response()->json([
+    //             'success' => false,
+    //             'message' => 'Selected livestream not found'
+    //         ], 404);
+    //     }
+
+    //     $page = $request->has('offset') ? (int) $request->get('offset') : null;
+    //     $perPage = $request->has('limit') ? (int) $request->get('limit') : null;
+
+    //     $usePagination = !is_null($page) && !is_null($perPage);
+    //     $dbOffset = $usePagination ? ($page * $perPage) : null;
+
+    //     // $comments = DB::table('livestream_comment')
+    //     //     ->where('livestream_id', $id)
+    //     //     ->join('users', 'livestream_comment.user_id', '=', 'users.id')
+    //     //     ->select(
+    //     //         'livestream_comment.id',
+    //     //         'livestream_comment.content',
+    //     //         'livestream_comment.created_at',
+    //     //         'users.full_name',
+    //     //         'users.avatar'
+    //     //     )
+    //     //     ->orderBy('livestream_comment.created_at', 'desc')
+    //     //     ->limit(50)
+    //     //     ->get()
+    //     //     ->map(function ($comment) {
+    //     //     return [
+    //     //         'id' => $comment->id,
+    //     //         'content' => $comment->content,
+    //     //         'created_at' => $comment->created_at,
+    //     //         'user' => [
+    //     //             'full_name' => $comment->full_name,
+    //     //             'avatar' => !empty($comment->avatar) ? url($comment->avatar) : null
+    //     //         ]
+    //     //     ];
+    //     // });
+
+    //     $comments = DB::table('livestream_comment as lc')
+    //         ->where('lc.livestream_id', $id)
+    //         ->where('lc.reply_id','0') // Only parent comments, no replies
+    //         ->join('users', 'lc.user_id', '=', 'users.id')
+    //         ->select(
+    //             'lc.id',
+    //             'lc.user_id',
+    //             'lc.livestream_id',
+    //             'lc.content',
+    //             'lc.created_at',
+    //             'users.full_name',
+    //             'users.avatar'
+    //         )
+    //         ->orderBy('lc.created_at', 'desc')
+    //         ->limit(50)
+    //         ->get()
+    //     ->map(function ($comment) {
+    //         // Get replies for each comment
+    //         $replies = DB::table('livestream_comment as lc')
+    //             ->where('lc.reply_id', $comment->id)
+    //             ->join('users', 'lc.user_id', '=', 'users.id')
+    //             ->select(
+    //                 'lc.id',
+    //                 'lc.content',
+    //                 'lc.created_at',
+    //                 'users.full_name',
+    //                 'users.avatar'
+    //             )
+    //             ->orderBy('lc.created_at', 'asc')
+    //             ->get()
+    //             ->map(function ($reply) {
+    //                 return [
+    //                     'id'         => $reply->id,
+    //                     'content'    => $reply->content,
+    //                     'created_at' => $reply->created_at,
+    //                     'user' => [
+    //                         'full_name' => $reply->full_name,
+    //                         'avatar'    => !empty($reply->avatar) ? url($reply->avatar) : null,
+    //                     ],
+    //                 ];
+    //             });
+
+    //         return [
+    //             'id'         => $comment->id,
+    //             'user_id' => $comment->user_id,
+    //             'livestream_id' => $comment->livestream_id,
+    //             'content'    => $comment->content,
+    //             'created_at' => $comment->created_at,
+    //             'user' => [
+    //                 'full_name' => $comment->full_name,
+    //                 'avatar'    => !empty($comment->avatar) ? url($comment->avatar) : null,
+    //             ],
+    //             'replies' => $replies,
+    //         ];
+    //     });
+
+    //     $reviews = DB::table('livestream_review')
+    //         ->where('livestream_id', $id)
+    //         ->join('users', 'livestream_review.user_id', '=', 'users.id')
+    //         ->select(
+    //             'livestream_review.id',
+    //             'livestream_review.user_id',
+    //             'livestream_review.livestream_id',
+    //             'livestream_review.review',
+    //             'livestream_review.rating',
+    //             'livestream_review.created_at',
+    //             'users.full_name',
+    //             'users.avatar'
+    //         )
+    //         ->orderBy('livestream_review.created_at', 'desc')
+    //         ->limit(20) // Adjust as needed
+    //         ->get()
+    //         ->map(function ($review) {
+    //         return [
+    //             'id' => $review->id,
+    //             'user_id' => $review->user_id,
+    //             'livestream_id' => $review->livestream_id,
+    //             'review' => $review->review,
+    //             'rating' => $review->rating,
+    //             'created_at' => $review->created_at,
+    //             'username' => $review->full_name,
+    //             'avatar' => !empty($review->avatar) ? url($review->avatar) : null
+    //         ];
+    //     });
+
+    //     // Calculate average rating
+    //     $avgRating = DB::table('livestream_review')
+    //         ->where('livestream_id', $id)
+    //         ->avg('rating');
+
+    //     $userReviewed = DB::table('livestream_review')
+    //         ->where('livestream_id', $id)
+    //         ->where('user_id', $userId)
+    //         ->exists();
+
+    //     // Check if user liked selected livestream
+    //     $selectedIsLiked = DB::table('livestream_like')
+    //         ->where('livestream_id', $id)
+    //         ->where('user_id', $userId)
+    //         ->exists();
+
+    //     $selectedIssaved = DB::table('livestream_saved')
+    //         ->where('livestream_id', $id)
+    //         ->where('user_id', $userId)
+    //         ->exists();
+
+    //     // Get other livestreams with or without pagination
+    //     $otherLivestreamsQuery = Livestream::where('id', '!=', $id)
+    //         ->where('livestream_end', 'No')
+    //         ->orderBy('created_at', 'desc')
+    //         ->with(['creator' => function($query) {
+    //             $query->select('id', 'full_name', 'avatar', 'country_id');
+    //         }]);
+
+    //     $totalOtherLivestreams = $otherLivestreamsQuery->count();
+
+    //     if ($usePagination) {
+    //         // Apply pagination
+    //         $otherLivestreams = $otherLivestreamsQuery
+    //             ->offset($dbOffset)
+    //             ->limit($perPage)
+    //             ->get();
+    //     } else {
+    //         // Get all without pagination
+    //         $otherLivestreams = $otherLivestreamsQuery->get();
+    //     }
+
+    //     // Process selected livestream
+    //     $selectedData = $this->processLivestreamData($selectedLivestream);
+    //     $selectedData['is_liked'] = $selectedIsLiked;
+    //     $selectedData['is_saved'] = $selectedIssaved;
+    //     $selectedData['comments'] = $comments;
+    //     $selectedData['reviews'] = $reviews;
+    //     $selectedData['average_rating'] = round($avgRating, 1);
+    //     $selectedData['user_reviewed'] = $userReviewed;
+    //     $selectedData['is_selected'] = true;
+    //     $selectedData['liked_by_current_user'] = $selectedIsLiked;
+
+    //     // Process other livestreams
+    //     $otherLivestreamsData = [];
+    //     foreach ($otherLivestreams as $livestream) {
+    //         $livestreamData = $this->processLivestreamData($livestream);
+            
+    //         $isLiked = DB::table('livestream_like')
+    //             ->where('livestream_id', $livestream->id)
+    //             ->where('user_id', $userId)
+    //         ->exists();
+
+    //         $isSaved = DB::table('livestream_saved')
+    //         ->where('livestream_id', $livestream->id)
+    //         ->where('user_id', $userId)
+    //         ->exists(); 
+            
+    //         $livestreamData['is_liked'] = $isLiked;
+    //         $livestreamData['is_Saved'] = $isSaved;
+    //         $livestreamData['is_selected'] = false;
+    //         $livestreamData['liked_by_current_user'] = $isLiked;
+            
+    //         $otherLivestreamsData[] = $livestreamData;
+    //     }
+
+    //     // Create single array with selected first
+    //     $resultArray = [$selectedData];
+    //     foreach ($otherLivestreamsData as $livestream) {
+    //         $resultArray[] = $livestream;
+    //     }
+
+    //     return response()->json([
+    //         'success' => true,
+    //         'data' => [
+    //             'livestreams' => $resultArray,
+    //             'pagination' => [
+    //                 'current_offset' => $page,
+    //                 'per_page' => $perPage,
+    //                 'total_other_streams' => $totalOtherLivestreams,
+    //                 'has_more' => ($dbOffset + $perPage) < $totalOtherLivestreams,
+    //                 'next_offset' => ($dbOffset + $perPage) < $totalOtherLivestreams ? $page + 1 : null
+    //             ]
+    //         ]
+    //     ]);
+    // }
 
     // private function processLivestreamData($livestream)
     // {
@@ -783,13 +1061,15 @@ class LivestreamController extends Controller
     //         'country' => $livestream->country,
     //         'is_active' => $livestream->is_active,
     //         'livestream_end' => $livestream->livestream_end,
-    //         'like_count' => $livestream->like_count ?? 0,
-    //         'comments_count' => $livestream->comments_count ?? 0,
-    //         'saved_count' => $livestream->saved_count ?? 0,
-    //         'share_count' => $livestream->share_count ?? 0,
-    //         'gift_count' => $livestream->gift_count ?? 0,
-    //         'report_count' => $livestream->report_count ?? 0,
-    //         'review_count' => $livestream->review_count ?? 0,
+
+    //         'like_count' => $livestream->likes()->count() ?? 0,
+    //         'comments_count' => $livestream->comments()->count() ?? 0,
+    //         'saved_count' => $livestream->savedItems()->count() ?? 0,
+    //         'share_count' => $livestream->share()->count() ?? 0,
+    //         'gift_count' => $livestream->gift()->count() ?? 0,
+    //         'report_count' => $livestream->reports()->count() ?? 0,
+    //         'review_count' => $livestream->review()->count() ?? 0,
+
     //         'livestreamview_count' => $livestream->livestreamview_count ?? 0,
     //         'created_at' => $livestream->created_at,
     //         'updated_at' => $livestream->updated_at,

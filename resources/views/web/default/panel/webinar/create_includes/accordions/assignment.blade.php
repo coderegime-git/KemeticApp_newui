@@ -224,8 +224,12 @@
 .kemetic-footer {
     margin-top: 25px;
     display: flex;
+    flex-direction: row !important;
     align-items: center;
-    gap: 10px;
+    /* gap: 10px; */
+    justify-content: flex-end;
+    gap: 15px;
+    width: 100%;
 }
 
 .kemetic-footer .btn-primary {
@@ -234,9 +238,10 @@
     color: #141414;
     font-weight: 700;
     border-radius: 10px;
-    padding: 10px 24px;
+    padding: 12px 24px;
     cursor: pointer;
     transition: background 0.2s;
+    flex: 1;
 }
 
 .kemetic-footer .btn-primary:hover {
@@ -249,9 +254,10 @@
     color: #e74c3c;
     font-weight: 600;
     border-radius: 10px;
-    padding: 10px 24px;
+    padding: 12px 24px;
     cursor: pointer;
     transition: all 0.2s;
+    flex: 1;
 }
 
 .kemetic-footer .btn-danger:hover {
@@ -632,7 +638,7 @@
                                     <input type="number"
                                            name="ajax[{{ !empty($assignment) ? $assignment->id : 'new' }}][access_after_day]"
                                            value="{{ !empty($assignment) ? $assignment->access_after_day : '' }}"
-                                           class="kemetic-input js-ajax-access_after_day"
+                                           class="kemetic-input js-ajax-access_after_day" min="0"
                                            placeholder="{{ trans('update.access_after_day_placeholder') }}"/>
                                     <div class="invalid-feedback"></div>
                                 </div>

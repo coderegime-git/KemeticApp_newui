@@ -78,7 +78,8 @@
                                         <table class="table table-striped font-14">
                                             <thead>
                                                 <tr>
-                                                    <th>App Version</th>
+                                                    <th>Android App Version</th>
+                                                    <th>IOS App Version</th>
                                                     <th class="text-center">Force Update</th>
                                                     <th>Update Message</th>
                                                     <th class="text-center">Status</th>
@@ -89,7 +90,10 @@
                                                 @foreach($versions as $version)
                                                     <tr>
                                                         <td>
-                                                            <strong class="text-primary">{{ $version->app_version }}</strong>
+                                                            <strong class="text-primary">{{ $version->android_app_version }}</strong>
+                                                        </td>
+                                                        <td>
+                                                            <strong class="text-primary">{{ $version->ios_app_version }}</strong>
                                                         </td>
                                                         <td class="text-center">
                                                             @if($version->force_update)
@@ -130,20 +134,34 @@
                                             <form action="{{ getAdminPanelUrl() }}/app_version/{{ !empty($editVersion) ? $editVersion->id.'/update' : 'store' }}"
                                                   method="POST">
                                                 @csrf
-
-                                                {{-- App Version --}}
                                                 <div class="form-group">
                                                     <label class="input-label">
-                                                        App Version <span class="text-danger">*</span>
+                                                        AndroidApp Version <span class="text-danger">*</span>
                                                     </label>
-                                                    <input type="text" name="app_version"
-                                                           class="form-control @error('app_version') is-invalid @enderror"
-                                                           value="{{ old('app_version', $editVersion->app_version ?? '') }}"
+                                                    <input type="text" name="android_app_version"
+                                                           class="form-control @error('android_app_version') is-invalid @enderror"
+                                                           value="{{ old('android_app_version', $editVersion->android_app_version ?? '') }}"
                                                            placeholder="e.g. 1.1.0 or 3.2.1" />
                                                     <small class="form-text text-muted">
                                                         API compares this with the client version. If not equal → update needed.
                                                     </small>
-                                                    @error('app_version')
+                                                    @error('android_app_version')
+                                                        <div class="invalid-feedback">{{ $message }}</div>
+                                                    @enderror
+                                                </div>
+
+                                                <div class="form-group">
+                                                    <label class="input-label">
+                                                        IOS App Version <span class="text-danger">*</span>
+                                                    </label>
+                                                    <input type="text" name="ios_app_version"
+                                                           class="form-control @error('ios_app_version') is-invalid @enderror"
+                                                           value="{{ old('ios_app_version', $editVersion->ios_app_version ?? '') }}"
+                                                           placeholder="e.g. 1.1.0 or 3.2.1" />
+                                                    <small class="form-text text-muted">
+                                                        API compares this with the client version. If not equal → update needed.
+                                                    </small>
+                                                    @error('ios_app_version')
                                                         <div class="invalid-feedback">{{ $message }}</div>
                                                     @enderror
                                                 </div>

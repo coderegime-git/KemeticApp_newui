@@ -193,6 +193,7 @@ class SubscribesController extends Controller
 
     public function webPayGenerator(Request $request)
     {
+
         validateParam($request->all(), [
             'subscribe_id' => ['required', Rule::exists('subscribes', 'id')]
         ]);

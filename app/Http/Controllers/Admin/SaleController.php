@@ -56,17 +56,21 @@ class SaleController extends Controller
                 'productOrder.product',
             ])
             ->paginate(10);
+        try {
+            foreach ($sales as $sale) {
+                $sale = $this->makeTitle($sale);
 
-        foreach ($sales as $sale) {
-            $sale = $this->makeTitle($sale);
-
-            if (empty($sale->saleLog)) {
-                SaleLog::create([
-                    'sale_id' => $sale->id,
-                    'viewed_at' => time()
-                ]);
+                if (empty($sale->saleLog)) {
+                    SaleLog::create([
+                        'sale_id' => $sale->id,
+                        'viewed_at' => time()
+                    ]);
+                }
             }
+        } catch (\Throwable $e) {
+            // dd($e->getMessage(), $e->getFile(), $e->getLine());
         }
+        // dd($sales);
 
         $data = [
             'pageTitle' => trans('admin/pages/financial.sales_page_title'),

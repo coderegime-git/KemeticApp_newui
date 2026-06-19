@@ -25,24 +25,38 @@ class VersionCheckController extends Controller
     {
         $this->validate($request, [
             'app_version' => 'required|string',
+            'platform'    => 'required|string|in:android,ios',
         ]);
 
         $latest = AppVersion::where('status', 1)->orderByDesc('id')->first();
 
         if (! $latest) {
             return response()->json([
-                'status'       => false,
-                'message'      => 'No version record found.',
+                'status'  => false,
+                'message' => 'No version record found.',
             ], 404);
         }
 
+        $platform      = $request->platform; // 'android' or 'ios'
         $clientVersion = trim($request->app_version);
-        $serverVersion = trim($latest->app_version);
 
-        // If versions are identical → no update needed
+        // Pick the correct version column based on platform
+        $serverVersion = trim(
+            $platform === 'android'
+                ? $latest->android_app_version
+                : $latest->ios_app_version
+        );
+
+        if (! $serverVersion) {
+            return response()->json([
+                'status'  => false,
+                'message' => "No version record found for platform: {$platform}.",
+            ], 404);
+        }
+
         $isSame      = version_compare($clientVersion, $serverVersion, '=');
-        $forceUpdate = ! $isSame && (bool) $latest->force_update;
         $needsUpdate = ! $isSame;
+        $forceUpdate = $needsUpdate && (bool) $latest->force_update;
 
         return response()->json([
             'status'         => true,

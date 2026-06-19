@@ -280,7 +280,7 @@
     e.preventDefault();
     location.href = '/panel/financial/subscribes';
   };
-  
+
   document.getElementById('invoiceLink').onclick = (e) => {
     e.preventDefault();
     location.href = `/panel/store/purchases/{{ $order->id }}/invoice`;

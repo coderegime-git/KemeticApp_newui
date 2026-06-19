@@ -29,7 +29,7 @@ class ProductResource extends JsonResource
             'point' => (string)$this->point,
             'sales_count' => (string)$this->salesCount() ?? 0,
             'sales_amount' => (string)convertPriceToUserCurrency($this->sales()->sum('total_amount')) ?? 0,
-            'like_count' => (string)$this->like_count ?? 0,
+            'like_count' => (string)($this->likes->count() ?? 0),
             'is_liked' => isset($this->is_liked) ? (bool)$this->is_liked : false,
             'is_saved' => isset($this->is_saved) ? (bool)$this->is_saved : false,
             'share_count' => (string)$this->share_count ?? 0,

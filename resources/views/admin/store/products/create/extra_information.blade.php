@@ -4,6 +4,36 @@
     <div class="row">
     <div class="col-12 col-md-6 mt-15">
 
+
+        <div class="form-group">
+            <label class="input-label">Shiping Price({{ $currency }})</label>
+            <input type="number" name="cj_shipping_price" value="{{ !empty($product) ? $product->cj_shipping_price : old('cj_shipping_price') }}" class="form-control @error('cj_shipping_price')  is-invalid @enderror" placeholder="{{ trans('public.0_for_free') }}"/>
+            @error('cj_shipping_price')
+            <div class="invalid-feedback">
+                {{ $message }}
+            </div>
+            @enderror
+        </div>
+        <div class="form-group">
+            <label class="input-label">Earning price({{ $currency }})</label>
+            <input type="number" name="cj_your_price" value="{{ !empty($product) ? $product->cj_your_price : old('cj_your_price') }}" class="form-control @error('cj_your_price')  is-invalid @enderror" placeholder="{{ trans('public.0_for_free') }}"/>
+            @error('cj_your_price')
+            <div class="invalid-feedback">
+                {{ $message }}
+            </div>
+            @enderror
+        </div>
+
+        <div class="form-group">
+            <label class="input-label">Platform Fee (10%) ({{ $currency }})</label>
+            <input type="number" name="platform_price" value="{{ !empty($product) ? $product->platform_price : old('platform_price') }}" class="form-control @error('platform_price')  is-invalid @enderror" placeholder="{{ trans('public.0_for_free') }}"/>
+            @error('platform_price')
+            <div class="invalid-feedback">
+                {{ $message }}
+            </div>
+            @enderror
+        </div>
+
         <div class="form-group">
             <label class="input-label">{{ trans('public.price') }} ({{ $currency }})</label>
             <input type="number" name="price" value="{{ !empty($product) ? $product->price : old('price') }}" class="form-control @error('price')  is-invalid @enderror" placeholder="{{ trans('public.0_for_free') }}"/>
@@ -13,6 +43,8 @@
             </div>
             @enderror
         </div>
+
+       
 
         @if($product->isPhysical())
             <div class="form-group">

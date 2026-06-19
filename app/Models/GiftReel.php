@@ -24,4 +24,9 @@ class GiftReel extends Model
     {
         return $this->hasMany(ReelGift::class);
     }
+
+    public function getItemTitle()
+    {
+        return $this->title;
+    }
 }

@@ -313,6 +313,32 @@ input[type="file"]::file-selector-button:hover {
   width: 100%;
   height: auto;
   max-height: 80vh;
+  object-fit: contain;
+}
+
+#videoPlayerModal #videoPlayer:fullscreen {
+  max-height: 100vh;
+  height: 100vh;
+}
+
+#videoPlayerModal #videoPlayer:-webkit-full-screen {
+  max-height: 100vh;
+  height: 100vh;
+}
+
+/* Fix for inline videos on the card */
+.reel-video:fullscreen {
+  object-fit: contain !important;
+  width: 100vw !important;
+  height: 100vh !important;
+  max-height: 100vh !important;
+}
+
+.reel-video:-webkit-full-screen {
+  object-fit: contain !important;
+  width: 100vw !important;
+  height: 100vh !important;
+  max-height: 100vh !important;
 }
 
 #videoPlayerModal .modal-header {
@@ -394,7 +420,7 @@ input[type="file"]::file-selector-button:hover {
 <!-- membership banner -->
 <div class="reels-banner">
   <div class="reels-wrap">
-    <span>Unlock Unlimited Portals, Courses & Livestreams — €1/month or €10/year</span>
+    <span>Unlock Unlimited Portals, Courses & Livestreams — €10/year or €33/Lifetime</span>
      @if(auth()->check())
           <button class="reels-btn"><a href="/membership">Join Now</a></button>
         @else
@@ -699,7 +725,7 @@ input[type="file"]::file-selector-button:hover {
                 <form id="uploadForm" action="/reels" method="POST" enctype="multipart/form-data">
                     @csrf
                     <div class="mb-3">
-                        <label class="form-label">Video (Max 250MB)</label>
+                        <label class="form-label">Video (Max 250MB) <span class="text-danger">*</span></label>
                         <input type="file" class="form-control" id="videoFile" name="video" accept="video/*" required>
                         <div id="videoPreview" class="mt-2 d-none">
                             <video controls style="max-width: 100%; max-height: 400px">
@@ -709,11 +735,11 @@ input[type="file"]::file-selector-button:hover {
                         <small class="text-muted">Supported formats: MP4, MOV, WebM</small>
                     </div>
                     <div class="mb-3">
-                        <label class="form-label">Title</label>
+                        <label class="form-label">Title <span class="text-danger">*</span></label>
                         <input type="text" class="form-control" id="title" name="title" required maxlength="255" placeholder="Enter a title for your portals">
                     </div>
                     <div class="mb-3">
-                        <label class="form-label">Category</label>
+                        <label class="form-label">Category <span class="text-danger">*</span></label>
                         <select class="form-select" id="category_id" name="category_id" required>
                             <option value="">Select a category</option>
                             @foreach($categories as $category)
@@ -722,7 +748,7 @@ input[type="file"]::file-selector-button:hover {
                         </select>
                     </div>
                     <div class="mb-3">
-                        <label class="form-label">Caption</label>
+                        <label class="form-label">Caption <span class="text-danger">*</span></label>
                         <textarea class="form-control" id="caption" name="caption" required maxlength="1000" rows="3" placeholder="Write a caption..."></textarea>
                     </div>
                     <div class="progress mb-3">
@@ -865,7 +891,7 @@ document.addEventListener('DOMContentLoaded', function() {
   // Handle form submission with progress
   const uploadForm = document.getElementById('uploadForm');
   const uploadProgress = document.getElementById('uploadProgress');
-  
+
   // Clear modal fields on close
   const uploadModal = document.getElementById('uploadModal');
   if (uploadModal) {
@@ -1005,6 +1031,12 @@ document.addEventListener('DOMContentLoaded', function() {
   document.querySelectorAll('.reels-scroller').forEach(function(scroller) {
     scroller.addEventListener('wheel', function(e) {
       if (Math.abs(e.deltaY) > Math.abs(e.deltaX)) {
+        const atLeft = s.scrollLeft <= 0;
+        const atRight = Math.abs(s.scrollWidth - s.clientWidth - s.scrollLeft) < 1;
+        
+        if ((e.deltaY < 0 && atLeft) || (e.deltaY > 0 && atRight)) {
+            return;
+        }
         this.scrollLeft += e.deltaY;
         e.preventDefault();
       }

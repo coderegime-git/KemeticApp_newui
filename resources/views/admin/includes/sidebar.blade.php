@@ -51,6 +51,7 @@
             @endif
 
             @can('admin_webinars')
+                <!-- <li class="nav-item dropdown {{ (request()->is(getAdminPanelUrl('/webinars*', false)) and !request()->is(getAdminPanelUrl('/webinars/comments*', false))) ? 'active' : '' }}"> -->
                 <li class="nav-item dropdown {{ ((request()->is(getAdminPanelUrl('/webinars*', false)) and !request()->is(getAdminPanelUrl('/webinars/comments*', false)) and !request()->is(getAdminPanelUrl('/webinars/course_forums*', false))) or request()->is(getAdminPanelUrl('/agora_history*', false))) ? 'active' : '' }}">
                     <a href="#" class="nav-link has-dropdown" data-toggle="dropdown">
                         <i class="fas fa-graduation-cap"></i>
@@ -341,7 +342,7 @@
                     <span>Livestream Settings</span>
                 </a>
             </li>
-
+            
             @if($authUser->can('admin_consultants_lists') or
                 $authUser->can('admin_appointments_lists')
             )
@@ -698,8 +699,7 @@
                                 <a class="nav-link" href="{{ getAdminPanelUrl() }}/reports/webinars">{{ trans('panel.classes') }}</a>
                             </li>
                         @endcan
-
-                            <li class="{{ (request()->is(getAdminPanelUrl('/reports/reels', false))) ? 'active' : '' }}">
+                        <li class="{{ (request()->is(getAdminPanelUrl('/reports/reels', false))) ? 'active' : '' }}">
                                 <a class="nav-link" href="{{ getAdminPanelUrl() }}/reports/reels">Portals</a>
                             </li>
 
@@ -993,11 +993,10 @@
                 </a>
 
                 <ul class="dropdown-menu">
-                   
                         <li class="{{ (request()->is(getAdminPanelUrl('/reel', false))) ? 'active' : '' }}">
                             <a class="nav-link" href="{{ getAdminPanelUrl() }}/reel">{{ trans('admin/main.lists') }}</a>
                         </li>
-
+                        
                         <li class="{{ (request()->is(getAdminPanelUrl('/reel/create', false))) ? 'active' : '' }}">
                             <a class="nav-link" href="{{ getAdminPanelUrl() }}/reel/create">New Portals</a>
                         </li>

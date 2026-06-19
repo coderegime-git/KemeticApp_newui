@@ -8,7 +8,7 @@
       <div class="book-membership-badge">∞</div>
       <div>
         <div class="book-membership-text-main">
-          Unlock Unlimited Kemetic Knowledge – €1/mo or €10/yr
+          Unlock Unlimited Kemetic Knowledge – €10/yr or €33/Lifetime
         </div>
         <div class="book-membership-text-sub">
           Access all ebooks, PDFs, courses, portals, livestreams & premium articles with one membership.
@@ -27,7 +27,7 @@
 
     <div class="shop-banner">
       <div class="article-chip">💎 Unlock Unlimited Articles, Reels & Live</div>
-      <div class="article-chip">€1/mo • €10/yr • €33 lifetime</div>
+      <div class="article-chip">€10/yr • €33 lifetime</div>
        @if(auth()->check())
           <button class="shop-cta"><a href="/membership">Upgrade</a></button>
         @else
@@ -97,7 +97,7 @@
         @if($popularBook->creator)
          <a href="{{ $popularBook->creator->getProfileUrl() }}">
         <div class="book-hero-avatar">
-         <img src="{{ $popularBook->creator->getAvatar(190) 
+          <img src="{{ $popularBook->creator->getAvatar(190) 
             ? (Str::startsWith($popularBook->creator->getAvatar(190), '/') ? $popularBook->creator->getAvatar(190) : '/' . $popularBook->creator->getAvatar(190))
             : url('/getDefaultAvatar?item=' . ($popularBook->creator['id'] ?? '') . '&name=' . urlencode($popularBook->creator['full_name']) . '&size=190') 
         }}" 

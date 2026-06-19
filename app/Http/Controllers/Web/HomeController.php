@@ -893,7 +893,7 @@ class HomeController extends Controller
                 });
         }
 
-        $totalCount = User::whereIn('role_name', [Role::$teacher, Role::$organization])
+        $totalCount = User::whereIn('role_name', [Role::$user, Role::$teacher, Role::$organization])
             ->where('status', 'active')
             ->where(function ($query) {
                 $query->where('ban', false)
@@ -954,7 +954,8 @@ class HomeController extends Controller
 
     public function membership()
     {
-        $subscribes = Subscribe::all();
+        // $subscribes = Subscribe::all();
+        $subscribes = Subscribe::where('id', '!=', 3)->get();
 
         $user = auth()->user();
         $installmentPlans = new InstallmentPlans($user);
@@ -984,7 +985,8 @@ class HomeController extends Controller
 
     public function membership1()
     {
-        $subscribes = Subscribe::all();
+        // $subscribes = Subscribe::all();
+        $subscribes = Subscribe::where('id', '!=', 3)->get();
 
         $user = auth()->user();
         $installmentPlans = new InstallmentPlans($user);

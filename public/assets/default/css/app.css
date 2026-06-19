@@ -1435,7 +1435,7 @@
   /* Details */
   h1{margin:0 0 10px;font-size:32px}
   .shopdetail-stars{display:flex;align-items:center;gap:6px;margin:6px 0 14px}
-  .shopdetail-star{width:14px;height:14px;border-radius:50%}
+  .shopdetail-star{width:14px;height:14pverify-otpx;border-radius:50%}
   .shopdetail-about,
   .shopdetail-about * {
     color: #ffffff !important;

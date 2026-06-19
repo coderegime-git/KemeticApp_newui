@@ -88,7 +88,7 @@
     </div>
         
         <!-- <div class="articledetail-sticky">
-          <span class="articledetail-pill">Free with Membership • €1/mo</span>
+          <span class="articledetail-pill">Free with Membership • €10/yr</span>
           <button class="articledetail-btn-gold"><span class="material-symbols-outlined">book_2</span> Continue Reading</button>
         </div> -->
       </div>
@@ -113,7 +113,7 @@
       <div class="articledetail-card">
         <div class="articledetail-hd">Membership</div>
         <div class="articledetail-bd">
-          <p class="muted" style="color:#ffffffcc">Unlock unlimited Articles, Reels, Courses & Live for just €1/mo.</p>
+          <p class="muted" style="color:#ffffffcc">Unlock unlimited Articles, Reels, Courses & Live for just €10/yr.</p>
           <button class="articledetail-btn-gold" style="width:100%; justify-content:center; margin-top:8px">
             @if(auth()->check())
             <a href="/membership"><span class="material-symbols-outlined">workspace_premium</span> Join Now</a>

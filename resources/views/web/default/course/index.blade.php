@@ -154,8 +154,8 @@
     @endphp
     <div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap;padding: 10px;">
     <div class="coursedetail-title" style="font-weight:bold;">
-        @if(!empty($course->price) and $course->price > 0)
-          <span class="real">Price : {{ handlePrice($course->price, true, true, false, null, true, 'store') }}</span>
+        @if(!empty($course->price) && $course->price > 0)
+          <span class="real">Price : {{ handlePrice($course->price, true, true, false, null, true) }}</span>
         @else
             <span class="real">Price : {{ trans('public.free') }}</span>
         @endif
@@ -165,7 +165,7 @@
       <input type="hidden" name="item_id" value="{{ $course->id }}">
       <input type="hidden" name="item_name" value="webinar_id">
     <div class="coursedetail-cta-sticky">
-      @if(!$canSale and $course->canJoinToWaitlist())
+      @if(!$canSale && $course->canJoinToWaitlist())
         <button type="button" data-slug="{{ $course->slug }}" class="coursedetail-btn {{ (!$authUserJoinedWaitlist) ? ((!empty($authUser)) ? 'js-join-waitlist-user' : 'js-join-waitlist-guest') : 'disabled' }}" {{ $authUserJoinedWaitlist ? 'disabled' : '' }}>
           @if($authUserJoinedWaitlist)
             {{ trans('update.already_joined') }}
@@ -173,9 +173,9 @@
             {{ trans('update.join_waitlist') }}
           @endif
         </button>
-      @elseif($hasBought or !empty($course->getInstallmentOrder()) or $course->price == 0)
+      @elseif($hasBought || !empty($course->getInstallmentOrder()) || $course->price == 0)
         <a href="{{ $course->getLearningPageUrl() }}"> <button type="button" class="coursedetail-btn">{{ trans('update.go_to_learning_page') }}</button></a>
-      @elseif(!empty($course->price) and $course->price > 0)
+      @elseif(!empty($course->price) && !$course->subscribe && $course->price > 0)
         <button type="button" class="coursedetail-btn btn btn-primary {{ $canSale ? 'js-course-add-to-cart-btn' : ($course->cantSaleStatus($hasBought) .' disabled ') }}">
           @if(!$canSale)
             @if($course->checkCapacityReached())
@@ -194,19 +194,19 @@
           </a>
         @endif -->
         
-        @if($canSale and !empty(getFeaturesSettings('direct_classes_payment_button_status')))
+        @if($canSale && !$course->subscribe  && !empty(getFeaturesSettings('direct_classes_payment_button_status')))
           <button type="button" class="coursedetail-btn js-course-direct-payment">
             {{ trans('update.buy_now') }}
           </button>
         @endif
 
-        @if(!empty($installments) and count($installments) and getInstallmentsSettings('display_installment_button'))
-          <a href="/course/{{ $course->slug }}/installments">
+        @if(!empty($installments) && count($installments) && getInstallmentsSettings('display_installment_button'))
+          <!-- <a href="/course/{{ $course->slug }}/installments">
             <button type="button" class="coursedetail-btn">{{ trans('update.pay_with_installments') }}></button> 
-          </a>
+          </a> -->
         @endif
     @else
-      <a href="{{ $canSale ? '/course/'. $course->slug .'/free' : '#' }}" class="{{ (! $canSale) ? (' disabled ' . $course->cantSaleStatus($hasBought)) : '' }}">
+      <!-- <a href="{{ $canSale ? '/course/'. $course->slug .'/free' : '#' }}" class="{{ (! $canSale) ? (' disabled ' . $course->cantSaleStatus($hasBought)) : '' }}">
         <button type="button" class="coursedetail-btn">@if(!$canSale)
           @if($course->checkCapacityReached())
             {{ trans('update.capacity_reached') }}
@@ -216,12 +216,12 @@
         @else
           {{ trans('public.enroll_on_webinar') }}
         @endif
-      </button></a>
+      </button></a> -->
     @endif
 
-    @if($canSale and $course->subscribe and $course->price != 0)
+    @if($canSale && $course->subscribe && $course->price != 0)
       <a href="/subscribes/apply/{{ $course->slug }}" class="@if(!$canSale) disabled @endif">
-        <button type="button" class="coursedetail-btn">Subscribe</button></a>
+        <button type="button" class="coursedetail-btn">Start Learning</button></a>
     @endif</div>
   </div>
   </form>
@@ -267,7 +267,7 @@
         @foreach($course->chapters as $chapter)
           <div class="coursedetail-lesson" style="margin-top:8px"><span>{{ $chapter->title }}</span>
           <!-- <button class="coursedetail-btn">Preview</button> -->
-        </div> 
+          </div> 
         @endforeach
       </div>
     </section>
@@ -332,40 +332,40 @@
               @endphp  
             <div class="coursedetail-lesson" style="margin-top:8px"><span>{{ $chapterItem->file->title }}</span>
               
-              @if(!empty($checkSequenceContent) and $sequenceContentHasError)
-                        <!-- <button
+              <!-- @if(!empty($checkSequenceContent) and $sequenceContentHasError)
+                        <button
                             type="button"
                             class="coursedetail-btn btn-sm btn-gray flex-grow-1 disabled js-sequence-content-error-modal"
                             data-passed-error="{{ !empty($checkSequenceContent['all_passed_items_error']) ? $checkSequenceContent['all_passed_items_error'] : '' }}"
                             data-access-days-error="{{ !empty($checkSequenceContent['access_after_day_error']) ? $checkSequenceContent['access_after_day_error'] : '' }}"
-                        >{{ trans('public.play') }}</button> -->
+                        >{{ trans('public.play') }}</button>
                     @elseif($file->accessibility == 'paid')
                         @if(!empty($user) and $hasBought)
                             @if($file->downloadable)
-                                <!-- <a href="{{ $course->getUrl() }}/file/{{ $file->id }}/download">
+                                <a href="{{ $course->getUrl() }}/file/{{ $file->id }}/download">
                                    <button class="coursedetail-btn"> {{ trans('home.download') }}</button>
-                                </a> -->
+                                </a>
                             @else
-                                <!-- <a href="{{ $course->getLearningPageUrl() }}?type=file&item={{ $file->id }}" target="_blank">
+                                <a href="{{ $course->getLearningPageUrl() }}?type=file&item={{ $file->id }}" target="_blank">
                                   <button class="coursedetail-btn">  {{ trans('public.play') }}</button>
-                                </a> -->
+                                </a>
                             @endif
                         @else
-                            <!-- <button type="button" class="coursedetail-btn btn-sm btn-gray disabled {{ ((empty($user)) ? 'not-login-toast' : (!$hasBought ? 'not-access-toast' : '')) }}">
+                            <button type="button" class="coursedetail-btn btn-sm btn-gray disabled {{ ((empty($user)) ? 'not-login-toast' : (!$hasBought ? 'not-access-toast' : '')) }}">
                                 @if($file->downloadable)
                                     {{ trans('home.download') }}
                                 @else
                                     {{ trans('public.play') }}
                                 @endif
-                            </button> -->
+                            </button>
                         @endif
                     @else
                         @if($file->downloadable)
-                            <!-- <a href="{{ $course->getUrl() }}/file/{{ $file->id }}/download">
+                            <a href="{{ $course->getUrl() }}/file/{{ $file->id }}/download">
                                <button class="coursedetail-btn"> {{ trans('home.download') }}</button>
-                            </a> -->
+                            </a>
                         @else
-                            <!-- @if(!empty($user) and $hasBought)
+                            @if(!empty($user) and $hasBought)
                                 <a href="{{ $course->getLearningPageUrl() }}?type=file&item={{ $file->id }}" target="_blank">
                                   <button class="coursedetail-btn">   {{ trans('public.play') }}</button> 
                                 </a>
@@ -385,9 +385,10 @@
                                 <a href="{{ $file->file }}" target="_blank">
                                   <button class="coursedetail-btn">   {{ trans('public.play') }}</button>
                                 </a>
-                            @endif -->
+                            @endif
                         @endif
-                    @endif</div>
+                    @endif -->
+                  </div>
             @endif
           @endforeach  
        @endforeach

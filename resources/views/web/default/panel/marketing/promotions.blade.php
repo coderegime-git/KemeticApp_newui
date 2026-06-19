@@ -321,7 +321,7 @@
 @section('content')
 
 {{-- ================= PROMOTION PLANS ================= --}}
-<section>
+<!-- <section>
     <h2 class="k-title">{{ trans('panel.select_promotion_plan') }}</h2>
 
     <div class="row mt-25">
@@ -362,7 +362,7 @@
             </div>
         @endforeach
     </div>
-</section>
+</section> -->
 
 {{-- ================= PROMOTION HISTORY ================= --}}
 @if($promotionSales->count() > 0)

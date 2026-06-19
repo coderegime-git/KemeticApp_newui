@@ -139,7 +139,7 @@
                                 @if(!empty($topUser->all_posts))
                                     <div class="d-flex align-items-center mt-15">
                                         <div class="topics-right-side-user-avatar rounded-circle">
-                                            <img width="48" height="48" src="{{ $topUser->getAvatar(48) }}" class="img-cover rounded-circle" alt="{{ $topUser->full_name }}">
+                                            <img src="{{ $topUser->getAvatar(48) }}" class="img-cover rounded-circle" alt="{{ $topUser->full_name }}">
                                         </div>
                                         <div class="ml-10">
                                             <a href="{{ $topUser->getProfileUrl() }}" class="d-block">
@@ -159,7 +159,7 @@
                         @foreach($popularTopics as $popularTopic)
                             <div class="d-flex align-items-center mt-15">
                                 <div class="topics-right-side-user-avatar rounded-circle">
-                                    <img width="48" height="48" src="{{ $popularTopic->creator->getAvatar(48) }}" class="img-cover rounded-circle" alt="{{ $popularTopic->creator->full_name }}">
+                                    <img src="{{ $popularTopic->creator->getAvatar(48) }}" class="img-cover rounded-circle" alt="{{ $popularTopic->creator->full_name }}">
                                 </div>
                                 <div class="ml-10">
                                     <a href="{{ $popularTopic->getPostsUrl() }}" class="d-block">

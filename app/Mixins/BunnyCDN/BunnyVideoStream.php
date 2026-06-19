@@ -23,17 +23,10 @@ class BunnyVideoStream
 
         $settings = getFeaturesSettings('bunny_configs');
 
-        $this->libraryId             = (!empty($settings) and !empty($settings['library_id']))                   ? $settings['library_id']                   : null;
-        $this->hostname              = (!empty($settings) and !empty($settings['hostname']))                      ? $settings['hostname']                      : null;
-        $this->accessKey             = (!empty($settings) and !empty($settings['access_key']))                   ? $settings['access_key']                   : null;
-        $this->tokenAuthenticationKey = (!empty($settings) and !empty($settings['token_authentication_key']))   ? $settings['token_authentication_key']     : null;
-
-        if (empty($this->accessKey)) {
-            throw new \RuntimeException(
-                'Bunny CDN Stream API key is not configured. ' .
-                'Please go to Admin → Settings → Features and fill in the Bunny CDN Stream credentials (Library ID, Access Key, etc.).'
-            );
-        }
+        $this->libraryId = (!empty($settings) and !empty($settings['library_id'])) ? $settings['library_id'] : null;
+        $this->hostname = (!empty($settings) and !empty($settings['hostname'])) ? $settings['hostname'] : null;
+        $this->accessKey = (!empty($settings) and !empty($settings['access_key'])) ? $settings['access_key'] : null;
+        $this->tokenAuthenticationKey = (!empty($settings) and !empty($settings['token_authentication_key'])) ? $settings['token_authentication_key'] : null;
 
         $this->bunnyStream = new VideoStreamRequest($this->accessKey);
     }

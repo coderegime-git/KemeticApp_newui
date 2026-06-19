@@ -180,6 +180,63 @@
 .d-none{ display:none !important; }
 .invalid-feedback{ color:#ffb3b3; font-size:13px; margin-top:6px; }
 
+
+/* ── Session Mobile Fix ── */
+@media (max-width: 767px) {
+    .kemetic-accordion-item {
+        padding: 6px;
+    }
+    .kemetic-accordion-header {
+        flex-wrap: wrap;
+        gap: 6px;
+        padding: 6px 4px;
+    }
+    .kemetic-accordion-left {
+        min-width: 0;
+        flex: 1;
+        overflow: hidden;
+        gap: 8px;
+    }
+    .kemetic-icon-box {
+        width: 32px;
+        height: 32px;
+        flex-shrink: 0;
+    }
+    .kemetic-title {
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        max-width: 130px;
+        display: block;
+        font-size: 13px;
+    }
+    .kemetic-accordion-actions {
+        flex-wrap: wrap;
+        gap: 2px;
+    }
+    .kemetic-panel-inner {
+        padding: 8px;
+    }
+    .kemetic-input,
+    .kemetic-textarea,
+    .kemetic-select {
+        font-size: 14px;
+    }
+    .kemetic-radio-row {
+        flex-direction: column;
+        gap: 8px;
+    }
+    .kemetic-actions-row {
+        flex-direction: column;
+    }
+    .kemetic-actions-row .kemetic-btn {
+        width: 100%;
+        text-align: center;
+        margin-left: 0 !important;
+        margin-top: 6px;
+    }
+}
+
 </style>
 
 @php
@@ -282,20 +339,20 @@
                         @endif
 
                         <div class="kemetic-form-group js-api-secret {{ (!empty($session) and in_array($session->session_api, ['zoom', 'agora', 'jitsi'])) ? 'd-none' :'' }}">
-                            <label class="kemetic-label">{{ trans('auth.password') }}</label>
+                            <label class="kemetic-label">{{ trans('auth.password') }} <span class="text-danger">*</span></label>
                             <input type="text" name="ajax[{{ !empty($session) ? $session->id : 'new' }}][api_secret]" class="kemetic-input js-ajax-api_secret" value="{{ !empty($session) ? $session->api_secret : '' }}" {{ (!empty($session) and $session->session_api != 'local') ? 'disabled' :'' }}/>
                             <div class="invalid-feedback"></div>
                         </div>
 
                         <div class="kemetic-form-group js-moderator-secret {{ (empty($session) or $session->session_api != 'big_blue_button') ? 'd-none' :'' }}">
-                            <label class="kemetic-label">{{ trans('public.moderator_password') }}</label>
+                            <label class="kemetic-label">{{ trans('public.moderator_password') }} <span class="text-danger">*</span></label>
                             <input type="text" name="ajax[{{ !empty($session) ? $session->id : 'new' }}][moderator_secret]" class="kemetic-input js-ajax-moderator_secret" value="{{ !empty($session) ? $session->moderator_secret : '' }}" {{ (!empty($session) and $session->session_api == 'big_blue_button') ? 'disabled' :'' }}/>
                             <div class="invalid-feedback"></div>
                         </div>
 
                         @if(!empty($session))
                             <div class="kemetic-form-group">
-                                <label class="kemetic-label">{{ trans('public.chapter') }}</label>
+                                <label class="kemetic-label">{{ trans('public.chapter') }} <span class="text-danger">*</span></label>
                                 <select name="ajax[{{ !empty($session) ? $session->id : 'new' }}][chapter_id]" class="kemetic-input js-ajax-chapter_id">
                                     @foreach($webinar->chapters as $ch)
                                         <option value="{{ $ch->id }}" {{ ($session->chapter_id == $ch->id) ? 'selected' : '' }}>{{ $ch->title }}</option>
@@ -308,13 +365,13 @@
                         @endif
 
                         <div class="kemetic-form-group">
-                            <label class="kemetic-label">{{ trans('public.title') }}</label>
+                            <label class="kemetic-label">{{ trans('public.title') }} <span class="text-danger">*</span></label>
                             <input type="text" name="ajax[{{ !empty($session) ? $session->id : 'new' }}][title]" class="kemetic-input js-ajax-title" value="{{ !empty($session) ? $session->title : '' }}" placeholder="{{ trans('forms.maximum_255_characters') }}"/>
                             <div class="invalid-feedback"></div>
                         </div>
 
                         <div class="kemetic-form-group">
-                            <label class="kemetic-label">{{ trans('public.date') }}</label>
+                            <label class="kemetic-label">{{ trans('public.date') }} <span class="text-danger">*</span></label>
                             <div class="kemetic-input-with-icon">
                                 <span class="kemetic-input-icon"><i data-feather="calendar"></i></span>
                                 <input type="text" name="ajax[{{ !empty($session) ? $session->id : 'new' }}][date]" class="kemetic-input js-ajax-date datetimepicker" value="{{ !empty($session) ? dateTimeFormat($session->date, 'Y-m-d H:i', false, true, ($session->webinar ? $session->webinar->timezone : null)) : '' }}" {{ (!empty($session) and $session->session_api != 'local') ? 'disabled' :'' }} autocomplete="off"/>
@@ -323,19 +380,19 @@
                         </div>
 
                         <div class="kemetic-form-group">
-                            <label class="kemetic-label">{{ trans('public.duration') }} <span class="braces">({{ trans('public.minutes') }})</span></label>
+                            <label class="kemetic-label">{{ trans('public.duration') }} <span class="braces">({{ trans('public.minutes') }})</span> <span class="text-danger">*</span></label>
                             <input type="text" name="ajax[{{ !empty($session) ? $session->id : 'new' }}][duration]" class="kemetic-input js-ajax-duration" value="{{ !empty($session) ? $session->duration : '' }}" {{ (!empty($session) and $session->session_api != 'local') ? 'disabled' :'' }}/>
                             <div class="invalid-feedback"></div>
                         </div>
 
                         <div class="kemetic-form-group js-local-link {{ (!empty($session) and in_array($session->session_api, ['agora', 'jitsi'])) ? 'd-none' : '' }}">
-                            <label class="kemetic-label">{{ trans('public.link') }}</label>
+                            <label class="kemetic-label">{{ trans('public.link') }} <span class="text-danger">*</span></label>
                             <input type="text" name="ajax[{{ !empty($session) ? $session->id : 'new' }}][link]" class="kemetic-input js-ajax-link" value="{{ !empty($session) ? $session->getJoinLink() : '' }}" {{ (!empty($session) and $session->session_api != 'local') ? 'disabled' :'' }}/>
                             <div class="invalid-feedback"></div>
                         </div>
 
                         <div class="kemetic-form-group">
-                            <label class="kemetic-label">{{ trans('public.description') }}</label>
+                            <label class="kemetic-label">{{ trans('public.description') }} <span class="text-danger">*</span></label>
                             <textarea name="ajax[{{ !empty($session) ? $session->id : 'new' }}][description]" class="kemetic-textarea js-ajax-description" rows="6">{{ !empty($session) ? $session->description : '' }}</textarea>
                             <div class="invalid-feedback"></div>
                         </div>
@@ -390,7 +447,7 @@
 
                                 <div class="kemetic-form-group">
                                     <label class="kemetic-label">{{ trans('update.access_after_day') }}</label>
-                                    <input type="number" name="ajax[{{ !empty($session) ? $session->id : 'new' }}][access_after_day]" value="{{ (!empty($session)) ? $session->access_after_day : '' }}" class="kemetic-input js-ajax-access_after_day" placeholder="{{ trans('update.access_after_day_placeholder') }}"/>
+                                    <input type="number" name="ajax[{{ !empty($session) ? $session->id : 'new' }}][access_after_day]" min="0" value="{{ (!empty($session)) ? $session->access_after_day : '' }}" class="kemetic-input js-ajax-access_after_day" placeholder="{{ trans('update.access_after_day_placeholder') }}"/>
                                     <div class="invalid-feedback"></div>
                                 </div>
                             </div>

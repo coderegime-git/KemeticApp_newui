@@ -233,13 +233,6 @@
     <div class="k-card col-lg-6">
 
         <div class="input-group">
-
-            <input type="text"
-                   id="affiliate_url"
-                   readonly
-                   value="{{ $affiliateCode->getAffiliateUrl() }}"
-                   class="form-control k-input"/>
-
             <div class="input-group-append">
                 <button type="button"
                         class="copy-btn"
@@ -247,6 +240,13 @@
                      <i data-feather="copy" ></i>
                 </button>
             </div>
+            <input type=reff"text"
+                   id="affiliate_url"
+                   readonly
+                   value="{{ $affiliateCode->getAffiliateUrl() }}"
+                   class="form-control k-input"/>
+
+            
 
         </div>
 

@@ -12,9 +12,8 @@
 <meta name="robots" content="{{ $pageRobot ?? 'index, follow' }}">
 
 <link rel="canonical" href="{{ url()->current() }}" />
-<meta name="google-site-verification"
-      content="K3FxvckIZ41vklr31BJOknd5wQxHQA_EsxAwwB_BDZE" />
 
+<meta name="google-site-verification" content="K3FxvckIZ41vklr31BJOknd5wQxHQA_EsxAwwB_BDZE" />
 @if (isset($pageDescription) and !empty($pageDescription))
     <meta name="description" content="{{ $pageDescription }}">
     <meta property="og:description" content="{{ (!empty($ogDescription)) ? $ogDescription : $pageDescription }}">
@@ -87,7 +86,7 @@
     })(window, document, 'script', 'https://an.gr-wcon.com/script/1cdaabfc-c3d4-4352-b44d-19a6253fb7c9/ga.js', 'GrTracking');
 </script>
 
-<!-- <script>
+<script>
 !function(f,b,e,v,n,t,s)
 {if(f.fbq)return;n=f.fbq=function(){n.callMethod?
 n.callMethod.apply(n,arguments):n.queue.push(arguments)};
@@ -107,7 +106,7 @@ new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],
 j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;
 j.src='https://www.googletagmanager.com/gtm.js?id='+i+dl;
 f.parentNode.insertBefore(j,f);
-})(window,document,'script','dataLayer','GTM-XXXXXXX');</script> -->
+})(window,document,'script','dataLayer','GTM-XXXXXXX');</script>
 
 <!-- <script>
 !function (w, d, t) {

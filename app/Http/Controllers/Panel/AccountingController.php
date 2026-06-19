@@ -124,7 +124,8 @@ class AccountingController extends Controller
         $this->authorize("panel_financial_charge_account");
 
         $rules = [
-            'amount' => 'required|numeric|min:0',
+            // 'amount' => 'required|numeric|min:0',
+            'amount' => 'required|numeric|min:0|max:9999999999',
             'gateway' => 'required',
             'account' => 'required_if:gateway,offline',
             'referral_code' => 'required_if:gateway,offline',

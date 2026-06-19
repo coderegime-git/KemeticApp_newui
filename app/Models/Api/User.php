@@ -172,20 +172,6 @@ class User extends Model implements JWTSubject
 
     }
 
-
-    // public function getFinancialAttribute()
-    // {
-    //     return [
-    //         'account_type' => $this->type,
-    //         'iban' => $this->iban,
-    //         'account_id' => $this->account_id,
-    //         'identity_scan' => ($this->identity_scan) ? url($this->identity_scan) : null,
-    //         'certificate' => ($this->certificate) ? url($this->certificate) : null,
-    //         'address' => $this->address,
-
-    //     ];
-    // }
-
     public function getFinancialAttribute()
     {
         // Get selected bank specs (iban & account_id stored in specifications)
@@ -208,7 +194,7 @@ class User extends Model implements JWTSubject
         }
 
         return [
-            'account_type'  => $userSelectedBank->user_bank_id ?? $this->type,
+            'account_type'  => "Bank Transfer",
             'iban'          => $iban,
             'account_id'    => $accountId,
             'identity_scan' => ($this->identity_scan) ? url($this->identity_scan) : null,
@@ -216,6 +202,20 @@ class User extends Model implements JWTSubject
             'address'       => $this->address,
         ];
     }
+
+
+    // public function getFinancialAttribute()
+    // {
+    //     return [
+    //         'account_type' => $this->type,
+    //         'iban' => $this->iban,
+    //         'account_id' => $this->account_id,
+    //         'identity_scan' => ($this->identity_scan) ? url($this->identity_scan) : null,
+    //         'certificate' => ($this->certificate) ? url($this->certificate) : null,
+    //         'address' => $this->address,
+
+    //     ];
+    // }
 
     public function getAuthUserIsFollowerAttribute()
     {

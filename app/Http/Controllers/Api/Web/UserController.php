@@ -144,8 +144,12 @@ class UserController extends Controller
             'reviews' => 0
         ];
 
-        $isWisdomKeeper = $user->role->caption === 'Wisdom Keeper'
-                   || $user->role->caption === 'wisdom_keeper' || $user->role->caption == 'admin';
+        $isWisdomKeeper = $user->role->name === 'admin' 
+            || $user->role->name === 'organization'
+            || $user->role->name === 'teacher';
+
+        // $isWisdomKeeper = $user->role->name === 'Wisdom Keeper'
+        //            || $user->role->name === 'wisdom_keeper' || $user->role->name == 'admin';
         $seekerLikedWebinars        = collect();
         $seekerLikedProducts        = collect();
         $seekerLikedLivestreams     = collect();
@@ -178,10 +182,10 @@ class UserController extends Controller
 
             // 4. Webinars counts
             foreach ($user->webinars as $webinar) {
-                // $totalCounts['likes'] += $webinar->likes()->count(); // If webinar has likes relation
+                $totalCounts['likes'] += $webinar->likes()->count(); // If webinar has likes relation
                 $totalCounts['comments'] += $webinar->comments()->count();
                 $totalCounts['reviews'] += $webinar->reviews()->count();
-                $totalCounts['reviews'] += $webinar->reviews()->count();
+                // $totalCounts['reviews'] += $webinar->reviews()->count();
             }
 
             $wisdomKeeperReceivedReviews = collect([
@@ -538,7 +542,12 @@ class UserController extends Controller
                 ->where('follower', $authUser->id)  // where follower is the auth user
                 ->where('status', Follow::$accepted)
                 ->exists();
-            $authUserIsFollower = !is_null($authUserIsFollower);
+            if($authUserIsFollower) {
+                $authUserIsFollower = true;
+            } else {
+                $authUserIsFollower = false;
+            }
+            // $authUserIsFollower = !is_null($authUserIsFollower);
         } else {
             $authUserIsFollower = false;
         }
@@ -1894,79 +1903,301 @@ class UserController extends Controller
     /**
      * Get vendor orders data for a user
      */
+    // private function getVendorOrdersData($user)
+    // {
+    //     $orders = Order::whereHas('orderItems', function ($query) use ($user) {
+    //             $query->where('user_id', $user->id);
+    //         })
+    //         ->where('status', Order::$paid)
+    //         ->with(['user', 'orderItems' => function ($query) use ($user) {
+    //             $query->where('user_id', $user->id);
+    //         }])
+    //         ->orderBy('created_at', 'desc')
+    //         ->limit(10)
+    //         ->get()
+    //         ->map(function ($order) use ($user) {
+    //             // Filter orderItems to get only items created by this vendor
+    //             $vendorItems = $order->orderItems->filter(function ($item) use ($user) {
+    //                 return $item->user_id == $user->id;
+    //             });
+                
+    //             // Get the first item to extract product/webinar info
+    //             $firstItem = $vendorItems->first();
+    //             $itemType = '';
+    //             $itemTitle = '';
+                
+    //             if ($firstItem) {
+    //                 if ($firstItem->webinar_id) {
+    //                     $itemType = 'Course';
+    //                     $itemTitle = $firstItem->webinar->title ?? 'Deleted Course';
+    //                 } elseif ($firstItem->product_id) {
+    //                     $itemType = 'Product';
+    //                     $itemTitle = $firstItem->product->title ?? 'Deleted Product';
+    //                 } elseif ($firstItem->bundle_id) {
+    //                     $itemType = 'Bundle';
+    //                     $itemTitle = $firstItem->bundle->title ?? 'Deleted Bundle';
+    //                 }elseif ($firstItem->book_id) {
+    //                     $itemType = 'Book';
+    //                     $itemTitle = $firstItem->book->title ?? 'Deleted Product';
+    //                 }
+    //             }
+                
+    //             $itemsList = $vendorItems->map(function ($item) {
+    //                 if ($item->webinar_id) {
+    //                     return $item->webinar->title ?? 'Course';
+    //                 } elseif ($item->product_id) {
+    //                     return $item->product->title ?? 'Product';
+    //                 } elseif ($item->bundle_id) {
+    //                     return $item->bundle->title ?? 'Bundle';
+    //                 }
+    //                 elseif ($item->book_id) {
+    //                     return $item->book->title ?? 'Book';
+    //                 }
+    //                 return 'Item';
+    //             })->implode(', ');
+                
+    //             $totalAmount = $vendorItems->sum('total_amount');
+    //             $totalQuantity = $vendorItems->sum('quantity');
+                
+    //             return [
+    //                 'order_id' => $order->id,
+    //                 'order_number' => $order->order_number ?? 'N/A',
+    //                 'customer' => $order->user->full_name ?? $order->user->username ?? 'Unknown',
+    //                 'customer_email' => $order->user->email ?? '',
+    //                 'items' => $itemsList,
+    //                 'item_type' => $itemType,
+    //                 'item_title' => $itemTitle,
+    //                 'quantity' => $totalQuantity,
+    //                 'total' => $this->formatPrice($totalAmount),
+    //                 'date' => $order->created_at,
+    //                 'status' => $order->status,
+    //                 'payment_method' => $order->payment_method ?? 'N/A',
+    //             ];
+    //         })
+    //         ->toArray();
+        
+    //     return $orders;
+    // }
+
     private function getVendorOrdersData($user)
     {
         $orders = Order::whereHas('orderItems', function ($query) use ($user) {
                 $query->where('user_id', $user->id);
             })
             ->where('status', Order::$paid)
-            ->with(['user', 'orderItems' => function ($query) use ($user) {
-                $query->where('user_id', $user->id);
-            }])
+            ->with([
+                'user',
+                'orderItems' => function ($query) use ($user) {
+                    $query->where('user_id', $user->id);
+                },
+                'orderItems.webinar',
+                'orderItems.webinar.teacher:id,full_name,avatar',
+                'orderItems.webinar.creator:id,full_name,avatar',
+                'orderItems.product',
+                'orderItems.product.media',
+                'orderItems.product.creator:id,full_name,avatar',
+                'orderItems.productOrder',
+                'orderItems.productOrder.product',
+                'orderItems.productOrder.product.media',
+                'orderItems.productOrder.product.creator:id,full_name,avatar',
+                'orderItems.bundle',
+                'orderItems.bundle.creator:id,full_name,avatar',
+                'orderItems.book',
+                'orderItems.book.creator:id,full_name,avatar',
+            ])
             ->orderBy('created_at', 'desc')
             ->limit(10)
             ->get()
             ->map(function ($order) use ($user) {
-                // Filter orderItems to get only items created by this vendor
+
+                // Filter to only this vendor's items
                 $vendorItems = $order->orderItems->filter(function ($item) use ($user) {
                     return $item->user_id == $user->id;
                 });
-                
-                // Get the first item to extract product/webinar info
-                $firstItem = $vendorItems->first();
-                $itemType = '';
-                $itemTitle = '';
-                
+
+                // First item for summary fields
+                $firstItem  = $vendorItems->first();
+                $itemType   = '';
+                $itemTitle  = '';
+
                 if ($firstItem) {
                     if ($firstItem->webinar_id) {
-                        $itemType = 'Course';
-                        $itemTitle = $firstItem->webinar->title ?? 'Deleted Course';
+                        $itemType  = 'Course';
+                        $itemTitle = optional($firstItem->webinar)->title ?? 'Deleted Course';
+                    } elseif ($firstItem->product_order_id && optional($firstItem->productOrder)->product) {
+                        $itemType  = 'Product';
+                        $itemTitle = $firstItem->productOrder->product->title ?? 'Deleted Product';
                     } elseif ($firstItem->product_id) {
-                        $itemType = 'Product';
-                        $itemTitle = $firstItem->product->title ?? 'Deleted Product';
+                        $itemType  = 'Product';
+                        $itemTitle = optional($firstItem->product)->title ?? 'Deleted Product';
                     } elseif ($firstItem->bundle_id) {
-                        $itemType = 'Bundle';
-                        $itemTitle = $firstItem->bundle->title ?? 'Deleted Bundle';
-                    }elseif ($firstItem->book_id) {
-                        $itemType = 'Book';
-                        $itemTitle = $firstItem->book->title ?? 'Deleted Product';
+                        $itemType  = 'Bundle';
+                        $itemTitle = optional($firstItem->bundle)->title ?? 'Deleted Bundle';
+                    } elseif ($firstItem->book_id) {
+                        $itemType  = 'Book';
+                        $itemTitle = optional($firstItem->book)->title ?? 'Deleted Book';
                     }
                 }
-                
+
+                // Flat label string
                 $itemsList = $vendorItems->map(function ($item) {
                     if ($item->webinar_id) {
-                        return $item->webinar->title ?? 'Course';
+                        return optional($item->webinar)->title ?? 'Course';
+                    } elseif ($item->product_order_id && optional($item->productOrder)->product) {
+                        return $item->productOrder->product->title ?? 'Product';
                     } elseif ($item->product_id) {
-                        return $item->product->title ?? 'Product';
+                        return optional($item->product)->title ?? 'Product';
                     } elseif ($item->bundle_id) {
-                        return $item->bundle->title ?? 'Bundle';
-                    }
-                    elseif ($item->book_id) {
-                        return $item->book->title ?? 'Book';
+                        return optional($item->bundle)->title ?? 'Bundle';
+                    } elseif ($item->book_id) {
+                        return optional($item->book)->title ?? 'Book';
                     }
                     return 'Item';
                 })->implode(', ');
-                
-                $totalAmount = $vendorItems->sum('total_amount');
+
+                // Rich items array with full details
+                $itemsDetail = $vendorItems->map(function ($item) {
+
+                    // --- COURSE ---
+                    if ($item->webinar_id && $item->webinar) {
+                        $webinar = $item->webinar;
+                        $author  = $webinar->teacher ?? $webinar->creator ?? null;
+                        return [
+                            'type'       => 'course',
+                            'id'         => $webinar->id,
+                            'title'      => $webinar->title ?? 'Deleted Course',
+                            'price'      => $this->formatPrice($item->total_amount ?? 0),
+                            'raw_price'  => (float) ($item->total_amount ?? 0),
+                            'quantity'   => (int) ($item->quantity ?? 1),
+                            'author_id'  => $author ? $author->id : null,
+                            'author'     => $author ? $author->full_name : null,
+                            'avatar'     => ($author && $author->avatar) ? url($author->avatar) : null,
+                            'thumbnail'  => !empty($webinar->thumbnail) ? url($webinar->thumbnail) : null,
+                            'url'        => '/course/' . ($webinar->slug ?? $webinar->id),
+                        ];
+                    }
+
+                    // --- PRODUCT via product_order_id ---
+                    if (!empty($item->product_order_id) && $item->productOrder && $item->productOrder->product) {
+                        $product   = $item->productOrder->product;
+                        $creator   = $product->creator ?? null;
+                        $thumbnail = $product->media->firstWhere('type', 'thumbnail');
+                        return [
+                            'type'       => 'product',
+                            'id'         => $product->id,
+                            'title'      => $product->title ?? 'Deleted Product',
+                            'price'      => $this->formatPrice($item->total_amount ?? 0),
+                            'raw_price'  => (float) ($item->total_amount ?? 0),
+                            'quantity'   => (int) ($item->quantity ?? 1),
+                            'author_id'  => $creator ? $creator->id : null,
+                            'author'     => $creator ? $creator->full_name : null,
+                            'avatar'     => ($creator && $creator->avatar) ? url($creator->avatar) : null,
+                            'thumbnail'  => $thumbnail ? url($thumbnail->path) : null,
+                            'url'        => '/products/' . ($product->slug ?? $product->id),
+                        ];
+                    }
+
+                    // --- PRODUCT via product_id ---
+                    if (!empty($item->product_id) && $item->product) {
+                        $product   = $item->product;
+                        $creator   = $product->creator ?? null;
+                        $thumbnail = $product->media->firstWhere('type', 'thumbnail');
+                        return [
+                            'type'       => 'product',
+                            'id'         => $product->id,
+                            'title'      => $product->title ?? 'Deleted Product',
+                            'price'      => $this->formatPrice($item->total_amount ?? 0),
+                            'raw_price'  => (float) ($item->total_amount ?? 0),
+                            'quantity'   => (int) ($item->quantity ?? 1),
+                            'author_id'  => $creator ? $creator->id : null,
+                            'author'     => $creator ? $creator->full_name : null,
+                            'avatar'     => ($creator && $creator->avatar) ? url($creator->avatar) : null,
+                            'thumbnail'  => $thumbnail ? url($thumbnail->path) : null,
+                            'url'        => '/products/' . ($product->slug ?? $product->id),
+                        ];
+                    }
+
+                    // --- BUNDLE ---
+                    if (!empty($item->bundle_id) && $item->bundle) {
+                        $bundle  = $item->bundle;
+                        $creator = $bundle->creator ?? null;
+                        return [
+                            'type'       => 'bundle',
+                            'id'         => $bundle->id,
+                            'title'      => $bundle->title ?? 'Deleted Bundle',
+                            'price'      => $this->formatPrice($item->total_amount ?? 0),
+                            'raw_price'  => (float) ($item->total_amount ?? 0),
+                            'quantity'   => (int) ($item->quantity ?? 1),
+                            'author_id'  => $creator ? $creator->id : null,
+                            'author'     => $creator ? $creator->full_name : null,
+                            'avatar'     => ($creator && $creator->avatar) ? url($creator->avatar) : null,
+                            'thumbnail'  => !empty($bundle->thumbnail) ? url($bundle->thumbnail) : null,
+                            'url'        => '/bundle/' . ($bundle->slug ?? $bundle->id),
+                        ];
+                    }
+
+                    // --- BOOK ---
+                    if (!empty($item->book_id) && $item->book) {
+                        $book    = $item->book;
+                        $creator = $book->creator ?? null;
+                        return [
+                            'type'       => 'book',
+                            'id'         => $book->id,
+                            'title'      => $book->title ?? 'Deleted Book',
+                            'price'      => $this->formatPrice($item->total_amount ?? 0),
+                            'raw_price'  => (float) ($item->total_amount ?? 0),
+                            'quantity'   => (int) ($item->quantity ?? 1),
+                            'author_id'  => $creator ? $creator->id : null,
+                            'author'     => $creator ? $creator->full_name : null,
+                            'avatar'     => ($creator && $creator->avatar) ? url($creator->avatar) : null,
+                            'thumbnail'  => !empty($book->cover) ? url($book->cover) : null,
+                            'url'        => '/books/' . ($book->slug ?? $book->id),
+                        ];
+                    }
+
+                    // --- FALLBACK ---
+                    return [
+                        'type'       => 'other',
+                        'id'         => $item->id,
+                        'title'      => 'Item #' . $item->id,
+                        'price'      => $this->formatPrice($item->total_amount ?? 0),
+                        'raw_price'  => (float) ($item->total_amount ?? 0),
+                        'quantity'   => (int) ($item->quantity ?? 1),
+                        'author_id'  => null,
+                        'author'     => null,
+                        'avatar'     => null,
+                        'thumbnail'  => null,
+                        'url'        => null,
+                    ];
+
+                })->values()->toArray();
+
+                $totalAmount   = $vendorItems->sum('total_amount');
                 $totalQuantity = $vendorItems->sum('quantity');
-                
+
                 return [
-                    'order_id' => $order->id,
-                    'order_number' => $order->order_number ?? 'N/A',
-                    'customer' => $order->user->full_name ?? $order->user->username ?? 'Unknown',
-                    'customer_email' => $order->user->email ?? '',
-                    'items' => $itemsList,
-                    'item_type' => $itemType,
-                    'item_title' => $itemTitle,
-                    'quantity' => $totalQuantity,
-                    'total' => $this->formatPrice($totalAmount),
-                    'date' => $order->created_at,
-                    'status' => $order->status,
+                    'order_id'       => $order->id,
+                    'order_number'   => !empty($order->order_number)
+                                            ? $order->order_number
+                                            : 'ORD-' . str_pad($order->id, 6, '0', STR_PAD_LEFT),
+                    'customer'       => optional($order->user)->full_name
+                                            ?? optional($order->user)->username
+                                            ?? 'Unknown',
+                    'customer_email' => optional($order->user)->email ?? '',
+                    'items'          => $itemsList,
+                    'item_type'      => $itemType,
+                    'item_title'     => $itemTitle,
+                    'items_detail'   => $itemsDetail,   // ← full rich array
+                    'quantity'       => (int) $totalQuantity,
+                    'total'          => $this->formatPrice($totalAmount),
+                    'raw_total'      => (float) $totalAmount,
+                    'date'           => $order->created_at,
+                    'status'         => $order->status,
                     'payment_method' => $order->payment_method ?? 'N/A',
                 ];
             })
             ->toArray();
-        
+
         return $orders;
     }
 
@@ -2291,28 +2522,276 @@ class UserController extends Controller
     {
         $orders = Order::where('user_id', $user->id)
             ->where('status', Order::$paid)
-            ->with(['orderItems'])
+            ->with([
+                'orderItems',
+                'orderItems.webinar',
+                'orderItems.webinar.teacher:id,full_name,avatar',
+                'orderItems.webinar.creator:id,full_name,avatar',
+                'orderItems.product',
+                'orderItems.product.media',
+                'orderItems.product.creator:id,full_name,avatar',
+                'orderItems.productOrder',
+                'orderItems.productOrder.product',
+                'orderItems.productOrder.product.media',
+                'orderItems.productOrder.product.creator:id,full_name,avatar',
+                'orderItems.bundle',
+                'orderItems.bundle.creator:id,full_name,avatar',
+                'orderItems.book',
+                'orderItems.book.creator:id,full_name,avatar',
+                'orderItems.bookOrder',
+                'orderItems.bookOrder.book',
+                'orderItems.bookOrder.book.creator:id,full_name,avatar',
+                'orderItems.subscribe',
+                'orderItems.reserveMeeting',
+            ])
             ->orderBy('created_at', 'desc')
             ->limit(50)
             ->get()
             ->map(function ($order) {
                 $items = $order->orderItems->map(function ($item) {
-                    return $item->title ?? 'Product';
-                })->implode(', ');
-                
+
+                    // --- COURSE / WEBINAR ---
+                    if (!empty($item->webinar_id) && $item->webinar) {
+                        $webinar = $item->webinar;
+                        $author  = $webinar->teacher ?? $webinar->creator ?? null;
+                        return [
+                            'type'      => 'course',
+                            'id'        => $webinar->id,
+                            'title'     => $webinar->title ?? 'Deleted Course',
+                            'author_id' => $author ? $author->id : null,
+                            'author'    => $author ? $author->full_name : null,
+                            'avatar'    => ($author && $author->avatar) ? url($author->avatar) : null,
+                            'thumbnail' => !empty($webinar->thumbnail) ? url($webinar->thumbnail) : null,
+                            'url'       => '/course/' . ($webinar->slug ?? $webinar->id),
+                        ];
+                    }
+
+                    // --- PRODUCT (via product_id directly) ---
+                    if (!empty($item->product_id) && $item->product) {
+                        $product   = $item->product;
+                        $creator   = $product->creator ?? null;
+                        $thumbnail = $product->media->firstWhere('type', 'thumbnail');
+                        return [
+                            'type'      => 'product',
+                            'id'        => $product->id,
+                            'title'     => $product->title ?? 'Deleted Product',
+                            'author_id' => $creator ? $creator->id : null,
+                            'author'    => $creator ? $creator->full_name : null,
+                            'avatar'    => ($creator && $creator->avatar) ? url($creator->avatar) : null,
+                            'thumbnail' => $thumbnail ? url($thumbnail->path) : null,
+                            'url'       => '/products/' . ($product->slug ?? $product->id),
+                        ];
+                    }
+
+                    // --- PRODUCT (via product_order_id) ---
+                    if (!empty($item->product_order_id) && $item->productOrder && $item->productOrder->product) {
+                        $product   = $item->productOrder->product;
+                        $creator   = $product->creator ?? null;
+                        $thumbnail = $product->media->firstWhere('type', 'thumbnail');
+                        return [
+                            'type'      => 'product',
+                            'id'        => $product->id,
+                            'title'     => $product->title ?? 'Deleted Product',
+                            'author_id' => $creator ? $creator->id : null,
+                            'author'    => $creator ? $creator->full_name : null,
+                            'avatar'    => ($creator && $creator->avatar) ? url($creator->avatar) : null,
+                            'thumbnail' => $thumbnail ? url($thumbnail->path) : null,
+                            'url'       => '/products/' . ($product->slug ?? $product->id),
+                        ];
+                    }
+
+                    // --- BUNDLE ---
+                    if (!empty($item->bundle_id) && $item->bundle) {
+                        $bundle  = $item->bundle;
+                        $creator = $bundle->creator ?? null;
+                        return [
+                            'type'      => 'bundle',
+                            'id'        => $bundle->id,
+                            'title'     => $bundle->title ?? 'Deleted Bundle',
+                            'author_id' => $creator ? $creator->id : null,
+                            'author'    => $creator ? $creator->full_name : null,
+                            'avatar'    => ($creator && $creator->avatar) ? url($creator->avatar) : null,
+                            'thumbnail' => !empty($bundle->thumbnail) ? url($bundle->thumbnail) : null,
+                            'url'       => '/bundle/' . ($bundle->slug ?? $bundle->id),
+                        ];
+                    }
+
+                    // --- BOOK (via book_id directly) ---
+                    if (!empty($item->book_id) && $item->book) {
+                        $book    = $item->book;
+                        $creator = $book->creator ?? null;
+                        return [
+                            'type'      => 'book',
+                            'id'        => $book->id,
+                            'title'     => $book->title ?? 'Deleted Book',
+                            'author_id' => $creator ? $creator->id : null,
+                            'author'    => $creator ? $creator->full_name : null,
+                            'avatar'    => ($creator && $creator->avatar) ? url($creator->avatar) : null,
+                            'thumbnail' => !empty($book->cover) ? url($book->cover) : null,
+                            'url'       => '/books/' . ($book->slug ?? $book->id),
+                        ];
+                    }
+
+                    // --- BOOK (via book_order_id) ---
+                    if (!empty($item->book_order_id) && $item->bookOrder && $item->bookOrder->book) {
+                        $book    = $item->bookOrder->book;
+                        $creator = $book->creator ?? null;
+                        return [
+                            'type'      => 'book',
+                            'id'        => $book->id,
+                            'title'     => $book->title ?? 'Deleted Book',
+                            'author_id' => $creator ? $creator->id : null,
+                            'author'    => $creator ? $creator->full_name : null,
+                            'avatar'    => ($creator && $creator->avatar) ? url($creator->avatar) : null,
+                            'thumbnail' => !empty($book->cover) ? url($book->cover) : null,
+                            'url'       => '/books/' . ($book->slug ?? $book->id),
+                        ];
+                    }
+
+                    // --- SUBSCRIPTION ---
+                    if (!empty($item->subscribe_id) && $item->subscribe) {
+                        $subscribe = $item->subscribe;
+                        $days      = $subscribe->days ?? 0;
+
+                        if ($days == 31) {
+                            $membershipTitle = 'Monthly Membership';
+                        } elseif ($days == 365) {
+                            $membershipTitle = 'Yearly Membership';
+                        } elseif ($days == 100000) {
+                            $membershipTitle = 'Lifetime Membership';
+                        } elseif ($days > 0) {
+                            $membershipTitle = $days . '-Day Membership';
+                        } else {
+                            $membershipTitle = !empty($subscribe->title) ? $subscribe->title : 'Membership Plan';
+                        }
+
+                        return [
+                            'type'      => 'subscription',
+                            'id'        => $item->subscribe_id,
+                            'title'     => $membershipTitle,
+                            'author_id' => null,
+                            'author'    => null,
+                            'avatar'    => null,
+                            'thumbnail' => null,
+                            'url'       => null,
+                        ];
+                    }
+
+                    // --- MEETING ---
+                    if (!empty($item->reserve_meeting_id) && $item->reserveMeeting) {
+                        return [
+                            'type'      => 'meeting',
+                            'id'        => $item->reserve_meeting_id,
+                            'title'     => 'Consultation / Meeting',
+                            'author_id' => null,
+                            'author'    => null,
+                            'avatar'    => null,
+                            'thumbnail' => null,
+                            'url'       => null,
+                        ];
+                    }
+
+                    // --- UNKNOWN FALLBACK ---
+                    return [
+                        'type'      => 'other',
+                        'id'        => $item->id,
+                        'title'     => 'Item #' . $item->id,
+                        'author_id' => null,
+                        'author'    => null,
+                        'avatar'    => null,
+                        'thumbnail' => null,
+                        'url'       => null,
+                    ];
+
+                })->values()->toArray();
+
+                $itemsLabel = collect($items)->pluck('title')->implode(', ');
+
                 return [
-                    'id' => $order->id,
-                    'order_number' => $order->order_number ?? 'N/A',
-                    'items' => $items,
-                    'total' => $order->total_amount,
-                    'date' => date('Y-m-d H:i', $order->created_at),
-                    'status' => $order->status,
+                    'id'           => $order->id,
+                    'order_number' => !empty($order->order_number)
+                                        ? $order->order_number
+                                        : 'ORD-' . str_pad($order->id, 6, '0', STR_PAD_LEFT),
+                    'items'  => $itemsLabel,
+                    'items_label'        => $items,
+                    'total'        => $order->total_amount,
+                    'date'         => date('Y-m-d H:i', $order->created_at),
+                    'status'       => $order->status,
                 ];
             })
             ->toArray();
-        
+
         return $orders;
     }
+
+    // private function getOrdersData($user)
+    // {
+    //     $orders = Order::where('user_id', $user->id)
+    //         ->where('status', Order::$paid)
+    //         ->with([
+    //             'orderItems',
+    //             'orderItems.webinar',
+    //             'orderItems.product',
+    //             'orderItems.bundle',
+    //             'orderItems.book',
+    //         ])
+    //         ->orderBy('created_at', 'desc')
+    //         ->limit(50)
+    //         ->get()
+    //         ->map(function ($order) {
+    //             $items = $order->orderItems->map(function ($item) {
+    //                 if (!empty($item->webinar_id) && $item->webinar) {
+    //                     return $item->webinar->title ?? 'Deleted Course';
+    //                 } elseif (!empty($item->product_id) && $item->product) {
+    //                     return $item->product->title ?? 'Deleted Product';
+    //                 } elseif (!empty($item->bundle_id) && $item->bundle) {
+    //                     return $item->bundle->title ?? 'Deleted Bundle';
+    //                 } elseif (!empty($item->book_id) && $item->book) {
+    //                     return $item->book->title ?? 'Deleted Book';
+    //                 }
+    //                 return 'Item';
+    //             })->implode(', ');
+
+    //             return [
+    //                 'id' => $order->id,
+    //                 'order_number' => $order->order_number ?? 'N/A',
+    //                 'items' => $items,
+    //                 'total' => $order->total_amount,
+    //                 'date' => date('Y-m-d H:i', $order->created_at),
+    //                 'status' => $order->status,
+    //             ];
+    //         })
+    //         ->toArray();
+
+    //     return $orders;
+    // }
+
+    // private function getOrdersData($user)
+    // {
+    //     $orders = Order::where('user_id', $user->id)
+    //         ->where('status', Order::$paid)
+    //         ->with(['orderItems'])
+    //         ->orderBy('created_at', 'desc')
+    //         ->limit(50)
+    //         ->get()
+    //         ->map(function ($order) {
+    //             $items = $order->orderItems->map(function ($item) {
+    //                 return $item->title ?? 'Product';
+    //             })->implode(', ');
+                
+    //             return [
+    //                 'id' => $order->id,
+    //                 'order_number' => $order->order_number ?? 'N/A',
+    //                 'items' => $items,
+    //                 'total' => $order->total_amount,
+    //                 'date' => date('Y-m-d H:i', $order->created_at),
+    //                 'status' => $order->status,
+    //             ];
+    //         })
+    //         ->toArray();
+        
+    //     return $orders;
+    // }
 
     private function getMessagesData($user)
     {

@@ -36,10 +36,10 @@ class Livestream extends Model
         'deleted_at'
     ];
 
-    // protected $casts = [
-    //     'is_active' => 'boolean',
-    //     'tags' => 'array'
-    // ];
+    protected $casts = [
+        'is_active' => 'boolean',
+        // 'tags' => 'array'
+    ];
 
     // Helper method to get full playback URL
     // public function getFullPlaybackUrlAttribute()

@@ -24,7 +24,7 @@ class ProductOrderController extends Controller
     {
         $this->cjService = $cjService;
     }
-
+    
     public function index(Request $request)
     {
         $user = apiAuth();
@@ -206,7 +206,7 @@ class ProductOrderController extends Controller
         $orders->canceledOrders = $canceledOrders;
         $orders->totalPurchase = $totalPurchase;
         $orders->sellers = $sellers;
-
+        
         return apiResponse2(
             1,
             'retrieved',

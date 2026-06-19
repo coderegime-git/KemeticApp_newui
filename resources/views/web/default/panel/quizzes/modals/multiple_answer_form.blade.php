@@ -102,7 +102,7 @@
                 <label class="input-label">{{ trans('quiz.answer_image') }}</label>
                 <div class="input-group">
                     <div class="input-group-prepend">
-                        <button type="button" class="input-group-text panel-file-manager" data-input="file{{ !empty($answer) ? $answer->id : '_ans_tmp' }}" data-preview="holder">
+                        <button type="button" class="input-group-text panel-file-manager-image" data-input="file{{ !empty($answer) ? $answer->id : '_ans_tmp' }}" data-preview="holder">
                             <i data-feather="arrow-up" width="18" height="18"></i>
                         </button>
                     </div>
@@ -121,3 +121,4 @@
         </div>
     </div>
 </div>
+

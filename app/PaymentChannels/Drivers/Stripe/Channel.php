@@ -54,23 +54,27 @@ class Channel extends BasePaymentChannel implements IChannel
 
     public function paymentRequest(Order $order)
     {
+       
+        //$price = round($this->makeAmountByCurrency($order->total_amount, $this->currency),2);
+        // $priceFloat = round($this->makeAmountByCurrency($order->total_amount, $this->currency), 2);
+        // $priceCents = (int) round($priceFloat * 100);
+
         $reqCurrency = request()->input('currency');
         $reqAmount   = request()->input('amount');
 
-        // Determine target currency
         if (!empty($reqCurrency)) {
             $currency = $reqCurrency;
         } else {
             $currency = currency();
+            // $currency = $currency == 'USD' ? 'EUR' : $currency;   
             $currency = $currency == 'USD' ? 'EUR' : $currency;
         }
 
-        // If the frontend already passed the live-rate total, use it directly.
-        // Otherwise fetch the live rate from the same exchangerate-api.com the JS uses.
         if (!empty($reqAmount) && (float)$reqAmount > 0) {
             $priceFloat = (float) $reqAmount;
             Log::info('Stripe paymentRequest - using frontend-supplied amount', ['amount' => $priceFloat, 'currency' => $currency]);
         } else {
+            $priceFloat = round($this->makeAmountByCurrency($order->total_amount, $this->currency), 2);
             // Fetch live rate from exchangerate-api.com (EUR base)
             $liveRate = null;
             $apiKey   = '571fa201a47780cdeaa90825';
@@ -87,47 +91,39 @@ class Channel extends BasePaymentChannel implements IChannel
             } catch (\Throwable $e) {
                 Log::warning('Stripe paymentRequest - live rate API failed: ' . $e->getMessage());
             }
-
             if ($liveRate !== null) {
                 // order->total_amount is stored in EUR base
                 $priceFloat = round($order->total_amount * $liveRate, 2);
+                $priceCents = (int) round($priceFloat * 100);
                 Log::info('Stripe paymentRequest - using live API rate', ['rate' => $liveRate, 'amount' => $priceFloat, 'currency' => $currency]);
             } else {
                 // Fallback to DB rate
                 $priceFloat = round($this->makeAmountByCurrency($order->total_amount, $this->currency), 2);
+                $priceCents = (int) round($priceFloat * 100);
                 Log::info('Stripe paymentRequest - using DB rate fallback', ['amount' => $priceFloat, 'currency' => $currency]);
             }
         }
-
         $priceCents = (int) round($priceFloat * 100);
-
+        
         $generalSettings = getGeneralSettings();
-
-        Log::info('Stripe paymentRequest - currency: ' . $currency . ', amount_cents: ' . $priceCents . ', order_id: ' . $order->id);
+        $currency = currency();
+        $currency = $currency == 'USD' ? 'EUR' : $currency;   
 
         Stripe::setApikey(env('STRIPE_SECRET'));
         $successUrl = (session()->get('mobileHeader') == 1)
             ? 'https://kemetic.app/paymentSuccess'
             : $this->makeCallbackUrl('success');
         
-        // EUR-specific payment methods (iDEAL, bancontact etc. only work with EUR)
-        if (strtolower($currency) === 'eur') {
-            $paymentMethods = ['ideal', 'card', 'p24', 'klarna', 'giropay', 'eps', 'bancontact'];
-        } elseif (strtolower($currency) === 'gbp') {
-            $paymentMethods = ['card', 'klarna', 'bacs_debit'];
-        } else {
-            // CAD, USD, INR and others — only card is universally safe
-            $paymentMethods = ['card'];
-        }
-
         $checkoutData = [
-            'payment_method_types' => $paymentMethods,
+            //'payment_method_types' => ['card', 'bancontact', 'ideal', 'p24', 'sofort', 'klarna', 'giropay', 'eps'],
+            'payment_method_types' => ['ideal','card','p24', 'klarna', 'giropay', 'eps','bancontact'],
             'mode' => 'payment',
             'billing_address_collection' => 'required',
             'line_items' => [
                 [
                     'price_data' => [
-                        'currency' => strtolower($currency),
+                        'currency' => $currency,
+                        //'unit_amount_decimal' => $price * 100,
                         'unit_amount_decimal' => $priceCents,
                         'product_data' => [
                             'name' => $generalSettings['site_name'] . ' payment',
@@ -138,9 +134,9 @@ class Channel extends BasePaymentChannel implements IChannel
             ],
             'metadata' => [
                 'order_id'        => $order->id,
-                'currency_requested' => $currency,
             ],
             'success_url' => $successUrl,
+            // 'cancel_url' => $cancelUrl,
         ];
 
         // Add cancel_url only if mobileHeader != 1
@@ -168,6 +164,7 @@ class Channel extends BasePaymentChannel implements IChannel
             ]);
             throw $e; // allow upstream to catch and show friendly toast
         }
+        //dd('order2');
         session()->put($this->order_session_key, $order->id);
 
         if (session()->get('mobileHeader') == 1) {
@@ -237,14 +234,6 @@ class Channel extends BasePaymentChannel implements IChannel
                         'customer_name'  => $user->name,
                         'customer_email' => $user->email,
                         'order_id'       => $order->id,
-                        'address' => [
-                            'line1'       => $user->address ?? '6th Floor, Indore',
-                            'line2'       => $user->address ?? '1st Floor, Indore',
-                            'city'        => $city->title ?? 'Indore',
-                            'state'       => $state->title ?? 'Madhya Pradesh',
-                            'postal_code' => $user->zip_code ?? '452001',
-                            'country'     => 'IN',
-                        ],
                     ],
                     'success_url' => $successUrl,
                     //'cancel_url' => $cancelUrl ?? route('payment.cancel'),

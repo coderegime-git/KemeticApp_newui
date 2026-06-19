@@ -836,21 +836,25 @@ class PaymentsController extends Controller
         $quantity = 1;
 
         $address = $user->house_no . ' ' . $user->address;
+        $address1 = $user->address1 ?? '';
 
         // If address is longer than 30 chars, split intelligently
         if (strlen($address) > 30) {
             // Find the last space before position 30
             $splitPos = strrpos(substr($address, 0, 31), ' ');
+            $splitPos = strrpos(substr($address1, 0, 31), ' ');
             
             // If no space found, force split at 30
             $splitPos = $splitPos ?: 30;
             
             $street1 = substr($address, 0, $splitPos);
-            $street2 = trim(substr($address, $splitPos));
+            $street2 = substr($address1, 0, $splitPos);
         } else {
             $street1 = $address;
-            $street2 = "";
+            $street2 = $address1;
         }
+
+        $full_name = $user->first_name . ' ' . $user->last_name;
 
         $data = [
             "contact_email" => $user->email ?: "info@kemetic.app",
@@ -876,7 +880,7 @@ class PaymentsController extends Controller
             "shipping_address" => [
                 "city" => $user->city_name,
                 "country_code" => $countrycode,
-                "name" => $user->full_name,
+                "name" => $full_name,
                 "phone_number" => $phone,
                 "state_code" => $user->province_name,
                 "postcode" => $user->zip_code,
@@ -1176,6 +1180,7 @@ class PaymentsController extends Controller
                 Log::error("CJ Fulfil: no buyer for order #{$order->id}");
                 return;
             }
+            $full_name = $buyer->first_name . ' ' . $buyer->last_name;
 
             // Resolve country name & code
             $countryCode = '';
@@ -1257,11 +1262,11 @@ class PaymentsController extends Controller
                 'shippingProvince' => $buyer->province_name ?? '',
                 'shippingCity' => $buyer->city_name ?? '',
                 'shippingAddress' => $buyer->address ?? '',
-                'shippingAddress2' => '',
+                'shippingAddress2' => $buyer->address1 ?? '',
                 'shippingZip' => $buyer->zip_code ?? '',
                 'shippingPhone' => $buyer->mobile ?? '',
                 'houseNumber' => $buyer->house_no ?? '',
-                'shippingCustomerName' => $buyer->full_name ?? '',
+                'shippingCustomerName' => $full_name ?? '',
                 'email' => $buyer->email ?? '',
                 'logisticName' => $cjLogistic,
                 'fromCountryCode' => env('CJ_FROM_COUNTRY', 'CN'),

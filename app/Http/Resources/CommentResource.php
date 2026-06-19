@@ -79,6 +79,7 @@ class CommentResource extends JsonResource
             //         'comment' => $reply->comment,
             //     ];
             // })
+
             $this->mergeWhen(!$this->reply_id, function () {
                 return [
                     'replies' => $this->replies

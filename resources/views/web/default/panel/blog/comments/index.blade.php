@@ -1,397 +1,361 @@
 @extends('web.default.layouts.newapp')
 
 <style>
-    /* KEMETIC STATS */
-    .kemetic-stat-section {
-        margin-top: 25px;
-    }
+  /* KEMETIC STATS */
+.kemetic-stat-section {
+    margin-top: 25px;
+}
 
-    .kemetic-title {
-        font-size: 22px;
-        font-weight: 700;
-        color: #F2C94C;
-        margin-bottom: 18px;
-    }
+.kemetic-title {
+    font-size: 22px;
+    font-weight: 700;
+    color: #F2C94C;
+    margin-bottom: 18px;
+}
 
-    /* CARD */
+/* CARD */
+.kemetic-stat-card {
+    background: linear-gradient(180deg, #121212, #0b0b0b);
+    border: 1px solid #262626;
+    border-radius: 18px;
+    padding: 26px 18px;
+}
+
+/* ITEM */
+.kemetic-stat-item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 6px;
+}
+
+/* ICON */
+.kemetic-stat-icon {
+    width: 56px;
+    height: 56px;
+    border-radius: 50%;
+    background: rgba(242, 201, 76, 0.15);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+.kemetic-stat-icon img {
+    width: 28px;
+    filter: invert(0.9);
+}
+
+/* VALUE */
+.kemetic-stat-value {
+    font-size: 30px;
+    font-weight: 700;
+    color: #F2C94C;
+}
+
+/* LABEL */
+.kemetic-stat-label {
+    font-size: 14px;
+    color: #9a9a9a;
+}
+
+/* MOBILE */
+@media (max-width: 768px) {
     .kemetic-stat-card {
-        background: linear-gradient(180deg, #121212, #0b0b0b);
-        border: 1px solid #262626;
-        border-radius: 18px;
-        padding: 26px 18px;
+        padding: 20px 12px;
     }
-
-    /* ITEM */
-    .kemetic-stat-item {
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-        gap: 6px;
-    }
-
-    /* ICON */
-    .kemetic-stat-icon {
-        width: 56px;
-        height: 56px;
-        border-radius: 50%;
-        background: rgba(242, 201, 76, 0.15);
-        display: flex;
-        align-items: center;
-        justify-content: center;
-    }
-
-    .kemetic-stat-icon img {
-        width: 28px;
-        filter: invert(0.9);
-    }
-
-    /* VALUE */
     .kemetic-stat-value {
-        font-size: 30px;
-        font-weight: 700;
-        color: #F2C94C;
+        font-size: 24px;
     }
+}
 
-    /* LABEL */
-    .kemetic-stat-label {
-        font-size: 14px;
-        color: #9a9a9a;
-    }
+/* KEMETIC FILTER */
+.kemetic-filter-section {
+    color: #eaeaea;
+}
 
-    /* MOBILE */
-    @media (max-width: 768px) {
-        .kemetic-stat-card {
-            padding: 20px 12px;
-        }
+.kemetic-title {
+    font-size: 22px;
+    font-weight: 700;
+    color: #F2C94C;
+}
 
-        .kemetic-stat-value {
-            font-size: 24px;
-        }
-    }
+/* CARD */
+.kemetic-filter-card {
+    background: linear-gradient(180deg, #121212, #0a0a0a);
+    border: 1px solid #262626;
+    border-radius: 18px;
+    padding: 26px 22px;
+}
 
-    /* KEMETIC FILTER */
-    .kemetic-filter-section {
-        color: #eaeaea;
-    }
+/* LABEL */
+.kemetic-label {
+    font-size: 13px;
+    color: #b5b5b5;
+    margin-bottom: 6px;
+    display: block;
+}
 
-    .kemetic-title {
-        font-size: 22px;
-        font-weight: 700;
-        color: #F2C94C;
-    }
+/* INPUT GROUP */
+.kemetic-input-group {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    background: #0f0f0f;
+    border: 1px solid #2a2a2a;
+    border-radius: 12px;
+    padding: 10px 12px;
+}
 
-    /* CARD */
-    .kemetic-filter-card {
-        background: linear-gradient(180deg, #121212, #0a0a0a);
-        border: 1px solid #262626;
-        border-radius: 18px;
-        padding: 26px 22px;
-    }
+.kemetic-input-group i {
+    color: #F2C94C;
+}
 
-    /* LABEL */
-    .kemetic-label {
-        font-size: 13px;
-        color: #b5b5b5;
-        margin-bottom: 6px;
-        display: block;
-    }
+/* INPUT */
+.kemetic-input {
+    width: 100%;
+    background: transparent;
+    border: none;
+    color: #fff;
+    outline: none;
+    font-size: 14px;
+}
 
-    /* INPUT GROUP */
-    .kemetic-input-group {
-        display: flex;
-        align-items: center;
-        gap: 10px;
-        background: #0f0f0f;
-        border: 1px solid #2a2a2a;
-        border-radius: 12px;
-        padding: 10px 12px;
-    }
+/* SELECT2 */
+.select2-container--default .select2-selection--single {
+    background: #0f0f0f !important;
+    border: 1px solid #2a2a2a !important;
+    border-radius: 12px !important;
+    height: 44px !important;
+    display: flex;
+    align-items: center;
+}
+.select2-selection__rendered {
+    color: #fff !important;
+    line-height: 44px !important;
+}
+.select2-container--default .select2-selection--single .select2-selection__arrow {
+    height: 42px !important;
+}
+.select2-container--default .select2-selection--single .select2-selection__arrow b {
+    border-color: #F2C94C transparent transparent transparent !important;
+}
+.select2-dropdown {
+    background: #0f0f0f !important;
+    border: 1px solid rgba(242,201,76,.35) !important;
+    border-radius: 12px !important;
+}
+.select2-results__option {
+    color: #e0e0e0 !important;
+    padding: 10px 14px !important;
+}
+.select2-results__option--highlighted {
+    background: rgba(242,201,76,.15) !important;
+    color: #fff !important;
+}
+.select2-results__option[aria-selected=true] {
+    background: rgba(242,201,76,.25) !important;
+}
+.select2-search--dropdown .select2-search__field {
+    background: #0d0d0d !important;
+    border: 1px solid rgba(242,201,76,.35) !important;
+    color: #fff !important;
+    border-radius: 8px !important;
+}
 
-    .kemetic-input-group i {
-        color: #F2C94C;
-    }
+/* BUTTON */
+.kemetic-btn {
+    background: linear-gradient(135deg, #F2C94C, #d4af37);
+    border: none;
+    border-radius: 14px;
+    padding: 12px;
+    font-weight: 700;
+    color: #000;
+    transition: 0.3s ease;
+}
+.kemetic-btn:hover {
+    background: linear-gradient(135deg, #d4af37, #F2C94C);
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(242,201,76,0.4);
+}
+.kemetic-btn-sm {
+    padding: 8px 16px;
+    font-size: 13px;
+}
 
-    /* INPUT */
-    .kemetic-input {
-        width: 100%;
-        background: transparent;
-        border: none;
-        color: #fff;
-        outline: none;
-        font-size: 14px;
-    }
+/* TABLE CARD */
+.kemetic-table-card {
+    background: linear-gradient(180deg,#121212,#0a0a0a);
+    border:1px solid #262626;
+    border-radius:18px;
+    padding:20px;
+}
 
-    /* SELECT2 */
-    .select2-container--default .select2-selection--single {
-        background: #0f0f0f !important;
-        border: 1px solid #2a2a2a !important;
-        border-radius: 12px !important;
-        height: 44px !important;
-        display: flex;
-        align-items: center;
-    }
+/* TABLE */
+.kemetic-table {
+    width:100%;
+    border-collapse:separate;
+    border-spacing:0 10px;
+}
+.kemetic-table thead th {
+    color:#aaa; 
+    font-size:13px;
+    font-weight:600; 
+    text-align:center;
+    padding-bottom: 10px;
+}
+.kemetic-table thead th.text-left {
+    text-align: left;
+}
+.kemetic-table tbody tr {
+    background:#0f0f0f;
+    border:1px solid #262626;
+    transition: 0.3s ease;
+}
+.kemetic-table tbody tr:hover {
+    background: #1a1a1a;
+    border-color: rgba(242,201,76,0.3);
+}
+.kemetic-table td {
+    padding:14px;
+    text-align:center;
+    vertical-align:middle;
+}
+.kemetic-table td.text-left { 
+    text-align:left; 
+}
 
-    .select2-selection__rendered {
-        color: #fff !important;
-        line-height: 44px !important;
-    }
+/* USER AVATAR */
+.user-avatar-cell {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+.user-avatar {
+    width: 44px;
+    height: 44px;
+    border-radius: 50%;
+    overflow: hidden;
+    border: 2px solid rgba(242,201,76,0.3);
+    background: #1a1a1a;
+}
+.user-avatar img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+.user-info {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+}
+.user-name {
+    color: #fff;
+    font-weight: 600;
+    font-size: 14px;
+}
+.user-email {
+    color: #888;
+    font-size: 11px;
+}
 
-    .select2-container--default .select2-selection--single .select2-selection__arrow {
-        height: 42px !important;
-    }
+/* POST LINK */
+.post-link {
+    color: #fff;
+    text-decoration: none;
+    font-weight: 500;
+    transition: 0.3s ease;
+}
+.post-link:hover {
+    color: #F2C94C;
+}
 
-    .select2-container--default .select2-selection--single .select2-selection__arrow b {
-        border-color: #F2C94C transparent transparent transparent !important;
-    }
+/* STATUS BADGES */
+.status-badge {
+    padding:4px 10px;
+    border-radius:12px;
+    font-size:12px;
+    font-weight: 500;
+    display: inline-block;
+}
+.status-badge.active {
+    background: #1f3d2b; 
+    color: #2ecc71;
+}
+.status-badge.pending {
+    background: #3d2e1f; 
+    color: #f39c12;
+}
 
-    .select2-dropdown {
-        background: #0f0f0f !important;
-        border: 1px solid rgba(242, 201, 76, .35) !important;
-        border-radius: 12px !important;
-    }
+/* VIEW BUTTON */
+.view-btn {
+    background: transparent;
+    border: 1px solid rgba(242,201,76,0.4);
+    color: #F2C94C;
+    border-radius: 10px;
+    padding: 6px 16px;
+    font-size: 13px;
+    transition: 0.3s ease;
+}
+.view-btn:hover {
+    background: rgba(242,201,76,0.1);
+    border-color: #F2C94C;
+}
 
-    .select2-results__option {
-        color: #e0e0e0 !important;
-        padding: 10px 14px !important;
-    }
+/* COMMENT MODAL */
+.modal-content {
+    background: #121212;
+    border: 1px solid #262626;
+    border-radius: 18px;
+}
+.modal-header {
+    border-bottom: 1px solid #262626;
+}
+.modal-title {
+    color: #F2C94C;
+    font-weight: 700;
+}
+.modal-body {
+    color: #eaeaea;
+}
+.modal-footer {
+    border-top: 1px solid #262626;
+}
+.modal-footer .btn {
+    background: #1a1a1a;
+    border: 1px solid #262626;
+    color: #fff;
+    border-radius: 12px;
+}
+.modal-footer .btn:hover {
+    background: #2a2a2a;
+}
 
-    .select2-results__option--highlighted {
-        background: rgba(242, 201, 76, .15) !important;
-        color: #fff !important;
-    }
+/* NO RESULT */
+.no-result-card {
+    background: linear-gradient(180deg,#121212,#0a0a0a);
+    border:1px solid #262626;
+    border-radius:18px;
+    padding:40px;
+    text-align: center;
+}
+.no-result-card img {
+    opacity: 0.7;
+    margin-bottom: 20px;
+}
+.no-result-card h3 {
+    color: #F2C94C;
+    font-size: 20px;
+    margin-bottom: 10px;
+}
+.no-result-card p {
+    color: #888;
+    font-size: 14px;
+}
 
-    .select2-results__option[aria-selected=true] {
-        background: rgba(242, 201, 76, .25) !important;
-    }
-
-    .select2-search--dropdown .select2-search__field {
-        background: #0d0d0d !important;
-        border: 1px solid rgba(242, 201, 76, .35) !important;
-        color: #fff !important;
-        border-radius: 8px !important;
-    }
-
-    /* BUTTON */
-    .kemetic-btn {
-        background: linear-gradient(135deg, #F2C94C, #d4af37);
-        border: none;
-        border-radius: 14px;
-        padding: 12px;
-        font-weight: 700;
-        color: #000;
-        transition: 0.3s ease;
-    }
-
-    .kemetic-btn:hover {
-        background: linear-gradient(135deg, #d4af37, #F2C94C);
-        transform: translateY(-2px);
-        box-shadow: 0 6px 20px rgba(242, 201, 76, 0.4);
-    }
-
-    .kemetic-btn-sm {
-        padding: 8px 16px;
-        font-size: 13px;
-    }
-
-    /* TABLE CARD */
-    .kemetic-table-card {
-        background: linear-gradient(180deg, #121212, #0a0a0a);
-        border: 1px solid #262626;
-        border-radius: 18px;
-        padding: 20px;
-    }
-
-    /* TABLE */
-    .kemetic-table {
-        width: 100%;
-        border-collapse: separate;
-        border-spacing: 0 10px;
-    }
-
-    .kemetic-table thead th {
-        color: #aaa;
-        font-size: 13px;
-        font-weight: 600;
-        text-align: center;
-        padding-bottom: 10px;
-    }
-
-    .kemetic-table thead th.text-left {
-        text-align: left;
-    }
-
-    .kemetic-table tbody tr {
-        background: #0f0f0f;
-        border: 1px solid #262626;
-        transition: 0.3s ease;
-    }
-
-    .kemetic-table tbody tr:hover {
-        background: #1a1a1a;
-        border-color: rgba(242, 201, 76, 0.3);
-    }
-
-    .kemetic-table td {
-        padding: 14px;
-        text-align: center;
-        vertical-align: middle;
-    }
-
-    .kemetic-table td.text-left {
-        text-align: left;
-    }
-
-    /* USER AVATAR */
-    .user-avatar-cell {
-        display: flex;
-        align-items: center;
-        gap: 12px;
-    }
-
-    .user-avatar {
-        width: 44px;
-        height: 44px;
-        border-radius: 50%;
-        overflow: hidden;
-        border: 2px solid rgba(242, 201, 76, 0.3);
-        background: #1a1a1a;
-    }
-
-    .user-avatar img {
-        width: 100%;
-        height: 100%;
-        object-fit: cover;
-    }
-
-    .user-info {
-        display: flex;
-        flex-direction: column;
-        align-items: flex-start;
-    }
-
-    .user-name {
-        color: #fff;
-        font-weight: 600;
-        font-size: 14px;
-    }
-
-    .user-email {
-        color: #888;
-        font-size: 11px;
-    }
-
-    /* POST LINK */
-    .post-link {
-        color: #fff;
-        text-decoration: none;
-        font-weight: 500;
-        transition: 0.3s ease;
-    }
-
-    .post-link:hover {
-        color: #F2C94C;
-    }
-
-    /* STATUS BADGES */
-    .status-badge {
-        padding: 4px 10px;
-        border-radius: 12px;
-        font-size: 12px;
-        font-weight: 500;
-        display: inline-block;
-    }
-
-    .status-badge.active {
-        background: #1f3d2b;
-        color: #2ecc71;
-    }
-
-    .status-badge.pending {
-        background: #3d2e1f;
-        color: #f39c12;
-    }
-
-    /* VIEW BUTTON */
-    .view-btn {
-        background: transparent;
-        border: 1px solid rgba(242, 201, 76, 0.4);
-        color: #F2C94C;
-        border-radius: 10px;
-        padding: 6px 16px;
-        font-size: 13px;
-        transition: 0.3s ease;
-    }
-
-    .view-btn:hover {
-        background: rgba(242, 201, 76, 0.1);
-        border-color: #F2C94C;
-    }
-
-    /* COMMENT MODAL */
-    .modal-content {
-        background: #121212;
-        border: 1px solid #262626;
-        border-radius: 18px;
-    }
-
-    .modal-header {
-        border-bottom: 1px solid #262626;
-    }
-
-    .modal-title {
-        color: #F2C94C;
-        font-weight: 700;
-    }
-
-    .modal-body {
-        color: #eaeaea;
-    }
-
-    .modal-footer {
-        border-top: 1px solid #262626;
-    }
-
-    .modal-footer .btn {
-        background: #1a1a1a;
-        border: 1px solid #262626;
-        color: #fff;
-        border-radius: 12px;
-    }
-
-    .modal-footer .btn:hover {
-        background: #2a2a2a;
-    }
-
-    /* NO RESULT */
-    .no-result-card {
-        background: linear-gradient(180deg, #121212, #0a0a0a);
-        border: 1px solid #262626;
-        border-radius: 18px;
-        padding: 40px;
-        text-align: center;
-    }
-
-    .no-result-card img {
-        opacity: 0.7;
-        margin-bottom: 20px;
-    }
-
-    .no-result-card h3 {
-        color: #F2C94C;
-        font-size: 20px;
-        margin-bottom: 10px;
-    }
-
-    .no-result-card p {
-        color: #888;
-        font-size: 14px;
-    }
-
-    /* DATE STYLE */
-    .comment-date {
-        color: #888;
-        font-size: 13px;
-    }
+/* DATE STYLE */
+.comment-date {
+    color: #888;
+    font-size: 13px;
+}
 </style>
 
 @push('styles_top')
@@ -454,16 +418,18 @@
                             <div class="col-12 col-md-6">
                                 <label class="kemetic-label">{{ trans('public.from') }}</label>
                                 <div class="kemetic-input-group">
-                                    <input type="date" name="from" autocomplete="off" class="kemetic-input"
-                                        value="{{ request()->get('from', '') }}">
+                                    <input type="date" name="from" autocomplete="off"
+                                        class="kemetic-input"
+                                        value="{{ request()->get('from','') }}">
                                 </div>
                             </div>
 
                             <div class="col-12 col-md-6">
                                 <label class="kemetic-label">{{ trans('public.to') }}</label>
                                 <div class="kemetic-input-group">
-                                    <input type="date" name="to" autocomplete="off" class="kemetic-input"
-                                        value="{{ request()->get('to', '') }}">
+                                    <input type="date" name="to" autocomplete="off"
+                                        class="kemetic-input"
+                                        value="{{ request()->get('to','') }}">
                                 </div>
                             </div>
                         </div>
@@ -472,11 +438,11 @@
                     {{-- Post filter --}}
                     <div class="col-12 col-lg-4">
                         <label class="kemetic-label">{{ trans('admin/main.post') }}</label>
-                        <select name="blog_id" class="kemetic-select select2"
-                            data-placeholder="{{ trans('update.select_post') }}" style="width: 100%;">
+                        <select name="blog_id" class="kemetic-select select2" data-placeholder="{{ trans('update.select_post') }}" style="width: 100%;">
                             <option value="">{{ trans('public.all') }}</option>
                             @foreach($posts as $post)
-                                <option value="{{ $post->id }}" {{ !empty($selectedPost) && $selectedPost->id == $post->id ? 'selected' : '' }}>
+                                <option value="{{ $post->id }}"
+                                    {{ !empty($selectedPost) && $selectedPost->id == $post->id ? 'selected' : '' }}>
                                     {{ $post->title }}
                                 </option>
                             @endforeach
@@ -529,15 +495,19 @@
                                     </td>
 
                                     <td class="text-left">
-                                        <a href="{{ $comment->blog->getUrl() }}" target="_blank" class="post-link">
+                                        <a href="{{ $comment->blog->getUrl() }}" 
+                                           target="_blank" 
+                                           class="post-link">
                                             {{ $comment->blog->title }}
                                         </a>
                                     </td>
 
                                     <td>
-                                        <input type="hidden" id="commentDescription{{ $comment->id }}"
-                                            value="{{ nl2br($comment->comment) }}">
-                                        <button class="view-btn js-view-comment" data-comment-id="{{ $comment->id }}">
+                                        <input type="hidden" 
+                                               id="commentDescription{{ $comment->id }}" 
+                                               value="{{ nl2br($comment->comment) }}">
+                                        <button class="view-btn js-view-comment" 
+                                                data-comment-id="{{ $comment->id }}">
                                             {{ trans('public.view') }}
                                         </button>
                                     </td>
@@ -551,7 +521,7 @@
                                     </td>
 
                                     <td>
-                                        <span class="comment-date">{{ dateTimeFormat($comment->created_at, 'j M Y | H:i') }}</span>
+                                        <span class="comment-date">{{ dateTimeFormat($comment->created_at,'j M Y | H:i') }}</span>
                                     </td>
                                 </tr>
                             @endforeach
@@ -582,16 +552,14 @@
             <div class="modal-content">
                 <div class="modal-header">
                     <h5 class="modal-title">{{ trans('panel.comment') }}</h5>
-                    <button type="button" class="close js-close-modal" data-dismiss="modal" data-bs-dismiss="modal"
-                        aria-label="Close">
+                    <button type="button" class="close js-close-modal" data-dismiss="modal" data-bs-dismiss="modal" aria-label="Close">
                         <span aria-hidden="true" style="color: #0e0d0d;">&times;</span>
                     </button>
                 </div>
                 <div class="modal-body" id="commentModalBody" style="color: #0e0d0d;">
                 </div>
                 <div class="modal-footer">
-                    <button type="button" class="btn js-close-modal" data-dismiss="modal"
-                        data-bs-dismiss="modal">{{ trans('public.close') }}</button>
+                    <button type="button" class="btn js-close-modal" data-dismiss="modal" data-bs-dismiss="modal">{{ trans('public.close') }}</button>
                 </div>
             </div>
         </div>
@@ -602,27 +570,27 @@
 @push('scripts_bottom')
     <script src="/assets/default/vendors/select2/select2.min.js"></script>
     <script src="/assets/default/vendors/daterangepicker/daterangepicker.min.js"></script>
-
+    
     <script>
-        $(document).ready(function () {
+        $(document).ready(function() {
             // Initialize Select2
             $('.select2').select2({
                 width: '100%',
                 theme: 'default'
             });
-
+            
 
             // View comment
             var commentLang = '{{ trans('panel.comment') }}';
-
-            $('.js-view-comment').on('click', function () {
+            
+            $('.js-view-comment').on('click', function() {
                 var commentId = $(this).data('comment-id');
                 var commentText = $('#commentDescription' + commentId).val();
                 $('#commentModalBody').html(commentText);
                 $('#commentModal').modal('show');
             });
 
-            $('.js-close-modal').on('click', function (e) {
+            $('.js-close-modal').on('click', function(e) {
                 e.preventDefault();
                 $('#commentModal').modal('hide');
             });

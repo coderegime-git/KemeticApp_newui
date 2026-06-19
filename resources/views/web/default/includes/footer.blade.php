@@ -200,7 +200,6 @@
 
                 <ul class="footer-list mt-4">
                     <li><a href="https://www.kemetic.app" class="kemetic-footer-link">www.kemetic.app</a></li>
-                    <li><a href="mailto:info@kemetic.app" class="kemetic-footer-link">Email: info@kemetic.app</a></li>
                 </ul>
 
                 <div class="footer-social mt-4">
@@ -258,6 +257,7 @@
                             Your website</a></li>
                     <li><a href="/pages/Dropshipping-How-it-Works" class="kemetic-footer-link">Dropshipping</a></li>
                     <li><a href="/pages/Membership-How-it-works" class="kemetic-footer-link">Membership</a></li>
+                    <li><a href="/pages/Order-trackingcodes" class="kemetic-footer-link">Orders and Tracking codes</a></li>
                     <li><a href="/pages/ads" class="kemetic-footer-link">Ads</a></li>
                 </ul>
             </div>
@@ -350,8 +350,8 @@
                         <div class="border-left mx-5 mx-lg-15 h-100"></div>
 
                         <div class="d-flex align-items-center text-white font-14">
-                            <i data-feather="mail" width="20" height="20" class="mr-10"></i>
-                            {{ $generalSettings['site_email'] }}
+                            <!-- <i data-feather="mail" width="20" height="20" class="mr-10"></i> -->
+                           
                         </div>
                     @endif
                 </div>

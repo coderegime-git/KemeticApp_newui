@@ -339,6 +339,45 @@
     cursor: default;
 }
 
+
+/* ── Text Lesson Mobile Fix ── */
+@media (max-width: 767px) {
+    .kemetic-item-wrapper {
+        padding: 10px 8px;
+    }
+    .kemetic-item-header {
+        flex-wrap: wrap;
+        gap: 8px;
+    }
+    .kemetic-item-header .kemetic-title {
+        font-size: 13px;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        max-width: 130px;
+    }
+    .kemetic-collapse-body {
+        padding: 8px 2px;
+    }
+    .kemetic-input-group {
+        flex-wrap: nowrap;
+    }
+    .kemetic-radio-group {
+        flex-direction: column;
+        gap: 8px;
+    }
+    .kemetic-btn-footer {
+        flex-direction: column;
+    }
+    .kemetic-btn-footer button {
+        width: 100%;
+        margin-left: 0 !important;
+        margin-top: 6px;
+    }
+    .note-editor {
+        min-height: 120px !important;
+    }
+}
 </style>
 <li data-id="{{ !empty($chapterItem) ? $chapterItem->id :'' }}"
     class="accordion-row kemetic-item-wrapper mt-20">
@@ -622,7 +661,7 @@
                             <div class="kemetic-group">
                                 <label class="kemetic-label">{{ trans('update.access_after_day') }}</label>
                                 <input type="number"
-                                       class="kemetic-input js-ajax-access_after_day"
+                                       class="kemetic-input js-ajax-access_after_day" min="0"
                                        name="ajax[{{ !empty($textLesson) ? $textLesson->id : 'new' }}][access_after_day]"
                                        value="{{ !empty($textLesson) ? $textLesson->access_after_day : '' }}">
                             </div>

@@ -60,7 +60,6 @@ class LoginController extends Controller
             'pageTitle' => trans('auth.login'),
         ];
 
-
         return view('admin.auth.login', $data);
     }
 
@@ -124,6 +123,7 @@ class LoginController extends Controller
             $user = auth()->user();
 
             if (!empty($user)) {
+                
                 if (!$user->isAdmin()) {
                     Auth::logout();
                     $request->session()->invalidate();

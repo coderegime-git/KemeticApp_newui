@@ -72,17 +72,21 @@ class SaleController extends Controller
         $type = $request->input('type');
 
         if (!empty($from) and !empty($to)) {
+            // $from = strtotime($from);
+            // $to = strtotime($to);
             $from = strtotime($from . ' 00:00:00');
             $to = strtotime($to . ' 23:59:59');
 
             $query->whereBetween('created_at', [$from, $to]);
         } else {
             if (!empty($from)) {
+                // $from = strtotime($from);
                 $from = strtotime($from . ' 00:00:00');
                 $query->where('created_at', '>=', $from);
             }
 
             if (!empty($to)) {
+                // $to = strtotime($to);
                 $to = strtotime($to . ' 23:59:59');
 
                 $query->where('created_at', '<=', $to);

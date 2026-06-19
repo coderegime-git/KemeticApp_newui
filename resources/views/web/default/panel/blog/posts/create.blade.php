@@ -76,6 +76,7 @@
     padding: 10px 26px;
 }
 
+
 /* Summernote Modal Fixes */
 .note-modal .modal-content {
     background-color: #121212 !important;
@@ -150,7 +151,7 @@
 
                     {{-- TITLE --}}
                     <div class="form-group">
-                        <label class="input-label">{{ trans('admin/main.title') }}</label>
+                        <label class="input-label">{{ trans('admin/main.title') }} <span class="text-danger">*</span></label>
                         <input type="text" name="title"
                                class="form-control @error('title') is-invalid @enderror"
                                value="{{ (!empty($post) && !empty($post->translate($locale))) ? $post->translate($locale)->title : old('title') }}"
@@ -162,7 +163,7 @@
 
                     {{-- CATEGORY --}}
                     <div class="form-group">
-                        <label class="input-label">{{ trans('/admin/main.category') }}</label>
+                        <label class="input-label">{{ trans('admin/main.category') }} <span class="text-danger">*</span></label>
                         <select name="category_id"
                                 class="form-control @error('category_id') is-invalid @enderror">
                             <option disabled selected>{{ trans('admin/main.choose_category') }}</option>
@@ -180,7 +181,7 @@
 
                     {{-- COVER IMAGE --}}
                     <div class="form-group">
-                        <label class="input-label">{{ trans('public.cover_image') }}</label>
+                        <label class="input-label">{{ trans('public.cover_image') }} <span class="text-danger">*</span></label>
                         <div class="input-group">
                             <div class="input-group-prepend">
                                 <button type="button"
@@ -205,7 +206,7 @@
 
             {{-- DESCRIPTION --}}
             <div class="form-group mt-20">
-                <label class="input-label">{{ trans('public.description') }}</label>
+                <label class="input-label">{{ trans('public.description') }} <span class="text-danger">*</span></label>
                 <textarea id="summernote"
                           name="description"
                           class="summernote form-control @error('description') is-invalid @enderror">
@@ -218,7 +219,7 @@
 
             {{-- CONTENT --}}
             <div class="form-group mt-20">
-                <label class="input-label">{{ trans('admin/main.content') }}</label>
+                <label class="input-label">{{ trans('admin/main.content') }} <span class="text-danger">*</span></label>
                 <textarea id="contentSummernote"
                           name="content"
                           class="summernote form-control @error('content') is-invalid @enderror">
@@ -244,9 +245,8 @@
 
 @push('scripts_bottom')
 <script src="/assets/vendors/summernote/summernote-bs4.min.js"></script>
-<script src="/vendor/laravel-filemanager/js/stand-alone-button.js"></script>
 <script>
-    // Initialize file manager for images only
+    // Fix for Summernote modals close button in Bootstrap 5
     $(document).ready(function() {
         if($.fn.filemanager) {
             $('.panel-file-manager-image').filemanager('image', {
@@ -254,8 +254,7 @@
             });
         }
     });
-
-    // Fix for Summernote modals close button in Bootstrap 5
+    
     document.addEventListener('click', function(e) {
         if (e.target.closest('.note-modal .close')) {
             const modal = e.target.closest('.note-modal');

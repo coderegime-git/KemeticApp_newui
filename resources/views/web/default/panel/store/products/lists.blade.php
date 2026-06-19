@@ -335,10 +335,10 @@
                                                 {{ trans('public.edit') }}
                                             </a>
 
-                                            <a href="/panel/store/products/{{ $product->id }}/delete"
+                                            <!-- <a href="/panel/store/products/{{ $product->id }}/delete"
                                                class="delete-action dropdown-item text-danger mt-1">
                                                 {{ trans('public.delete') }}
-                                            </a>
+                                            </a> -->
                                         </div>
                                     </div>
                                 @endif
@@ -350,6 +350,12 @@
                             <div class="kemetic-price mt-10">
                                 @if($product->price > 0)
                                     <span class="price">{{ currencySign() }}{{ round($product->price) }}</span>
+                                    <!-- @if($product->getPriceWithActiveDiscountPrice() < $product->price)
+                                        <span class="price">{{ handlePrice($product->getPriceWithActiveDiscountPrice(),true,true,false,null,true,'store') }}</span>
+                                        <span class="old-price">{{ handlePrice($product->price,true,true,false,null,true,'store') }}</span>
+                                    @else
+                                        <span class="price">{{ handlePrice($product->price,true,true,false,null,true,'store') }}</span>
+                                    @endif -->
                                 @else
                                     <span class="price">{{ trans('public.free') }}</span>
                                 @endif
@@ -368,12 +374,13 @@
                                 </div>
 
                                 @if($product->isPhysical())
-                                <div><span>{{ trans('update.shipping_cost') }}</span>
+                                <!-- <div><span>{{ trans('update.shipping_cost') }}</span>
+                                    <strong>{{ !empty($product->delivery_fee) ? handlePrice($product->delivery_fee) : 0 }}</strong>
                                     <strong>{{ !empty($product->delivery_fee) ? currencySign() . round($product->delivery_fee) : 0 }}</strong>
                                 </div>
                                 <div><span>{{ trans('update.waiting_orders') }}</span>
                                     <strong>{{ $product->productOrders->whereIn('status',[\App\Models\ProductOrder::$waitingDelivery,\App\Models\ProductOrder::$shipped])->count() }}</strong>
-                                </div>
+                                </div> -->
                                 @endif
                             </div>
 

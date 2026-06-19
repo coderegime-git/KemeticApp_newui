@@ -3,25 +3,100 @@
     @php
         $rtlLanguages = !empty($generalSettings['rtl_languages']) ? $generalSettings['rtl_languages'] : [];
         $isRtl = ((in_array(mb_strtoupper(app()->getLocale()), $rtlLanguages)) or (!empty($generalSettings['rtl_layout']) and $generalSettings['rtl_layout'] == 1));
+ 
+        // ── Resolve OG values once cleanly ──────────────────────────────────
+        $siteName = $generalSettings['site_name'] ?? 'Kemetic App';
+        $ogTitle  = isset($pageTitle) && !empty($pageTitle)
+                        ? $pageTitle . ' | ' . $siteName
+                        : $siteName;
+        $ogDesc   = isset($pageDescription) && !empty($pageDescription)
+                        ? $pageDescription
+                        : 'Discover Kemetic wisdom, ancient Egyptian mystery school teachings, and esoteric knowledge on Kemetic App.';
+        $ogImage  = isset($pageMetaImage) && !empty($pageMetaImage)
+                        ? url($pageMetaImage)
+                        : url(!empty($generalSettings['fav_icon']) ? $generalSettings['fav_icon'] : '');
+        $ogUrl    = url()->current();
+        $ogRobot  = $pageRobot ?? 'index, follow';
+        $favicon  = !empty($generalSettings['fav_icon']) ? $generalSettings['fav_icon'] : '';
     @endphp
     <head>
-    <meta charset="UTF-8" />
-    <title>Kemetic App – Header Popovers</title>
-    <meta name="viewport" content="width=device-width, initial-scale=1" />
-
-    @include('web.default.includes.metas')
-        <title>{{ $pageTitle ?? '' }}{{ !empty($generalSettings['site_name']) ? (' | '.$generalSettings['site_name']) : '' }}</title>
-        
+        <meta charset="UTF-8">
+        <meta http-equiv="X-UA-Compatible" content="IE=edge">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+        <meta name="csrf-token" content="{{ csrf_token() }}">
+ 
+        {{--
+        ╔══════════════════════════════════════════════════════════════╗
+        ║  ALL META / OG TAGS FIRST — before ANY <script> tags        ║
+        ║  WhatsApp & Facebook bots read top-to-bottom.               ║
+        ║  If scripts appear first, they grab window.dataLayer        ║
+        ║  as the preview title/description.                          ║
+        ╚══════════════════════════════════════════════════════════════╝
+        --}}
+ 
+        {{-- ── Page Title (NEVER hardcode this) ───────────────────────── --}}
+        <title>{{ $ogTitle }}</title>
+ 
+        {{-- ── SEO ─────────────────────────────────────────────────────── --}}
+        <meta name="robots"       content="{{ $ogRobot }}">
+        <meta name="description"  content="{{ $ogDesc }}">
+        <link rel="canonical"     href="{{ $ogUrl }}">
+ 
+        {{-- ── Open Graph (WhatsApp / Facebook reads these) ───────────── --}}
+        <meta property="og:type"         content="website">
+        <meta property="og:site_name"    content="{{ $siteName }}">
+        <meta property="og:url"          content="{{ $ogUrl }}">
+        <meta property="og:title"        content="{{ $ogTitle }}">
+        <meta property="og:description"  content="{{ $ogDesc }}">
+        <meta property="og:image"        content="{{ $ogImage }}">
+        <meta property="og:image:width"  content="1200">
+        <meta property="og:image:height" content="630">
+ 
+        {{-- ── Twitter Card ─────────────────────────────────────────────── --}}
+        <meta name="twitter:card"        content="summary_large_image">
+        <meta name="twitter:title"       content="{{ $ogTitle }}">
+        <meta name="twitter:description" content="{{ $ogDesc }}">
+        <meta name="twitter:image"       content="{{ $ogImage }}">
+ 
+        {{-- ── Favicons & PWA ──────────────────────────────────────────── --}}
+        <link rel="shortcut icon"    type="image/x-icon" href="{{ url($favicon) }}">
+        <link rel="icon"                                  href="{{ url($favicon) }}">
+        <link rel="apple-touch-icon"                      href="{{ url($favicon) }}">
+        <link rel="home"                                  href="{{ url('') }}">
+        <link rel="manifest"                              href="/mix-manifest.json?v=4">
+ 
+        <meta name="theme-color"                       content="#FFF">
+        <meta name="apple-mobile-web-app-title"        content="{{ $siteName }}">
+        <meta name="apple-mobile-web-app-capable"      content="yes">
+        <meta name="apple-mobile-web-app-status-bar-style" content="default">
+        <meta name="mobile-web-app-capable"            content="yes">
+        <meta name="application-name"                  content="{{ $siteName }}">
+        <meta name="msapplication-TileColor"           content="#FFF">
+        <meta name="msapplication-TileImage"           content="/ms-icon-144x144.png">
+ 
+        {{-- ── Extra meta tags from DB/settings ──────────────────────── --}}
+        @include('web.default.includes.metas')
+ 
+        {{-- ── Page-specific meta overrides (e.g. reset-password page) ── --}}
+        @stack('meta_tags')
+ 
+        {{--
+        ╔══════════════════════════════════════════════════════════════╗
+        ║  CSS & SCRIPTS come AFTER all meta tags                     ║
+        ╚══════════════════════════════════════════════════════════════╝
+        --}}
+ 
         <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
         <link rel="stylesheet" href="/assets/default/vendors/sweetalert2/dist/sweetalert2.min.css">
         <link rel="stylesheet" href="/assets/default/vendors/toast/jquery.toast.min.css">
         <link rel="stylesheet" href="/assets/default/vendors/simplebar/simplebar.css">
-        <script src="https://code.jquery.com/jquery-3.7.1.js" integrity="sha256-eKhayi8LEQwp4NKxN+CfCh+3qOVUtJn3QNZ0TciWLP4=" crossorigin="anonymous"></script>
-
-        <!-- Main App CSS -->
         <link rel="stylesheet" href="/assets/default/css/app.css">
-
-        <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght@300;400;600&display=swap"/>
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght@300;400;600&display=swap">
+ 
+        <script src="https://code.jquery.com/jquery-3.7.1.js" integrity="sha256-eKhayi8LEQwp4NKxN+CfCh+3qOVUtJn3QNZ0TciWLP4=" crossorigin="anonymous"></script>
+ 
+        @stack('styles_top')
+ 
     </head>
     <style>
         .app-popup {
@@ -486,8 +561,7 @@
                         </div>
                     </header>
                     @yield('content')
-
-                    @include('web.default.includes.footer') 
+                    @include('web.default.includes.footer')
                 </div>
             </main>
             
@@ -551,11 +625,12 @@
                 const isAndroid = /Android/i.test(navigator.userAgent);
                 const isIOS = /iPhone|iPad|iPod/i.test(navigator.userAgent);
                 const popupDontShow = localStorage.getItem('appPopupDontShow');
+                const isOnApp = window.location.protocol === 'kemeticapp:';
                 const isHomePage = window.location.pathname === '/' || window.location.pathname === '/home';
-                const isNewsletterPage = window.location.pathname === '/pages/newsletter';
-                const isPanelMembershipPage = window.location.pathname === '/panel_membership';
-                const isMembershipPage = window.location.pathname === '/membership';
-                const isLoginPage = window.location.pathname === '/login';
+                // const isNewsletterPage = window.location.pathname === '/pages/newsletter';
+                // const isPanelMembershipPage = window.location.pathname === '/panel_membership';
+                // const isMembershipPage = window.location.pathname === '/membership';
+                // const isLoginPage = window.location.pathname === '/login';
 
                 // ─── DEEP LINK CONFIGURATION ──────────────────────────────────────────────
                 const DEEP_LINKS = {
@@ -568,8 +643,7 @@
                 };
                 // ──────────────────────────────────────────────────────────────────────────
 
-                // if (isMobile && !popupDontShow && (isAndroid || isIOS) && !isNewsletterPage && !isPanelMembershipPage 
-                //     && !isMembershipPage && !isLoginPage) {
+                // if (isMobile && !popupDontShow && (isAndroid || isIOS) && isHomePage) {
                 //     if (isAndroid) {
                 //         document.getElementById('android-container').style.display = 'block';
                 //     } else if (isIOS) {

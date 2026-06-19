@@ -83,6 +83,7 @@ class WebinarResource extends JsonResource
                     'assignments_average_grade' => $this->assignments_average_grade,
                     'forums_messages_count' => $this->forums_messages_count,
                     'forums_students_count' => $this->forums_students_count,
+
                     'students_roles' => $this->students_roles,
                     'quizzes_result_status' => $this->quiz_status,
                     'assignments_status' => $this->assignments_status,

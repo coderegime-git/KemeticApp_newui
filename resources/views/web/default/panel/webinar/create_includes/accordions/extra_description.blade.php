@@ -227,7 +227,7 @@
                                    value="{{ $defaultLocale }}">
 
                             <div class="kemetic-form-group">
-                                <label class="kemetic-label">{{ trans('public.image') }}</label>
+                                <label class="kemetic-label">{{ trans('public.image') }} <span class="text-danger">*</span></label>
 
                                 <div class="kemetic-input-group">
                                     <button type="button"
@@ -273,7 +273,7 @@
                             @endif
 
                             <div class="kemetic-form-group">
-                                <label class="kemetic-label">{{ trans('public.title') }}</label>
+                                <label class="kemetic-label">{{ trans('public.title') }} <span class="text-danger">*</span></label>
                                 <input type="text"
                                        name="ajax[{{ !empty($extraDescription) ? $extraDescription->id : 'new' }}][value]"
                                        class="kemetic-input js-ajax-value"

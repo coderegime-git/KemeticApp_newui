@@ -29,9 +29,9 @@ return [
     'mailers' => [
     'smtp' => [
         'transport' => 'smtp',
-        'host' => env('MAIL_HOST'),
-        'port' => env('MAIL_PORT'),
-        'encryption' => env('MAIL_ENCRYPTION'),
+        'host' => env('MAIL_HOST', 'smtp.office365.com'),
+        'port' => env('MAIL_PORT', 465),
+        'encryption' => env('MAIL_ENCRYPTION', 'ssl'),
         'username' => env('MAIL_USERNAME'),
         'password' => env('MAIL_PASSWORD'),
         'timeout' => null,

@@ -139,7 +139,7 @@
 
             {{-- TITLE --}}
             <div class="form-group">
-                <label class="input-label">{{ trans('public.chapter_title') }}</label>
+                <label class="input-label">{{ trans('public.chapter_title') }} <span class="text-danger">*</span></label>
                 <input type="text"
                        name="ajax[chapter][title]"
                        class="form-control js-ajax-title"

@@ -39,6 +39,7 @@ Route::group(['namespace' => 'Panel', 'prefix' => 'panel', 'middleware' => ['imp
             Route::get('/{id}/export-students-list', 'WebinarController@exportStudentsList');
             Route::post('/order-items', 'WebinarController@orderItems');
             Route::post('/{id}/getContentItemByLocale', 'WebinarController@getContentItemByLocale');
+            
 
             Route::group(['prefix' => '{webinar_id}/statistics'], function () {
                 Route::get('/', 'WebinarStatisticController@index');
@@ -387,7 +388,7 @@ Route::group(['namespace' => 'Panel', 'prefix' => 'panel', 'middleware' => ['imp
             Route::group(['prefix' => 'products'], function () {
                 Route::get('/', 'ProductController@index');
                 Route::get('/new', 'ProductController@create');
-                Route::get('/create', 'ProductController@create'); // Alias for /new
+                Route::get('/create', 'ProductController@create'); 
                 Route::post('/store', 'ProductController@store');
                 Route::get('/{id}/step/{step?}', 'ProductController@edit');
                 Route::get('/{id}/edit', 'ProductController@edit');
@@ -395,7 +396,7 @@ Route::group(['namespace' => 'Panel', 'prefix' => 'panel', 'middleware' => ['imp
                 Route::get('/{id}/delete', 'ProductController@destroy');
                 Route::post('/{id}/getContentItemByLocale', 'ProductController@getContentItemByLocale');
                 Route::post('/{id}/resync-cj', 'ProductController@resyncCj');
-
+                
                 Route::group(['prefix' => 'filters'], function () {
                     Route::get('/get-by-category-id/{categoryId}', 'ProductFilterController@getByCategoryId');
                 });
@@ -446,6 +447,7 @@ Route::group(['namespace' => 'Panel', 'prefix' => 'panel', 'middleware' => ['imp
             Route::get('/{id}/productOrder/{order_id}/invoice', 'MyPurchaseController@invoice');
             Route::get('/{order_id}/invoice', 'MyPurchaseController@memberinvoice');
         });
+
 
         Route::group(['prefix' => 'products'], function () {
             Route::get('/my-comments', 'CommentController@myComments');
@@ -570,13 +572,12 @@ Route::group(['namespace' => 'Panel', 'prefix' => 'panel', 'middleware' => ['imp
         Route::get('/', 'AiContentController@index');
         Route::post('/generate', 'AiContentController@generate');
     });
-    
+
     // Reels management
     Route::resources([
         'reels' => 'ReelController'
     ]);
 
-    // CJ Dropshipping
     Route::group(['prefix' => 'cj-products'], function () {
         Route::get('/', [CJProductController::class, 'index'])->name('panel.cj.products.index');
         Route::get('/{pid}', [CJProductController::class, 'show'])->name('panel.cj.products.show');

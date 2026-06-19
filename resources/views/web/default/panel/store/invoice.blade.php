@@ -144,7 +144,7 @@
                                         <div class="col-md-6">
                                             <address>
                                                 <strong>{{ trans('admin/main.buyer') }}:</strong><br>
-                                                {{ !empty($buyer) ? $buyer->full_name : '' }}
+                                                   {{ !empty($buyer) ? $buyer->full_name : '' }}
                                             </address>
                                             <address class="mt-2">
                                                 <strong>{{ trans('update.buyer_address') }}:</strong><br>
@@ -164,7 +164,7 @@
                                         <div class="col-md-6">
                                             <address>
                                                 <strong>{{ trans('admin/main.seller') }}:</strong><br>
-                                                {{ !empty($seller) ? $seller->full_name : '' }}
+                                                   {{ !empty($seller) ? $seller->full_name : '' }}
                                             </address>
                                         </div>
 

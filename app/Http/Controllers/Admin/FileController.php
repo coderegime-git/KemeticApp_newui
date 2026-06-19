@@ -555,12 +555,8 @@ class FileController extends Controller
         if (!empty($file)) {
 
             if ($file->storage == "secure_host") {
-                try {
-                    $bunnyVideoStream = new BunnyVideoStream();
-                    $bunnyVideoStream->deleteVideo($file->file);
-                } catch (\Exception $ex) {
-                    \Illuminate\Support\Facades\Log::error('BunnyVideoStream delete error (Admin): ' . $ex->getMessage());
-                }
+                $bunnyVideoStream = new BunnyVideoStream();
+                $bunnyVideoStream->deleteVideo($file->file);
             }
 
 

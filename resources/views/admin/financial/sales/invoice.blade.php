@@ -115,6 +115,7 @@
                                                                         @if(!empty($sale->amount))
                                                                             {{ handlePrice($sale->amount) }}
                                                                         @else
+                                                                            <!-- {{ trans('public.free') }} -->
                                                                             {{ $sale->payment_method == 'manual' ? trans('public.manual') : trans('public.free') }}
                                                                         @endif
                                                                     </td>
@@ -129,6 +130,7 @@
                                                                         @if(!empty($sale->total_amount))
                                                                             {{ handlePrice($sale->total_amount) }}
                                                                         @else
+                                                                            <!-- 0 -->
                                                                             {{ $sale->payment_method == 'manual' ? trans('public.manual') : 0 }}
                                                                         @endif
                                                                     </td>
@@ -169,6 +171,7 @@
                                                                         @if(!empty($sale->total_amount))
                                                                             {{ handlePrice($sale->total_amount) }}
                                                                         @else
+                                                                            <!-- - -->
                                                                             {{ $sale->payment_method == 'manual' ? trans('public.manual') : '-' }}
                                                                         @endif
                                                                     </div>

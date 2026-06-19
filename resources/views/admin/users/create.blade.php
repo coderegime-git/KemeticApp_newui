@@ -26,6 +26,31 @@
                                 <div class="col-12 col-md-6 col-lg-6">
                                     <form action="{{ getAdminPanelUrl() }}/users/store" method="Post">
                                         {{ csrf_field() }}
+                                        <div class="form-group">
+                                            <label>First Name</label>
+                                            <input type="text" name="first_name"
+                                                   class="form-control  @error('first_name') is-invalid @enderror"
+                                                   value="{{ old('first_name') }}" required
+                                                   placeholder="First name"/>
+                                            @error('first_name')
+                                            <div class="invalid-feedback">
+                                                {{ $message }}
+                                            </div>
+                                            @enderror
+                                        </div>
+
+                                        <div class="form-group">
+                                            <label>Last Name</label>
+                                            <input type="text" name="last_name"
+                                                   class="form-control  @error('last_name') is-invalid @enderror"
+                                                   value="{{ old('last_name') }}" required
+                                                   placeholder="Last name"/>
+                                            @error('last_name')
+                                            <div class="invalid-feedback">
+                                                {{ $message }}
+                                            </div>
+                                            @enderror
+                                        </div>
 
                                         <div class="form-group">
                                             <label>{{ trans('/admin/main.full_name') }}</label>

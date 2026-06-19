@@ -18,6 +18,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Validation\ValidationException;
 use App\Models\Api\UserFirebaseSessions;
+
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Mail;
@@ -25,7 +26,6 @@ use Illuminate\Support\Facades\Mail;
 class RegisterController extends Controller
 {
     use UserFormFieldsTrait;
-    
     protected array $blockedEmailDomains = [
         // Disposable / Temporary
         'mailinator.com', '10minutemail.com', 'guerrillamail.com', 'temp-mail.org',
@@ -46,15 +46,14 @@ class RegisterController extends Controller
         $domain = strtolower(substr(strrchr($email, '@'), 1));
         return in_array($domain, $this->blockedEmailDomains);
     }
-
-
+    
     public function stepRegister(Request $request, $step)
     {
         if ($step == 1) {
             return $this->stepOne($request);
         } elseif ($step == 2) {
             return $this->stepTwo($request);
-        } elseif ($step == 3) {
+        }  elseif ($step == 3) {
             return $this->stepThree($request);
         }
     
@@ -75,8 +74,8 @@ class RegisterController extends Controller
             // 'country_code' => ($username == 'mobile') ? 'required' : 'nullable',
             $username => ($username == 'mobile') ? 'required|numeric' : 'required|string|email|max:255',
             'full_name' => 'required|string|min:3',
-            'first_name' => 'required|string|min:3',
-            'last_name' => 'required|string|min:3',
+            // 'first_name' => 'required|string|min:3',
+            // 'last_name' => 'required|string|min:3',
             'password' => 'required|string|min:6|confirmed',
             'password_confirmation' => 'required|same:password',
         ];
@@ -88,6 +87,7 @@ class RegisterController extends Controller
                 return apiResponse2(0, 'invalid_email_domain', trans('This email provider is not allowed. Please use a valid email address.'));
             }
         }
+    
     
         if ($username == 'mobile') {
             $data[$username] = ltrim($data['country_code'], '+') . ltrim($data[$username], '0');
@@ -126,8 +126,8 @@ class RegisterController extends Controller
             'role_id' => $roleId,
             $username => $data[$username],
             'full_name' => $data['full_name'],
-            'first_name' => $data['first_name'],
-            'last_name' => $data['last_name'],
+            'first_name' => $data['first_name'] ?? null,
+            'last_name' => $data['last_name'] ?? null,
             'status' => User::$pending,
             'password' => Hash::make($data['password']),
             // 'country_id' => $data['country_id'],
@@ -223,7 +223,7 @@ class RegisterController extends Controller
         //     'user_id' => $user->id
         // ]);
     }
-
+    
     public function stepTwo(Request $request)
     {
         $data = $request->all();
@@ -342,16 +342,16 @@ class RegisterController extends Controller
         validateParam($data, [
             'user_id' => 'required|exists:users,id',
             'full_name' => 'required|string|min:3',
-            'first_name' => 'required|string|min:3',
-            'last_name' => 'required|string|min:3',
+            // 'first_name' => 'required|string|min:3',
+            // 'last_name' => 'required|string|min:3',
             'referral_code' => 'nullable|exists:affiliates_codes,code'
         ]);
     
         $user = User::find($data['user_id']);
         $user->update([
             'full_name' => $data['full_name'],
-            'first_name' => $data['first_name'],
-            'last_name' => $data['last_name'],
+            'first_name' => $data['first_name'] ?? null,
+            'last_name' => $data['last_name'] ?? null,
         ]);
     
         $enableRegistrationBonus = false;

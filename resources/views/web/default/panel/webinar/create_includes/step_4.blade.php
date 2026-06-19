@@ -112,9 +112,24 @@
     /* make icons gold */
     .kemetic-card [data-feather] { color: var(--k-gold); }
 
-    /* responsive */
     @media (max-width: 768px){
-        .kemetic-card { padding: 14px; }
+        .kemetic-card { padding: 10px; overflow-x: hidden; }
+        .kemetic-section { margin-top: 15px; }
+        .kemetic-accordion .card .card-header {
+            flex-wrap: wrap;
+            gap: 8px;
+        }
+        .kemetic-accordion .card .card-body {
+            padding: 10px;
+        }
+        .kemetic-fab {
+            width: 100%;
+            text-align: center;
+        }
+        .mobile-full-width {
+            width: 100% !important;
+            margin-bottom: 10px;
+        }
     }
 
     /* CHECKBOX */
@@ -255,57 +270,67 @@
 }
 
 
-.select2-container--default .select2-selection--single {
-    background: #0d0d0d !important;
-    border: 1px solid rgba(242,201,76,.35) !important;
-    border-radius: 14px !important;
-    height: 45px !important;
-    display: flex;
-    align-items: center;
-    color: #e0e0e0 !important;
-}
-
-/* text */
-.select2-container--default .select2-selection--single .select2-selection__rendered {
-    color: #e0e0e0 !important;
-    line-height: 45px !important;
-}
-
-/* arrow */
-.select2-container--default .select2-selection--single .select2-selection__arrow b {
-    border-color: #f2c94c transparent transparent transparent !important;
-}
-
-/* dropdown */
-.select2-dropdown {
-    background: #0f0f0f !important;
-    border: 1px solid rgba(242,201,76,.35) !important;
-    border-radius: 12px !important;
-}
-
-/* options */
-.select2-results__option {
-    color: #e0e0e0 !important;
-    padding: 10px 14px !important;
-}
-
-/* hover */
-.select2-results__option--highlighted {
-    background: rgba(242,201,76,.15) !important;
-    color: #fff !important;
-}
-
-/* selected */
-.select2-results__option[aria-selected=true] {
-    background: rgba(242,201,76,.25) !important;
-}
-
-/* search box */
-.select2-search--dropdown .select2-search__field {
-    background: #0d0d0d !important;
-    border: 1px solid rgba(242,201,76,.35) !important;
-    color: #fff !important;
-    border-radius: 8px !important;
+@media (max-width: 767px) {
+    .kemetic-chapter-header {
+        flex-wrap: wrap;
+        gap: 10px;
+        padding: 12px;
+    }
+    .kemetic-chapter-header .header-left {
+        width: 100%;
+        min-width: 0;
+    }
+    .kemetic-chapter-header .header-right {
+        width: 100%;
+        justify-content: flex-start;
+        flex-wrap: wrap;
+        gap: 6px;
+    }
+    .kemetic-chapter-info {
+        min-width: 0;
+        overflow: hidden;
+    }
+    .kemetic-chapter-info .chapter-title {
+        display: block;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+    .kemetic-chapter-panel {
+        padding: 10px;
+    }
+    .kemetic-chapter-content {
+        padding: 8px;
+    }
+    .kemetic-accordion-item {
+        padding: 6px;
+    }
+    .kemetic-accordion-header {
+        flex-wrap: wrap;
+        gap: 8px;
+        padding: 6px;
+    }
+    .kemetic-accordion-left {
+        min-width: 0;
+        flex: 1;
+        overflow: hidden;
+    }
+    .kemetic-accordion-left .kemetic-title {
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        max-width: 120px;
+    }
+    .kemetic-accordion-actions {
+        flex-wrap: wrap;
+        gap: 4px;
+    }
+    .kemetic-panel-inner {
+        padding: 10px;
+    }
+    .kemetic-dropdown-menu {
+        min-width: 140px;
+    }
 }
 </style>
 @endpush
@@ -314,14 +339,14 @@
 <section class="kemetic-section">
     <div class="kemetic-card">
 
-        <div class="d-flex align-items-center justify-content-between mb-10">
-            <div>
-                <h2 class="section-title after-line">{{ trans('public.chapters') }} <span class="text-muted">({{ trans('public.optional') }})</span></h2>
+        <div class="d-flex flex-column flex-md-row align-items-start align-items-md-center justify-content-between mb-10">
+            <div class="mb-3 mb-md-0">
+                <h2 class="section-title after-line">{{ trans('public.chapters') }} ({{ trans('public.optional') }})</h2>
             </div>
 
-            <div>
+            <div class="mobile-full-width">
                 <button type="button"
-                        class="js-add-chapter kemetic-fab"
+                        class="js-add-chapter kemetic-fab mobile-full-width"
                         data-webinar-id="{{ $webinar->id }}">
                     <i data-feather="plus" style="width:16px;height:16px;margin-right:8px;"></i>
                     {{ trans('public.new_chapter') }}

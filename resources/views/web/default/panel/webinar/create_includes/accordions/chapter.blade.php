@@ -189,6 +189,61 @@
     color: #bdbdbd;
 }
 
+
+/* ── Chapter Mobile Fix ── */
+@media (max-width: 767px) {
+    .kemetic-chapter-item {
+        padding: 0;
+        overflow-x: hidden;
+    }
+    .kemetic-chapter-header {
+        flex-wrap: wrap;
+        gap: 8px;
+        padding: 12px 10px;
+    }
+    .header-left {
+        width: 100%;
+        min-width: 0;
+    }
+    .header-left .kemetic-icon-box {
+        width: 30px;
+        height: 30px;
+        flex-shrink: 0;
+    }
+    .kemetic-chapter-info {
+        min-width: 0;
+        overflow: hidden;
+    }
+    .kemetic-chapter-info .chapter-title {
+        display: block;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        font-size: 14px;
+    }
+    .header-right {
+        width: 100%;
+        justify-content: flex-start;
+        flex-wrap: wrap;
+        gap: 4px;
+    }
+    .kemetic-btn-icon {
+        padding: 4px;
+        margin-left: 4px;
+    }
+    .kemetic-chapter-panel {
+        padding: 8px;
+    }
+    .kemetic-chapter-content {
+        padding: 6px;
+    }
+    .kemetic-dropdown-menu {
+        min-width: 140px;
+    }
+    .kemetic-draggable-list > li {
+        margin-bottom: 8px;
+    }
+}
 </style>
 
 <div class="kemetic-chapter-wrapper mt-10">

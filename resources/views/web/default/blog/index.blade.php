@@ -6,7 +6,7 @@
     <!-- Membership banner -->
     <div class="shop-banner">
       <div class="article-chip">💎 Unlock Unlimited Articles, Reels & Live</div>
-      <div class="article-chip">€1/mo • €10/yr • €33 lifetime</div>
+      <div class="article-chip">€10/yr • €33 lifetime</div>
        @if(auth()->check())
           <button class="shop-cta"><a href="/membership">Upgrade</a></button>
         @else

@@ -36,7 +36,6 @@
     .profile-grid::-webkit-scrollbar-thumb:hover {
       background: #ffd769; 
     }
-   
   </style>
 
   <div class="profile-wrap">
@@ -116,7 +115,7 @@
 
     <!-- Tabs -->
     <nav class="profile-tabs" id="tabs">
-      <a class="profile-tab active" data-tab="reels">Reels</a>
+      <a class="profile-tab active" data-tab="reels">Portals</a>
       <a class="profile-tab" data-tab="courses">Courses</a>
       <!-- <a class="profile-tab" data-tab="live">Livestreams</a> -->
       <a class="profile-tab" data-tab="shop">Shop</a>
@@ -144,13 +143,13 @@
             @if($user->role->caption === 'Wisdom Keeper' || $user->role->caption === 'wisdom_keeper')
               @include(getTemplate() . '.includes.no-result',[
                   'file_name' => 'webinar.png',
-                  'title' => trans('site.instructor_not_have_reel'),
+                  'title' =>'Instructor doesn\'t have any portals!',
                   'hint' => '',
               ])
             @else
               @include(getTemplate() . '.includes.no-result',[
                   'file_name' => 'webinar.png',
-                  'title' => 'This Seeker hasn\'t shared any reels yet',
+                  'title' => 'This Seeker hasn\'t shared any portals yet',
                   'hint' => '',
               ])
             @endif

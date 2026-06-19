@@ -1,502 +1,491 @@
 @extends('web.default.layouts.newapp')
+
 @push('styles_top')
     <link rel="stylesheet" href="/assets/default/vendors/daterangepicker/daterangepicker.min.css">
+    <style>
+        :root {
+            --k-bg: #0b0b0b;
+            --k-card: #141414;
+            --k-gold: #d4af37;
+            --k-gold-soft: rgba(212,175,55,.25);
+            --k-border: rgba(212,175,55,.15);
+            --k-text: #f5f5f5;
+            --k-muted: #9a9a9a;
+            --k-radius: 18px;
+            --k-shadow: 0 12px 40px rgba(0,0,0,.65);
+        }
+
+        .kemetic-page {
+            background: radial-gradient(circle at top, #1a1a1a, #000);
+            min-height: 100vh;
+            padding: 25px;
+            color: var(--k-text);
+        }
+
+        .section-title {
+            color: var(--k-gold);
+            font-weight: 700;
+            letter-spacing: .6px;
+            position: relative;
+            margin-bottom: 1rem;
+            font-size: 1.3rem;
+        }
+
+        .section-title::after {
+            content: "";
+            display: block;
+            width: 70px;
+            height: 1px;
+            margin-top: 6px;
+            background: linear-gradient(to right, var(--k-gold), transparent);
+        }
+
+        .panel-section-card {
+            background: linear-gradient(180deg, #121212, #0a0a0a);
+            border: 1px solid var(--k-border);
+            border-radius: var(--k-radius);
+            padding: 25px;
+            box-shadow: var(--k-shadow);
+            margin-bottom: 2rem;
+        }
+
+        .form-group label,
+        .input-label {
+            color: var(--k-gold);
+            font-size: 13px;
+            font-weight: 600;
+            margin-bottom: 8px;
+            display: block;
+            letter-spacing: 0.3px;
+        }
+
+        .form-control {
+            background: #1a1a1a !important;
+            color: var(--k-text) !important;
+            border: 1px solid var(--k-border) !important;
+            border-radius: 12px !important;
+            height: 44px;
+            padding: 0 15px;
+            transition: all 0.25s ease;
+            width: 100%;
+        }
+
+        .form-control:focus {
+            border-color: var(--k-gold) !important;
+            box-shadow: 0 0 8px var(--k-gold-soft) !important;
+            outline: none;
+        }
+
+        .form-control::placeholder {
+            color: var(--k-muted);
+            opacity: 0.7;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #d4af37, #b8962e) !important;
+            color: #000 !important;
+            font-weight: 700;
+            border-radius: 12px;
+            height: 44px;
+            border: none;
+            transition: all .25s ease;
+            padding: 0 20px;
+            font-size: 14px;
+            letter-spacing: 0.3px;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(212,175,55,.35);
+            color: #000 !important;
+        }
+
+        .btn-gray200 {
+            background: rgba(212,175,55,0.12);
+            border: 1px solid var(--k-border);
+            color: var(--k-gold);
+            border-radius: 10px;
+            font-size: 13px;
+            font-weight: 600;
+            padding: 6px 14px;
+            transition: 0.25s ease;
+        }
+
+        .btn-gray200:hover {
+            background: var(--k-gold);
+            color: #000;
+        }
+
+        .custom-table {
+            width: 100%;
+            border-collapse: collapse;
+            border-spacing: 0 12px;
+        }
+
+        .custom-table thead th {
+            background: transparent;
+            color: var(--k-gold);
+            font-size: 13px;
+            font-weight: 600;
+            text-align: center;
+            border: none;
+            padding: 15px;
+        }
+
+        .custom-table thead th.text-left {
+            text-align: left;
+        }
+
+        .custom-table tbody tr {
+            background: #0f0f0f;
+            border: 1px solid var(--k-border);
+            border-radius: 14px;
+            transition: all 0.3s ease;
+        }
+
+        .custom-table tbody tr:hover {
+            background: #151515;
+            box-shadow: 0 10px 28px rgba(212, 175, 55, 0.12);
+        }
+
+        .custom-table tbody td {
+            border: none;
+            padding: 16px 18px;
+            vertical-align: middle;
+            color: var(--k-text);
+            text-align: center;
+        }
+
+        .custom-table tbody td.text-left {
+            text-align: left;
+        }
+
+        .custom-table a.text-dark-blue {
+            color: var(--k-gold) !important;
+            font-weight: 500;
+            text-decoration: none;
+        }
+
+        .custom-table a.text-dark-blue:hover {
+            text-decoration: underline;
+            color: #ffd700 !important;
+        }
+
+        /* STATUS BADGES — matches product file */
+        .text-primary {
+            color: #2ecc71 !important;
+            font-weight: 600;
+            background: rgba(46,204,113,0.15);
+            padding: 4px 12px;
+            border-radius: 20px;
+            display: inline-block;
+        }
+
+        .text-warning {
+            color: #f1c40f !important;
+            font-weight: 600;
+            background: rgba(241,196,15,0.15);
+            padding: 4px 12px;
+            border-radius: 20px;
+            display: inline-block;
+        }
+
+        .text-dark-blue.font-weight-500 {
+            color: var(--k-gold) !important;
+            font-weight: 500;
+            font-size: 13px;
+        }
+
+        .btn-transparent {
+            color: var(--k-gold) !important;
+            background: none;
+            border: none;
+            padding: 5px 10px;
+            cursor: pointer;
+            width: 100%;
+            text-align: left;
+        }
+
+        .btn-transparent:hover {
+            color: #ffd700 !important;
+        }
+
+        .table-actions .dropdown-menu {
+            background: #0f0f0f !important;
+            border: 1px solid var(--k-border) !important;
+            border-radius: 12px !important;
+            padding: 8px !important;
+            min-width: 120px !important;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5) !important;
+        }
+
+        .table-actions .dropdown-menu .dropdown-item {
+            color: var(--k-text) !important;
+            font-size: 13px !important;
+            padding: 8px 12px !important;
+            border-radius: 8px !important;
+            transition: all 0.2s ease !important;
+            display: block !important;
+            width: 100% !important;
+            text-align: left !important;
+            border: none !important;
+            background: transparent !important;
+            cursor: pointer !important;
+        }
+
+        .table-actions .dropdown-menu .dropdown-item:hover {
+            background: rgba(212, 175, 55, 0.12) !important;
+            color: var(--k-gold) !important;
+            text-decoration: none !important;
+        }
+
+        .table-actions .dropdown-menu .delete-action {
+            color: #e74c3c !important;
+        }
+
+        .table-actions .dropdown-menu .delete-action:hover {
+            background: rgba(231, 76, 60, 0.15) !important;
+            color: #ff6b6b !important;
+        }
+
+        .no-result {
+            background: #0f0f0f;
+            border: 1px dashed var(--k-border);
+            border-radius: 18px;
+            padding: 60px 20px;
+            text-align: center;
+            margin-top: 20px;
+        }
+
+        .no-result img {
+            filter: brightness(0.9) sepia(0.3);
+            opacity: 0.9;
+            max-width: 120px;
+        }
+
+        .no-result .no-result-content h2 {
+            color: var(--k-gold);
+            font-size: 20px;
+            margin: 20px 0 10px;
+        }
+
+        .no-result .no-result-content p {
+            color: var(--k-muted);
+            font-size: 14px;
+            max-width: 400px;
+            margin: 0 auto;
+        }
+
+        .pagination .page-link {
+            background: #111;
+            color: var(--k-gold);
+            border: 1px solid var(--k-border);
+            border-radius: 10px;
+            margin: 0 3px;
+        }
+
+        .pagination .page-item.active .page-link {
+            background: var(--k-gold);
+            border-color: var(--k-gold);
+            color: #000;
+        }
+
+        .pagination .page-item.disabled .page-link {
+            background: #1a1a1a;
+            color: var(--k-muted);
+            border-color: #2a2a2a;
+        }
+
+        @media (max-width: 768px) {
+            .custom-table thead {
+                display: none;
+            }
+
+            .custom-table tbody tr {
+                display: block;
+                margin-bottom: 15px;
+            }
+
+            .custom-table tbody td {
+                display: block;
+                text-align: left;
+                padding: 12px;
+            }
+
+            .custom-table tbody td:before {
+                content: attr(data-label);
+                float: left;
+                font-weight: 600;
+                color: var(--k-gold);
+                margin-right: 10px;
+                min-width: 100px;
+            }
+        }
+    </style>
 @endpush
-<style>
-    /* =========================================================
-   KEMETIC COMMENTS PAGE
-   Black • Gold • Premium Panel UI
-========================================================= */
 
-:root {
-    --k-bg: #0d0d0d;
-    --k-card: #161616;
-    --k-border: rgba(242, 201, 76, 0.25);
-    --k-gold: #F2C94C;
-    --k-gold-soft: rgba(242, 201, 76, 0.18);
-    --k-text: #e6e6e6;
-    --k-muted: #9a9a9a;
-    --k-radius: 16px;
-}
-
-/* PAGE BACKGROUND */
-.panel-content,
-section {
-    background: transparent;
-}
-
-/* SECTION TITLE */
-.section-title {
-    font-size: 18px;
-    font-weight: 700;
-    color: var(--k-gold);
-    letter-spacing: 0.4px;
-    position: relative;
-}
-
-.section-title::after {
-    content: "";
-    display: block;
-    width: 60px;
-    height: 1px;
-    margin-top: 6px;
-    background: linear-gradient(to right, var(--k-gold), transparent);
-}
-
-/* PANEL CARD */
-.panel-section-card {
-    background: linear-gradient(180deg, #161616, #101010);
-    border: 1px solid var(--k-border);
-    border-radius: var(--k-radius);
-    box-shadow: 0 20px 55px rgba(0, 0, 0, 0.75);
-}
-
-/* FORM LABEL */
-.input-label {
-    font-size: 13px;
-    font-weight: 600;
-    color: var(--k-gold);
-    margin-bottom: 6px;
-}
-
-/* INPUTS */
-.form-control {
-    background: #0f0f0f;
-    border: 1px solid #2a2a2a;
-    color: var(--k-text);
-    border-radius: 12px;
-    padding: 11px 14px;
-    font-size: 14px;
-    transition: 0.25s ease;
-}
-
-.form-control:focus {
-    background: #141414;
-    border-color: var(--k-gold);
-    box-shadow: 0 0 0 2px var(--k-gold-soft);
-    outline: none;
-}
-
-.form-control::placeholder {
-    color: var(--k-muted);
-}
-
-/* INPUT GROUP */
-.input-group-text {
-    background: #1a1a1a;
-    border: 1px solid #2a2a2a;
-    color: var(--k-gold);
-    border-radius: 12px 0 0 12px;
-}
-
-/* BUTTONS */
-.btn {
-    border-radius: 12px;
-    font-weight: 600;
-    transition: 0.25s ease;
-}
-
-.btn-primary {
-    background: linear-gradient(135deg, #F2C94C, #E5A100);
-    border: none;
-    color: #000;
-}
-
-.btn-primary:hover {
-    box-shadow: 0 12px 30px rgba(242, 201, 76, 0.45);
-    transform: translateY(-2px);
-}
-
-/* VIEW BUTTON */
-.btn-gray200 {
-    background: #1c1c1c;
-    border: 1px solid #2a2a2a;
-    color: var(--k-gold);
-}
-
-.btn-gray200:hover {
-    background: var(--k-gold);
-    color: #000;
-}
-
-/* TABLE */
-.custom-table {
-    background: transparent;
-    border-collapse: separate;
-    border-spacing: 0 10px;
-}
-
-.custom-table thead th {
-    border: none;
-    font-size: 13px;
-    color: var(--k-muted);
-    font-weight: 600;
-}
-
-.custom-table tbody tr {
-    background: #141414;
-    border: 1px solid var(--k-border);
-    border-radius: 12px;
-    transition: 0.25s ease;
-}
-
-.custom-table tbody tr:hover {
-    background: #1b1b1b;
-    box-shadow: 0 10px 25px rgba(242, 201, 76, 0.12);
-}
-
-.custom-table td {
-    border: none;
-    padding: 16px;
-    color: var(--k-text);
-}
-
-.custom-table a {
-    color: var(--k-gold);
-    text-decoration: none;
-}
-
-.custom-table a:hover {
-    text-decoration: underline;
-}
-
-/* STATUS */
-.text-primary,
-.text-warning {
-    color: var(--k-gold) !important;
-}
-
-/* DROPDOWN */
-.table-actions .dropdown-menu {
-    background: #161616 !important;
-    border: 1px solid var(--k-border) !important;
-    border-radius: 12px !important;
-    padding: 8px !important;
-    min-width: 120px !important;
-    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5) !important;
-}
-
-.table-actions .dropdown-menu .dropdown-item {
-    color: var(--k-text) !important;
-    font-size: 14px !important;
-    padding: 8px 12px !important;
-    border-radius: 8px !important;
-    transition: all 0.2s ease !important;
-    display: block !important;
-    width: 100% !important;
-    text-align: left !important;
-    border: none !important;
-    background: transparent !important;
-    cursor: pointer !important;
-}
-
-.table-actions .dropdown-menu .dropdown-item:hover {
-    background: rgba(242, 201, 76, 0.12) !important;
-    color: var(--k-gold) !important;
-    text-decoration: none !important;
-}
-
-.table-actions .dropdown-menu .delete-action {
-    color: #e74c3c !important;
-}
-
-.table-actions .dropdown-menu .delete-action:hover {
-    background: rgba(231, 76, 60, 0.15) !important;
-    color: #ff6b6b !important;
-}
-
-/* PAGINATION */
-.pagination .page-link {
-    background: #161616;
-    border: 1px solid #2a2a2a;
-    color: var(--k-text);
-}
-
-.pagination .page-item.active .page-link {
-    background: var(--k-gold);
-    border-color: var(--k-gold);
-    color: #000;
-}
-
-/* NO RESULT */
-.no-result-card {
-    background: #141414;
-    border: 1px dashed var(--k-border);
-    border-radius: var(--k-radius);
-}
-
-/* RESPONSIVE */
-@media (max-width: 768px) {
-    .custom-table tbody tr {
-        display: block;
-    }
-}
-
-/* =====================================
-   KEMETIC FILTER PANEL – BLACK & GOLD
-===================================== */
-
-.kemetic-section {
-    color: #fff;
-}
-
-/* Title */
-.kemetic-title {
-    font-size: 20px;
-    font-weight: 600;
-    color: #d4af37;
-}
-
-/* Card */
-.kemetic-card {
-    background: linear-gradient(145deg, #0b0b0b, #161616);
-    border-radius: 16px;
-    padding: 22px 24px;
-    border: 1px solid rgba(212, 175, 55, 0.25);
-    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.6);
-}
-
-/* Labels */
-.kemetic-label {
-    font-size: 13px;
-    color: #cbb86e;
-    margin-bottom: 6px;
-    display: block;
-}
-
-/* Form Group */
-.kemetic-form-group {
-    width: 100%;
-}
-
-/* Input Group */
-.kemetic-input-group {
-    display: flex;
-    align-items: center;
-    border-radius: 10px;
-    background: rgba(255, 255, 255, 0.04);
-    border: 1px solid rgba(212, 175, 55, 0.25);
-    transition: 0.3s ease;
-}
-
-.kemetic-input-group:focus-within {
-    border-color: #d4af37;
-    box-shadow: 0 0 0 2px rgba(212, 175, 55, 0.18);
-}
-
-/* Icon */
-.kemetic-icon {
-    padding: 0 12px;
-    color: #d4af37;
-}
-
-.kemetic-icon svg {
-    width: 18px;
-    height: 18px;
-}
-
-/* Inputs */
-.kemetic-input {
-    width: 100%;
-    background: transparent;
-    border: none;
-    outline: none;
-    padding: 12px;
-    color: #ffffff;
-    font-size: 14px;
-}
-
-.kemetic-input::placeholder {
-    color: rgba(255, 255, 255, 0.45);
-}
-
-/* Button */
-.kemetic-btn {
-    background: linear-gradient(135deg, #d4af37, #b8962e);
-    color: #000;
-    border: none;
-    border-radius: 12px;
-    padding: 12px;
-    font-weight: 600;
-    letter-spacing: 0.4px;
-    transition: all 0.3s ease;
-}
-
-.kemetic-btn:hover {
-    background: linear-gradient(135deg, #e8c963, #d4af37);
-    box-shadow: 0 8px 28px rgba(212, 175, 55, 0.45);
-    transform: translateY(-1px);
-}
-
-</style>
 @section('content')
+    {{-- ✅ FIX 1: kemetic-page wrapper added (was missing in original) --}}
+    <div class="kemetic-page">
 
-    <section class="kemetic-section">
-        <h2 class="section-title kemetic-title">
-            {{ trans('panel.filter_comments') }}
-        </h2>
+        <section>
+            <h2 class="section-title">{{ trans('panel.filter_comments') }}</h2>
 
-        <div class="kemetic-card mt-20">
-            <form action="" method="get" class="row g-3 align-items-end">
+            <div class="panel-section-card">
+                <form action="" method="get">
+                    <div class="row">
 
-                {{-- Date Range --}}
-                <div class="col-12 col-lg-5">
-                    <div class="row g-3">
-
-                        {{-- From --}}
-                        <div class="col-12 col-md-6">
-                            <div class="kemetic-form-group">
-                                <label class="kemetic-label">
-                                    {{ trans('public.from') }}
-                                </label>
-
-                                <div class="kemetic-input-group">
-                                    <input type="date"
-                                        class="kemetic-input text-center"
-                                        name="from"
-                                        value="{{ request()->get('from') }}">
-                                        <!-- <span class="input-group-text kemetic-icon bg-gold text-black">
-                                            <i data-feather="calendar" width="18" height="18"></i>
-                                        </span> -->
-
-                                        <!-- <input type="text" name="from" autocomplete="off"
-                                            class="form-control kemetic-input @if(request()->get('from')) datepicker @else datefilter @endif"
-                                            value="{{ request()->get('from','') }}"> -->
+                        {{-- Date Range --}}
+                        <div class="col-12 col-lg-5">
+                            <div class="row">
+                                <div class="col-12 col-md-6">
+                                    <div class="form-group">
+                                        <label>{{ trans('public.from') }}</label>
+                                        <input type="date"
+                                            class="form-control"
+                                            name="from"
+                                            value="{{ request()->get('from') }}">
+                                    </div>
+                                </div>
+                                <div class="col-12 col-md-6">
+                                    <div class="form-group">
+                                        <label>{{ trans('public.to') }}</label>
+                                        <input type="date"
+                                            class="form-control"
+                                            name="to"
+                                            value="{{ request()->get('to') }}">
+                                    </div>
                                 </div>
                             </div>
                         </div>
 
-                        {{-- To --}}
-                        <div class="col-12 col-md-6">
-                            <div class="kemetic-form-group">
-                                <label class="kemetic-label">
-                                    {{ trans('public.to') }}
-                                </label>
+                        {{-- Webinar Search --}}
+                        <div class="col-12 col-lg-5">
+                            <div class="form-group">
+                                <label>{{ trans('panel.webinar') }}</label>
+                                <input type="text"
+                                    name="webinar"
+                                    value="{{ request()->get('webinar') }}"
+                                    class="form-control"
+                                    placeholder="{{ trans('panel.webinar') }}"/>
+                            </div>
+                        </div>
 
-                                <div class="kemetic-input-group">
-                                    <input type="date"
-                                        class="kemetic-input text-center"
-                                        name="to"
-                                        value="{{ request()->get('to') }}">
-
-                                    <!-- <span class="input-group-text kemetic-icon bg-gold text-black">
-                                        <i data-feather="calendar" width="18" height="18"></i>
-                                    </span> -->
-                                    
-                                    <!-- <input type="text" name="to" autocomplete="off"
-                                        class="form-control kemetic-input @if(request()->get('to')) datepicker @else datefilter @endif"
-                                        value="{{ request()->get('to','') }}"> -->
-                                </div>
+                        {{-- Submit --}}
+                        <div class="col-12 col-lg-2 d-flex align-items-end">
+                            <div class="form-group w-100">
+                                <label class="d-none d-lg-block">&nbsp;</label>
+                                <button type="submit" class="btn btn-primary w-100">
+                                    {{ trans('public.show_results') }}
+                                </button>
                             </div>
                         </div>
 
                     </div>
-                </div>
+                </form>
+            </div>
+        </section>
 
-                {{-- Webinar --}}
-                <div class="col-12 col-lg-5">
-                    <div class="kemetic-form-group">
-                        <label class="kemetic-label">
-                            {{ trans('panel.webinar') }}
-                        </label>
-                        <div class="kemetic-input-group">
-                            <input
-                                type="text"
-                                name="webinar"
-                                value="{{ request()->get('webinar') }}"
-                                class="kemetic-input"
-                                placeholder="Search webinar / course"
-                            />
-                        </div>
-                    </div>
-                </div>
+        <section class="mt-35">
+            <h2 class="section-title">{{ trans('panel.my_comments') }}</h2>
 
-                {{-- Button --}}
-                <div class="col-12 col-lg-2">
-                    <button type="submit" class="kemetic-btn w-100">
-                        {{ trans('public.show_results') }}
-                    </button>
-                </div>
+            @if(!empty($comments) and !$comments->isEmpty())
 
-            </form>
-        </div>
-    </section>
-
-
-    <section class="mt-35">
-        <h2 class="section-title">{{ trans('panel.my_comments') }}</h2>
-
-        @if(!empty($comments) and !$comments->isEmpty())
-
-            <div class="panel-section-card py-20 px-25 mt-20">
-                <div class="row">
-                    <div class="col-12 ">
-                        <div class="table-responsive">
-                            <table class="custom-table text-center ">
-                                <thead>
+                <div class="panel-section-card">
+                    <div class="table-responsive">
+                        <table class="custom-table text-center">
+                            <thead>
                                 <tr>
-                                    <th class="text-left text-gray">{{ trans('panel.webinar') }}</th>
-                                    <th class="text-gray text-center">{{ trans('panel.comment') }}</th>
-                                    <th class="text-gray text-center">{{ trans('public.status') }}</th>
-                                    <th class="text-gray text-center">{{ trans('public.date') }}</th>
+                                    <th class="text-left">{{ trans('panel.webinar') }}</th>
+                                    <th>{{ trans('panel.comment') }}</th>
+                                    <th>{{ trans('public.status') }}</th>
+                                    <th>{{ trans('public.date') }}</th>
                                     <th></th>
                                 </tr>
-                                </thead>
-                                <tbody>
-
+                            </thead>
+                            <tbody>
                                 @foreach($comments as $comment)
                                     <tr>
-                                        <td class="text-left align-middle" width="35%">
-                                            <a class="text-dark-blue font-weight-500" href="{{ $comment->webinar->getUrl() }}" target="_blank">{{ $comment->webinar->title }}</a>
-                                        </td>
-                                        <td class="align-middle">
-                                            <button type="button" data-comment-id="{{ $comment->id }}" class="js-view-comment btn btn-sm btn-gray200">{{ trans('public.view') }}</button>
+                                        {{-- ✅ FIX 2: data-label added for responsive mobile view --}}
+                                        <td class="text-left" data-label="{{ trans('panel.webinar') }}">
+                                            <a class="text-dark-blue" href="{{ $comment->webinar->getUrl() }}" target="_blank">
+                                                {{ $comment->webinar->title }}
+                                            </a>
                                         </td>
 
-                                        <td class="align-middle">
+                                        <td data-label="{{ trans('panel.comment') }}">
+                                            <button type="button"
+                                                data-comment-id="{{ $comment->id }}"
+                                                class="js-view-comment btn-gray200 btn-sm">
+                                                {{ trans('public.view') }}
+                                            </button>
+                                        </td>
+
+                                        {{-- ✅ FIX 3: status badges now use pill style matching product file --}}
+                                        <td data-label="{{ trans('public.status') }}">
                                             @if($comment->status == 'active')
-                                                <span class="text-primary text-dark-blue font-weight-500">{{ trans('public.published') }}</span>
+                                                <span class="text-primary">{{ trans('public.published') }}</span>
                                             @else
-                                                <span class="text-warning text-dark-blue font-weight-500">{{ trans('public.pending') }}</span>
+                                                <span class="text-warning">{{ trans('public.pending') }}</span>
                                             @endif
                                         </td>
 
-                                        <td class="text-dark-blue font-weight-500 align-middle">{{ dateTimeFormat($comment->created_at,'j M Y | H:i') }}</td>
-                                        <td class="align-middle text-right">
-                                            <input type="hidden" id="commentDescription{{ $comment->id }}" value="{{ nl2br($comment->comment) }}">
+                                        <td data-label="{{ trans('public.date') }}" class="text-dark-blue font-weight-500">
+                                            {{ dateTimeFormat($comment->created_at,'j M Y | H:i') }}
+                                        </td>
+
+                                        <td>
+                                            <input type="hidden"
+                                                id="commentDescription{{ $comment->id }}"
+                                                value="{{ nl2br($comment->comment) }}">
+
                                             <div class="btn-group dropdown table-actions">
-                                                <button type="button" class="btn-transparent dropdown-toggle" data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                                                {{-- ✅ FIX 4: data-toggle (Bootstrap 4) consistent with project --}}
+                                                <button type="button"
+                                                    class="btn-transparent dropdown-toggle"
+                                                    data-toggle="dropdown">
                                                     <i data-feather="more-vertical" height="20"></i>
                                                 </button>
                                                 <div class="dropdown-menu">
-                                                    <button type="button" data-comment-id="{{ $comment->id }}" class="dropdown-item js-edit-comment btn-transparent">{{ trans('public.edit') }}</button>
-                                                    <a href="/panel/webinars/comments/{{ $comment->id }}/delete" class="dropdown-item delete-action btn-transparent d-block mt-10">{{ trans('public.delete') }}</a>
+                                                    <button type="button"
+                                                        data-comment-id="{{ $comment->id }}"
+                                                        class="dropdown-item js-edit-comment btn-transparent">
+                                                        {{ trans('public.edit') }}
+                                                    </button>
+                                                    <a href="/panel/webinars/comments/{{ $comment->id }}/delete"
+                                                        class="dropdown-item delete-action btn-transparent">
+                                                        {{ trans('public.delete') }}
+                                                    </a>
                                                 </div>
                                             </div>
                                         </td>
                                     </tr>
                                 @endforeach
-                                </tbody>
-                            </table>
+                            </tbody>
+                        </table>
+                    </div>
+
+                    {{-- ✅ FIX 5: pagination moved inside card + hasPages() guard added --}}
+                    @if($comments->hasPages())
+                        <div class="my-30">
+                            {{ $comments->appends(request()->input())->links('vendor.pagination.panel') }}
                         </div>
+                    @endif
+                </div>
+
+            @else
+                <div class="no-result">
+                    <div class="no-result-content">
+                        <img src="/assets/default/img/no-results/comment.png"
+                            alt="{{ trans('panel.my_comments_no_result') }}">
+                        <h2>{{ trans('panel.my_comments_no_result') }}</h2>
+                        <p>{{ trans('panel.my_comments_no_result_hint') }}</p>
                     </div>
                 </div>
-            </div>
+            @endif
+        </section>
 
-        @else
-
-            @include(getTemplate() . '.includes.no-result',[
-                'file_name' => 'comment.png',
-                'title' => trans('panel.my_comments_no_result'),
-                'hint' =>  nl2br(trans('panel.my_comments_no_result_hint')) ,
-            ])
-
-        @endif
-    </section>
-
-    <div class="my-30" style="padding: 10px;">
-        {{ $comments->appends(request()->input())->links('vendor.pagination.panel') }}
-    </div>
+    </div>{{-- end .kemetic-page --}}
 @endsection
 
 @push('scripts_bottom')

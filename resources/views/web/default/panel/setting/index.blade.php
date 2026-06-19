@@ -212,11 +212,11 @@
                 <div class="settings-profile-info">
                     <h2>{{ $user->full_name}}</h2>
                     <span>{{ $user->role->caption}}</span>
-                    <div class="settings-profile-badges">
+                    <!-- <div class="settings-profile-badges">
                         <span class="settings-badge settings-chakra">Global Rank 12</span>
                         <span class="settings-badge">42.3K Likes</span>
                         <span class="settings-badge">3.9K Reviews</span>
-                    </div>
+                    </div> -->
                 </div>
             </div>
             <!-- <div class="settings-profile-actions">
@@ -394,7 +394,7 @@
                                 €1 / month • Full access to Kemetic App
                             </div>
                             <div class="settings-card-sub">
-                                Courses, PDFs, audio, reels, livestreams, articles & more.
+                                Courses, PDFs, audio, Portals, livestreams, articles & more.
                             </div>
                         </div>
 
@@ -488,7 +488,7 @@
                         <div class="settings-header-title">
                             <h1>Profile Photos</h1>
                             <span>
-                                Your main profile picture appears on Reels, Courses, Books, Chat and Livestreams.
+                                Your main profile picture appears on Portals, Courses, Books, Chat and Livestreams.
                             </span>
                         </div>
 
@@ -517,7 +517,7 @@
                                 </div>
 
                                 <p class="settings-photo-help">
-                                    This photo will be shown on your Reels, Courses, Books, Articles, and Chat profile.
+                                    This photo will be shown on your Portals, Courses, Books, Articles, and Chat profile.
                                 </p>
 
                                 <div class="settings-main-actions">
@@ -598,7 +598,7 @@
                                 <!-- <button class="settings-btn settings-btn-ghost">Discard changes</button> -->
                                 <button type="submit" class="settings-btn settings-btn-primary">Save photos</button>
                             </div>
-                            <div class="settings-muted-link">
+                            <div class="settings-muted">
                                 Tip: choose one strong portrait as your main photo so Seekers trust your energy instantly.
                             </div>
                         </section>
@@ -1368,10 +1368,20 @@
                 });
             });
 
+            let isEducationSaving = false;
+
             // Education Save/Update - UNIFIED handler (checks #educationEditId to decide ADD vs UPDATE)
-            $(document).on('click', '#educationModal #saveEducation', function(e) {
+            $(document).off('click', '#educationModal #saveEducation').on('click', '#educationModal #saveEducation', function(e) {
                 e.preventDefault();
+                e.stopPropagation();
+
                 var $this = $(this);
+
+                if (isEducationSaving || $this.hasClass('loadingbar')) {
+                    return false;
+                }
+
+                isEducationSaving = true;
                 $this.addClass('loadingbar primary').prop('disabled', true);
 
                 var val = $('#educationModal #new_education_val').val().trim();
@@ -1384,8 +1394,10 @@
                 if (!val) {
                     $('#educationModal #new_education_val').addClass('is-invalid');
                     $this.removeClass('loadingbar primary').prop('disabled', false);
+                    isEducationSaving = false;
                     return;
                 }
+
                 $('#educationModal #new_education_val').removeClass('is-invalid');
 
                 var data = { value: val, institution: institution, year: year, name: 'education' };
@@ -1395,40 +1407,60 @@
                     ? ('/panel/setting/metas/' + editId + '/update')
                     : '/panel/setting/metas';
 
-                $.post(url, data, function(result) {
-                    if (result && result.code == 200) {
-                        Swal.fire({
-                            icon: 'success',
-                            html: '<h3 class="font-20 text-center text-dark-blue py-25">success</h3>',
-                            showConfirmButton: false,
-                            width: '25rem',
-                        });
-                        educationModal.style.display = 'none';
-                        setTimeout(() => { window.location.reload(); }, 500);
-                    } else {
+                $.ajax({
+                    url: url,
+                    type: 'POST',
+                    data: data,
+                    success: function(result) {
+                        if (result && result.code == 200) {
+                            Swal.fire({
+                                icon: 'success',
+                                html: '<h3 class="font-20 text-center text-dark-blue py-25">Saved successfully</h3>',
+                                showConfirmButton: false,
+                                width: '25rem',
+                            });
+                            educationModal.style.display = 'none';
+                            resetEducationModal();
+                            setTimeout(() => { window.location.reload(); }, 500);
+                        } else {
+                            Swal.fire({
+                                icon: 'error',
+                                html: '<h3 class="font-20 text-center text-dark-blue py-25">Error saving</h3>',
+                                showConfirmButton: false,
+                                width: '25rem',
+                            });
+                            $this.removeClass('loadingbar primary').prop('disabled', false);
+                            isEducationSaving = false;
+                        }
+                    },
+                    error: function() {
                         Swal.fire({
                             icon: 'error',
-                            html: '<h3 class="font-20 text-center text-dark-blue py-25">error</h3>',
+                            html: '<h3 class="font-20 text-center text-dark-blue py-25">Error occurred</h3>',
                             showConfirmButton: false,
                             width: '25rem',
                         });
                         $this.removeClass('loadingbar primary').prop('disabled', false);
+                        isEducationSaving = false;
                     }
-                }).fail(function() {
-                    Swal.fire({
-                        icon: 'error',
-                        html: '<h3 class="font-20 text-center text-dark-blue py-25">error</h3>',
-                        showConfirmButton: false,
-                        width: '25rem',
-                    });
-                    $this.removeClass('loadingbar primary').prop('disabled', false);
                 });
             });
 
+            let isExperienceSaving = false;
+
             // Experience Save/Update - UNIFIED handler (checks #experienceEditId to decide ADD vs UPDATE)
-            $(document).on('click', '#experienceModal #saveExperience', function(e) {
+            $(document).off('click', '#experienceModal #saveExperience').on('click', '#experienceModal #saveExperience', function(e) {
+
                 e.preventDefault();
+                e.stopPropagation();
+
                 var $this = $(this);
+
+                if (isExperienceSaving || $this.hasClass('loadingbar')) {
+                    return false;
+                }
+                
+                isExperienceSaving = true;
                 $this.addClass('loadingbar primary').prop('disabled', true);
 
                 var val = $('#experienceModal #new_experience_val').val().trim();
@@ -1443,8 +1475,10 @@
                 if (!val) {
                     $('#experienceModal #new_experience_val').addClass('is-invalid');
                     $this.removeClass('loadingbar primary').prop('disabled', false);
+                    isExperienceSaving = false;
                     return;
                 }
+
                 $('#experienceModal #new_experience_val').removeClass('is-invalid');
 
                 var data = {
@@ -1461,33 +1495,42 @@
                     ? ('/panel/setting/metas/' + editId + '/update')
                     : '/panel/setting/metas';
 
-                $.post(url, data, function(result) {
-                    if (result && result.code == 200) {
-                        Swal.fire({
-                            icon: 'success',
-                            html: '<h3 class="font-20 text-center text-dark-blue py-25">success</h3>',
-                            showConfirmButton: false,
-                            width: '25rem',
-                        });
-                        experienceModal.style.display = 'none';
-                        setTimeout(() => { window.location.reload(); }, 500);
-                    } else {
+                $.ajax({
+                    url: url,
+                    type: 'POST',
+                    data: data,
+                    success: function(result) {
+                        if (result && result.code == 200) {
+                            Swal.fire({
+                                icon: 'success',
+                                html: '<h3 class="font-20 text-center text-dark-blue py-25">Saved successfully</h3>',
+                                showConfirmButton: false,
+                                width: '25rem',
+                            });
+                            experienceModal.style.display = 'none';
+                            resetExperienceModal();
+                            setTimeout(() => { window.location.reload(); }, 500);
+                        } else {
+                            Swal.fire({
+                                icon: 'error',
+                                html: '<h3 class="font-20 text-center text-dark-blue py-25">Error saving</h3>',
+                                showConfirmButton: false,
+                                width: '25rem',
+                            });
+                            $this.removeClass('loadingbar primary').prop('disabled', false);
+                            isExperienceSaving = false;
+                        }
+                    },
+                    error: function() {
                         Swal.fire({
                             icon: 'error',
-                            html: '<h3 class="font-20 text-center text-dark-blue py-25">error</h3>',
+                            html: '<h3 class="font-20 text-center text-dark-blue py-25">Error occurred</h3>',
                             showConfirmButton: false,
                             width: '25rem',
                         });
                         $this.removeClass('loadingbar primary').prop('disabled', false);
+                        isExperienceSaving = false;
                     }
-                }).fail(function() {
-                    Swal.fire({
-                        icon: 'error',
-                        html: '<h3 class="font-20 text-center text-dark-blue py-25">error</h3>',
-                        showConfirmButton: false,
-                        width: '25rem',
-                    });
-                    $this.removeClass('loadingbar primary').prop('disabled', false);
                 });
             });
 

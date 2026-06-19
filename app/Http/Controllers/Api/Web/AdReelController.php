@@ -462,6 +462,7 @@ class AdReelController extends Controller
             'visibleInDiscoveryTabs' => $plan->is_membership
         ]);
     }
+
     public function destroy(Request $request, $id)
     {
         $user = auth('api')->user();

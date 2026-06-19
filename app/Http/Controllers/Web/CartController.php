@@ -264,9 +264,9 @@ class CartController extends Controller
                     return response()->json([
                         'status' => 200,
                         'discount_id' => $discountCoupon->id,
-                        'total_discount' => handlePrice($calculate["total_discount"]),
-                        'total_tax' => handlePrice($calculate["tax_price"]),
-                        'total_amount' => handlePrice($calculate["total"]),
+                        'total_discount' => $calculate["total_discount"],
+                        'total_tax' => $calculate["tax_price"],
+                        'total_amount' => $calculate["total"],
                     ], 200);
                 }
             }
@@ -698,6 +698,7 @@ class CartController extends Controller
                     'totalCashbackAmount' => $totalCashbackAmount,
                     'previousUrl' => url()->previous(),
                 ];
+
                 if ($request->ajax()) {
                     return response()->json([
                         'status' => 200,
@@ -705,6 +706,7 @@ class CartController extends Controller
                         'msg' => 'success'
                     ]);
                 }
+
                 return view(getTemplate() . '.cart.payment', $data);
             } else {
                 return $this->handlePaymentOrderWithZeroTotalAmount($order);
@@ -740,6 +742,7 @@ class CartController extends Controller
                 'zip_code' => $data['zip_code'] ?? $user->zip_code,
                 'house_no' => $data['house_no'] ?? $user->house_no,
                 'address' => $data['address'] ?? $user->address,
+                'address1' => $data['address1'] ?? $user->address1,
             ]);
         }
         else{
@@ -752,6 +755,7 @@ class CartController extends Controller
                 'zip_code'      => $data['zip_code'] ?? null,
                 'house_no'      => $data['house_no'] ?? null,
                 'address'       => $data['address'] ?? null,
+                'address1'      => $data['address1'] ?? null,
                 // 'full_name'     => $name ?? null,
                 'first_name'    => $data['first_name'] ?? null,
                 'last_name'     => $data['last_name'] ?? null,
@@ -780,10 +784,11 @@ class CartController extends Controller
     public function createOrderAndOrderItems(Request $request, $carts, $calculate, $user, $user_as_a_guest, $discountCoupon = null)
     {
         $data = $request->all();
+
         \Illuminate\Support\Facades\Log::info('createOrderAndOrderItems Data:', $data);
 
         if(!$user_as_a_guest){
-            // Use raw DB update to guarantee fields are saved (bypasses any Eloquent observer/mass-assignment issues)
+            
             \Illuminate\Support\Facades\DB::table('users')->where('id', $user->id)->update([
                 'mobile'        => $data['phone']         ?? $user->mobile,
                 'first_name'    => $data['first_name']    ?? $user->first_name,
@@ -795,6 +800,7 @@ class CartController extends Controller
                 'zip_code'      => $data['zip_code']      ?? $user->zip_code,
                 'house_no'      => $data['house_no']      ?? $user->house_no,
                 'address'       => $data['address']       ?? $user->address,
+                'address1'      => $data['address1']      ?? $user->address1,
             ]);
         }
         else{
@@ -807,6 +813,7 @@ class CartController extends Controller
                 'zip_code'      => $data['zip_code'] ?? null,
                 'house_no'      => $data['house_no'] ?? null,
                 'address'       => $data['address'] ?? null,
+                'address1'      => $data['address1'] ?? null,
                 // 'full_name'     => $name ?? null,
                 'first_name'    => $data['first_name'] ?? null,
                 'last_name'     => $data['last_name'] ?? null,

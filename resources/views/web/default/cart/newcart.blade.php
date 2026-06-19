@@ -352,18 +352,14 @@
                     <span>Estimated Shipping</span>
                     <span class="cart-shipping-value">{{ handlePrice($productDeliveryFee ?? 0) }}</span>
                   </div>
-                  @if(isset($totalDiscount) && $totalDiscount > 0)
-                    <div class="ck-summary-row" style="color:#00E676;">
-                      <span>Discount</span>
-                      <span>-{{ handlePrice($totalDiscount) }}</span>
-                    </div>
-                  @endif
-                  @if(isset($taxPrice) && $taxPrice > 0)
-                    <div class="ck-summary-row">
-                      <span>Tax / VAT</span>
-                      <span>{{ handlePrice($taxPrice) }}</span>
-                    </div>
-                  @endif
+                  <div class="ck-summary-row cart-discount-row" style="color:#00E676; display: {{ (isset($totalDiscount) && $totalDiscount > 0) ? 'flex' : 'none' }};">
+                    <span>Discount</span>
+                    <span class="cart-discount-value">-{{ handlePrice($totalDiscount ?? 0) }}</span>
+                  </div>
+                  <div class="ck-summary-row cart-tax-row" style="display: {{ (isset($taxPrice) && $taxPrice > 0) ? 'flex' : 'none' }};">
+                    <span>Tax / VAT</span>
+                    <span class="cart-tax-value">{{ handlePrice($taxPrice ?? 0) }}</span>
+                  </div>
                   <div class="ck-summary-row total">
                     <span>{{ trans('cart.total') }}</span>
                     <span class="cart-total-value">{{ handlePrice($total) }}</span>
@@ -545,10 +541,17 @@
                   </div>
 
                   <div class="ck-field">
-                    <label for="address">{{ trans('update.address') }} <span style="color:var(--ck-danger);">*</span></label>
+                    <label for="address">Address Line 1 <span style="color:var(--ck-danger);">*</span></label>
                     <textarea id="address" name="address" rows="3" class="ck-input @error('address') is-invalid @enderror">{{ !empty($user) ? $user->address : '' }}</textarea>
                     <div class="ck-invalid ck-client-error" id="error-address" style="display:none;color:var(--ck-danger);font-size:12px;margin-top:4px;">Please fill required fields</div>
                     @error('address')<div class="ck-invalid" style="color:var(--ck-danger);">{{ $message }}</div>@enderror
+                  </div>
+
+                  <div class="ck-field">
+                    <label for="address1">Address Line 2 </label>
+                    <textarea id="address1" name="address1" rows="3" class="ck-input @error('address1') is-invalid @enderror">{{ !empty($user) ? $user->address1 : '' }}</textarea>
+                    <div class="ck-invalid ck-client-error" id="error-address1" style="display:none;color:var(--ck-danger);font-size:12px;margin-top:4px;">Please fill required fields</div>
+                    @error('address1')<div class="ck-invalid" style="color:var(--ck-danger);">{{ $message }}</div>@enderror
                   </div>
 
                   <div class="ck-field">
@@ -600,11 +603,35 @@
                       <textarea id="billing_address" name="billing_address" rows="3" class="ck-input"></textarea>
                     </div>
                     <div class="ck-field">
+                      <label for="billing_address1">Address Line 2</label>
+                      <textarea id="billing_address1" name="billing_address1" rows="3" class="ck-input"></textarea>
+                    </div>
+                    <div class="ck-field">
                       <label for="billing_zip">ZIP / Postal Code</label>
                       <input id="billing_zip" name="billing_zip" type="text" class="ck-input" maxlength="10" oninput="if(this.value.length>10)this.value=this.value.slice(0,10);">
                     </div>
                   </div>
                 </section>
+
+                <section class="ck-section">
+                  <h2 class="ck-section-title">Promo Code</h2>
+                  <div class="ck-row" style="display:flex; gap:10px;">
+                    <input id="coupon_input" class="ck-input" placeholder="Enter promo code" style="flex:1;">
+                    <button type="button" id="checkCouponBtn" class="ck-cta ghost"
+                      style="width:auto; margin:0; padding:17px 24px; font-size:14px; background:rgba(255,255,255,.05); color:#fff; border:1px solid rgba(255,255,255,.12);">Apply</button>
+                  </div>
+                  <div id="coupon_invalid" style="display:none;color:var(--ck-danger);font-size:12px;margin-top:8px;">{{ trans('cart.coupon_invalid') }}</div>
+                  <div id="coupon_valid" style="display:none;color:#22c55e;font-size:12px;margin-top:8px;">{{ trans('cart.coupon_valid') }}</div>
+                </section>
+
+                <!-- <section class="ck-section">
+                  <h2 class="ck-section-title">Promo Code</h2>
+                  <div class="ck-row" style="display:flex; gap:10px;">
+                    <input id="promo" class="ck-input" placeholder="Enter promo code" style="flex:1;">
+                    <button type="button" class="ck-cta ghost"
+                      style="width:auto; margin:0; padding:17px 24px; font-size:14px;">Apply</button>
+                  </div>
+                </section> -->
 
                 {{-- Legal Confirmation (moved from Step 1) --}}
                 <section class="ck-section" id="legalSection">
@@ -623,6 +650,8 @@
                     <span style="font-size:14px;color:var(--ck-text);">I want to receive order updates and Kemetic App notifications.</span>
                   </label>
                 </section>
+
+                
 
               </div>
 
@@ -663,18 +692,14 @@
                     <span>Shipping</span>
                     <span class="cart-shipping-value">{{ handlePrice($productDeliveryFee ?? 0) }}</span>
                   </div>
-                  @if(isset($totalDiscount) && $totalDiscount > 0)
-                    <div class="ck-summary-row" style="color:#00E676;">
-                      <span>Discount</span>
-                      <span>-{{ handlePrice($totalDiscount) }}</span>
-                    </div>
-                  @endif
-                  @if(isset($taxPrice) && $taxPrice > 0)
-                    <div class="ck-summary-row">
-                      <span>Tax / VAT</span>
-                      <span>{{ handlePrice($taxPrice) }}</span>
-                    </div>
-                  @endif
+                  <div class="ck-summary-row cart-discount-row" style="color:#00E676; display: {{ (isset($totalDiscount) && $totalDiscount > 0) ? 'flex' : 'none' }};">
+                    <span>Discount</span>
+                    <span class="cart-discount-value">-{{ handlePrice($totalDiscount ?? 0) }}</span>
+                  </div>
+                  <div class="ck-summary-row cart-tax-row" style="display: {{ (isset($taxPrice) && $taxPrice > 0) ? 'flex' : 'none' }};">
+                    <span>Tax / VAT</span>
+                    <span class="cart-tax-value">{{ handlePrice($taxPrice ?? 0) }}</span>
+                  </div>
                   <div class="ck-summary-row total">
                     <span>Total</span>
                     <span class="cart-total-value">{{ handlePrice($total) }}</span>
@@ -813,6 +838,8 @@
     var currentCurrency = '{{ currency() }}';
     var baseSubTotal = {{ floatval($subTotal ?? 0) }};
     var baseShipping = {{ floatval($productDeliveryFee ?? 0) }};
+    var baseDiscount = {{ floatval($totalDiscount ?? 0) }};
+    var baseTax = {{ floatval($taxPrice ?? 0) }};
 
     var userProfileCountryId = '{{ !empty($user) && $user->country_id ? $user->country_id : "" }}';
 
@@ -840,7 +867,27 @@
     function updateDomTotals() {
       document.querySelectorAll('.cart-subtotal-value').forEach(function(el) { el.textContent = formatMoney(baseSubTotal); });
       document.querySelectorAll('.cart-shipping-value').forEach(function(el) { el.textContent = formatMoney(baseShipping); });
-      document.querySelectorAll('.cart-total-value').forEach(function(el) { el.textContent = formatMoney(baseSubTotal + baseShipping); });
+      
+      var discountRows = document.querySelectorAll('.cart-discount-row');
+      if (baseDiscount > 0) {
+        discountRows.forEach(function(el) { el.style.display = 'flex'; });
+        document.querySelectorAll('.cart-discount-value').forEach(function(el) { el.textContent = '-' + formatMoney(baseDiscount); });
+      } else {
+        discountRows.forEach(function(el) { el.style.display = 'none'; });
+      }
+
+      var taxRows = document.querySelectorAll('.cart-tax-row');
+      if (baseTax > 0) {
+        taxRows.forEach(function(el) { el.style.display = 'flex'; });
+        document.querySelectorAll('.cart-tax-value').forEach(function(el) { el.textContent = formatMoney(baseTax); });
+      } else {
+        taxRows.forEach(function(el) { el.style.display = 'none'; });
+      }
+
+      var total = baseSubTotal + baseShipping + baseTax - baseDiscount;
+      if (total < 0) total = 0;
+
+      document.querySelectorAll('.cart-total-value').forEach(function(el) { el.textContent = formatMoney(total); });
       document.querySelectorAll('.cart-item-unit-price').forEach(function(el) { el.textContent = formatMoney(parseFloat(el.getAttribute('data-base')) || 0); });
       document.querySelectorAll('.cart-item-line-total').forEach(function(el) { el.textContent = formatMoney(parseFloat(el.getAttribute('data-base')) || 0); });
     }
@@ -929,6 +976,7 @@
       if (nextBtn2) {
         nextBtn2.addEventListener('click', function() {
           var ok = true;
+          var firstErrorEl = null;
           ['firstName', 'lastName', 'email', 'phone'].forEach(function(id) {
             var el = document.getElementById(id);
             var errEl = document.getElementById('error-' + id);
@@ -942,11 +990,20 @@
                 var emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
                 if (!emailRegex.test(val)) { isValid = false; if (errEl) errEl.textContent = 'Please enter a valid email address'; }
               }
-              if (!isValid) { el.style.borderColor = 'var(--ck-danger)'; if (errEl) errEl.style.display = 'block'; ok = false; }
+              if (!isValid) { 
+                el.style.borderColor = 'var(--ck-danger)'; 
+                if (errEl) errEl.style.display = 'block'; 
+                ok = false; 
+                if (!firstErrorEl) firstErrorEl = el;
+              }
               else { el.style.borderColor = ''; if (errEl) errEl.style.display = 'none'; }
             }
           });
-          if (ok) showPanel(3);
+          if (ok) {
+            showPanel(3);
+          } else if (firstErrorEl) {
+            firstErrorEl.scrollIntoView({ behavior: 'smooth', block: 'center' });
+          }
         });
       }
 
@@ -967,6 +1024,7 @@
 
           /* ── 2. Validate shipping address fields ── */
           var ok = true;
+          var firstErrorEl = null;
           ['shipping_country', 'province', 'city', 'house_no', 'address', 'zip'].forEach(function(id) {
             var el = document.getElementById(id);
             var errEl = document.getElementById('error-' + id);
@@ -976,13 +1034,17 @@
                 el.style.borderColor = 'var(--ck-danger)';
                 if (errEl) { errEl.textContent = 'Please fill required fields'; errEl.style.display = 'block'; }
                 ok = false;
+                if (!firstErrorEl) firstErrorEl = el;
               } else {
                 el.style.borderColor = '';
                 if (errEl) errEl.style.display = 'none';
               }
             }
           });
-          if (!ok) return;
+          if (!ok) {
+            if (firstErrorEl) firstErrorEl.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            return;
+          }
 
           var form = document.getElementById('cartForm');
           var btn = this;
@@ -1020,7 +1082,9 @@
 
               // Set live amount + currency
               var liveRate = parseFloat(currencyRates[currentCurrency]) || 1;
-              var liveTotal = Math.round((parseFloat(baseSubTotal) + parseFloat(baseShipping)) * liveRate * 100) / 100;
+              // var liveTotal = Math.round((parseFloat(baseSubTotal) + parseFloat(baseShipping)) * liveRate * 100) / 100;
+              var liveTotal = Math.round((parseFloat(baseSubTotal) + parseFloat(baseShipping) + parseFloat(baseTax) - parseFloat(baseDiscount)) * liveRate * 100) / 100;
+              if (liveTotal < 0) liveTotal = 0;
 
               var amountInput = document.getElementById('checkoutAmount') || form.querySelector('input[name="amount"]');
               if (!amountInput) { amountInput = document.createElement('input'); amountInput.type = 'hidden'; amountInput.name = 'amount'; amountInput.id = 'checkoutAmount'; form.appendChild(amountInput); }
@@ -1086,6 +1150,70 @@
           }
         } catch(e) {}
       });
+
+      /* Promo Code Logic */
+      var checkCouponBtn = document.getElementById('checkCouponBtn');
+      if (checkCouponBtn) {
+        checkCouponBtn.addEventListener('click', function(e) {
+          e.preventDefault();
+          var btn = this;
+          var couponInput = document.getElementById('coupon_input');
+          var invalidFeedback = document.getElementById('coupon_invalid');
+          var validFeedback = document.getElementById('coupon_valid');
+          var coupon = couponInput.value.trim();
+          
+          couponInput.style.borderColor = '';
+          invalidFeedback.style.display = 'none';
+          validFeedback.style.display = 'none';
+
+          if (!coupon) {
+            couponInput.style.borderColor = 'var(--ck-danger)';
+            return;
+          }
+
+          var originalText = btn.innerHTML;
+          btn.innerHTML = '...';
+          btn.disabled = true;
+
+          var formData = new FormData();
+          formData.append('coupon', coupon);
+
+          fetch('/cart/coupon/validate', {
+            method: 'POST',
+            body: formData,
+            headers: {
+              'X-Requested-With': 'XMLHttpRequest',
+              'X-CSRF-TOKEN': '{{ csrf_token() }}'
+            }
+          })
+          .then(function(res) { return res.json(); })
+          .then(function(result) {
+            btn.innerHTML = originalText;
+            btn.disabled = false;
+            
+            if (result && result.status == 200) {
+              baseTax = parseFloat(result.total_tax) || 0;
+              baseDiscount = parseFloat(result.total_discount) || 0;
+              updateDomTotals();
+              
+              var discountInput = document.querySelector('input[name="discount_id"]');
+              if (discountInput) discountInput.value = result.discount_id;
+
+              couponInput.style.borderColor = '#22c55e';
+              validFeedback.style.display = 'block';
+              btn.disabled = true;
+            } else if (result && result.status == 422) {
+              couponInput.style.borderColor = 'var(--ck-danger)';
+              invalidFeedback.textContent = result.msg;
+              invalidFeedback.style.display = 'block';
+            }
+          })
+          .catch(function(err) {
+            btn.innerHTML = originalText;
+            btn.disabled = false;
+          });
+        });
+      }
 
       /* Init */
       var serverStep = {{ isset($step) ? $step : 'null' }};

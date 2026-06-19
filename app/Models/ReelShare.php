@@ -8,6 +8,7 @@ use Illuminate\Database\Eloquent\Model;
 class ReelShare extends Model
 {
     protected $table = 'reel_share';
+    public $timestamps = false;
     protected $fillable = ['reel_id', 'user_id'];
     
     public function user()

@@ -45,7 +45,7 @@ class UserController extends Controller
         // dd($id);
 
         $user = User::where('id', $id)
-            ->whereIn('role_name', [Role::$organization, Role::$teacher, Role::$user, Role::$admin])
+        ->whereIn('role_name', [Role::$organization, Role::$teacher, Role::$user, Role::$admin])
             ->with([
                 'blog' => function ($query) {
                     $query->where('status', 'publish');
@@ -57,7 +57,7 @@ class UserController extends Controller
                 },
                 'products' => function ($query) {
                     $query->where('status', Product::$active)
-                        ->with('media');
+                    ->with('media');
                 },
                 'reels' => function ($query) {
                     $query->where('is_hidden', '0');
@@ -67,12 +67,12 @@ class UserController extends Controller
                 // },
                 'stories' => function ($query) {
                     $query->active()
-                        ->withCount('views')
-                        ->orderBy('created_at', 'desc');
+                            ->withCount('views')
+                            ->orderBy('created_at', 'desc');
                 },
                 'userMetas'
-            ])
-            ->first();
+        ])
+        ->first();
         // dd($user);
 
         if (!$user) {
@@ -85,18 +85,18 @@ class UserController extends Controller
             'reviews' => 0
         ];
 
-        $seekerLikedWebinars = collect();
-        $seekerLikedProducts = collect();
-        $seekerLikedLivestreams = collect();
-        $seekerLikedArticles = collect();
-        $seekerReviews = collect();
-        $wisdomKeeperReceivedReviews = collect();
+        $seekerLikedWebinars         = collect();
+        $seekerLikedProducts         = collect();
+        $seekerLikedLivestreams      = collect();
+        $seekerLikedArticles         = collect();
+        $seekerReviews               = collect();
+        $wisdomKeeperReceivedReviews = collect(); 
 
-        $isWisdomKeeper = $user->role->name === 'admin'
+        $isWisdomKeeper = $user->role->name === 'admin' 
             || $user->role->name === 'organization'
-            || $user->role->name === 'teacher';
+            || $user->role->name === 'teacher';  
 
-        // dd($user->role->caption);
+            // dd($user->role->caption);
         if ($isWisdomKeeper) {
             foreach ($user->blog as $article) {
                 $totalCounts['likes'] += $article->like()->count();
@@ -195,7 +195,9 @@ class UserController extends Controller
                     ->get(),
             ]);
 
-        } else {
+        }
+        else
+        {
             $totalCounts['likes'] += DB::table('article_like')->where('user_id', $user->id)->count();
             $totalCounts['reviews'] += DB::table('article_reviews')->where('creator_id', $user->id)->count();
             $totalCounts['comments'] += DB::table('comments')->where('user_id', $user->id)->count();
@@ -206,37 +208,37 @@ class UserController extends Controller
             $totalCounts['likes'] += DB::table('reel_likes')->where('user_id', $user->id)->count();
             $totalCounts['reviews'] += DB::table('reel_review')->where('user_id', $user->id)->count();
             $totalCounts['comments'] += DB::table('reel_comments')->where('user_id', $user->id)->count();
-
-
+            
+            
             // 6. Products this seeker has commented on
             // $productComments = DB::table('product_comments') // Adjust table name if different
             //     ->where('user_id', $user->id)
             //     ->count();
             // $totalCounts['comments'] += $productComments;
-
+            
             // 9. Webinars this seeker has commented on
             // $webinarComments = DB::table('webinar_comments') // Adjust table name if different
             //     ->where('user_id', $user->id)
             //     ->count();
             // $totalCounts['comments'] += $webinarComments;
-
+            
             // 10. Livestreams this seeker has liked
             // $livestreamLikes = DB::table('livestream_like')
             //     ->where('user_id', $user->id)
             //     ->count();
             // $totalCounts['likes'] += $livestreamLikes;
-
+            
             // // 11. Livestreams this seeker has reviewed
             // $livestreamReviews = DB::table('livestream_review')
             //     ->where('user_id', $user->id)
             //     ->count();
             // $totalCounts['reviews'] += $livestreamReviews;
-
+            
 
             $seekerLikedProducts = Product::whereHas('savedItems', function ($q) use ($user) {
                 $q->where('user_id', $user->id);
             })
-                ->get();
+            ->get();
 
             // $seekerLikedLivestreams = Livestream::whereHas('savedItems', function ($q) use ($user) {
             //     $q->where('user_id', $user->id);
@@ -246,13 +248,13 @@ class UserController extends Controller
             $seekerLikedArticles = Blog::whereHas('saveditems', function ($q) use ($user) {
                 $q->where('user_id', $user->id);
             })
-                ->get();
+            ->get();
 
             $seekerLikedWebinars = Webinar::whereHas('savedcourse', function ($q) use ($user) {
                 $q->where('user_id', $user->id);
             })
-                ->with(['teacher', 'reviews', 'tickets', 'feature'])
-                ->get();
+            ->with(['teacher', 'reviews', 'tickets', 'feature'])
+            ->get();
 
             $seekerWebinarReviews = DB::table('webinar_reviews')
                 ->join('webinars', 'webinar_reviews.webinar_id', '=', 'webinars.id')
@@ -287,10 +289,10 @@ class UserController extends Controller
             //     ->get();
 
             $seekerReviews = collect([
-                'webinars' => $seekerWebinarReviews,
-                'products' => $seekerProductReviews,
-                'articles' => $seekerArticleReviews,
-                'reels' => $seekerReelReviews,
+                'webinars'    => $seekerWebinarReviews,
+                'products'    => $seekerProductReviews,
+                'articles'    => $seekerArticleReviews,
+                'reels'       => $seekerReelReviews,
                 // 'livestreams' => $seekerLivestreamReviews,
             ]);
         }
@@ -349,7 +351,8 @@ class UserController extends Controller
                 'category'
             ])->get();
 
-        if ($isWisdomKeeper) {
+        if ($isWisdomKeeper)
+        {
             $webinars = Webinar::where('status', Webinar::$active)
                 ->where('private', false)
                 ->where(function ($query) use ($user) {
@@ -357,33 +360,25 @@ class UserController extends Controller
                         ->orWhere('teacher_id', $user->id);
                 })
                 ->orderBy('updated_at', 'desc')
-                ->with([
-                    'teacher' => function ($qu) {
-                        $qu->select('id', 'full_name', 'avatar');
-                    },
-                    'reviews',
-                    'tickets',
-                    'feature'
-                ])
-                ->get();
-        } else {
+            ->with(['teacher' => function ($qu) {
+                $qu->select('id', 'full_name', 'avatar');
+            }, 'reviews', 'tickets', 'feature'])
+            ->get();
+        }
+        else
+        {
             $likedWebinarIds = DB::table('webinar_like')
-                ->where('user_id', $user->id)
-                ->pluck('webinar_id')
-                ->toArray();
-
+            ->where('user_id', $user->id)
+            ->pluck('webinar_id')
+            ->toArray();
+            
             $webinars = Webinar::whereIn('id', $likedWebinarIds)
                 ->where('status', Webinar::$active)
                 ->where('private', false)
                 ->orderBy('updated_at', 'desc')
-                ->with([
-                    'teacher' => function ($qu) {
-                        $qu->select('id', 'full_name', 'avatar');
-                    },
-                    'reviews',
-                    'tickets',
-                    'feature'
-                ])
+                ->with(['teacher' => function ($qu) {
+                    $qu->select('id', 'full_name', 'avatar');
+                }, 'reviews', 'tickets', 'feature'])
                 ->get();
         }
 
@@ -456,12 +451,12 @@ class UserController extends Controller
             'totalLikes' => $totalCounts['likes'],
             'totalComments' => $totalCounts['comments'],
             'totalReviews' => $totalCounts['reviews'],
-            'isWisdomKeeper' => $isWisdomKeeper,
-            'seekerLikedWebinars' => $seekerLikedWebinars,
-            'seekerLikedProducts' => $seekerLikedProducts,
+            'isWisdomKeeper'     => $isWisdomKeeper,
+            'seekerLikedWebinars'    => $seekerLikedWebinars,
+            'seekerLikedProducts'    => $seekerLikedProducts,
             'seekerLikedLivestreams' => $seekerLikedLivestreams,
-            'seekerLikedArticles' => $seekerLikedArticles,
-            'seekerReviews' => $seekerReviews,
+            'seekerLikedArticles'    => $seekerLikedArticles,
+            'seekerReviews'          => $seekerReviews,
             'wisdomKeeperReceivedReviews' => $wisdomKeeperReceivedReviews ?? collect(),
         ];
 
@@ -630,12 +625,10 @@ class UserController extends Controller
                             ->orWhere('users.ban_end_at', '<', time());
                     });
             })
-            ->with([
-                'meeting' => function ($query) {
-                    $query->with('meetingTimes');
-                    $query->withCount('meetingTimes');
-                }
-            ]);
+            ->with(['meeting' => function ($query) {
+                $query->with('meetingTimes');
+                $query->withCount('meetingTimes');
+            }]);
 
         $instructors = $this->filterInstructors($request, deepClone($query), $role)
             ->paginate(6);
@@ -645,7 +638,7 @@ class UserController extends Controller
 
             foreach ($instructors as $instructor) {
                 $html .= '<div class="col-12 col-lg-4">';
-                $html .= (string) view()->make('web.default.pages.instructor_card', ['instructor' => $instructor]);
+                $html .= (string)view()->make('web.default.pages.instructor_card', ['instructor' => $instructor]);
                 $html .= '</div>';
             }
 
@@ -910,8 +903,8 @@ class UserController extends Controller
                     ]);
                 } catch (\Exception $e) {
                     Log::error('Email sending failed: ' . $e->getMessage());
-
-                    return response()->json([
+                    
+                   return response()->json([
                         'code' => 500,
                         'message' => trans('site.server_error_try_again')
                     ]);
@@ -942,7 +935,7 @@ class UserController extends Controller
     {
         //dd('here');
         $user = auth()->user();
-
+        
         if (!$user) {
             return response()->json([
                 'success' => false,
@@ -972,26 +965,26 @@ class UserController extends Controller
         }
 
         try {
-
+            
             $file = $request->file('story');
             $isVideo = $file->getMimeType() === 'video/mp4' || $file->getMimeType() === 'video/quicktime';
             $mediaType = $isVideo ? 'video' : 'image';
-
+            
             // Create directory if it doesn't exist
             $directory = 'stories/' . $user->id . '/' . date('Y/m');
             Storage::disk('public')->makeDirectory($directory);
-
+            
             // Generate unique filename
             $filename = uniqid() . '_' . time() . '.' . $file->getClientOriginalExtension();
             $path = $directory . '/' . $filename;
 
-
-
+            
+            
             Storage::disk('public')->put($path, file_get_contents($file));
-
+            
             $mediaUrl = Storage::disk('public')->url($path);
             $thumbnailUrl = null;
-
+            
             // Generate thumbnail for video
             if ($isVideo) {
                 $thumbnailUrl = $this->generateVideoThumbnail($file, $directory);
@@ -1000,7 +993,7 @@ class UserController extends Controller
                 $thumbnailUrl = $this->createImageThumbnail($file, $directory);
             }
 
-
+            
             $now = time();
 
             // Create story record
@@ -1025,10 +1018,10 @@ class UserController extends Controller
                 'message' => 'Story uploaded successfully!',
                 'story' => $story
             ]);
-
+            
         } catch (\Exception $e) {
             Log::error('Story upload error: ' . $e->getMessage());
-
+            
             return response()->json([
                 'success' => false,
                 'message' => 'Failed to upload story. Please try again.'
@@ -1040,15 +1033,15 @@ class UserController extends Controller
     public function getUserStories(Request $request, $id)
     {
         $user = User::findOrFail($id);
-
+        
         $stories = UserStory::where('user_id', $id)
             ->active()
             ->orderBy('created_at', 'desc')
             ->get()
             ->map(function ($story) {
-                $createdAt = is_int($story->created_at)
-                    ? \Carbon\Carbon::createFromTimestamp($story->created_at)
-                    : $story->created_at;
+                $createdAt = is_int($story->created_at) 
+                ? \Carbon\Carbon::createFromTimestamp($story->created_at)
+                : $story->created_at;
                 return [
                     'id' => $story->id,
                     'title' => $story->title,
@@ -1062,7 +1055,7 @@ class UserController extends Controller
                     'viewed' => auth()->check() ? $story->viewedByCurrentUser() : false
                 ];
             });
-
+        
         return response()->json([
             'success' => true,
             'stories' => $stories
@@ -1073,30 +1066,30 @@ class UserController extends Controller
     public function markStoryViewed(Request $request, $id, $storyId)
     {
         $user = auth()->user();
-
+        
         if (!$user) {
             return response()->json([
                 'success' => false,
                 'message' => 'Unauthorized'
             ], 401);
         }
-
-        $story = UserStory::where('id', $storyId)
-            ->where('user_id', $id) // Ensure story belongs to this user
-            ->first();
-
+        
+         $story = UserStory::where('id', $storyId)
+        ->where('user_id', $id) // Ensure story belongs to this user
+        ->first();
+        
         if (!$story) {
             return response()->json([
                 'success' => false,
                 'message' => 'Story not found'
             ]);
         }
-
+        
         // Check if already viewed
         $existingView = UserStoryView::where('story_id', $storyId)
             ->where('user_id', $user->id)
             ->first();
-
+        
         if (!$existingView) {
             // Create view record
             UserStoryView::create([
@@ -1105,11 +1098,11 @@ class UserController extends Controller
                 'created_at' => time(),
                 'updated_at' => time()
             ]);
-
+            
             // Increment views count
             $story->increment('views');
         }
-
+        
         return response()->json([
             'success' => true,
             'message' => 'Story marked as viewed'
@@ -1120,44 +1113,44 @@ class UserController extends Controller
     public function deleteStory($storyId)
     {
         $user = auth()->user();
-
+        
         if (!$user) {
             return response()->json([
                 'success' => false,
                 'message' => 'Unauthorized'
             ], 401);
         }
-
+        
         $story = UserStory::where('id', $storyId)
             ->where('user_id', $user->id)
             ->first();
-
+        
         if (!$story) {
             return response()->json([
                 'success' => false,
                 'message' => 'Story not found or unauthorized'
             ], 404);
         }
-
+        
         try {
             // Delete file from storage
             $this->deleteStoryFile($story->media_url);
-
+            
             if ($story->thumbnail_url) {
                 $this->deleteStoryFile($story->thumbnail_url);
             }
-
+            
             // Delete from database
             $story->delete();
-
+            
             return response()->json([
                 'success' => true,
                 'message' => 'Story deleted successfully'
             ]);
-
+            
         } catch (\Exception $e) {
             Log::error('Story delete error: ' . $e->getMessage());
-
+            
             return response()->json([
                 'success' => false,
                 'message' => 'Failed to delete story'
@@ -1172,28 +1165,28 @@ class UserController extends Controller
             // Create a temporary file for the video
             $tempVideoPath = tempnam(sys_get_temp_dir(), 'video_') . '.mp4';
             file_put_contents($tempVideoPath, file_get_contents($videoFile->getRealPath()));
-
+            
             // Use FFmpeg to generate thumbnail
             $thumbnailFilename = 'thumbnail_' . uniqid() . '.jpg';
             $thumbnailPath = $directory . '/' . $thumbnailFilename;
             $fullThumbnailPath = storage_path('app/public/' . $thumbnailPath);
-
+            
             // Ensure directory exists
             Storage::disk('public')->makeDirectory($directory);
-
+            
             // Generate thumbnail (using first frame)
             $ffmpegCommand = "ffmpeg -i {$tempVideoPath} -ss 00:00:01 -vframes 1 -vf 'scale=320:-1' {$fullThumbnailPath} 2>&1";
             exec($ffmpegCommand);
-
+            
             // Clean up temp file
             unlink($tempVideoPath);
-
+            
             if (file_exists($fullThumbnailPath)) {
                 return Storage::disk('public')->url($thumbnailPath);
             }
-
+            
             return null;
-
+            
         } catch (\Exception $e) {
             Log::error('Video thumbnail generation error: ' . $e->getMessage());
             return null;
@@ -1207,19 +1200,19 @@ class UserController extends Controller
             $thumbnailFilename = 'thumbnail_' . uniqid() . '.jpg';
             $thumbnailPath = $directory . '/' . $thumbnailFilename;
             $fullThumbnailPath = storage_path('app/public/' . $thumbnailPath);
-
+            
             // Create thumbnail using Intervention Image
             $image = Image::make($imageFile->getRealPath());
             $image->fit(320, 320, function ($constraint) {
                 $constraint->aspectRatio();
                 $constraint->upsize();
             });
-
+            
             // Save thumbnail
             $image->save($fullThumbnailPath, 80);
-
+            
             return Storage::disk('public')->url($thumbnailPath);
-
+            
         } catch (\Exception $e) {
             Log::error('Image thumbnail creation error: ' . $e->getMessage());
             return null;
@@ -1232,7 +1225,7 @@ class UserController extends Controller
         try {
             $path = parse_url($url, PHP_URL_PATH);
             $relativePath = str_replace('/storage/', '', $path);
-
+            
             if (Storage::disk('public')->exists($relativePath)) {
                 Storage::disk('public')->delete($relativePath);
             }

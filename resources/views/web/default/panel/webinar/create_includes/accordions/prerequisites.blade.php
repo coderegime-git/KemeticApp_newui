@@ -38,7 +38,27 @@
     cursor:pointer;
 }
 
+
 /* DROPDOWN */
+.kemetic-header-actions {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.kemetic-dropdown {
+    position: relative;
+    display: inline-block;
+}
+
+.kemetic-dropdown-btn {
+    background: transparent;
+    border: none;
+    color: #F2C94C;
+    padding: 0;
+    cursor: pointer;
+}
+
 .kemetic-dropdown-menu{
     background:#222;
     border:1px solid rgba(242,201,76,0.35);
@@ -50,10 +70,12 @@
     display:block;
     padding:8px 15px;
     color:#fff;
+    text-decoration: none;
 }
 .kemetic-dropdown-item:hover{
     background:rgba(242,201,76,0.15);
     color:#F2C94C;
+    text-decoration: none;
 }
 
 /* CONTENT BOX */
@@ -134,19 +156,36 @@
     margin-top:25px;
     display:flex;
     gap:15px;
+    width: 100%;
 }
 .kemetic-btn-save{
     background:#F2C94C;
     color:#000;
-    padding:8px 18px;
-    font-weight:600;
-    border-radius:8px;
+    padding:12px 18px;
+    font-weight:700;
+    border-radius:10px;
+    border: none;
+    flex: 1;
+    cursor: pointer;
+    transition: background 0.2s;
+}
+.kemetic-btn-save:hover {
+    background: #ffe28a;
 }
 .kemetic-btn-cancel{
-    background:#822;
-    color:#fff;
-    padding:8px 18px;
-    border-radius:8px;
+    background: transparent;
+    border: 1px solid #e74c3c;
+    color: #e74c3c;
+    padding: 12px 18px;
+    font-weight: 600;
+    border-radius: 10px;
+    flex: 1;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+.kemetic-btn-cancel:hover {
+    background: #e74c3c;
+    color: #fff;
 }
 /* ===============================
    KEMETIC PREREQUISITE SELECT
@@ -187,31 +226,6 @@
     border-color: #c62828 !important;
 }
 
-/* ===============================
-   SELECT2 DROPDOWN THEME
-================================ */
-
-.select2-container--default .select2-selection--single {
-    background: #000;
-    border: none;
-}
-
-.select2-dropdown {
-    background: #0b0b0b;
-    border: 1px solid rgba(242,201,76,.25);
-    border-radius: 12px;
-}
-
-.select2-results__option {
-    color: #e0e0e0;
-    padding: 10px 14px;
-}
-
-.select2-results__option--highlighted {
-    background: rgba(242,201,76,.15);
-    color: #f2c94c;
-}
-
 
 </style>
 <li data-id="{{ !empty($prerequisite) ? $prerequisite->id :'' }}" 
@@ -238,13 +252,13 @@
             <i data-feather="move" class="kemetic-move-icon"></i>
 
             @if(!empty($prerequisite))
-                <div class="kemetic-dropdown">
-                    <button class="kemetic-icon-btn" data-bs-toggle="dropdown">
+                <div class="kemetic-dropdown dropdown">
+                    <button class="kemetic-dropdown-btn" data-bs-toggle="dropdown">
                         <i data-feather="more-vertical"></i>
                     </button>
-                    <div class="kemetic-dropdown-menu">
+                    <div class="dropdown-menu kemetic-dropdown-menu">
                         <a href="/panel/prerequisites/{{ $prerequisite->id }}/delete"
-                           class="kemetic-dropdown-item delete-action">
+                           class="dropdown-item kemetic-dropdown-item delete-action">
                             {{ trans('public.delete') }}
                         </a>
                     </div>
@@ -280,7 +294,7 @@
                         <div class="form-group kemetic-form-group kemetic-prerequisite-box">
 
                             <label class="kemetic-label">
-                                {{ trans('public.select_prerequisites') }}
+                                {{ trans('public.select_prerequisites') }} <span class="text-danger">*</span>
                             </label>
 
                             <select name="ajax[{{ !empty($prerequisite) ? $prerequisite->id : 'new' }}][prerequisite_id]"

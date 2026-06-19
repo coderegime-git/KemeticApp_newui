@@ -3,32 +3,34 @@ namespace App\Http\Controllers\Api\Panel;
 
 use App\Http\Controllers\Api\Controller;
 use App\Models\CoursePersonalNote;
+use App\Http\Controllers\Panel\Traits\VideoDemoTrait;
 use Illuminate\Http\Request;
+use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Support\Carbon;
+use Illuminate\Support\Facades\DB;
 
 class CoursePersonalNotesController extends Controller
 {
+    use VideoDemoTrait;
+
     public function show(Request $request , $id)
     {
         if (!empty(getFeaturesSettings('course_notes_status'))) {
 
             $user = apiAuth();
 
+           
+
             $personalNote = CoursePersonalNote::query()
                 ->where("user_id",$user->id)
                 ->where('targetable_id', $id)
                 ->first();
+                //  dd($personalNote);
 
             if (!empty($personalNote)) {
                 if (!empty($personalNote->attachment)) {
                     $attachment = $personalNote->attachment;
-                    // $filePath = public_path($attachment);
 
-                    // if (file_exists($filePath)) {
-                    //     $extension = \Illuminate\Support\Facades\File::extension($filePath);
-                    //     $fileName = "personal_note_{$personalNote->id}." . $extension;
-
-                    //     $personalNote->attachment = url( $filePath . $fileName );
-                    // }
                     if (strpos($attachment, '/store/') === 0) {
                         $filePath = public_path($attachment);
                         
@@ -37,13 +39,20 @@ class CoursePersonalNotesController extends Controller
                             $personalNote->attachment = url($attachment);
                         }
                     }
+                    // $filePath = public_path($attachment);
+
+                    // if (file_exists($filePath)) {
+                    //     $extension = \Illuminate\Support\Facades\File::extension($filePath);
+                    //     $fileName = "personal_note_{$personalNote->id}." . $extension;
+
+                    //     $personalNote->attachment = url( $filePath . $fileName );
+                    // }
                 }
                 return apiResponse2(1, 'retrieved', trans('api.public.retrieved'),$personalNote);
             }
         }
         return apiResponse2(1, 'retrieved', trans('api.public.retrieved'),[]);
     }
-
     public function destroy( $id)
     {
         if (!empty(getFeaturesSettings('course_notes_status'))) {
@@ -61,7 +70,6 @@ class CoursePersonalNotesController extends Controller
 
         return apiResponse2(0, 'error', trans('api.public.error'));
     }
-
     public function store(Request $request , $id)
     {
         $user = apiAuth();

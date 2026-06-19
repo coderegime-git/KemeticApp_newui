@@ -216,8 +216,13 @@
 .custom-switch .custom-control-input:disabled:checked ~ .custom-control-label::before {
   background-color: rgba(67, 212, 119, 0.5);
 }
-
-    </style>
+@media (max-width: 767px) {
+    .mobile-full-width {
+        width: 100% !important;
+        margin-bottom: 10px;
+    }
+}
+</style>
 @endpush
 
 
@@ -225,12 +230,11 @@
         FAQ SECTION (KEMETIC)
 ────────────────────────────────── --}}
 <section class="kemetic-section">
-    <div class="d-flex justify-content-between align-items-center mb-2">
-        <h2 class="section-title after-line">
-            {{ trans('public.faq') }} <span class="text-muted">({{ trans('public.optional') }})</span>
-        </h2>
+   <div class="d-flex flex-column flex-md-row justify-content-between align-items-start align-items-md-center mb-2">
+        <h2 class="section-title after-line mb-3 mb-md-0">
+            {{ trans('public.faq') }} ({{ trans('public.optional') }})
 
-        <button id="webinarAddFAQ" data-webinar-id="{{ $webinar->id }}" type="button" class="kemetic-add-btn">
+        <button id="webinarAddFAQ" data-webinar-id="{{ $webinar->id }}" type="button" class="kemetic-add-btn mobile-full-width">
             + {{ trans('public.add_faq') }}
         </button>
     </div>
@@ -266,16 +270,16 @@
 ──────────────────────────────────────────────── --}}
 @foreach(\App\Models\WebinarExtraDescription::$types as $type)
 <section class="kemetic-section">
-    <div class="d-flex justify-content-between align-items-center mb-2">
+    <div class="d-flex flex-column flex-md-row justify-content-between align-items-start align-items-md-center mb-2">
 
-        <h2 class="section-title after-line">
-            {{ trans('update.'.$type) }} <span class="text-muted">({{ trans('public.optional') }})</span>
+        <h2 class="section-title after-line mb-3 mb-md-0">
+            {{ trans('update.'.$type) }} ({{ trans('public.optional') }})
         </h2>
 
         <button id="add_new_{{ $type }}"
                 data-webinar-id="{{ $webinar->id }}"
                 type="button"
-                class="kemetic-add-btn">
+                class="kemetic-add-btn mobile-full-width">
             + {{ trans('update.add_'.$type) }}
         </button>
     </div>

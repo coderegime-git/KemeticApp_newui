@@ -211,7 +211,7 @@ return [
         Kavenegar\Laravel\ServiceProvider::class,
         MoemenGaballah\Msegat\MsegatServiceProvider::class,
         Craftsys\Msg91\Msg91LaravelServiceProvider::class,
-        Kreait\Laravel\Firebase\ServiceProvider::class,
+        // Kreait\Laravel\Firebase\ServiceProvider::class,
         Paytabscom\Laravel_paytabs\PaypageServiceProvider::class,
         // App\Providers\LuluServiceProvider::class,
     ],

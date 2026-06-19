@@ -397,6 +397,55 @@ select.kemetic-control option {
     background: linear-gradient(90deg, transparent, var(--k-gold-border), transparent);
     margin: 20px 0;
 }
+
+
+/* ── File Accordion Mobile Fix ── */
+@media (max-width: 767px) {
+    .kemetic-accordion-item {
+        padding: 10px 12px;
+    }
+    .kemetic-accordion-header {
+        flex-wrap: wrap;
+        gap: 8px;
+    }
+    .kemetic-header-left {
+        min-width: 0;
+        flex: 1;
+        overflow: hidden;
+    }
+    .kemetic-header-left .kemetic-title {
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        max-width: 140px;
+        display: block;
+    }
+    .kemetic-header-actions {
+        flex-wrap: wrap;
+        gap: 2px;
+    }
+    .kemetic-accordion-body {
+        padding-top: 14px;
+    }
+    .kemetic-two-col {
+        grid-template-columns: 1fr;
+        gap: 10px;
+    }
+    .kemetic-radio-group {
+        flex-direction: column;
+        gap: 8px;
+    }
+    .kemetic-subsection {
+        padding: 10px;
+    }
+    .kemetic-switch-row {
+        padding: 10px 12px;
+    }
+    .kemetic-btn {
+        width: 100%;
+        text-align: center;
+    }
+}
 </style>
 
 @if(!empty($file) and $file->storage == 'upload_archive')
@@ -793,7 +842,7 @@ select.kemetic-control option {
                                 <input type="number"
                                        name="ajax[{{ !empty($file) ? $file->id : 'new' }}][access_after_day]"
                                        value="{{ !empty($file) ? $file->access_after_day : '' }}"
-                                       class="kemetic-control js-ajax-access_after_day"
+                                       class="kemetic-control js-ajax-access_after_day" min="0"
                                        placeholder="{{ trans('update.access_after_day_placeholder') }}">
                                 <div class="invalid-feedback"></div>
                             </div>

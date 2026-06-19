@@ -510,11 +510,11 @@
                                                                 @endif
                                                             @endif
 
-                                                            <a href="{{ $item->getUrl() }}?tab=reviews"
+                                                            <!-- <a href="{{ $item->getUrl() }}?tab=reviews"
                                                             target="_blank"
                                                             class="kemetic-dropdown-item kemetic-muted">
                                                                 {{ trans('public.feedback') }}
-                                                            </a>
+                                                            </a> -->
                                                         @endif
 
                                                     </div>

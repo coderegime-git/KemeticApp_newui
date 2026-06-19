@@ -18,6 +18,8 @@ use App\Models\ProductMedia;
 use App\Models\ProductSelectedFilterOption;
 use App\Models\ProductSpecificationCategory;
 use App\Models\RelatedCourse;
+use App\Models\ProductFile;
+use App\Models\Translation\ProductFileTranslation;
 use App\Models\ProductSelectedSpecification;
 use App\Models\ProductSelectedSpecificationMultiValue;
 use App\Models\Translation\ProductSelectedSpecificationTranslation;
@@ -25,7 +27,7 @@ use App\Models\ProductFaq;
 use App\Models\Translation\ProductFaqTranslation;
 use App\Models\ProductSpecificationMultiValue;
 use App\Http\Resources\ProductOrderResource;
-
+use Illuminate\Support\Facades\Log;
 
 class ProductController extends Controller
 {
@@ -163,7 +165,7 @@ class ProductController extends Controller
 
             ProductTranslation::updateOrCreate([
                 'product_id' => $product->id,
-                'locale' => mb_strtolower($data['locale']),
+                'locale' => "en",
             ], [
                 'title' => $data['title'],
                 'seo_description' => $data['seo_description'],
@@ -268,34 +270,62 @@ class ProductController extends Controller
 
             }
 
+
             if (!empty($data['product_file'])) {
-                $pf = $data['product_file'];          // keyed sub-array from the request
-
-                $file = ProductFile::create([
-                    'creator_id'    => $user->id,
-                    'product_id'    => $product->id,
-                    'path'          => $pf['path'],
-                    'order'         => null,
-                    'volume'        => $pf['volume'],
-                    'file_type'     => $pf['file_type'],
-                    'online_viewer' => (!empty($pf['online_viewer']) && $pf['online_viewer'] == 'on'),
-                    'status'        => (!empty($pf['status']) && $pf['status'] == 'on')
-                                            ? ProductFile::$Active
-                                            : ProductFile::$Inactive,
-                    'created_at'    => time(),
+                \Log::info('Entering product_file condition', [
+                    'product_file_data' => $data['product_file']
                 ]);
+                foreach ($data['product_file'] as $pf) {
+                    \Log::info('Processing product file item', [
+                        'has_path' => isset($pf['path']),
+                        'pf_data' => $pf
+                    ]);
 
-                if (!empty($file)) {
-                    ProductFileTranslation::updateOrCreate(
-                        [
-                            'product_file_id' => $file->id,
-                            'locale'          => mb_strtolower($pf['locale']),
-                        ],
-                        [
-                            'title'       => $pf['title'],
-                            'description' => $pf['description'],
-                        ]
-                    );
+                    if (!empty($pf['path'])) {
+
+                        \Log::info('Processing file path', [
+                            'path_type' => gettype($pf['path']),
+                            'is_object' => is_object($pf['path']) ? get_class($pf['path']) : 'not_object'
+                        ]);
+
+                        $uploadedFile = $pf['path'];                          // renamed
+                        $fileName     = $uploadedFile->getClientOriginalName();
+                        $uploadPath   = public_path('assets/store/1/products');
+
+                        if (!file_exists($uploadPath)) {
+                            mkdir($uploadPath, 0755, true);
+                        }
+
+                        $uploadedFile->move($uploadPath, $fileName);          // use renamed var
+                        $filePath = '/assets/store/1/products/' . $fileName;
+
+                        $productFile = ProductFile::create([                  // renamed
+                            'creator_id'    => $user->id,
+                            'product_id'    => $product->id,
+                            'path'          => $filePath,                     // ← fixed
+                            'order'         => null,
+                            'volume'        => $pf['volume'] ?? null,
+                            'file_type'     => $pf['file_type'] ?? null,
+                            'online_viewer' => (!empty($pf['online_viewer']) && $pf['online_viewer'] == 'on'),
+                            'status'        => (!empty($pf['status']) && $pf['status'] == 'on')
+                                                    ? ProductFile::$Active
+                                                    : ProductFile::$Inactive,
+                            'created_at'    => time(),
+                        ]);
+
+                        if (!empty($productFile)) {
+                            ProductFileTranslation::updateOrCreate(
+                                [
+                                    'product_file_id' => $productFile->id,   // ← fixed
+                                    'locale'          =>"en",
+                                ],
+                                [
+                                    'title'       => $pf['title'],
+                                    'description' => $pf['description'] ?? null,
+                                ]
+                            );
+                        }
+                    }
                 }
             }
 
@@ -357,7 +387,7 @@ class ProductController extends Controller
                             }
                         } else if (!empty($Val->summary)) {
                             ProductSelectedSpecificationTranslation::updateOrCreate([
-                                'locale' => mb_strtolower($Val->locale),
+                                'locale' => "en",
                                 'product_selected_specification_id' => $selectedSpecification->id
                             ], [
                                 'value' => $Val->summary
@@ -387,7 +417,7 @@ class ProductController extends Controller
                         if (!empty($faq)) {
                             ProductFaqTranslation::updateOrCreate([
                                 'product_faq_id' => $faq->id,
-                                'locale' => mb_strtolower($val->locale),
+                                'locale' => "en",
                             ], [
                                 'title' => $val->title,
                                 'answer' => $val->answer,

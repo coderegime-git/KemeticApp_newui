@@ -496,15 +496,15 @@ class ProductsController extends Controller
             'tax' => 'nullable|integer',
             'commission' => 'nullable|integer',
             'inventory' => 'required_without:unlimited_inventory',
-            //'thumbnail' => 'required',
-            'thumbnail' => [
-                'required',
-                function ($attribute, $value, $fail) {
-                    if (preg_match('/[:*?"<>]/', $value)) {
-                        $fail('The thumbnail field contains invalid characters. Please avoid using: \ / : * ? " < > |');
-                    }
-                }
-            ],
+            'thumbnail' => 'required',
+            // 'thumbnail' => [
+            //     'required',
+            //     function ($attribute, $value, $fail) {
+            //         if (preg_match('/[:*?"<>]/', $value)) {
+            //             $fail('The thumbnail field contains invalid characters. Please avoid using: \ / : * ? " < > |');
+            //         }
+            //     }
+            // ],
             'images' => 'required|array|min:1|max:4',
             'category_id' => 'required',
         ];
@@ -593,7 +593,7 @@ class ProductsController extends Controller
 
         $url = getAdminPanelUrl('/store/products/' . $product->id . '/edit?locale=' . $data['locale']);
 
-        return redirect($url);
+        return back();
     }
 
     private function handleProductImages($product, $data)

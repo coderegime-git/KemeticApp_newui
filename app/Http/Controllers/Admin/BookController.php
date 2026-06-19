@@ -139,7 +139,7 @@ class BookController extends Controller
 
         if($data['type'] == 'Print')
         {
-            $covercheck = $pdfService->resizeForLulu(
+           $covercheck = $pdfService->resizeForLulu(
                 $coverpdfurl, // interior PDF
                 false                // no full bleed
             );
@@ -279,8 +279,8 @@ class BookController extends Controller
             'title' => 'required|string|max:255',
             'category_id' => 'required|numeric',
             'image_cover' => 'required|string',
-            'image_path' => 'required|string',
             'cover_pdf' => 'required|string',
+            'image_path' => 'required|string',
             'type' => 'required|string',
             'price' => 'nullable',
             'description' => 'required|string',
@@ -511,6 +511,139 @@ class BookController extends Controller
         return $data['access_token'] ?? null;
     }
 
+    public function getLuluPriceUsingCurl(Request $request, $method = 'POST', $token = null)
+    {
+        if (!$token) {
+            $token = $this->getLuluAccessTokenUsingCurl();
+        }
+
+        $lineItems[] = [
+            'page_count' => $request->pages,
+            'pod_package_id' => '0600X0900BWSTDPB060UW444MXX', // Default package
+            'quantity' => '1'
+        ];
+
+        $data = [
+            'line_items' => $lineItems,
+            'shipping_address' => [
+                'city' => 'washington',
+                'country_code' => 'US',
+                'postcode' => '20540',
+                'state_code' => 'DC',
+                // 'street1' => ($addressData['house_no'] ?? '') . ' ' . ($addressData['address'] ?? ''),
+                'street1' => '1600 Pennsylvania Avenue NW',
+                'phone_number' => '+1234567890',
+            ],
+            'shipping_option' => 'MAIL' // Standard shipping
+        ];
+
+
+        $curl = curl_init();
+        
+        $url = "https://api.lulu.com/print-job-cost-calculations/";
+        curl_setopt_array($curl, [
+            CURLOPT_URL => $url,
+            CURLOPT_RETURNTRANSFER => true,
+            CURLOPT_ENCODING => '',
+            CURLOPT_MAXREDIRS => 10,
+            CURLOPT_TIMEOUT => 30,
+            CURLOPT_FOLLOWLOCATION => true,
+            CURLOPT_HTTP_VERSION => CURL_HTTP_VERSION_1_1,
+            CURLOPT_CUSTOMREQUEST => strtoupper($method),
+            CURLOPT_HTTPHEADER => [
+                'Authorization: Bearer '. $token,
+                'Cache-Control: no-cache',
+                'Content-Type: application/json'
+            ],
+        ]);
+
+        // Certificate verification handling
+        if ($this->laragonCertPath && file_exists($this->laragonCertPath)) {
+            $options[CURLOPT_CAINFO] = $this->laragonCertPath;
+            $options[CURLOPT_CAPATH] = dirname($this->laragonCertPath);
+            $options[CURLOPT_SSL_VERIFYPEER] = true;
+            $options[CURLOPT_SSL_VERIFYHOST] = 2;
+        } else {
+            $options[CURLOPT_SSL_VERIFYPEER] = false;
+            $options[CURLOPT_SSL_VERIFYHOST] = false;
+        }
+
+        if (!empty($data)) {
+            $options[CURLOPT_POSTFIELDS] = json_encode($data);
+        }
+
+        curl_setopt_array($curl, $options);
+        
+        
+        $response = curl_exec($curl);
+        $httpCode = curl_getinfo($curl, CURLINFO_HTTP_CODE);
+        $error = curl_error($curl);
+
+        if ($error) {
+            $errorNo = curl_errno($curl);
+            \Log::error("cURL Error #{$errorNo}: {$error}");
+            \Log::error("Certificate path used: " . ($this->laragonCertPath ?? 'none'));
+            \Log::error("File exists: " . (file_exists($this->laragonCertPath) ? 'Yes' : 'No'));
+        }
+
+        //dd($response);
+        
+        // Enhanced error logging
+        if ($error) {
+            $errorNo = curl_errno($curl);
+            $errorInfo = [
+                'error_no' => $errorNo,
+                'error_msg' => $error,
+                'endpoint' => $endpoint,
+                'cert_path' => $this->laragonCertPath,
+                'cert_exists' => file_exists($this->laragonCertPath) ? 'Yes' : 'No',
+                'url' => $url,
+            ];
+            \Log::error('Lulu API cURL Error', $errorInfo);
+        }
+        
+        curl_close($curl);
+
+        $responseData = json_decode($response, true);
+
+         if (json_last_error() !== JSON_ERROR_NONE) {
+            \Log::error('Lulu API Invalid JSON Response', [
+                'response' => $response,
+                'json_error' => json_last_error_msg()
+            ]);
+            
+            return [
+                'success' => false,
+                'message' => 'Invalid response from Lulu API',
+                'print_price' => 0
+            ];
+        }
+        
+        // Check if we got the expected data structure
+        if (isset($responseData['line_item_costs'][0]['total_cost_incl_tax'])) {
+            $printPrice = (float) $responseData['line_item_costs'][0]['total_cost_incl_tax'];
+            
+            return [
+                'success' => true,
+                'print_price' => $printPrice,
+                'raw_response' => $responseData // Optional: include raw response for debugging
+            ];
+        } else {
+            \Log::error('Lulu API Unexpected Response Structure', [
+                'response_data' => $responseData
+            ]);
+            
+            return [
+                'success' => false,
+                'message' => 'Unexpected response structure from Lulu API',
+                'print_price' => 0,
+                'raw_response' => $responseData
+            ];
+        }
+       
+        //return $responseData;
+    }
+
     private function validateLuluFile($type, $sourceUrl, $token, $podPackageId = null, $pageCount = null)
     {
         // ── STEP 1: POST to start validation, get the ID ──────────────────────
@@ -700,138 +833,5 @@ class BookController extends Controller
         curl_close($curl);
 
         return json_decode($response, true);
-    }
-
-    public function getLuluPriceUsingCurl(Request $request, $method = 'POST', $token = null)
-    {
-        if (!$token) {
-            $token = $this->getLuluAccessTokenUsingCurl();
-        }
-
-        $lineItems[] = [
-            'page_count' => $request->pages,
-            'pod_package_id' => '0600X0900BWSTDPB060UW444MXX', // Default package
-            'quantity' => '1'
-        ];
-
-        $data = [
-            'line_items' => $lineItems,
-            'shipping_address' => [
-                'city' => 'washington',
-                'country_code' => 'US',
-                'postcode' => '20540',
-                'state_code' => 'DC',
-                // 'street1' => ($addressData['house_no'] ?? '') . ' ' . ($addressData['address'] ?? ''),
-                'street1' => '1600 Pennsylvania Avenue NW',
-                'phone_number' => '+1234567890',
-            ],
-            'shipping_option' => 'MAIL' // Standard shipping
-        ];
-
-
-        $curl = curl_init();
-        
-        $url = "https://api.lulu.com/print-job-cost-calculations/";
-        curl_setopt_array($curl, [
-            CURLOPT_URL => $url,
-            CURLOPT_RETURNTRANSFER => true,
-            CURLOPT_ENCODING => '',
-            CURLOPT_MAXREDIRS => 10,
-            CURLOPT_TIMEOUT => 30,
-            CURLOPT_FOLLOWLOCATION => true,
-            CURLOPT_HTTP_VERSION => CURL_HTTP_VERSION_1_1,
-            CURLOPT_CUSTOMREQUEST => strtoupper($method),
-            CURLOPT_HTTPHEADER => [
-                'Authorization: Bearer '. $token,
-                'Cache-Control: no-cache',
-                'Content-Type: application/json'
-            ],
-        ]);
-
-        // Certificate verification handling
-        if ($this->laragonCertPath && file_exists($this->laragonCertPath)) {
-            $options[CURLOPT_CAINFO] = $this->laragonCertPath;
-            $options[CURLOPT_CAPATH] = dirname($this->laragonCertPath);
-            $options[CURLOPT_SSL_VERIFYPEER] = true;
-            $options[CURLOPT_SSL_VERIFYHOST] = 2;
-        } else {
-            $options[CURLOPT_SSL_VERIFYPEER] = false;
-            $options[CURLOPT_SSL_VERIFYHOST] = false;
-        }
-
-        if (!empty($data)) {
-            $options[CURLOPT_POSTFIELDS] = json_encode($data);
-        }
-
-        curl_setopt_array($curl, $options);
-        
-        
-        $response = curl_exec($curl);
-        $httpCode = curl_getinfo($curl, CURLINFO_HTTP_CODE);
-        $error = curl_error($curl);
-
-        if ($error) {
-            $errorNo = curl_errno($curl);
-            \Log::error("cURL Error #{$errorNo}: {$error}");
-            \Log::error("Certificate path used: " . ($this->laragonCertPath ?? 'none'));
-            \Log::error("File exists: " . (file_exists($this->laragonCertPath) ? 'Yes' : 'No'));
-        }
-
-        //dd($response);
-        
-        // Enhanced error logging
-        if ($error) {
-            $errorNo = curl_errno($curl);
-            $errorInfo = [
-                'error_no' => $errorNo,
-                'error_msg' => $error,
-                'endpoint' => $endpoint,
-                'cert_path' => $this->laragonCertPath,
-                'cert_exists' => file_exists($this->laragonCertPath) ? 'Yes' : 'No',
-                'url' => $url,
-            ];
-            \Log::error('Lulu API cURL Error', $errorInfo);
-        }
-        
-        curl_close($curl);
-
-        $responseData = json_decode($response, true);
-
-         if (json_last_error() !== JSON_ERROR_NONE) {
-            \Log::error('Lulu API Invalid JSON Response', [
-                'response' => $response,
-                'json_error' => json_last_error_msg()
-            ]);
-            
-            return [
-                'success' => false,
-                'message' => 'Invalid response from Lulu API',
-                'print_price' => 0
-            ];
-        }
-        
-        // Check if we got the expected data structure
-        if (isset($responseData['line_item_costs'][0]['total_cost_incl_tax'])) {
-            $printPrice = (float) $responseData['line_item_costs'][0]['total_cost_incl_tax'];
-            
-            return [
-                'success' => true,
-                'print_price' => $printPrice,
-                'raw_response' => $responseData // Optional: include raw response for debugging
-            ];
-        } else {
-            \Log::error('Lulu API Unexpected Response Structure', [
-                'response_data' => $responseData
-            ]);
-            
-            return [
-                'success' => false,
-                'message' => 'Unexpected response structure from Lulu API',
-                'print_price' => 0,
-                'raw_response' => $responseData
-            ];
-        }
-       
-        //return $responseData;
     }
 }

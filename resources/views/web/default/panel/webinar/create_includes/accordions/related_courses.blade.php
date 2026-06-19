@@ -45,11 +45,17 @@
 }
 
 /* DROPDOWN */
+.kemetic-dropdown {
+    position: relative;
+    display: inline-block;
+}
+
 .kemetic-dropdown-btn {
     background: transparent;
     border: none;
     color: #F2C94C;
-    padding: 4px;
+    padding: 0;
+    cursor: pointer;
 }
 
 .kemetic-dropdown-menu {
@@ -61,11 +67,13 @@
 
 .kemetic-dropdown-menu .dropdown-item {
     color: #aaa;
+    text-decoration: none;
 }
 
 .kemetic-dropdown-menu .dropdown-item:hover {
     background: rgba(242,201,76,0.1);
     color: #F2C94C;
+    text-decoration: none;
 }
 
 /* BODY */
@@ -100,23 +108,39 @@
     margin-top: 25px;
     display: flex;
     align-items: center;
+    gap: 15px;
+    width: 100%;
 }
 
 .kemetic-btn-gold {
     background: #F2C94C;
     border: none;
-    color: #000;
-    font-weight: 600;
-    padding: 8px 18px;
+    color: #141414;
+    font-weight: 700;
+    padding: 12px 18px;
     border-radius: 10px;
+    flex: 1;
+    cursor: pointer;
+    transition: background 0.2s;
+}
+.kemetic-btn-gold:hover {
+    background: #ffe28a;
 }
 
 .kemetic-btn-red {
-    background: #C62828;
-    border: none;
-    color: white;
-    padding: 8px 18px;
+    background: transparent;
+    border: 1px solid #e74c3c;
+    color: #e74c3c;
+    font-weight: 600;
+    padding: 12px 18px;
     border-radius: 10px;
+    flex: 1;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+.kemetic-btn-red:hover {
+    background: #e74c3c;
+    color: #fff;
 }
 /* ===============================
    KEMETIC RELATED COURSES
@@ -156,27 +180,6 @@
 .kemetic-input.is-invalid {
     border-color: #c62828 !important;
 }
-
-/* ===============================
-   SELECT2 DROPDOWN
-================================ */
-
-.select2-dropdown {
-    background: #0b0b0b;
-    border: 1px solid rgba(242,201,76,.25);
-    border-radius: 12px;
-}
-
-.select2-results__option {
-    color: #e0e0e0;
-    padding: 10px 14px;
-}
-
-.select2-results__option--highlighted {
-    background: rgba(242,201,76,.15);
-    color: #f2c94c;
-}
-
 </style>
 <li data-id="{{ !empty($relatedCourse) ? $relatedCourse->id :'' }}" 
     class="accordion-row kemetic-accordion-item">
@@ -198,12 +201,12 @@
         <div class="kemetic-accordion-tools">
 
             @if(!empty($relatedCourse))
-            <div class="kemetic-dropdown">
+            <div class="kemetic-dropdown dropdown">
                 <button class="kemetic-dropdown-btn" data-bs-toggle="dropdown">
                     <i data-feather="more-vertical"></i>
                 </button>
 
-                <div class="kemetic-dropdown-menu">
+                <div class="dropdown-menu kemetic-dropdown-menu">
                     <a href="/panel/relatedCourses/{{ $relatedCourse->id }}/delete" 
                        class="dropdown-item text-danger">
                        {{ trans('public.delete') }}
@@ -239,7 +242,7 @@
                         <div class="form-group kemetic-related-course-box">
 
                             <label class="kemetic-label">
-                                {{ trans('update.select_related_courses') }}
+                                {{ trans('update.select_related_courses') }} <span class="text-danger">*</span>
                             </label>
 
                             <select name="ajax[{{ !empty($relatedCourse) ? $relatedCourse->id : 'new' }}][course_id]"

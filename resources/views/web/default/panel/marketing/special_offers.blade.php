@@ -54,6 +54,8 @@
     border:none;
     border-radius:12px;
     font-weight:600;
+    height: 38px;
+    white-space: nowrap;
 }
 
 .k-table th{
@@ -120,7 +122,7 @@
 }
 
 .select2-search--dropdown .select2-search__field {
-    background: #0d0d0d !important;
+    background: 0d0d0d !important;
     border: 1px solid rgba(242,201,76,.35) !important;
     color: #fff !important;
     border-radius: 8px !important;
@@ -277,6 +279,32 @@
 .k-select.is-invalid {
     border-color: #f87171 !important;
 }
+
+/* ===== Create button column alignment ===== */
+.k-submit-col {
+    display: flex;
+    align-items: flex-end;
+    padding-bottom: 0;
+}
+
+/* ===== Disable dropdown item – full width clickable ===== */
+.dropdown-menu .delete-action {
+    display: block;
+    width: 100%;
+    padding: 8px 16px;
+    text-align: left;
+    background: transparent;
+    border: none;
+    cursor: pointer;
+    color: #f87171;
+    font-size: 14px;
+    text-decoration: none;
+}
+
+.dropdown-menu .delete-action:hover {
+    background: rgba(248, 113, 113, 0.1);
+    color: #f87171;
+}
 </style>
 @endpush
 
@@ -294,7 +322,7 @@
         @endif
 
         <div class="k-card mt-20" style="padding: 16px;">
-            <form action="/panel/marketing/special_offers/store" method="post" class="row">
+            <form action="/panel/marketing/special_offers/store" method="post" class="row align-items-end">
                 {{ csrf_field() }}
 
                 <div class="col-12 col-lg-6">
@@ -302,7 +330,7 @@
 
                         {{-- Title --}}
                         <div class="col-lg-5">
-                            <div class="form-group">
+                            <div class="form-group mb-0">
                                 <label class="k-label">{{ trans('public.title') }}</label>
                                 <input type="text" name="name" class="form-control k-input">
                                 <div class="invalid-feedback"></div>
@@ -311,7 +339,7 @@
 
                         {{-- Webinar --}}
                         <div class="col-lg-4">
-                            <div class="form-group">
+                            <div class="form-group mb-0">
                                 <label class="k-label">{{ trans('panel.webinar') }}</label>
                                 <select name="webinar_id" class="form-control k-select select2">
                                     <option value="" disabled selected>{{ trans('panel.select_course') }}</option>
@@ -325,7 +353,7 @@
 
                         {{-- Percent --}}
                         <div class="col-lg-3">
-                            <div class="form-group">
+                            <div class="form-group mb-0">
                                 <label class="k-label">{{ trans('panel.amount') }} (%)</label>
                                 <input type="text" name="percent" class="form-control k-input">
                                 <div class="invalid-feedback"></div>
@@ -340,7 +368,7 @@
 
                         {{-- From Date --}}
                         <div class="col-md-6">
-                            <div class="form-group">
+                            <div class="form-group mb-0">
                                 <label class="k-label">{{ trans('public.from') }}</label>
                                 <input type="date"
                                        name="from_date"
@@ -352,7 +380,7 @@
 
                         {{-- To Date --}}
                         <div class="col-md-6">
-                            <div class="form-group">
+                            <div class="form-group mb-0">
                                 <label class="k-label">{{ trans('public.to') }}</label>
                                 <input type="date"
                                        name="to_date"
@@ -365,8 +393,8 @@
                     </div>
                 </div>
 
-                {{-- Submit --}}
-                <div class="col-12 col-lg-1 d-flex align-items-end">
+                {{-- Submit — aligned to bottom of inputs --}}
+                <div class="col-12 col-lg-1 k-submit-col">
                     <button type="button" id="formSubmit" class="btn k-btn w-100">
                         {{ trans('public.create') }}
                     </button>
@@ -456,6 +484,7 @@
                                                             <i data-feather="more-vertical" height="20"></i>
                                                         </button>
                                                         <div class="dropdown-menu">
+                                                            {{-- Full-width block link so entire row is clickable --}}
                                                             <a href="/panel/marketing/special_offers/{{ $specialOffer->id }}/disable"
                                                                class="delete-action btn-transparent">
                                                                 {{ trans('public.disable') }}
@@ -499,6 +528,24 @@
         var saveSuccessLang = '{{ trans('webinars.success_store') }}';
     </script>
 
-    {{-- This file handles #formSubmit click, $.post, success SweetAlert, and 422 errors --}}
     <script src="/assets/default/js/panel/marketing/special_offers.min.js"></script>
+
+    <script>
+    (function ($) {
+        var _inFlight = false;
+        var _origPost = $.post;
+
+        $.post = function (url, data, callback) {
+            if (_inFlight) {
+                console.warn('[guard] duplicate $.post blocked → ' + url);
+                return $.Deferred().reject();
+            }
+            _inFlight = true;
+            return _origPost.call(this, url, data, callback)
+                .always(function () {
+                    setTimeout(function () { _inFlight = false; }, 2000);
+                });
+        };
+    })(jQuery);
+    </script>
 @endpush

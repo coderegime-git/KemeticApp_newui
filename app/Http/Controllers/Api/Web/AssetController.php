@@ -34,8 +34,9 @@ class AssetController extends Controller
             ] : [];
             
             $data['Stripe'] = [
-                'stripe_key'   => env('STRIPE_KEY_DEV'), // only on server
-                'stripe_secret' => env('STRIPE_SECRET_DEV'), // only on server
+                'stripe_key'   => env('STRIPE_KEY'), // only on server
+                'stripe_secret' => env('STRIPE_SECRET'), // only on server
+                'exchange_rate' => env('EXCHANGE_RATE'), // only on server
             ];
 
             return response()->json([

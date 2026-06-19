@@ -849,6 +849,7 @@ main.home-container {
   .badge-bug  { display:inline-block; background:#ff3b30; color:#fff;  font-size:11px; font-weight:800; padding:2px 8px; border-radius:999px; margin-right:4px; }
   .badge-fix  { display:inline-block; background:#34c759; color:#000; font-size:11px; font-weight:800; padding:2px 8px; border-radius:999px; margin-right:4px; }
 
+  
 @import url('https://fonts.googleapis.com/css2?family=Cinzel:wght@600;700;900&family=Raleway:wght@400;500;600;700;800;900&display=swap');
 
 /* ── SECTION 1: FUNNEL ── */
@@ -1390,7 +1391,7 @@ main.home-container {
     <nav class="home-nav-links">
       <a href="#">Livestreams</a>
       <a href="#">Courses</a>
-      <a href="#">Reels</a>
+      <a href="#">Portals</a>
       <a href="#">Shop</a>
       <a href="#">Television</a>
       <a href="#">Articles</a>
@@ -1413,6 +1414,20 @@ main.home-container {
         <span></span>
         <span></span>
       </div>
+    </div> -->
+
+    <!-- <div class="home-membership-cta">
+      <div class="title">Awaken and Ascend</div>
+      <div class="desc">
+        Dive into the ancient wisdom of Kemet. Align your chakras and join a global community
+        of Seekers and Wisdom Keepers.
+      </div>
+       @if(auth()->check())
+      <button class="btn" onclick="location.href='/membership'">SUBSCRIBE A MEMBER</button>
+      @else
+      <button class="btn" onclick="storeRedirectThenLogin()">BECOME A MEMBER</button>
+      @endif
+      <div class="price">€10 / €33 • Unlimited access</div>
     </div> -->
 
     <section class="kh-funnel">
@@ -1454,7 +1469,7 @@ main.home-container {
             @endif
            
           </div>
-
+          <div class="kh-proof-row"><span>No Ai No Bots! Only real people</span></div>
           <div class="kh-proof-row">
             <div class="kh-avatars">
               <span style="background:linear-gradient(135deg,#8b5e3c,#d4936a)">👤</span>
@@ -1463,6 +1478,7 @@ main.home-container {
               <span style="background:linear-gradient(135deg,#8b3c5e,#d46a93)">👤</span>
               <span style="background:linear-gradient(135deg,#6b3c8b,#a36ad4)">👤</span>
             </div>
+            
             <span><strong>{{ $totalWisdomSeekers }}</strong> Wisdom Seekers Worldwide</span>
           </div>
         </div>
@@ -1520,7 +1536,7 @@ main.home-container {
           </div>
           <div class="kh-feat kf-reels">
             <span class="kh-feat-icon">🎬</span>
-            <div class="kh-feat-name">Reels</div>
+            <div class="kh-feat-name">Portals</div>
             <div class="kh-feat-desc">Swipe through wisdom drops.</div>
           </div>
           <div class="kh-feat kf-community">
@@ -1681,7 +1697,7 @@ main.home-container {
           <a href="https://kemetic.app/classes?sort=newest" style="color: inherit; text-decoration: none;">🎓 Courses</a>
           <a href="https://kemetic.app/book" style="color: inherit; text-decoration: none;">📚 Books</a>
           <a href="https://kemetic.app/products" style="color: inherit; text-decoration: none;">🛍️ Products</a>
-          <a href="https://kemetic.app/reels" style="color: inherit; text-decoration: none;">🎬 Videos</a>
+          <a href="https://kemetic.app/reels" style="color: inherit; text-decoration: none;">🎬 Portals</a>
         </div>
 
         <div class="kh-transform-cta">
@@ -1725,7 +1741,7 @@ main.home-container {
         </p>
 
         <p>
-          For the first time, courses, articles, books, livestreams, reels,
+          For the first time, courses, articles, books, livestreams, Portals,
           and Wisdom Keepers were all in one place.
         </p>
 
@@ -1739,7 +1755,7 @@ main.home-container {
           <span>📖 Articles</span>
           <span>📚 Books</span>
           <span>📡 Live</span>
-          <span>🎬 Reels</span>
+          <span>🎬 Portals</span>
         </div>
 
         <div class="kh-transform-cta">
@@ -1756,7 +1772,7 @@ main.home-container {
             </button>
           @endif
 
-          <small>Unlock courses, articles, books, livestreams, videos and more.</small>
+          <small>Unlock courses, articles, books, livestreams, Portals and more.</small>
         </div>
 
       </div>
@@ -1811,7 +1827,7 @@ main.home-container {
             <h1 class="home-hero-title">{{ clean($bestRateWebinar->title,'title') }}</h1>
             <p class="home-hero-sub">{{ convertMinutesToHourAndMinute($bestRateWebinar->duration) }} {{ trans('home.hours') }} · <a href="{{ $bestRateWebinar->teacher->getProfileUrl() }}" target="_blank" class="user-name ml-5 font-14">{{ $bestRateWebinar->teacher->full_name }}</p>
             <div class="home-stars">
-              @php
+               @php
                 $i = 5;
                 $averageRating = 0;
                 
@@ -2050,7 +2066,7 @@ main.home-container {
               <div>
                 <h1 id="kmTitle" class="kemetic-title">Become a Member</h1>
                 <p class="kemetic-subtitle">
-                  Get full access to all Kemetic App courses, PDFs, articles, videos, and more – included with membership.
+                  Get full access to all Kemetic App courses, PDFs, articles, Portals, and more – included with membership.
                 </p>
               </div>
               <button type="button" class="kemetic-close" aria-label="Close" id="kmClose">✕</button>
@@ -2087,7 +2103,7 @@ main.home-container {
                       <path d="M20 6L9 17l-5-5" stroke="white" stroke-opacity=".9" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/>
                     </svg>
                   </div>
-                  <p>Read all articles & watch member videos</p>
+                  <p>Read all articles & watch member Portals</p>
                 </div>
 
                 <div class="benefit">
@@ -2237,6 +2253,7 @@ main.home-container {
 
 <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 <script>
+
   function storeRedirectThenLogin() {
     fetch('/membership/store-redirect', {
         method: 'POST',
@@ -2583,7 +2600,6 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     });
 
-
     upgrade.addEventListener('click', async () => {
       window.location.href = '/membership';
     });
@@ -2683,7 +2699,7 @@ if (typeof feather !== 'undefined') {
                     if ((e.deltaY < 0 && atLeft) || (e.deltaY > 0 && atRight)) {
                         return;
                     }
-                    
+
                     s.scrollLeft += e.deltaY;
                     e.preventDefault();
                 }

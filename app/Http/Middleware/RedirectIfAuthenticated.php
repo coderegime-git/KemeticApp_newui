@@ -23,6 +23,7 @@ class RedirectIfAuthenticated
 
         foreach ($guards as $guard) {
             if (Auth::guard($guard)->check()) {
+
                 $adminPrefix = function_exists('getAdminPanelUrlPrefix') ? getAdminPanelUrlPrefix() : 'admin';
                 $adminLoginPath = ltrim($adminPrefix . '/login', '/');
 

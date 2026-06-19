@@ -349,6 +349,40 @@
 .form-group {
     margin-bottom: 18px;
 }
+
+
+/* Step 2 Mobile Fix */
+@media (max-width: 767px) {
+    .kemetic-form-section {
+        padding: 12px;
+        overflow-x: hidden;
+    }
+    .kemetic-form-section .row {
+        margin-left: 0;
+        margin-right: 0;
+    }
+    .kemetic-form-section [class*="col-"] {
+        padding-left: 8px;
+        padding-right: 8px;
+    }
+    .form-control,
+    .custom-select {
+        font-size: 14px !important;
+        min-width: 0 !important;
+    }
+    .input-group {
+        flex-wrap: nowrap;
+    }
+    .bootstrap-tagsinput {
+        max-width: 100% !important;
+    }
+    .kemetic-partner-box {
+        padding: 12px !important;
+    }
+    .select2-container {
+        width: 100% !important;
+    }
+}
 </style>
 
 @push('styles_top')
@@ -362,8 +396,8 @@
 
 
         <div class="form-group mt-15">
-            <label class="input-label">{{ trans('public.capacity') }}</label>
-            <input type="number" name="capacity" value="{{ (!empty($webinar) and !empty($webinar->capacity)) ? $webinar->capacity : old('capacity') }}" class="form-control @error('capacity')  is-invalid @enderror" placeholder="{{ trans('forms.capacity_placeholder') }}"/>
+            <label class="input-label">{{ trans('public.capacity') }} <span class="text-danger">*</span></label>
+            <input type="number" name="capacity" required value="{{ (!empty($webinar) and !empty($webinar->capacity)) ? $webinar->capacity : old('capacity') }}" class="form-control @error('capacity')  is-invalid @enderror" placeholder="{{ trans('forms.capacity_placeholder') }}"/>
             @error('capacity')
             <div class="invalid-feedback">
                 {{ $message }}
@@ -377,7 +411,7 @@
             @if($webinar->isWebinar())
                 <div class="col-12 col-md-6">
                     <div class="form-group">
-                        <label class="input-label">{{ trans('public.start_date') }}</label>
+                        <label class="input-label">{{ trans('public.start_date') }} <span class="text-danger">*</span></label>
                         <div class="input-group">
                             <div class="input-group-prepend">
                             <span class="input-group-text" id="dateInputGroupPrepend">
@@ -385,8 +419,8 @@
                             </span>
                             </div>
 
-                            <input type="date" name="start_date" value="{{ (!empty($webinar) and $webinar->start_date) ? dateTimeFormat($webinar->start_date, 'Y-m-d H:i', false, false, $webinar->timezone) : old('start_date') }}"
-                                   class="form-control " aria-describedby="dateInputGroupPrepend"/>
+                            <input type="text" name="start_date" value="{{ (!empty($webinar) and $webinar->start_date) ? dateTimeFormat($webinar->start_date, 'Y-m-d H:i', false, false, $webinar->timezone) : old('start_date') }}"
+                                   class="form-control datetimepicker" aria-describedby="dateInputGroupPrepend" readonly/>
                             @error('start_date')
                             <div class="invalid-feedback">
                                 {{ $message }}
@@ -399,7 +433,7 @@
 
             <div class="col-12 @if($webinar->isWebinar()) col-md-6 @endif">
                 <div class="form-group">
-                    <label class="input-label">{{ trans('public.duration') }} ({{ trans('public.minutes') }})</label>
+                    <label class="input-label">{{ trans('public.duration') }} ({{ trans('public.minutes') }}) <span class="text-danger">*</span></label>
                     <div class="input-group">
                         <div class="input-group-prepend">
                             <span class="input-group-text" id="timeInputGroupPrepend">
@@ -407,8 +441,7 @@
                             </span>
                         </div>
 
-
-                        <input type="text" name="duration" value="{{ (!empty($webinar) and !empty($webinar->duration)) ? $webinar->duration : old('duration') }}" class="form-control @error('duration')  is-invalid @enderror"/>
+                        <input type="text" name="duration" required value="{{ (!empty($webinar) and !empty($webinar->duration)) ? $webinar->duration : old('duration') }}" class="form-control @error('duration')  is-invalid @enderror"/>
                         @error('duration')
                         <div class="invalid-feedback">
                             {{ $message }}
@@ -541,7 +574,7 @@
 
 
         <div class="form-group mt-15">
-            <label class="input-label">{{ trans('public.category') }}</label>
+            <label class="input-label">{{ trans('public.category') }} <span class="text-danger">*</span></label>
 
             <select id="categories" class="custom-select @error('category_id')  is-invalid @enderror" name="category_id" required>
                 <option {{ (!empty($webinar) and !empty($webinar->category_id)) ? '' : 'selected' }} disabled>{{ trans('public.choose_category') }}</option>

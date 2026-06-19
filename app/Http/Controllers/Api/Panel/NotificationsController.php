@@ -113,19 +113,6 @@ class NotificationsController extends Controller
         return apiResponse2(0, 'already_seen', trans('api.notification.already_seen'));
     }
 
-    public function unRead()
-    {
-        $user = apiAuth();
-        $unReadNotifications = $user->getUnReadNotifications();
-        return $unReadNotifications;
-
-    }
-
-    public function read()
-    {
-        return $this->all()->diff($this->unRead());
-    }
-
     public function markAllAsRead()
     {
         $user = apiAuth();
@@ -152,6 +139,19 @@ class NotificationsController extends Controller
 
         return apiResponse2(1, trans('public.request_success'), trans('update.all_your_notifications_have_been_marked_as_read'));
 
+    }
+
+    public function unRead()
+    {
+        $user = apiAuth();
+        $unReadNotifications = $user->getUnReadNotifications();
+        return $unReadNotifications;
+
+    }
+
+    public function read()
+    {
+        return $this->all()->diff($this->unRead());
     }
 
     public function all()

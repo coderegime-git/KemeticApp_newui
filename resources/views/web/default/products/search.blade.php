@@ -6,7 +6,7 @@
     <!-- Membership banner -->
     <div class="shop-banner">
       <div class="shop-chip">💎 Full access to all products</div>
-      <div class="shop-chip">€1/mo • €10/yr • €33 lifetime</div>
+      <div class="shop-chip">€10/yr • €33 lifetime</div>
       
        @if(auth()->check())
             <button class="shop-cta"><a href="/membership">Upgrade</a></button>

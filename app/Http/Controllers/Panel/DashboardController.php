@@ -999,6 +999,66 @@ class DashboardController extends Controller
         return $reels;
     }
 
+    // private function getOrdersData($user)
+    // {
+    //     $orders = Order::where('user_id', $user->id)  // ✅ buyer's orders
+    //         ->where('status', Order::$paid)
+    //         ->with(['orderItems.webinar', 'orderItems.product', 
+    //                 'orderItems.bundle', 'orderItems.book'])
+    //         ->orderBy('created_at', 'desc')
+    //         ->limit(10)
+    //         ->get()
+    //         ->map(function ($order) {
+    //             $firstItem = $order->orderItems->first();
+    //             $itemType  = '';
+    //             $itemTitle = '';
+
+    //             if ($firstItem) {
+    //                 if ($firstItem->webinar_id) {
+    //                     $itemType  = 'Course';
+    //                     $itemTitle = $firstItem->webinar->title ?? 'Deleted Course';
+    //                 } elseif ($firstItem->product_id) {
+    //                     $itemType  = 'Product';
+    //                     $itemTitle = $firstItem->product->title ?? 'Deleted Product';
+    //                 } elseif ($firstItem->bundle_id) {
+    //                     $itemType  = 'Bundle';
+    //                     $itemTitle = $firstItem->bundle->title ?? 'Deleted Bundle';
+    //                 } elseif ($firstItem->book_id) {
+    //                     $itemType  = 'Book';
+    //                     $itemTitle = $firstItem->book->title ?? 'Deleted Book';
+    //                 } elseif ($firstItem->subscribe_id) {
+    //                     $itemType  = 'Membership';
+    //                     $itemTitle = 'Membership';
+    //                 }
+    //             }
+
+    //             $itemsList = $order->orderItems->map(function ($item) {
+    //                 if ($item->webinar_id)   return $item->webinar->title   ?? 'Course';
+    //                 if ($item->product_id)   return $item->product->title   ?? 'Product';
+    //                 if ($item->bundle_id)    return $item->bundle->title    ?? 'Bundle';
+    //                 if ($item->book_id)      return $item->book->title      ?? 'Book';
+    //                 if ($item->subscribe_id) return 'Membership';
+    //                 return 'Item';
+    //             })->implode(', ');
+
+    //             return [
+    //                 'order_id'       => $order->id,
+    //                 'order_number'   => $order->order_number ?? 'N/A',
+    //                 'items'          => $itemsList,
+    //                 'item_type'      => $itemType,
+    //                 'item_title'     => $itemTitle,
+    //                 'quantity'       => $order->orderItems->sum('quantity'),
+    //                 'total'          => $this->formatPrice($order->total_amount),
+    //                 'date'           => $order->created_at,
+    //                 'status'         => $order->status,
+    //                 'payment_method' => $order->payment_method ?? 'N/A',
+    //             ];
+    //         })
+    //         ->toArray();
+
+    //     return $orders;
+    // }
+
     private function getOrdersData($user)
     {
         $orders = Order::whereHas('orderItems', function ($query) use ($user) {

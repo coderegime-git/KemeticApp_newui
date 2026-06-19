@@ -1,6 +1,13 @@
 @extends(getTemplate().'.layouts.app')
-
+@section('title', 'Media Kit' . (!empty($generalSettings['site_name']) ? ' | ' . $generalSettings['site_name'] : ''))
+ 
+@section('fav_icon')
+    @if(!empty($generalSettings['fav_icon']))
+        <link href="{{ $generalSettings['fav_icon'] }}" rel="icon" type="image/png">
+    @endif
+@endsection
 @push('styles_top')
+        <link href="{{ $generalSettings['fav_icon'] }}" rel="icon" type="image/png">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
 @endpush
 
@@ -441,6 +448,19 @@
 
     .btn-close-custom:hover { color: var(--gold); background: var(--gold-dim); }
 
+    /* ── UPLOAD STATUS ── */
+    .mk-status-success {
+        background: #1f3d2b;
+        border: 1px solid #2ecc71;
+        color: #2ecc71;
+    }
+
+    .mk-status-error {
+        background: #3d1f1f;
+        border: 1px solid #e74c3c;
+        color: #e74c3c;
+    }
+
     /* ── NO DATA ── */
     .mk-no-data {
         background: linear-gradient(180deg, var(--surface), var(--surface-alt));
@@ -540,18 +560,6 @@
 </button>
 
 <div class="container-fluid py-4 px-3 px-md-4">
-    @if(session('success'))
-        <div class="alert alert-success">{{ session('success') }}</div>
-    @endif
-    @if($errors->any())
-        <div class="alert alert-danger">
-            <ul class="mb-0">
-                @foreach($errors->all() as $error)
-                    <li>{{ $error }}</li>
-                @endforeach
-            </ul>
-        </div>
-    @endif
 
     {{-- ── STATISTICS ── --}}
     <section class="mk-stat-section">
@@ -711,7 +719,7 @@
                 </button>
             </div>
             <div class="modal-body">
-                <form action="/create-media" method="POST" enctype="multipart/form-data">
+                <form id="uploadMediaForm" action="/create-media" method="POST" enctype="multipart/form-data">
                     @csrf
                     <div class="row g-3">
                         <div class="col-md-6 col-12">
@@ -735,10 +743,10 @@
                         </div>
 
                         <div class="col-12">
-                            <label class="mk-form-label">Course Link (Optional)</label>
+                            <label class="mk-form-label">Course Link</label>
                             <div class="mk-input-group">
                                 <i class="fa-solid fa-link" style="font-size:13px;"></i>
-                                <input type="url" name="courseLink" class="mk-input" placeholder="https://...">
+                                <input type="url" name="courseLink" class="mk-input" placeholder="https://..." required>
                             </div>
                         </div>
 
@@ -749,11 +757,25 @@
                         </div>
                     </div>
 
+                    {{-- Progress Bar --}}
+                    <div id="uploadProgressWrap" style="display:none;margin-top:18px;">
+                        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;">
+                            <span style="font-size:13px;color:var(--text-sub);">Uploading...</span>
+                            <span id="uploadProgressText" style="font-size:13px;font-weight:700;color:var(--gold);">0%</span>
+                        </div>
+                        <div style="background:#1a1a1a;border-radius:30px;height:8px;overflow:hidden;border:1px solid var(--border);">
+                            <div id="uploadProgressBar" style="height:100%;width:0%;background:linear-gradient(90deg,#d4af37,var(--gold));border-radius:30px;transition:width .2s ease;"></div>
+                        </div>
+                    </div>
+
+                    {{-- Status Message --}}
+                    <div id="uploadStatus" style="display:none;margin-top:14px;padding:12px 16px;border-radius:12px;font-size:14px;font-weight:500;"></div>
+
                     <div class="modal-footer mt-3 px-0 pb-0">
                         <button type="button" class="mk-share-btn mk-btn-sm" data-bs-dismiss="modal" style="min-width:90px;">
                             Close
                         </button>
-                        <button type="submit" class="mk-download-btn mk-btn-sm" style="min-width:120px;max-width:160px;">
+                        <button type="submit" id="uploadSubmitBtn" class="mk-download-btn mk-btn-sm" style="min-width:130px;max-width:160px;">
                             <i class="fas fa-cloud-upload-alt"></i> Upload
                         </button>
                     </div>
@@ -794,10 +816,12 @@
 <script>
 document.addEventListener("DOMContentLoaded", function () {
 
-    /* ── CATEGORY FILTER ── */
-    const tabs    = document.querySelectorAll(".mk-nav-link");
-    const cards   = document.querySelectorAll(".card-item");
-    const noData  = document.getElementById("noData");
+    /* ════════════════════════════════════════
+       1. CATEGORY FILTER
+    ════════════════════════════════════════ */
+    const tabs   = document.querySelectorAll(".mk-nav-link");
+    const cards  = document.querySelectorAll(".card-item");
+    const noData = document.getElementById("noData");
 
     tabs.forEach(tab => {
         tab.addEventListener("click", function (e) {
@@ -806,6 +830,9 @@ document.addEventListener("DOMContentLoaded", function () {
 
             tabs.forEach(t => t.classList.remove("active"));
             this.classList.add("active");
+
+            // Pause all videos when switching categories
+            pauseAllVideos();
 
             let visible = 0;
             cards.forEach(card => {
@@ -818,7 +845,67 @@ document.addEventListener("DOMContentLoaded", function () {
         });
     });
 
-    /* ── DOWNLOAD ── */
+
+    /* ════════════════════════════════════════
+       2. ONE-VIDEO-AT-A-TIME PLAY
+       — native <video> elements only
+       — YouTube iframes: postMessage pause
+    ════════════════════════════════════════ */
+    function pauseAllVideos(exceptVideo) {
+        // Pause all native videos
+        document.querySelectorAll(".mk-video-wrap video").forEach(v => {
+            if (v !== exceptVideo) {
+                v.pause();
+            }
+        });
+
+        // Pause all YouTube iframes (except the one currently playing)
+        document.querySelectorAll(".mk-video-wrap iframe").forEach(iframe => {
+            if (iframe !== exceptVideo) {
+                try {
+                    iframe.contentWindow.postMessage(
+                        '{"event":"command","func":"pauseVideo","args":""}',
+                        '*'
+                    );
+                } catch(e) {}
+            }
+        });
+    }
+
+    // Listen to native video play events
+    document.querySelectorAll(".mk-video-wrap video").forEach(video => {
+        video.addEventListener("play", function () {
+            pauseAllVideos(this);
+        });
+    });
+
+    // For YouTube iframes: add ?enablejsapi=1 dynamically so postMessage works
+    document.querySelectorAll(".mk-video-wrap iframe").forEach(iframe => {
+        let src = iframe.src || "";
+        if (src.includes("youtube.com") && !src.includes("enablejsapi")) {
+            iframe.src = src + (src.includes("?") ? "&" : "?") + "enablejsapi=1";
+        }
+    });
+
+    // Listen for YouTube play via postMessage
+    window.addEventListener("message", function (e) {
+        if (!e.data) return;
+        try {
+            const data = (typeof e.data === "string") ? JSON.parse(e.data) : e.data;
+            // YouTube sends info events; playerState 1 = playing
+            if (data.event === "infoDelivery" && data.info && data.info.playerState === 1) {
+                const playingIframe = document.querySelector(
+                    `.mk-video-wrap iframe[src*="${e.origin.replace("https://","").replace("http://","")}"]`
+                );
+                pauseAllVideos(playingIframe || null);
+            }
+        } catch(err) {}
+    });
+
+
+    /* ════════════════════════════════════════
+       3. DOWNLOAD BUTTON
+    ════════════════════════════════════════ */
     document.querySelectorAll(".download-btn").forEach(btn => {
         btn.addEventListener("click", function () {
             const url = this.getAttribute("data-url");
@@ -832,17 +919,100 @@ document.addEventListener("DOMContentLoaded", function () {
         });
     });
 
-    /* ── VIDEO PAUSE OTHERS ── */
-    const videos = document.querySelectorAll("video");
-    videos.forEach(video => {
-        video.addEventListener("play", function() {
-            videos.forEach(v => {
-                if (v !== this) {
-                    v.pause();
+
+    /* ════════════════════════════════════════
+       4. AJAX UPLOAD WITH PROGRESS BAR
+    ════════════════════════════════════════ */
+    const uploadForm     = document.getElementById("uploadMediaForm");
+    const uploadBtn      = document.getElementById("uploadSubmitBtn");
+    const progressWrap   = document.getElementById("uploadProgressWrap");
+    const progressBar    = document.getElementById("uploadProgressBar");
+    const progressText   = document.getElementById("uploadProgressText");
+    const uploadStatus   = document.getElementById("uploadStatus");
+
+    if (uploadForm) {
+        uploadForm.addEventListener("submit", function (e) {
+            e.preventDefault();
+
+            const formData = new FormData(uploadForm);
+
+            // UI: disable button, show progress
+            uploadBtn.disabled = true;
+            uploadBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Uploading...';
+            progressWrap.style.display  = "block";
+            uploadStatus.style.display  = "none";
+            progressBar.style.width     = "0%";
+            progressText.textContent    = "0%";
+
+            const xhr = new XMLHttpRequest();
+
+            // Track upload progress
+            xhr.upload.addEventListener("progress", function (e) {
+                if (e.lengthComputable) {
+                    const pct = Math.round((e.loaded / e.total) * 100);
+                    progressBar.style.width  = pct + "%";
+                    progressText.textContent = pct + "%";
                 }
             });
+
+            xhr.addEventListener("load", function () {
+                progressBar.style.width  = "100%";
+                progressText.textContent = "100%";
+
+                if (xhr.status === 200 || xhr.status === 201 || xhr.status === 302) {
+                    showUploadStatus("success", '<i class="fas fa-check-circle me-2"></i>Media uploaded successfully!');
+                    uploadForm.reset();
+                    // Reload page after 1.5s to show new card
+                    setTimeout(() => window.location.reload(), 1500);
+                } else {
+                    let msg = "Upload failed. Please try again.";
+                    try {
+                        const res = JSON.parse(xhr.responseText);
+                        if (res.message) msg = res.message;
+                        if (res.errors) msg = Object.values(res.errors).flat().join(" ");
+                    } catch(err) {}
+                    showUploadStatus("error", '<i class="fas fa-exclamation-circle me-2"></i>' + msg);
+                    resetUploadBtn();
+                }
+            });
+
+            xhr.addEventListener("error", function () {
+                showUploadStatus("error", '<i class="fas fa-exclamation-circle me-2"></i>Network error. Please try again.');
+                resetUploadBtn();
+            });
+
+            xhr.open("POST", uploadForm.action);
+            xhr.setRequestHeader("X-CSRF-TOKEN", document.querySelector('meta[name="csrf-token"]')?.content
+                || "{{ csrf_token() }}");
+            xhr.setRequestHeader("X-Requested-With", "XMLHttpRequest");
+            xhr.send(formData);
         });
-    });
+    }
+
+    function showUploadStatus(type, html) {
+        uploadStatus.style.display      = "block";
+        uploadStatus.className          = "mk-upload-status " + (type === "success" ? "mk-status-success" : "mk-status-error");
+        uploadStatus.innerHTML          = html;
+        progressWrap.style.display      = "none";
+    }
+
+    function resetUploadBtn() {
+        uploadBtn.disabled     = false;
+        uploadBtn.innerHTML    = '<i class="fas fa-cloud-upload-alt"></i> Upload';
+    }
+
+    // Reset modal state when closed
+    const uploadModal = document.getElementById("uploadModal");
+    if (uploadModal) {
+        uploadModal.addEventListener("hidden.bs.modal", function () {
+            if (uploadForm) uploadForm.reset();
+            progressWrap.style.display = "none";
+            uploadStatus.style.display = "none";
+            progressBar.style.width    = "0%";
+            progressText.textContent   = "0%";
+            resetUploadBtn();
+        });
+    }
 
 });
 </script>

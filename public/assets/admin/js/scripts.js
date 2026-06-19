@@ -68,7 +68,7 @@ $(function () {
             $("body.layout-2 #sidebar-wrapper").stick_in_parent({
                 parent: $('body')
             });
-            $("body.layout-2 #sidebar-wrapper").stick_in_parent({ recalc_every: 1 });
+            $("body.layout-2 #sidebar-wrapper").stick_in_parent({recalc_every: 1});
         }
     }
     sidebar_sticky();
@@ -680,7 +680,7 @@ var LFMButton = function (context) {
         tooltip: 'Insert image with filemanager',
         click: function () {
 
-            lfm({ type: 'file', prefix: '/laravel-filemanager' }, function (lfmItems, path) {
+            lfm({type: 'file', prefix: '/laravel-filemanager'}, function (lfmItems, path) {
                 lfmItems.forEach(function (lfmItem) {
                     context.invoke('insertImage', lfmItem.url);
                 });

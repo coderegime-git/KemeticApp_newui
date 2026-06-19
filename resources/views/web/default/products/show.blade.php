@@ -6,7 +6,7 @@
       <!-- <div class="shopdetail-logo">KA</div> -->
       <!-- <div class="shopdetail-crumbs"><a href="#">Shop</a> • Jewelry • Tiger Eye Necklace</div> -->
       <div class="shopdetail-member">
-        <div class="shopdetail-chip">€1/mo • €10/yr • €33 lifetime</div>
+        <div class="shopdetail-chip">€10/yr • €33 lifetime</div>
          @if(auth()->check())
           <button class="shopdetail-cta"><a href="/membership">Upgrade</a></button>
         @else
@@ -74,7 +74,7 @@
               <img src="{{ $product->creator->getAvatar() 
                     ? (Str::startsWith($product->creator->getAvatar(), '/') ? $product->creator->getAvatar() : '/' . $product->creator->getAvatar())
                     : url('/getDefaultAvatar?item=' . ($product->creator->id ?? '') . '&name=' . urlencode($product->creator->full_name) . '&size=36') 
-                }}" alt="">
+                }}" class="img-cover" alt="{{ $product->creator->full_name }}">
               <div><a href="{{ $product->creator->getProfileUrl() }}" target="_blank" class="user-name ml-5 font-14">{{ $product->creator->full_name }}</a> &nbsp;•&nbsp; <a href="{{ $product->category->getUrl() }}" target="_blank"><span class="shopdetail-muted">{{ $product->category->title }}</span></a></div>
               <!-- <div style="margin-left:auto">❤️ {{ $product->reviews->pluck('creator_id')->count() }}</div> -->
             </div>

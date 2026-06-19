@@ -115,10 +115,10 @@ class ProductController extends Controller
 
         if ($cjVid) {
             $cjProduct = $this->cjService->getProductDetail($cjVid);
-
+            
             if ($cjProduct) {
                 $cjPrice = $cjProduct['sellPrice'] ?? 0;
-
+                
                 if ($cjVariantId && !empty($cjProduct['variants'])) {
                     foreach ($cjProduct['variants'] as $v) {
                         if ($v['vid'] == $cjVariantId) {
@@ -444,6 +444,14 @@ class ProductController extends Controller
                 'description' => $data['description'],
             ]);
         } elseif ($currentStep == 2) {
+            // $data['cj_shipping_price'] = !empty($data['cj_shipping_price']) ? convertPriceToDefaultCurrency($data['cj_shipping_price']) : null;
+            // $data['cj_your_price'] = !empty($data['cj_your_price']) ? convertPriceToDefaultCurrency($data['cj_your_price']) : null;
+            // $data['platform_price'] = !empty($data['platform_price']) ? convertPriceToDefaultCurrency($data['platform_price']) : null;
+            // $data['earning_price'] = !empty($data['earning_price']) ? convertPriceToDefaultCurrency($data['earning_price']) : null;
+            // $data['own_platform_price'] = !empty($data['own_platform_price']) ? convertPriceToDefaultCurrency($data['own_platform_price']) : null;
+            // $data['price'] = !empty($data['price']) ? convertPriceToDefaultCurrency($data['price']) : null;
+            // $data['delivery_fee'] = !empty($data['delivery_fee']) ? convertPriceToDefaultCurrency($data['delivery_fee']) : null;
+            
             $data['cj_shipping_price'] = !empty($data['cj_shipping_price']) ? $data['cj_shipping_price'] : null;
             $data['cj_your_price'] = !empty($data['cj_your_price']) ? $data['cj_your_price'] : null;
             $data['platform_price'] = !empty($data['platform_price']) ? $data['platform_price'] : null;
@@ -455,15 +463,18 @@ class ProductController extends Controller
             if ($product->is_cj_product) {
                 $cjProduct = $this->cjService->getProductDetail($product->cj_vid);
                 if ($cjProduct && !empty($cjProduct['variants'])) {
+
                     $shipping = (float) ($data['cj_shipping_price'] ?? 0);
                     $earning = (float) ($data['cj_your_price'] ?? 0);
 
+                    
                     foreach ($cjProduct['variants'] as $v) {
                         $cjVPrice = (float) ($v['variantSellPrice'] ?? $v['sellPrice'] ?? 0);
-                        $cjVPriceVat = $cjVPrice * 1.20; // 20% VAT applied to base price
+                        $cjVPriceVat = $cjVPrice * 1.20; 
                         // Calculate final selling price for this specific variant
+                        // $variantSellPrice = ceil(($cjVPrice + $shipping + $earning) / 0.9);
                         $variantSellPrice = ceil(($cjVPriceVat + $shipping + $earning) / 0.9);
-
+                        
                         ProductCjVariant::where('product_id', $product->id)
                             ->where('vid', $v['vid'])
                             ->update([
@@ -853,4 +864,5 @@ class ProductController extends Controller
             'message' => 'Product resynchronized successfully!'
         ], 200);
     }
+
 }

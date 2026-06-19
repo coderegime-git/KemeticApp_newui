@@ -207,6 +207,60 @@
 .custom-switch .custom-control-input:disabled:checked ~ .custom-control-label::before {
   background-color: rgba(67, 212, 119, 0.5);
 }
+
+
+.kemetic-question-card {
+    background: #111;
+    border: 1px solid rgba(212, 175, 55, 0.2);
+    border-radius: 12px;
+    padding: 12px 16px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 12px;
+}
+
+.kemetic-question-card h4 {
+    font-size: 15px;
+    font-weight: 600;
+    color: #fff;
+    margin: 0 0 4px 0;
+}
+
+.kemetic-question-card .kemetic-muted {
+    font-size: 13px;
+    color: #999;
+}
+
+.kemetic-question-card .actions {
+    display: flex;
+    align-items: center;
+}
+
+.kemetic-question-card .actions i {
+    color: #d4af37;
+    width: 18px;
+    cursor: grab;
+    margin-right: 15px;
+}
+
+.kemetic-question-card .kemetic-text-danger {
+    color: #ff5c5c;
+    font-size: 13px;
+    font-weight: 500;
+}
+
+@media (max-width: 767px) {
+    .kemetic-question-card {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+    .kemetic-question-card .actions {
+        width: 100%;
+        justify-content: space-between;
+        margin-top: 10px;
+    }
+}
 </style>
 <div class="kemetic-container">
 
@@ -365,21 +419,21 @@
         {{-- ================= QUESTIONS ================= --}}
         @if(!empty($quiz))
             <section class="mt-50">
-                <div class="d-flex justify-content-between align-items-center">
-                    <h2 class="kemetic-section-title with-line">
+                <div class="d-flex flex-column flex-md-row justify-content-between align-items-start align-items-md-center">
+                    <h2 class="kemetic-section-title with-line mb-3 mb-md-0">
                         {{ trans('public.questions') }}
                     </h2>
 
-                    <div class="d-flex gap-10">
+                    <div class="d-flex flex-wrap gap-10">
                         <button type="button" id="add_multiple_question"
                                 data-quiz-id="{{ $quiz->id }}" style="margin-right:10px;"
-                                class="kemetic-btn-outline">
+                                class="kemetic-btn-outline flex-grow-1">
                             {{ trans('quiz.add_multiple_choice') }}
                         </button>
 
                         <button type="button" id="add_descriptive_question"
                                 data-quiz-id="{{ $quiz->id }}"
-                                class="kemetic-btn-gold">
+                                class="kemetic-btn-gold flex-grow-1">
                             {{ trans('quiz.add_descriptive') }}
                         </button>
                     </div>
@@ -388,18 +442,21 @@
                 <ul class="kemetic-question-list mt-30 draggable-questions-lists-{{ $quiz->id }}">
                     @foreach($quizQuestions as $question)
                         <li class="kemetic-question-card" data-id="{{ $question->id }}">
-                            <div>
+                            <div class="info">
                                 <h4>{{ $question->title }}</h4>
                                 <span class="kemetic-muted">
                                     {{ trans('quiz.grade') }}: {{ $question->grade }}
                                 </span>
                             </div>
 
-                            <div class="d-flex gap-10">
-                                <i data-feather="move"></i>
+                            <div class="actions">
+                                <!-- <i data-feather="move"></i> -->
+                                <button type="button" data-question-id="{{ $question->id }}" class="edit_question" style="background:transparent; border:none; color:#d4af37; padding:0; margin-right:15px;" title="{{ trans('public.edit') }}">
+                                    <i data-feather="edit-2"></i>
+                                </button>
                                 <a href="/panel/quizzes-questions/{{ $question->id }}/delete"
-                                   class="kemetic-text-danger">
-                                    {{ trans('public.delete') }}
+                                   class="kemetic-text-danger" title="{{ trans('public.delete') }}" style="margin-right:15px;">
+                                    <i data-feather="trash-2"></i>
                                 </a>
                             </div>
                         </li>
@@ -409,13 +466,13 @@
         @endif
 
         {{-- ================= FOOTER ================= --}}
-        <div class="d-flex justify-content-end mt-40 gap-10">
-            <button type="button" class="js-submit-quiz-form kemetic-btn-gold">
+        <div class="d-flex flex-column flex-md-row justify-content-end mt-40 gap-10">
+            <button type="button" class="js-submit-quiz-form w-100 w-md-auto kemetic-btn-gold mb-2 mb-md-0">
                 {{ !empty($quiz) ? trans('public.save_change') : trans('public.create') }}
             </button>
 
             @if(empty($quiz) && !empty($inWebinarPage))
-                <button type="button" class="kemetic-btn-outline cancel-accordion">
+                <button type="button" class="kemetic-btn-outline w-100 w-md-auto cancel-accordion">
                     {{ trans('public.close') }}
                 </button>
             @endif

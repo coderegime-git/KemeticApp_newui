@@ -55,7 +55,7 @@
         <article class="dashboard-tile" style="--tint:var(--red);--glow:#E5393544" data-key="savedReels">
           <div class="dashboard-count">{{ $seeker_data['saved_reels'] }}  </div>
           <div class="dashboard-icon"><span class="dashboard-ms">favorite</span></div>
-          <div class="dashboard-title">Saved Reels</div>
+          <div class="dashboard-title">Saved Portals</div>
           <div class="dashboard-meta">Likes & bookmarks</div>
         </article>
         <article class="dashboard-tile" style="--tint:var(--violet);--glow:#8E24AA44" data-key="orders">
@@ -78,6 +78,12 @@
           <div class="dashboard-title">Messages</div>
           <div class="dashboard-meta">DMs & groups</div>
         </article>
+        <article class="dashboard-tile" style="--tint:var(--violet);--glow:#8E24AA44" onclick="window.location.href='/cart'">
+          <div class="dashboard-count"></div>
+          <div class="dashboard-icon"><span class="dashboard-ms">shopping_cart</span></div>
+          <div class="dashboard-title">Cart</div>
+          <div class="dashboard-meta">Pending Orders</div>
+        </article>
       </section>
     @endif
     
@@ -87,7 +93,7 @@
         <article class="dashboard-tile" style="--tint:var(--red);--glow:#E5393544" data-key="reelStudio">
           <div class="dashboard-count">{{ $creator_data['reel_studio'] }}</div>
           <div class="dashboard-icon"><span class="dashboard-ms">movie_edit</span></div>
-          <div class="dashboard-title">Reel Studio</div>
+          <div class="dashboard-title">Portal Studio</div>
           <div class="dashboard-meta">Upload & schedule</div>
         </article>
         <article class="dashboard-tile" style="--tint:var(--blue);--glow:#1E88E544" data-key="liveStudio">
@@ -117,7 +123,7 @@
         <article class="dashboard-tile" style="--tint:var(--red);--glow:#E5393544" data-key="reelStudio">
           <div class="dashboard-count">{{ $keeper_data['reel_studio'] }}</div>
           <div class="dashboard-icon"><span class="dashboard-ms">movie_edit</span></div>
-          <div class="dashboard-title">Creator • Reel Studio</div>
+          <div class="dashboard-title">Creator • Portal Studio</div>
           <div class="dashboard-meta">Upload & schedule</div>
         </article>
         <article class="dashboard-tile" style="--tint:var(--blue);--glow:#1E88E544" data-key="liveStudio">
@@ -174,7 +180,7 @@
           <div class="dashboard-count">{{ $keeper_data['analytics'] }}</div>
           <div class="dashboard-icon"><span class="dashboard-ms">monitoring</span></div>
           <div class="dashboard-title">Analytics</div>
-          <div class="dashboard-meta">Courses • Reels • Shop</div>
+          <div class="dashboard-meta">Courses • Portals • Shop</div>
         </article>
         <article class="dashboard-tile" style="--tint:var(--gold);--glow:#D7B45E44" data-key="payouts">
           <div class="dashboard-count">{{ $keeper_data['payouts'] }}</div>
@@ -189,6 +195,13 @@
           <div class="dashboard-title">Membership</div>
           <div class="dashboard-meta">{{ $keeper_data['membership']['price'] }}</div>
           @if($keeper_data['membership']['status'] == 'Active')<a href="/membership" class="dashboard-cancel-btn" onclick="event.stopPropagation()">Cancel</a>@endif
+        </article>
+
+        <article class="dashboard-tile" style="--tint:var(--violet);--glow:#8E24AA44" onclick="window.location.href='/cart'">
+          <div class="dashboard-count"></div>
+          <div class="dashboard-icon"><span class="dashboard-ms">shopping_cart</span></div>
+          <div class="dashboard-title">Cart</div>
+          <div class="dashboard-meta">Pending Orders</div>
         </article>
       </section>
     @endif

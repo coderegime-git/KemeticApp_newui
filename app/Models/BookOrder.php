@@ -21,7 +21,6 @@ class BookOrder extends Model
     static $canceled = 'canceled';
     static $pending = 'pending';
 
-    // Lulu Statuses
     public const LULU_CREATED = 'CREATED';
     public const LULU_UNPAID = 'UNPAID';
     public const LULU_PAYMENT_IN_PROGRESS = 'PAYMENT_IN_PROGRESS';
@@ -120,11 +119,13 @@ class BookOrder extends Model
     
     public function seller()
     {
+        //return $this->belongsTo(User::class, 'seller_id');
         return $this->belongsTo(\App\User::class, 'seller_id');
     }
     
     public function buyer()
     {
+        //return $this->belongsTo(User::class, 'buyer_id');
         return $this->belongsTo(\App\User::class, 'buyer_id');
     }
     

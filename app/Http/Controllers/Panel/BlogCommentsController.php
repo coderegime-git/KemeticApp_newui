@@ -30,7 +30,6 @@ class BlogCommentsController extends Controller
         $blogIds = $posts->pluck('id')->toArray();
 
         $query = Comment::whereIn('blog_id', $blogIds);
-
         $totalComments = clone $query;
         $activeComments = clone $query;
         $pendingComments = clone $query;

@@ -1080,8 +1080,8 @@ class BlogController extends Controller
                 'verified' => $comment->user->verified,
                 'rate' => $comment->user->rate,
                 'avatar' => !empty($comment->user->avatar) 
-                        ? url($comment->user->avatar) 
-                        : 'https://kemetic.app/getDefaultAvatar?item=' . $comment->user->id . '&name=' . urlencode($comment->user->full_name) . '&size=40',
+                    ? url($comment->user->avatar) 
+                    : 'https://kemetic.app/getDefaultAvatar?item=' . $comment->user->id . '&name=' . urlencode($comment->user->full_name) . '&size=40',
                 'meeting_status' => $comment->user->meeting_status,
                 'user_group' => $comment->user->user_group,
                 'address' => $comment->user->address,

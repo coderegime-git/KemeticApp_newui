@@ -10,35 +10,71 @@ trait VideoDemoTrait
     private function handleVideoDemoData(Request $request, $data, $name)
     {
         // Upload to Bunny
-        if (!empty($data['video_demo_source']) and $data['video_demo_source'] == "secure_host") {
+        // if (!empty($data['video_demo_source']) and $data['video_demo_source'] == "secure_host") {
+
+        //     if (!empty($request->file('video_demo_secure_host_file'))) {
+        //         try {
+        //             $bunnyVideoStream = new BunnyVideoStream();
+
+        //             $file = $request->file('video_demo_secure_host_file');
+
+        //             $collectionId = $bunnyVideoStream->createCollection($name);
+
+        //             if ($collectionId) {
+
+        //                 $videoUrl = $bunnyVideoStream->uploadVideo($file->getClientOriginalName(), $collectionId, $file);
+
+        //                 $data['video_demo'] = $videoUrl;
+        //             }
+        //         } catch (\Exception $ex) {
+        //             dd($ex);
+        //         }
+        //     }
+        // } else {
+
+        //     if (!empty($data['video_demo_source']) and !in_array($data['video_demo_source'], ['upload', 'youtube', 'vimeo', 'external_link'])) {
+        //         $data['video_demo_source'] = 'upload';
+        //     }
+        // }
+
+        if (!empty($data['video_demo_source']) && $data['video_demo_source'] === 'secure_host') {
 
             if (!empty($request->file('video_demo_secure_host_file'))) {
-                try {
-                    $file = $request->file('video_demo_secure_host_file');
-                    $filename = time() . '_' . $file->getClientOriginalName();
-
-                    $userId = auth()->id() ?? 1;
-                    $videoPath = public_path('store/' . $userId);
-
-                    if (!file_exists($videoPath)) {
-                        mkdir($videoPath, 0777, true);
-                    }
-
-                    $file->move($videoPath, $filename);
-
-                    $data['video_demo'] = '/store/' . $userId . '/' . $filename;
-                } catch (\Exception $ex) {
-                    \Illuminate\Support\Facades\Log::error('Local secure_host upload error: ' . $ex->getMessage());
-                }
+                $data['video_demo'] = $this->uploadFile(
+                    $request->file('video_demo_secure_host_file'),
+                    auth()->id()
+                );
             }
+
         } else {
 
-            if (!empty($data['video_demo_source']) and !in_array($data['video_demo_source'], ['upload', 'youtube', 'vimeo', 'external_link'])) {
+            if (
+                !empty($data['video_demo_source']) &&
+                !in_array($data['video_demo_source'], ['upload', 'youtube', 'vimeo', 'external_link'])
+            ) {
                 $data['video_demo_source'] = 'upload';
             }
         }
 
         return $data;
+    }
+
+    private function uploadFile($file, $userId)
+    {
+        if (!($file instanceof \Illuminate\Http\UploadedFile)) {
+            return $file;
+        }
+
+        $uploadPath = public_path('store/' . $userId);
+
+        if (!file_exists($uploadPath)) {
+            mkdir($uploadPath, 0755, true);
+        }
+
+        $fileName = time() . '_' . $file->getClientOriginalName();
+        $file->move($uploadPath, $fileName);
+
+        return '/store/' . $userId . '/' . $fileName;
     }
 
 }

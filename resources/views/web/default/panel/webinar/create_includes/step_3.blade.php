@@ -274,6 +274,55 @@ body {
   background-color: rgba(67, 212, 119, 0.5);
 }
 
+
+/* Step 3 Mobile Fix */
+@media (max-width: 767px) {
+    .kemetic-card {
+        padding: 12px;
+        overflow-x: hidden;
+    }
+    .kemetic-card .row {
+        margin-left: 0;
+        margin-right: 0;
+    }
+    .kemetic-card [class*="col-"] {
+        padding-left: 6px;
+        padding-right: 6px;
+    }
+    .kemetic-card .form-control {
+        font-size: 14px !important;
+        min-width: 0 !important;
+    }
+    .kemetic-card .input-group {
+        flex-wrap: nowrap;
+    }
+    .accordion-content-wrapper {
+        padding: 8px !important;
+    }
+    .kemetic-ticket-card {
+        padding: 12px !important;
+    }
+    .kemetic-ticket-card .row {
+        margin-left: 0;
+        margin-right: 0;
+    }
+    .kemetic-ticket-card [class*="col-"] {
+        padding-left: 6px;
+        padding-right: 6px;
+    }
+    .kemetic-input {
+        min-width: 0 !important;
+        width: 100% !important;
+        box-sizing: border-box !important;
+    }
+    .kemetic-btn-gold,
+    .kemetic-btn-outline {
+        padding: 8px 14px;
+    }
+    .k-ticket-row {
+        padding: 10px !important;
+    }
+}
 </style>
 
 
@@ -299,7 +348,7 @@ body {
 
         <div class="form-group mt-15">
             <label class="input-label">{{ trans('update.access_days') }} ({{ trans('public.optional') }})</label>
-            <input type="number" name="access_days" value="{{ !empty($webinar) ? $webinar->access_days : old('access_days') }}" class="form-control @error('access_days')  is-invalid @enderror"/>
+            <input type="number" name="access_days" min="0" value="{{ !empty($webinar) ? $webinar->access_days : old('access_days') }}" class="form-control @error('access_days')  is-invalid @enderror"/>
             @error('access_days')
             <div class="invalid-feedback">
                 {{ $message }}
@@ -310,8 +359,8 @@ body {
 
     
         <div class="form-group mt-15">
-            <label class="input-label">Earning {{ trans('public.price') }} ({{ $currency }})</label>
-            <input id="webinarEarningPrice" name="earning_price" type="number" class="form-control" value="{{ (!empty($webinar) and !empty($webinar->earning_price)) ? convertPriceToUserCurrency($webinar->earning_price) : old('earning_price') }}" />
+            <label class="input-label">Earning {{ trans('public.price') }} ({{ $currency }}) <span class="text-danger">*</span></label>
+            <input id="webinarEarningPrice" name="earning_price" type="number" required class="form-control" min="0" value="{{ (!empty($webinar) and !empty($webinar->earning_price)) ? convertPriceToUserCurrency($webinar->earning_price) : old('earning_price') }}" />
             <p class="font-12 text-gray mt-10">- This is the amount you earn after platform fee.</p>
         </div>
 
@@ -390,36 +439,37 @@ body {
 @push('scripts_bottom')
 <script>
  // Initialize placeholders for date inputs
-function initDatePlaceholders() {
-    document.querySelectorAll('input[type="date"]').forEach(input => {
-        // Set placeholder attribute
-        input.setAttribute('placeholder', 'yyyy-mm-dd');
+// function initDatePlaceholders() {
+//     document.querySelectorAll('input[type="date"]').forEach(input => {
+//         // Set placeholder attribute
+//         input.setAttribute('placeholder', 'yyyy-mm-dd');
         
-        // For browsers that don't show placeholder on date inputs
-        // Create a pseudo-placeholder effect
-        if (!input.value) {
-            input.style.color = '#999';
-        }
+//         // For browsers that don't show placeholder on date inputs
+//         // Create a pseudo-placeholder effect
+//         if (!input.value) {
+//             input.style.color = '#999';
+//         }
         
-        input.addEventListener('focus', function() {
-            this.style.color = '';
-            if (this.type === 'date' && !this.value) {
-                this.type = 'text';
-            }
-        });
+//         input.addEventListener('focus', function() {
+//             this.style.color = '';
+//             if (this.type === 'date' && !this.value) {
+//                 this.type = 'text';
+//             }
+//         });
         
-        input.addEventListener('blur', function() {
-            if (this.type === 'text' && !this.value) {
-                this.type = 'date';
-                this.style.color = '#999';
-            }
-        });
-    });
-}
+//         input.addEventListener('blur', function() {
+//             if (this.type === 'text' && !this.value) {
+//                 this.type = 'date';
+//                 this.style.color = '#999';
+//             }
+//         });
+//     });
+// }
 
 // Call on page load
 document.addEventListener('DOMContentLoaded', function () {
-    initDatePlaceholders();
+    // initDatePlaceholders();
+    initWebinarPriceBreakdown();
     initWebinarPriceBreakdown();
 });
 

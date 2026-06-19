@@ -8,7 +8,7 @@ use App\Models\Setting;
 use App\Models\Translation\SettingTranslation;
 use App\Models\WebinarReport;
 use App\Models\Reel;
-use App\Models\ReelReport;
+use App\Models\ReelReport;  
 use Illuminate\Http\Request;
 
 class ReportsController extends Controller

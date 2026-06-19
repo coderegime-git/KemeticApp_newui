@@ -25,12 +25,14 @@ class AppVersionController extends Controller
         // $this->authorize('admin_app_versions_create');
 
         $this->validate($request, [
-            'app_version'    => 'required|string|max:20',
+            'android_app_version'    => 'required|string|max:20',
+            'ios_app_version' => 'nullable|string|max:20',
             'update_message' => 'nullable|string|max:500',
         ]);
 
         AppVersion::create([
-            'app_version'    => trim($request->app_version),
+            'android_app_version'    => trim($request->android_app_version),
+            'ios_app_version' => trim($request->ios_app_version),
             'force_update'   => $request->boolean('force_update') ? 1 : 0,
             'update_message' => $request->update_message,
             'status'         => $request->boolean('status', true) ? 1 : 0,
@@ -59,14 +61,16 @@ class AppVersionController extends Controller
         // $this->authorize('admin_app_versions_edit');
 
         $this->validate($request, [
-            'app_version'    => 'required|string|max:20',
+            'android_app_version'    => 'required|string|max:20',
+            'ios_app_version' => 'nullable|string|max:20',
             'update_message' => 'nullable|string|max:500',
         ]);
 
         $version = AppVersion::findOrFail($id);
 
         $version->update([
-            'app_version'    => trim($request->app_version),
+            'android_app_version'    => trim($request->android_app_version),
+            'ios_app_version' => trim($request->ios_app_version),
             'force_update'   => $request->boolean('force_update') ? 1 : 0,
             'update_message' => $request->update_message,
             'status'         => $request->boolean('status') ? 1 : 0,

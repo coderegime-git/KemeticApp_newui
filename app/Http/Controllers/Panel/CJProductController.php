@@ -27,22 +27,23 @@ class CJProductController extends Controller
         $page = $request->get('page', 1);
         $size = 8;
 
+        $categories = $this->cjService->getCategories();
+
         $maxPage = (int) floor(6000 / $size); // 750
         $page = max(1, min((int) $request->get('page', 1), $maxPage));
 
-        $categories = $this->cjService->getCategories();
         $productsData = $this->cjService->getProductList([
             'categoryId' => $selectedCategoryId,
             'productNameEn' => $search,
             'pageNum' => $page,
             'pageSize' => $size,
         ]);
-        
 
         $trendingProducts = $this->cjService->getTrendingProducts(10);
 
         $total = $productsData['total'] ?? 0;
         $totalPages = $total > 0 ? ceil(min($total, 6000) / $size) : 1;
+
 
         return view('web.default.panel.cj_products.index', [
             'pageTitle' => 'CJ Dropshipping Products',

@@ -461,7 +461,7 @@
     <div class="membership-hero-card">
       <div>
         <h1>Membership</h1>
-        <p>Unlimited access to Courses, E-books &amp; PDFs, Reels, Livestreams, Kemetic Television, Articles, and more.</p>
+        <p>Unlimited access to Courses, E-books &amp; PDFs, Portals, Livestreams, Kemetic Television, Articles, and more.</p>
         <div class="membership-badges">
           <span class="membership-badge">Cancel anytime</span>
           <span class="membership-badge">Watch on any device</span>
@@ -471,8 +471,8 @@
         
       </div>
       <div style="display:flex; gap:12px; align-items:center; justify-content:flex-end; flex-wrap:wrap">
-        <button type="button" class="membership-cta" onclick="chooseplan()">Join €1/mo</button>
-        <button type="button" class="membership-cta secondary" onclick="chooseplan()">or €10/year</button>
+        <button type="button" class="membership-cta" onclick="chooseplan()">Join €10/year</button>
+        <button type="button" class="membership-cta secondary" onclick="chooseplan()">or €33/Lifetime</button>
       </div>
     </div>
   </div>
@@ -499,7 +499,7 @@
               $originalPrice   = '€9';
               $originalLabel   = '/ month';
               $founderLabel    = '🔥 Now only €' . $subscribe->price . ' / month';
-              $planPerks = ['Full platform access','All courses & reels','Kemetic Television','Livestreams & e-books'];
+              $planPerks = ['Full platform access','All courses & Portals','Kemetic Television','Livestreams & e-books'];
           } elseif ($subscribe->days == 365) {
               $membershipType = 'Yearly Membership';
               $originalPrice   = '€99';
@@ -599,7 +599,7 @@
     <h2>Included in membership</h2>
     <div class="membership-features">
       <div class="membership-feature"><div class="membership-f-ico">★</div><div><strong>Courses</strong> Learn from Wisdom Keepers with reels-style lessons &amp; certificates.</div></div>
-      <div class="membership-feature"><div class="membership-f-ico">▶</div><div><strong>Reels</strong> Global Top Ranked, Trending, For You, and Live — with chakra actions.</div></div>
+      <div class="membership-feature"><div class="membership-f-ico">▶</div><div><strong>Portals</strong> Global Top Ranked, Trending, For You, and Live — with chakra actions.</div></div>
       <div class="membership-feature"><div class="membership-f-ico">📺</div><div><strong>Kemetic Television</strong> Old-school live channel + linked courses.</div></div>
       <div class="membership-feature"><div class="membership-f-ico">🔴</div><div><strong>Livestreams</strong> Join live, gift, co-watch with friends.</div></div>
       <div class="membership-feature"><div class="membership-f-ico">📚</div><div><strong>E-books &amp; PDFs</strong> Instant downloads; audiobook options when available.</div></div>
@@ -615,7 +615,7 @@
     <div class="membership-testimonials">
       <div class="membership-quote">
         <div class="membership-stars">★★★★★</div>
-        "Best €1 I spend monthly. The reels and live classes keep me consistent."
+        "Best €1 I spend monthly. The Portals and live classes keep me consistent."
         <div class="by">— Ama</div>
       </div>
       <div class="membership-quote">
@@ -641,8 +641,8 @@
       <div class="membership-small">Yes — the prices displayed reflect the selected currency. You'll be charged in that currency at checkout.</div>
     </details>
     <details>
-      <summary>What's included at €1/mo or €10/year?</summary>
-      <div class="membership-small">Full access to courses, reels, livestreams, Television, articles, and eligible e-books/PDFs.</div>
+      <summary>What's included at €10/year or €33/Lifetime?</summary>
+      <div class="membership-small">Full access to courses, Portals, livestreams, Television, articles, and eligible e-books/PDFs.</div>
     </details>
     <details>
       <summary>How does Lifetime work?</summary>
@@ -663,7 +663,7 @@
       Lock your rate before it's gone.
     </div>
     <div style="display:flex; gap:10px;">
-      <button class="membership-cta secondary" onclick="chooseplan()">€1/mo</button>
+      <button class="membership-cta secondary" onclick="chooseplan()">€10/year</button>
       <button class="membership-cta" onclick="chooseplan()">Join Membership</button>
     </div>
   </div>
@@ -748,8 +748,9 @@
 
     // Update hero CTA button labels
     const heroBtns = document.querySelectorAll('.membership-hero-card .membership-cta');
-    if (heroBtns[0]) heroBtns[0].textContent = cur === 'USD' ? 'Join $2/mo' : 'Join €1/mo';
+    // if (heroBtns[0]) heroBtns[0].textContent = cur === 'USD' ? 'Join $2/mo' : 'Join €1/mo';
     if (heroBtns[1]) heroBtns[1].textContent = cur === 'USD' ? 'or $11/year' : 'or €10/year';
+    if (heroBtns[2]) heroBtns[2].textContent = cur === 'USD' ? 'or $33/Lifetime' : 'or €33/Lifetime';
 }
 
   document.addEventListener('DOMContentLoaded', function () {

@@ -118,9 +118,9 @@
     border: 1px solid var(--k-border);
 }
 .form-control:focus {
-    box-shadow: 0 0 8px var(--k-gold);
-    border-color: var(--k-gold);
-    color: var(--k-text);
+    box-shadow: 0 0 8px var(--k-card);
+    border-color: var(--k-card);
+    color: var(--k-card);
 }
 
 /* Buttons */
@@ -342,7 +342,10 @@
                             <div class="input-group-prepend">
                                 <span class="input-group-text text-white">{{ $currency }}</span>
                             </div>
-                            <input type="number" name="amount" min="0" class="form-control @error('amount') is-invalid @enderror" value="{{ !empty($editOfflinePayment) ? $editOfflinePayment->amount : old('amount') }}" placeholder="{{ trans('panel.number_only') }}"/>
+                            <input type="number" name="amount" min="0" max="9999999999" 
+                            class="form-control @error('amount') is-invalid @enderror" 
+                            value="{{ !empty($editOfflinePayment) ? $editOfflinePayment->amount : old('amount') }}" 
+                            placeholder="{{ trans('panel.number_only') }}" oninput="validateAmount(this)"/>
                             <div class="invalid-feedback">@error('amount') {{ $message }} @enderror</div>
                         </div>
                     </div>

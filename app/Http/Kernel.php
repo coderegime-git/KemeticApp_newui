@@ -48,8 +48,8 @@ class Kernel extends HttpKernel
             \App\Http\Middleware\VerifyCsrfToken::class,
             \Illuminate\Routing\Middleware\SubstituteBindings::class,
             \App\Http\Middleware\DebugBar::class,
-            \App\Http\Middleware\NoCache::class
-        ],
+            \App\Http\Middleware\NoCache::class,
+       ],
         'api' => [
             'throttle:60,1',
             \Illuminate\Routing\Middleware\SubstituteBindings::class,

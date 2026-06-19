@@ -188,7 +188,7 @@
                                         </div>
 
                                         <div class="form-group">
-                                            <label class="input-label">Your Price ({{ $currency }})</label>
+                                            <label class="input-label">Earnings per Sale ({{ $currency }})</label>
                                             <input type="number" id="book_price" name="book_price" value="{{ !empty($book) ? $book->book_price : old('book_price') }}" class="form-control @error('book_price')  is-invalid @enderror" placeholder="{{ trans('public.0_for_free') }}"/>
                                             @error('book_price')
                                             <div class="invalid-feedback">

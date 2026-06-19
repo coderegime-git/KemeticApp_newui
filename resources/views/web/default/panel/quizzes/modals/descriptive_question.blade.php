@@ -50,7 +50,7 @@
 
         {{-- Body --}}
         <div class="kemetic-modal-body">
-            <form class="quiz-questions-form"
+            <div class="quiz-questions-form"
                   data-action="/panel/quizzes-questions/{{ empty($question_edit) ? 'store' : $question_edit->id.'/update' }}">
 
                 @csrf
@@ -80,7 +80,7 @@
                 <div class="row">
                     <div class="col-md-8">
                         <div class="form-group">
-                            <label class="kemetic-label">{{ trans('quiz.question_title') }}</label>
+                            <label class="kemetic-label">{{ trans('quiz.question_title') }} <span class="text-danger">*</span></label>
                             <textarea name="ajax[title]"
                                       class="form-control kemetic-input js-ajax-title"
                                       rows="2"
@@ -91,7 +91,7 @@
 
                     <div class="col-md-4">
                         <div class="form-group">
-                            <label class="kemetic-label">{{ trans('quiz.grade') }}</label>
+                            <label class="kemetic-label">{{ trans('quiz.grade') }} <span class="text-danger">*</span></label>
                             <input type="number"
                                    name="ajax[grade]"
                                    class="form-control kemetic-input js-ajax-grade"
@@ -108,7 +108,7 @@
                             <label class="kemetic-label">{{ trans('public.image') }} (Optional)</label>
                             <div class="kemetic-file-input">
                                 <button type="button"
-                                        class="kemetic-btn-outline panel-file-manager"
+                                        class="kemetic-btn-outline panel-file-manager-image"
                                         data-input="questionImageInput_{{ $question_edit->id ?? 'record' }}">
                                     <i data-feather="upload" width="16"></i>
                                 </button>
@@ -126,7 +126,7 @@
                             <label class="kemetic-label">{{ trans('update.video') }} (Optional)</label>
                             <div class="kemetic-file-input">
                                 <button type="button"
-                                        class="kemetic-btn-outline panel-file-manager"
+                                        class="kemetic-btn-outline panel-file-manager-video"
                                         data-input="questionVideoInput_{{ $question_edit->id ?? 'record' }}">
                                     <i data-feather="upload" width="16"></i>
                                 </button>
@@ -146,7 +146,7 @@
 
                 {{-- Correct Answer --}}
                 <div class="form-group mt-20">
-                    <label class="kemetic-label">{{ trans('quiz.correct_answer') }}</label>
+                    <label class="kemetic-label">{{ trans('quiz.correct_answer') }} <span class="text-danger">*</span></label>
                     <textarea name="ajax[correct]"
                               class="form-control kemetic-input js-ajax-correct"
                               rows="8"
@@ -165,8 +165,7 @@
                     </button>
                 </div>
 
-            </form>
+            </div>
         </div>
     </div>
 </div>
-

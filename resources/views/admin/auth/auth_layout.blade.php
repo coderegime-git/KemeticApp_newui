@@ -10,6 +10,9 @@
     <meta charset="UTF-8">
     <meta content="width=device-width, initial-scale=1, maximum-scale=1, shrink-to-fit=no" name="viewport">
     <title>{{ $pageTitle ?? '' }}</title>
+     @if(!empty($generalSettings['fav_icon']))
+        <link href="{{ $generalSettings['fav_icon'] }}" rel="icon" type="image/png">
+    @endif
     <meta name="csrf-token" content="{{ csrf_token() }}">
     <!-- General CSS File -->
     <link rel="stylesheet" href="/assets/admin/vendor/bootstrap/bootstrap.min.css"/>

@@ -77,6 +77,242 @@ class ReelController extends Controller
         return $seed;
     }
     
+    // public function index(Request $request)
+    // {
+    //     // $userId = Auth::id();
+    //     $userId = $this->getUserIdFromToken($request);
+    
+    //      $randomSeed = $this->getRandomSeed($request, $userId);
+        
+    //     // Get ALL viewed reel IDs for this user (permanent tracking)
+    //     $viewedReelIds = [];
+    //     if ($userId) {
+    //         $viewedReelIds = DB::table('reel_views')
+    //             ->where('user_id', $userId)
+    //             ->pluck('reel_id')
+    //             ->toArray();
+    //     }
+
+    //     // Base query - exclude hidden and reported reels
+    //     $reelQuery = Reel::with(['likes', 'comments.user', 'comments.replies.user', 'review.user', 'savedreel', 'user'])
+    //         ->where('is_hidden', false)
+    //         ->whereNotNull('video_path')
+    //         ->where('video_path', '!=', '')
+    //         ->where(function($query) {
+    //             $query->where('reports_count', '<', 15)
+    //                 ->orWhereNull('reports_count');
+    //         });
+
+    //     // Check if user has viewed all reels
+    //     $totalReelsCount = (clone $reelQuery)->count();
+    //     $viewedCount = count($viewedReelIds);
+        
+    //     // If all reels viewed, reset viewed tracking for fresh start
+    //     if ($viewedCount >= $totalReelsCount && $totalReelsCount > 0) {
+    //         if ($userId) {
+    //             // Delete all view records for this user to start fresh
+    //             DB::table('reel_views')
+    //                 ->where('user_id', $userId)
+    //                 ->delete();
+    //             $viewedReelIds = [];
+                
+    //             // Generate new random seed for fresh start
+    //             $randomSeed = $this->getRandomSeed($request, $userId, true);
+    //         }
+    //     }
+
+    //     // Apply viewed filter
+    //     if (!empty($viewedReelIds)) {
+    //         $reelQuery->whereNotIn('id', $viewedReelIds);
+    //     }
+
+    //     if ($userId) {
+    //         // ========== LOGGED-IN USER LOGIC ==========
+    //         // Get user's liked categories with counts
+    //         $userLikedCategories = DB::table('reel_likes')
+    //             ->join('reels', 'reel_likes.reel_id', '=', 'reels.id')
+    //             ->where('reel_likes.user_id', $userId)
+    //             ->whereNotNull('reels.category_id')
+    //             ->select('reels.category_id', DB::raw('COUNT(*) as like_count'))
+    //             ->groupBy('reels.category_id')
+    //             ->orderByDesc('like_count')
+    //             ->get();
+
+    //         if ($userLikedCategories->isNotEmpty()) {
+    //             // Build CASE statement for category ordering
+    //             $caseStatements = [];
+    //             foreach ($userLikedCategories as $index => $category) {
+    //                 $caseStatements[] = "WHEN category_id = {$category->category_id} THEN {$index}";
+    //             }
+    //             $caseStatements[] = "ELSE " . count($userLikedCategories);
+                
+    //             // Apply ordering: category preference → unviewed first → most liked → consistent random
+    //             $reels = $reelQuery
+    //                 ->select('reels.*')
+    //                 ->orderByRaw("CASE " . implode(' ', $caseStatements) . " END")
+    //                 ->orderBy('views_count', 'asc')  // Unviewed (0) first
+    //                 ->orderBy('likes_count', 'desc') // Most liked first
+    //                 // ->inRandomOrder() 
+    //                 ->orderByRaw("RAND($randomSeed)") // Consistent random shuffle
+    //                 ->paginate(10);
+    //         } else {
+    //             // No liked categories - show unviewed first, then most liked
+    //             $reels = $reelQuery
+    //                 ->select('reels.*')
+    //                 ->orderBy('views_count', 'asc')  // Unviewed first
+    //                 ->orderBy('likes_count', 'desc') // Most liked first
+    //                 // ->inRandomOrder() 
+    //                 ->orderByRaw("RAND($randomSeed)") // Consistent random shuffle
+    //                 ->paginate(10);
+    //         }
+    //     } else {
+    //         // ========== NON-LOGGED-IN USER LOGIC ==========
+    //         // Show unviewed first (by views_count=0), then most liked, with shuffle
+    //         $reels = $reelQuery
+    //             ->select('reels.*')
+    //             ->orderBy('views_count', 'asc')  // Unviewed (0) first
+    //             ->orderBy('likes_count', 'desc') // Most liked first
+    //             // ->inRandomOrder() 
+    //             ->orderByRaw("RAND($randomSeed)") // Consistent random shuffle
+    //             ->paginate(10);
+    //     }
+
+    //     $videoBasePath = public_path('store/reels/videos/');
+
+    //     $filtered = $reels->getCollection()->filter(function ($reel) use ($videoBasePath) {
+    //     $videoPath = ($reel->is_processed && $reel->processed_video_path)
+    //         ? $reel->processed_video_path
+    //         : $reel->video_path;
+
+    //     if (empty($videoPath)) {
+    //         return false;
+    //     }
+
+    //     $fullPath = $videoBasePath . $videoPath;
+    //     $exists   = file_exists($fullPath);
+
+    //     // Auto-mark missing files in DB so future queries skip them at DB level
+    //     if (!$exists) {
+    //         DB::table('reels')
+    //             ->where('id', $reel->id)
+    //             ->update(['video_path' => '']);
+    //     }
+
+    //     return $exists;
+    //     })->values();
+
+    //     // Rebuild paginator with corrected counts
+    //     $filteredCount = $filtered->count();
+    //     $removedCount  = $reels->count() - $filteredCount;
+    //     $adjustedTotal = max(0, $reels->total() - $removedCount);
+    //     $currentPage   = $reels->currentPage();
+    //     $perPage       = $reels->perPage();
+    //     $reelsPath     = $reels->path();
+
+    //     $reels = new \Illuminate\Pagination\LengthAwarePaginator(
+    //         $filtered,
+    //         $adjustedTotal,
+    //         $perPage,
+    //         $currentPage,
+    //         ['path' => $reelsPath, 'pageName' => 'page']
+    //     );
+
+    //     // Format the response
+    //     $pagination  = $reels->toArray();
+    //     $reelModels  = $reels->items();
+    //     $reelsArr    = [];
+
+    //     foreach ($reelModels as $reel) {
+
+    //         // $videoFile = public_path('store/reels/videos/' . (
+    //         //     $reel->is_processed && $reel->processed_video_path
+    //         //         ? $reel->processed_video_path
+    //         //         : $reel->video_path
+    //         // ));
+
+    //         // // ❌ Skip if file not exists
+    //         // if (!file_exists($videoFile)) {
+    //         //     continue;
+    //         // }
+            
+    //         $reelData = $reel->toArray();
+
+    //         $isLiked = $reel->likes->contains('user_id', $userId);
+             
+    //         $isSaved = $reel->savedreel->contains('user_id', $userId);
+    //         $username = $reel->user ? $reel->user->full_name : '';
+    //         // Likes array
+    //         $likesArr = [];
+    //         foreach ($reel->likes as $like) {
+    //             $likesArr[] = [
+    //                 'id' => $like->id,
+    //                 'user_id' => $like->user_id,
+    //                 'reel_id' => $like->reel_id,
+    //                 'created_at' => $like->created_at,
+    //             ];
+    //         }
+    //         // Comments array
+    //         $commentsArr = [];
+    //         foreach ($reel->comments as $comment) {
+    //             $formattedReplies = [];
+    //             foreach ($comment->replies as $reply) {
+    //                 $formattedReplies[] = [
+    //                     'id'         => $reply->id,
+    //                     'content'    => $reply->content,
+    //                     'created_at' => $reply->created_at,
+    //                     'user'       => [
+    //                         'full_name' => $reply->user?->full_name ?? '',
+    //                         'avatar'    => $reply->user ? url($reply->user->getAvatar()) : '',
+    //                     ],
+    //                 ];
+    //             }
+
+    //             $commentsArr[] = [
+    //                 'id' => $comment->id,
+    //                 'user_id' => $comment->user_id,
+    //                 'reel_id' => $comment->reel_id,
+    //                 'content' => $comment->content,
+    //                 'created_at' => $comment->created_at,
+    //                 'username' => $comment->user ? $comment->user->full_name : '',
+    //                 'avatar' => $comment->user ? url($comment->user->getAvatar()) : '',
+    //                 'replies'    => $formattedReplies,
+    //             ];
+    //         }
+
+    //         $reviewsArr = [];
+    //         foreach ($reel->review as $reviews) {
+    //             $reviewsArr[] = [
+    //                 'id' => $reviews->id,
+    //                 'user_id' => $reviews->user_id,
+    //                 'reel_id' => $reviews->reel_id,
+    //                 'review' => $reviews->review,
+    //                 'rating' => $reviews->rating,
+    //                 'created_at' => $reviews->created_at,
+    //                 'username' => $reviews->user ? $reviews->user->full_name : '',
+    //                 'avatar' => $reviews->user ? url($reviews->user->getAvatar()) : '',
+    //             ];
+    //         }
+
+    //         $reelData['username'] = $username;
+    //         $reelData['is_liked'] = $isLiked;
+    //         $reelData['is_saved'] = $isSaved;
+    //         $reelData['likes'] = $likesArr;
+    //         $reelData['comments'] = $commentsArr;
+    //         $reelData['reviews'] = $reviewsArr;
+    //         $reelsArr[] = $reelData;
+    //     }
+
+    //     $pagination['from']  = $filteredCount > 0 ? (($currentPage - 1) * $perPage) + 1 : null;
+    //     $pagination['to']    = $filteredCount > 0 ? (($currentPage - 1) * $perPage) + $filteredCount : null;
+    //     $pagination['reels'] = $reelsArr;
+    //     unset($pagination['data']);
+
+    //     return response()->json([
+    //         'status' => 'success',
+    //         'data' => $pagination
+    //     ]);
+    // }
+
     public function index(Request $request)
     {
         // $userId = Auth::id();
@@ -122,8 +358,16 @@ class ReelController extends Controller
         }
 
         // Apply viewed filter
+        // if (!empty($viewedReelIds)) {
+        //     $reelQuery->whereNotIn('id', $viewedReelIds);
+        // }
+        
+        // Replace whereNotIn with ordering
         if (!empty($viewedReelIds)) {
-            $reelQuery->whereNotIn('id', $viewedReelIds);
+            $viewedIdsStr = implode(',', $viewedReelIds);
+            $reelQuery->orderByRaw(
+                "CASE WHEN reels.id IN ($viewedIdsStr) THEN 1 ELSE 0 END ASC"
+            );
         }
 
         if ($userId) {
@@ -327,7 +571,7 @@ class ReelController extends Controller
         }
 
         // Build query for other reels
-        $reelQuery = Reel::with(['likes', 'comments.user','comments.replies.user', 'review.user', 'savedreel', 'user'])
+        $reelQuery = Reel::with(['likes', 'comments.user',  'comments.replies.user','review.user', 'savedreel', 'user'])
             ->where('id', '!=', $id)
             ->where('is_hidden', false)
             ->where(function($query) {
@@ -914,7 +1158,7 @@ class ReelController extends Controller
             'page'         => 'portals',
             'value'        => $reel->id   // or any unique share code
         ]);
-    
+
         return response()->json([
             'status' => 'success',
             'message' => 'Reel Shared successfully',

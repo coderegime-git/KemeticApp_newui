@@ -286,7 +286,6 @@
 
 @push('scripts_bottom')
 <script src="/assets/default/vendors/sortable/jquery-ui.min.js"></script>
-<script src="/vendor/laravel-filemanager/js/stand-alone-button.js"></script>
 <script>
     $(document).ready(function() {
         $('body').on('click', '.panel-file-manager-image', function (e) {
@@ -304,10 +303,7 @@
         });
     });
 </script>
-@endpush
-
 @if(!empty($cjProduct))
-@push('scripts_bottom')
 <script>
 (function ($) {
     // For CJ products: override the add-btn so it counts only user-added rows
@@ -344,5 +340,5 @@
     });
 })(jQuery);
 </script>
-@endpush
 @endif
+@endpush

@@ -332,7 +332,7 @@
             <div class="row">
                 <div class="col-12 col-lg-6">
                     <div class="form-group kemetic-form-group">
-                        <label class="kemetic-label">{{ trans('public.title') }}</label>
+                        <label class="kemetic-label">{{ trans('public.title') }} <span class="text-danger">*</span></label>
                         <input type="text"
                                name="ajax[{{ !empty($ticket) ? $ticket->id : 'new' }}][title]"
                                class="js-ajax-title form-control kemetic-input"
@@ -348,7 +348,7 @@
                 <div class="col-12 col-lg-4">
                     <div class="form-group kemetic-form-group">
                         <label class="kemetic-label">
-                            {{ trans('public.discount') }} <span class="kemetic-brace">(%)</span>
+                            {{ trans('public.discount') }} <span class="kemetic-brace">(%)</span> <span class="text-danger">*</span>
                         </label>
                         <input type="text"
                                name="ajax[{{ !empty($ticket) ? $ticket->id : 'new' }}][discount]"
@@ -358,7 +358,7 @@
                     </div>
 
                     <div class="form-group kemetic-form-group">
-                        <label class="kemetic-label">{{ trans('public.capacity') }}</label>
+                        <label class="kemetic-label">{{ trans('public.capacity') }} <span class="text-danger">*</span></label>
 
                         @if(empty($ticket) && !empty($webinar->capacity) && !empty($sumTicketsCapacities))
                             <span class="kemetic-hint">
@@ -386,17 +386,17 @@
                         @foreach(['start_date' => trans('public.start_date'), 'end_date' => trans('webinars.end_date')] as $field => $label)
                             <div class="col-12 col-lg-6 {{ $field == 'end_date' ? 'mt-15 mt-lg-0' : '' }}">
                                 <div class="form-group kemetic-form-group">
-                                    <label class="kemetic-label">{{ $label }}</label>
+                                    <label class="kemetic-label">{{ $label }} <span class="text-danger">*</span></label>
                                     <div class="input-group kemetic-input-group">
                                         <!-- <div class="input-group-prepend">
                                             <span class="input-group-text kemetic-calendar">
                                                 <i data-feather="calendar" width="16" height="16"></i>
                                             </span>
                                         </div> -->
-                                        <input type="date"
+                                        <input type="text"
                                                name="ajax[{{ !empty($ticket) ? $ticket->id : 'new' }}][{{ $field }}]"
-                                               class="js-ajax-{{ $field }} form-control kemetic-input"
-                                               value="{{ !empty($ticket) ? dateTimeFormat($ticket->{$field}, 'Y-m-d', false) :'' }}">
+                                               class="js-ajax-{{ $field }} form-control kemetic-input datepicker"
+                                               value="{{ !empty($ticket) ? dateTimeFormat($ticket->{$field}, 'Y-m-d', false) :'' }}" readonly>
                                         <div class="invalid-feedback"></div>
                                     </div>
                                 </div>

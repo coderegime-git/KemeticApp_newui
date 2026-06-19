@@ -55,7 +55,7 @@ class PagesController extends Controller
         $data = $request->all();
 
         $firstCharacter = substr($data['link'], 0, 1);
-        if ($firstCharacter !== '/') {
+        if ($firstCharacter != '/') {
             $data['link'] = '/' . $data['link'];
         }
 

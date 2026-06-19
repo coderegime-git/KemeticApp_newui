@@ -265,9 +265,11 @@ class NoticeboardController extends Controller
             if (!empty($noticeboard)) {
                 $noticeboard->delete();
 
-                return response()->json([
-                    'code' => 200,
-                ]);
+                return redirect()->back();
+
+                // return response()->json([
+                //     'code' => 200,
+                // ]);
             }
         }
 

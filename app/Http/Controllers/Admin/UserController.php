@@ -305,6 +305,8 @@ class UserController extends Controller
             });
         }
 
+        // dd($query);
+
         if (!empty($sort)) {
             switch ($sort) {
                 case 'sales_classes_asc':
@@ -490,6 +492,8 @@ class UserController extends Controller
         $this->validate($request, [
             $username => ($username == 'mobile') ? 'required|numeric|unique:users' : 'required|string|email|max:255|unique:users',
             'full_name' => 'required|min:3|max:128',
+            'first_name' => 'required|min:3|max:128',
+            'last_name' => 'required|min:3|max:128',
             'role_id' => 'required|exists:roles,id',
             'password' => 'required|string|min:6',
             'status' => 'required',
@@ -504,6 +508,8 @@ class UserController extends Controller
 
 
                 $user = User::create([
+                    'first_name' => $data['first_name'],
+                    'last_name' => $data['last_name'],
                     'full_name' => $data['full_name'],
                     'role_name' => $role->name,
                     'role_id' => $data['role_id'],
@@ -877,6 +883,8 @@ class UserController extends Controller
 
         $this->validate($request, [
             'full_name' => 'required|min:3|max:128',
+            'first_name' => 'required|min:3|max:128',
+            'last_name' => 'required|min:3|max:128',
             'email' => (!empty($user->email)) ? 'required|email|unique:users,email,' . $user->id . ',id,deleted_at,NULL' : 'nullable|email|unique:users',
             'mobile' => (!empty($user->mobile)) ? 'required|numeric|unique:users,mobile,' . $user->id . ',id,deleted_at,NULL' : 'nullable|numeric|unique:users',
             'password' => 'nullable|string',
@@ -929,6 +937,8 @@ class UserController extends Controller
 
 
         $user->full_name = !empty($data['full_name']) ? $data['full_name'] : null;
+        $user->first_name = !empty($data['first_name']) ? $data['first_name'] : null;
+        $user->last_name = !empty($data['last_name']) ? $data['last_name'] : null;
         $user->role_name = $userRoleName;
         $user->role_id = $userRoleId;
         $user->timezone = $data['timezone'] ?? null;

@@ -81,12 +81,42 @@
         background: var(--k-gold);
     }
 
-    /* SUMMERNOTE dark mode wrapper */
-    /* .note-editor {
-        background: #121212 !important;
-        color: var(--k-text);
-        border-radius: 10px;
-    } */
+   
+    /* Summernote Modal Fixes */
+    .note-modal .modal-content {
+        background-color: #121212 !important;
+        color: #fff !important;
+        border: 1px solid rgba(242,201,76,0.3);
+    }
+    .note-modal .modal-header {
+        border-bottom: 1px solid rgba(242,201,76,0.25);
+    }
+    .note-modal .modal-title, .note-modal label, .note-modal label small {
+        color: #f2c94c !important;
+    }
+    .note-modal .text-muted {
+        color: #c9b26d !important;
+    }
+    .note-modal .close {
+        color: #fff !important;
+        opacity: 1 !important;
+        background: transparent !important;
+        text-shadow: none !important;
+        border: none !important;
+    }
+    .note-modal .form-control {
+        background: #0e0e0e !important;
+        border: 1px solid rgba(242,201,76,0.3) !important;
+        color: #fff !important;
+    }
+    .note-modal .btn-primary {
+        background: linear-gradient(135deg, #f2c94c, #caa63c) !important;
+        color: #000 !important;
+        border: none !important;
+    }
+    .note-modal .checkbox input {
+        margin-right: 5px;
+    }
 </style>
 
 @push('styles_top')
@@ -116,8 +146,8 @@
 
             {{-- COURSE TYPE --}}
             <div class="mt-20">
-                <label class="kemetic-label">{{ trans('panel.course_type') }}</label>
-                <select name="type" class="kemetic-select w-100 @error('type') is-invalid @enderror">
+                <label class="kemetic-label">{{ trans('panel.course_type') }} <span class="text-danger">*</span></label>
+                <select name="type" required class="kemetic-select w-100 @error('type') is-invalid @enderror">
                     <option value="webinar" @if(!empty($webinar) and $webinar->isWebinar()) selected @endif>
                         {{ trans('webinars.webinar') }}
                     </option>
@@ -154,8 +184,8 @@
 
             {{-- TITLE --}}
             <div class="mt-20">
-                <label class="kemetic-label">{{ trans('public.title') }}</label>
-                <input type="text" name="title" class="kemetic-input w-100 @error('title') is-invalid @enderror"
+                <label class="kemetic-label">{{ trans('public.title') }} <span class="text-danger">*</span></label>
+                <input type="text" name="title" required class="kemetic-input w-100 @error('title') is-invalid @enderror"
                        value="{{ (!empty($webinar) && !empty($webinar->translate($locale))) ? $webinar->translate($locale)->title : old('title') }}">
             </div>
 
@@ -163,7 +193,7 @@
 
             {{-- SEO DESCRIPTION --}}
             <div class="mt-20">
-                <label class="kemetic-label">{{ trans('public.seo_description') }}</label>
+                <label class="kemetic-label">{{ trans('public.seo_description') }} <span class="text-danger">*</span></label>
                 <input type="text" name="seo_description"
                        class="kemetic-input w-100 @error('seo_description') is-invalid @enderror"
                        value="{{ (!empty($webinar) and !empty($webinar->translate($locale))) ? $webinar->translate($locale)->seo_description : old('seo_description') }}"
@@ -174,11 +204,11 @@
 
             {{-- THUMBNAIL --}}
             <div class="mt-20">
-                <label class="kemetic-label">{{ trans('public.thumbnail_image') }}</label>
+                <label class="kemetic-label">{{ trans('public.thumbnail_image') }} <span class="text-danger">*</span></label>
 
                 <div class="kemetic-input-group">
                     <button type="button"
-                        class="kemetic-btn-file panel-file-manager"
+                        class="kemetic-btn-file panel-file-manager-image"
                         data-input="thumbnail"
                         data-preview="holder">
                         <i data-feather="arrow-up"></i>
@@ -187,6 +217,7 @@
                     <input type="text"
                            name="thumbnail"
                            id="thumbnail"
+                           required
                            class="kemetic-input w-100 @error('thumbnail') is-invalid @enderror"
                            value="{{ !empty($webinar) ? $webinar->thumbnail : old('thumbnail') }}">
                 </div>
@@ -198,11 +229,11 @@
 
             {{-- COVER IMAGE --}}
             <div class="mt-20">
-                <label class="kemetic-label">{{ trans('public.cover_image') }}</label>
+                <label class="kemetic-label">{{ trans('public.cover_image') }} <span class="text-danger">*</span></label>
 
                 <div class="kemetic-input-group">
                     <button type="button"
-                        class="kemetic-btn-file panel-file-manager"
+                        class="kemetic-btn-file panel-file-manager-image"
                         data-input="cover_image"
                         data-preview="holder">
                         <i data-feather="arrow-up"></i>
@@ -211,6 +242,7 @@
                     <input type="text"
                            name="image_cover"
                            id="cover_image"
+                           required
                            class="kemetic-input w-100 @error('image_cover') is-invalid @enderror"
                            value="{{ !empty($webinar) ? $webinar->image_cover : old('image_cover') }}">
                 </div>
@@ -295,10 +327,11 @@
 <div class="row">
     <div class="col-12">
         <div class="kemetic-card">
-            <label class="kemetic-label">{{ trans('public.description') }}</label>
+            <label class="kemetic-label">{{ trans('public.description') }} <span class="text-danger">*</span></label>
 
             <textarea id="summernote"
                       name="description"
+                      required
                       class="kemetic-textarea w-100 @error('description') is-invalid @enderror">
                 {!! (!empty($webinar) && !empty($webinar->translate($locale))) ? $webinar->translate($locale)->description : old('description') !!}
             </textarea>
@@ -339,14 +372,31 @@
 
 @push('scripts_bottom')
     <script src="/assets/vendors/summernote/summernote-bs4.min.js"></script>
-     <script src="/vendor/laravel-filemanager/js/stand-alone-button.js"></script>
-        <script>
-            var videoDemoPathPlaceHolderBySource = {
-                upload: 'Path',
-                youtube: '{{ trans('update.file_source_youtube_placeholder') }}',
-                vimeo: '{{ trans('update.file_source_vimeo_placeholder') }}',
-                external_link: '{{ trans('update.file_source_external_link_placeholder') }}',
-                secure_host: '{{ trans('update.file_source_secure_host_placeholder') }}',
+    <script src="/vendor/laravel-filemanager/js/stand-alone-button.js"></script>
+    <script>
+        $(document).ready(function() {
+            if($.fn.filemanager) {
+                $('.panel-file-manager-image').filemanager('image', {
+                    prefix: '/laravel-filemanager'
+                });
             }
-        </script>
+        });
+
+        document.addEventListener('click', function(e) {
+            if (e.target.closest('.note-modal .close')) {
+                const modal = e.target.closest('.note-modal');
+                if (modal) {
+                    $(modal).modal('hide');
+                }
+            }
+        });
+
+        var videoDemoPathPlaceHolderBySource = {
+            upload: 'Path',
+            youtube: '{{ trans('update.file_source_youtube_placeholder') }}',
+            vimeo: '{{ trans('update.file_source_vimeo_placeholder') }}',
+            external_link: '{{ trans('update.file_source_external_link_placeholder') }}',
+            secure_host: '{{ trans('update.file_source_secure_host_placeholder') }}',
+        }
+    </script>
 @endpush

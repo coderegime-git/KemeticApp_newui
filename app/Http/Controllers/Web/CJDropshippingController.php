@@ -12,16 +12,13 @@ class CJDropshippingController extends Controller
 
     public function index(Request $request)
     {
+        $pageNum = $request->get('page', 1);
         $search = $request->get('search');
         $categoryId = $request->get('category_id');
 
-        $pageSize = 20;
-        $maxPage = (int) floor(6000 / $pageSize); // 300
-        $pageNum = max(1, min((int) $request->get('page', 1), $maxPage));
-
         $filters = [
             'pageNum' => $pageNum,
-            'pageSize' => $pageSize,
+            'pageSize' => 20,
             'productNameEn' => $search,
             'categoryId' => $categoryId,
         ];
@@ -29,7 +26,6 @@ class CJDropshippingController extends Controller
         $result = $this->cjService->getProductList($filters);
         $products = $result['list'] ?? [];
         $total = $result['total'] ?? 0;
-        $totalPages = $total > 0 ? ceil(min($total, 6000) / $pageSize) : 1;
 
         // Fetch categories for the filter sidebar
         $categories = ProductCategory::whereNull('parent_id')
@@ -46,7 +42,6 @@ class CJDropshippingController extends Controller
             'products' => $products,
             'total' => $total,
             'pageNum' => $pageNum,
-            'totalPages' => $totalPages,
             'productCategories' => $categories,
             'cjCategories' => $cjCategories,
             'search' => $search,

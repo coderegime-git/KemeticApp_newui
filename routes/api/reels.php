@@ -7,8 +7,8 @@ use App\Http\Controllers\Api\AdminReelController;
         Route::get('/', [ReelController::class, 'index']);
         Route::get('/trending', [ReelController::class, 'trending']);
         Route::get('/global', [ReelController::class, 'global']);
-        Route::get('/{reel}', [ReelController::class, 'details']);
         Route::get('/categories/list', [ReelController::class, 'categories']);
+        Route::get('/{reel}', [ReelController::class, 'details']);
      });
 
 Route::middleware(['auth:api'])->group(function () {

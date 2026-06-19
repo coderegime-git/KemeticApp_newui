@@ -835,15 +835,19 @@ class CartController extends Controller
         }
 
         $currencyItem = getUserCurrencyItem($user);
-        // dd($currencyItem);
+        
         return [
             'sub_total' => round($subTotal, 2),
+            // 'total_discount' => round(convertPriceToUserCurrency($totalDiscount, $currencyItem), 2),
             'total_discount' => round($totalDiscount, 2),
             'tax' => $tax,
+            // 'tax_price' => round(convertPriceToUserCurrency($taxPrice, $currencyItem), 2),
             'tax_price' => round($taxPrice, 2),
             'commission' => $commission,
+            // 'commission_price' => round(convertPriceToUserCurrency($commissionPrice, $currencyItem), 2),
             'commission_price' => round($commissionPrice, 2),
             'total' => round($total, 2),
+            // 'product_delivery_fee' => round(convertPriceToUserCurrency($productDeliveryFee, $currencyItem), 2),
             'product_delivery_fee' => round($productDeliveryFee, 2),
             'tax_is_different' => $taxIsDifferent
         ];

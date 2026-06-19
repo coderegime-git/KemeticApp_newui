@@ -13,7 +13,6 @@ use App\Models\Sale;
 use App\Models\Webinar;
 use App\User;
 use App\Models\Api\UserFirebaseSessions;
-use Illuminate\Support\Facades\Log;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Mail;
 use Kreait\Firebase\Messaging;
@@ -91,7 +90,7 @@ class NotificationsController extends Controller
         ]);
 
         $data = $request->all();
-        
+
         if (!empty($data['message'])) {
             $data['message'] = preg_replace('/src="\/store\//i', 'src="' . url('/store') . '/', $data['message']);
         }
@@ -114,20 +113,26 @@ class NotificationsController extends Controller
 
 
         //if (!empty($user_id) and env('APP_ENV') == 'production') {
-        $user = \App\User::where('id', $user_id)->first();
+        if (!empty($user_id)) {
+            $user = \App\User::where('id', $user_id)->first();
 
-        if (!empty($user) and !empty($user->email)) {
-            try {
-                Mail::to($user->email)->send(new SendNotifications(['title' => $data['title'], 'message' => $data['message']]));
-            } catch (\Exception $exception) {
-                // dd($exception)
+            if (!empty($user) and !empty($user->email)) {
+                try {
+                    Mail::to($user->email)->send(new SendNotifications(['title' => $data['title'], 'message' => $data['message']]));
+                } catch (\Exception $exception) {
+                    // dd($exception)
+                    \Log::error('Mail: Failed to send notification email', [
+                        'message' => $exception->getMessage(),
+                        'user_id' => $user_id,
+                    ]);
+                }
             }
+
+            // Firebase Messages
+            
         }
 
-        // Firebase Messages
         $this->handleFirebaseMessages($data, $user_id, $group_id, $webinar_id);
-        //}
-
 
         return redirect(getAdminPanelUrl() . '/notifications/posted');
     }
@@ -137,8 +142,7 @@ class NotificationsController extends Controller
         $usersQuery = \App\User::query()->whereNotNull('fcm_token')->where('fcm_token', '!=', '');
 
         if ($data["type"] === "single") {
-            if (empty($user_id))
-                return true;
+            if (empty($user_id)) return true;
             $usersQuery->where('id', $user_id);
         }
 
@@ -159,15 +163,13 @@ class NotificationsController extends Controller
         }
 
         if ($data["type"] === "group") {
-            if (empty($group_id))
-                return true;
+            if (empty($group_id)) return true;
             $usersIds = GroupUser::where("group_id", $group_id)->pluck("user_id")->toArray();
             $usersQuery->whereIn('id', $usersIds);
         }
 
         if ($data["type"] === "course_students") {
-            if (empty($webinar_id))
-                return true;
+            if (empty($webinar_id)) return true;
             $usersIds = Sale::where('webinar_id', $webinar_id)
                 ->whereNull('refund_at')
                 ->pluck('buyer_id')
@@ -175,145 +177,40 @@ class NotificationsController extends Controller
             $usersQuery->whereIn('id', $usersIds);
         }
 
+        // $deviceTokens = $usersQuery->pluck('fcm_token')->toArray();
         $deviceTokens = array_values(array_unique(array_filter($usersQuery->pluck('fcm_token')->toArray())));
 
         if (count($deviceTokens) > 0) {
             try {
-                \Illuminate\Support\Facades\Log::info('Firebase: Attempting to send notification', [
-                    'type' => $data['type'],
-                    'title' => $data['title'],
+                \Log::info('Firebase: Attempting to send notification', [
+                    'type'         => $data['type'],
+                    'title'        => $data['title'],
+                    'message'      => $data['message'],
+                    'user_id'      => $user_id,
                     'tokens_count' => count($deviceTokens),
-                    'tokens' => $deviceTokens,
+                    'tokens'       => $deviceTokens,
                 ]);
 
                 $firebase = app(\App\Services\FirebaseService::class);
-                $cleanMessage = trim(preg_replace(
-                    '/\s+/',
-                    ' ',
+                $cleanMessage = trim(preg_replace('/\s+/', ' ',
                     html_entity_decode(strip_tags($data['message']), ENT_QUOTES | ENT_HTML5, 'UTF-8')
                 ));
-                $response = $firebase->sendToMultipleTokens($deviceTokens, $data['title'], $cleanMessage);
 
-                \Illuminate\Support\Facades\Log::info('Firebase: Notification sent successfully', [
+                $response = $firebase->sendToMultipleTokens($deviceTokens, $data['title'], $cleanMessage);
+                // $firebase->sendToMultipleTokens($deviceTokens, $data['title'], $cleanMessage);
+
+                \Log::info('Firebase: Notification sent successfully', [
                     'response' => $response,
                 ]);
             } catch (\Exception $exception) {
-                \Illuminate\Support\Facades\Log::error('Firebase: Failed to send notification', [
+                \Log::error('Firebase: Failed to send notification', [
                     'message' => $exception->getMessage(),
-                    'file' => $exception->getFile(),
-                    'line' => $exception->getLine(),
-                    'trace' => $exception->getTraceAsString(),
+                    'file'    => $exception->getFile(),
+                    'line'    => $exception->getLine(),
+                    'trace'   => $exception->getTraceAsString(),
                 ]);
             }
         }
-
-        // $fcmTokensQuery = UserFirebaseSessions::query();
-
-        // if ($data["type"] === "single") {
-        //     if (empty($user_id)) {
-        //         return true;
-        //     }
-
-        //     $fcmTokensQuery->where('user_id', $user_id);
-        // }
-
-        // if ($data["type"] === "all_users") {
-        //     /**/
-        // }
-
-        // if ($data["type"] === "students") {
-        //     $usersIds = User::query()->where("role_id", Role::getUserRoleId())
-        //         ->pluck("id")->toArray();
-
-        //     $fcmTokensQuery->whereIn('user_id', $usersIds);
-        // }
-
-        // if ($data["type"] === "instructors") {
-        //     $usersIds = User::query()->where("role_id", Role::getTeacherRoleId())
-        //         ->pluck("id")->toArray();
-
-        //     $fcmTokensQuery->whereIn('user_id', $usersIds);
-        // }
-
-        // if ($data["type"] === "organizations") {
-        //     $usersIds = User::query()->where("role_id", Role::getOrganizationRoleId())
-        //         ->pluck("id")->toArray();
-
-        //     $fcmTokensQuery->whereIn('user_id', $usersIds);
-        // }
-
-        // if ($data["type"] === "group") {
-        //     if (empty($group_id)) {
-        //         return true;
-        //     }
-
-        //     $usersIds = GroupUser::where("group_id", $group_id)
-        //         ->pluck("user_id")->toArray();
-
-        //     $fcmTokensQuery->whereIn('user_id', $usersIds);
-        // }
-
-        // if ($data["type"] === "course_students") {
-        //     if (empty($webinar_id)) {
-        //         return true;
-        //     }
-
-        //     $usersIds = Sale::where('webinar_id', $webinar_id)
-        //         ->whereNull('refund_at')
-        //         ->pluck('buyer_id')
-        //         ->toArray();
-
-        //     $fcmTokensQuery->whereIn('user_id', $usersIds);
-        // }
-
-        // $fcmTokensQuery->orderBy('created_at', 'desc');
-
-        // $fcmTokens = $fcmTokensQuery->get();
-        // $deviceTokens = [];
-
-        // foreach ($fcmTokens as $fcmToken) {
-        //     if ($fcmToken->fcm_token && strlen($fcmToken->fcm_token) > 0) {
-        //         $deviceTokens[] = $fcmToken->fcm_token;
-        //     }
-        // }
-
-        //if (count($deviceTokens) > 0) {
-
-        // $messageFCM = app('firebase.messaging');
-
-        // foreach ($deviceTokens as $fcmToken) {
-        //     $fcmMessage = CloudMessage::new();
-        //     $fcmMessage = $fcmMessage->withChangedTarget("token", $fcmToken);
-        //     $fcmMessage = $fcmMessage->withData([
-        //         'user_id' => $user_id,
-        //         'group_id' => $group_id,
-        //         'webinar_id' => $webinar_id,
-        //         'sender_id' => auth()->id(),
-        //         'title' => $data['title'],
-        //         'message' => preg_replace('/<[^>]*>/', '', $data['message']),
-        //         'sender' => Notification::$AdminSender,
-        //         'type' => $data['type'],
-        //         'created_at' => time()
-        //     ]);
-
-        //     $fcmMessage = $fcmMessage->withNotification(\Kreait\Firebase\Messaging\Notification::create($data["title"], preg_replace('/<[^>]*>/', '', $data["message"])));
-
-        //     $fcmMessage = $fcmMessage->withAndroidConfig(\Kreait\Firebase\Messaging\AndroidConfig::fromArray([
-        //         'ttl' => '3600s',
-        //         'priority' => 'high',
-        //         'notification' => [
-        //             'color' => '#f45342',
-        //             'sound' => 'default',
-        //         ],
-        //     ]));
-
-        //     try {
-        //         $messageFCM->send($fcmMessage);
-        //     } catch (\Exception $exception) {
-        //         //dd($exception);
-        //     }
-        // }
-        //}
     }
 
     public function edit($id)

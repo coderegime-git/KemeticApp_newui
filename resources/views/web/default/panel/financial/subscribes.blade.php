@@ -171,7 +171,7 @@
 ])
 @endif
 
-<section class="kemetic-section mt-30">
+<!-- <section class="kemetic-section mt-30">
     <h2 class="section-title">{{ trans('financial.select_a_subscribe_plan') }}</h2>
 
     <div class="row mt-15">
@@ -236,7 +236,7 @@
             </div>
         @endforeach
     </div>
-</section>
+</section> -->
 @endsection
 
 @push('scripts_bottom')

@@ -228,6 +228,13 @@
   background-color: rgba(67, 212, 119, 0.5);
 }
 
+@media (max-width: 767px) {
+    .mobile-full-width {
+        width: 100% !important;
+        margin-bottom: 10px;
+    }
+}
+
     </style>
 @endpush
 
@@ -236,15 +243,15 @@
       PREREQUISITES SECTION
 ============================= --}}
 <section class="kemetic-section">
-    <div class="d-flex align-items-center justify-content-between mb-2">
-        <h2 class="section-title after-line">
-            {{ trans('public.prerequisites') }} <span class="text-muted">({{ trans('public.optional') }})</span>
+    <div class="d-flex flex-column flex-md-row align-items-start align-items-md-center justify-content-between mb-2">
+        <h2 class="section-title after-line mb-3 mb-md-0">
+            {{ trans('public.prerequisites') }} ({{ trans('public.optional') }})
         </h2>
 
         <button id="webinarAddPrerequisites"
                 data-webinar-id="{{ $webinar->id }}"
                 type="button"
-                class="kemetic-add-btn">
+                class="kemetic-add-btn mobile-full-width">
             + {{ trans('public.add_prerequisites') }}
         </button>
     </div>
@@ -273,15 +280,15 @@
       RELATED COURSES SECTION
 ============================= --}}
 <section class="kemetic-section">
-    <div class="d-flex align-items-center justify-content-between mb-2">
-        <h2 class="section-title after-line">
-            {{ trans('update.related_courses') }} <span class="text-muted">({{ trans('public.optional') }})</span>
+    <div class="d-flex flex-column flex-md-row align-items-start align-items-md-center justify-content-between mb-2">
+        <h2 class="section-title after-line mb-3 mb-md-0">
+            {{ trans('update.related_courses') }} ({{ trans('public.optional') }})
         </h2>
 
         <button id="webinarAddRelatedCourses"
                 data-webinar-id="{{ $webinar->id }}"
                 type="button"
-                class="kemetic-add-btn">
+                class="kemetic-add-btn mobile-full-width">
             + {{ trans('update.add_related_courses') }}
         </button>
     </div>

@@ -76,6 +76,7 @@ class Blog extends Model implements TranslatableContract
             'locale'=>$this->locale ,
             'author' => $this->author->brief,
             'like_count' => $this->like()->count(),
+            'save_count' => $this->saveditems()->count(),
             'is_liked' => $this->isLikedByUser($userid),
             'is_saved' => $this->isSavedByUser($userid),
             'share_count' => $this->share()->count(),

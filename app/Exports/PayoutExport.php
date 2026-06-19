@@ -51,6 +51,7 @@ class PayoutExport implements FromCollection, WithHeadings, WithMapping
         foreach ($bank->specifications as $specification) {
             $selectedBankSpecification = $payout->userSelectedBank->specifications->where('user_selected_bank_id', $payout->userSelectedBank->id)->where('user_bank_specification_id', $specification->id)->first();
 
+            // $bankTitle .= "{$specification->name}: {$selectedBankSpecification->value}";
             $value = $selectedBankSpecification ? $selectedBankSpecification->value : '';
             $bankTitle .= "{$specification->name}: {$value}, ";
         }

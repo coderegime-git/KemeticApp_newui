@@ -134,9 +134,9 @@
                                                 </a>
 
                                                 @can('admin_users_edit')
-                                                    <a href="{{ getAdminPanelUrl() }}/users/{{ $content->user_id }}/edit" class="btn-transparent mx-1 text-primary" data-toggle="tooltip" data-placement="top" title="{{ trans('update.edit_user') }}">
+                                                    <!-- <a href="{{ getAdminPanelUrl() }}/users/{{ $content->user_id }}/edit" class="btn-transparent mx-1 text-primary" data-toggle="tooltip" data-placement="top" title="{{ trans('update.edit_user') }}">
                                                         <i class="fa fa-edit"></i>
-                                                    </a>
+                                                    </a> -->
                                                 @endcan
 
                                                 @can('admin_sales_refund')

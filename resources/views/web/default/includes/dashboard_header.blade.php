@@ -475,11 +475,11 @@
                 @endcan
 
                 <!-- Favorites -->
-                @can('panel_webinars_favorites')
+                <!-- @can('panel_webinars_favorites')
                     <a href="/panel/webinars/favorites" class="{{ Request::is('panel/webinars/favorites') ? 'active' : '' }}">
                         <span class="dashboard-ms">favorite</span> {{ trans('panel.favorites') }}
                     </a>
-                @endcan
+                @endcan -->
 
                 <!-- Course Notes -->
                 @if(!empty(getFeaturesSettings('course_notes_status')))
@@ -681,17 +681,18 @@
         @can('panel_products')
         <div class="nav-collapsible {{ Request::is('panel/store*') ? 'open' : '' }}">
             <a class="nav-collapsible-toggle {{ Request::is('panel/store*') ? 'active' : '' }}">
-                <span class="dashboard-ms">store</span> {{ trans('update.store') }}
+                <span class="dashboard-ms">store</span> Shop
                 <span class="nav-arrow">›</span>
             </a>
             <div class="nav-collapsible-content">
                 
                 @if($authUser->isTeacher())
                     @can('panel_products_create')
-                    <a href="/panel/store/products/new" class="{{ Request::is('panel/store/products/new') ? 'active' : '' }}">
-                        <span class="dashboard-ms">add_circle</span>Own Product
-                    </a>
-                @endcan
+                        <a href="/panel/store/products/new" class="{{ Request::is('panel/store/products/new') ? 'active' : '' }}">
+                            <span class="dashboard-ms">add_circle</span>Own Product
+                        </a>
+                    @endcan
+                    
                     <div class="nav-collapsible nav-sub-collapsible {{ (request()->is('panel/cj-products') or request()->is('panel/cj/*')) ? 'open' : '' }}" data-sub="true">
                         <a class="nav-collapsible-toggle {{ (request()->is('panel/cj-products') or request()->is('panel/cj/*')) ? 'active' : '' }}">
                             <span class="dashboard-ms">store</span>Dropshipping
