@@ -86,11 +86,51 @@
 .k-accordion-body .btn-danger:hover {
     background-color: #ff2a2a;
 }
+
+/* ── Switch ── */
+.kemetic-switch-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+.kemetic-switch {
+    position: relative;
+    display: inline-block;
+    width: 44px; height: 24px;
+    flex-shrink: 0;
+    margin-bottom: 0;
+}
+.kemetic-switch input { display: none; }
+.kemetic-switch-track {
+    position: absolute;
+    inset: 0;
+    background: #333;
+    border-radius: 24px;
+    cursor: pointer;
+    transition: background 0.25s;
+}
+.kemetic-switch-track::before {
+    content: '';
+    position: absolute;
+    width: 18px; height: 18px;
+    top: 3px; left: 3px;
+    background: #777;
+    border-radius: 50%;
+    transition: transform 0.25s, background 0.25s;
+}
+.kemetic-switch input:checked ~ .kemetic-switch-track {
+    background: rgba(242, 201, 76, 0.2);
+    border: 1px solid var(--k-gold);
+}
+.kemetic-switch input:checked ~ .kemetic-switch-track::before {
+    background: var(--k-gold);
+    transform: translateX(20px);
+}
 </style>
 @endpush
 
 <li data-id="{{ !empty($file) ? $file->id : '' }}" class="accordion-row k-accordion-item">
-    <div class="k-accordion-header" data-toggle="collapse" href="#collapseFile{{ !empty($file) ? $file->id : 'record' }}" aria-controls="collapseFile{{ !empty($file) ? $file->id : 'record' }}" data-parent="#filesAccordion">
+    <div class="k-accordion-header" data-toggle="collapse" data-target="#collapseFile{{ !empty($file) ? $file->id : 'record' }}" aria-controls="collapseFile{{ !empty($file) ? $file->id : 'record' }}" data-parent="#filesAccordion">
         <div class="d-flex align-items-center">
             <i data-feather="file" class="mr-10"></i>
             <span class="title">{{ !empty($file) ? $file->title : trans('public.add_new_files') }}</span>
@@ -138,25 +178,26 @@
                         <input type="hidden" name="ajax[{{ !empty($file) ? $file->id : 'new' }}][locale]" value="{{ $defaultLocale }}">
                     @endif
 
-                    <div class="form-group">
-                        <label class="input-label">{{ trans('public.title') }}</label>
+                    <div class="form-group mt-15" style="margin-top:10px;">
+                        <label class="input-label">{{ trans('public.title') }} <span class="text-danger">*</span></label>
                         <input type="text" name="ajax[{{ !empty($file) ? $file->id : 'new' }}][title]" class="js-ajax-title form-control" value="{{ !empty($file) ? $file->title : '' }}" placeholder="{{ trans('forms.maximum_255_characters') }}"/>
                     </div>
 
-                    <div class="form-group js-file-path-input">
+                    <div class="row form-group js-file-path-input mt-15" style="margin-top:10px;">
+                        <label class="input-label">File Path <span class="text-danger">*</span></label>
                         <div class="local-input input-group">
                             <div class="input-group-prepend">
-                                <button type="button" class="input-group-text panel-file-manager text-white" data-input="file_path{{ !empty($file) ? $file->id : 'record' }}" data-preview="holder">
+                                <button type="button" class="input-group-text panel-file-manager" style="background: var(--k-gold); border: 1px solid var(--k-border); color: #000; outline: none; box-shadow: none;height: 100%;" data-input="file_path{{ !empty($file) ? $file->id : 'record' }}" data-preview="holder">
                                     <i data-feather="upload"></i>
                                 </button>
                             </div>
-                            <input type="text" name="ajax[{{ !empty($file) ? $file->id : 'new' }}][path]" id="file_path{{ !empty($file) ? $file->id : 'record' }}" value="{{ !empty($file) ? $file->path : '' }}" class="js-ajax-file_path form-control" placeholder="{{ trans('webinars.file_upload_placeholder') }}"/>
+                            <input type="text" name="ajax[{{ !empty($file) ? $file->id : 'new' }}][path]" id="file_path{{ !empty($file) ? $file->id : 'record' }}" value="{{ !empty($file) ? $file->path : '' }}" class="js-ajax-file_path form-control" style="border-top-left-radius: 0; border-bottom-left-radius: 0;" placeholder="{{ trans('webinars.file_upload_placeholder') }}"/>
                         </div>
                     </div>
 
-                    <div class="row form-group js-file-type-volume">
+                    <div class="row form-group js-file-type-volume mt-15" style="margin-top:10px;">
                         <div class="col-6">
-                            <label class="input-label">{{ trans('webinars.file_type') }}</label>
+                            <label class="input-label">{{ trans('webinars.file_type') }} <span class="text-danger">*</span></label>
                             <select name="ajax[{{ !empty($file) ? $file->id : 'new' }}][file_type]" class="js-ajax-file_type form-control">
                                 <option value="">{{ trans('webinars.select_file_type') }}</option>
                                 @foreach(\App\Models\File::$fileTypes as $fileType)
@@ -165,39 +206,39 @@
                             </select>
                         </div>
                         <div class="col-6">
-                            <label class="input-label">{{ trans('webinars.file_volume') }}</label>
+                            <label class="input-label">{{ trans('webinars.file_volume') }} <span class="text-danger">*</span></label>
                             <input type="text" name="ajax[{{ !empty($file) ? $file->id : 'new' }}][volume]" value="{{ !empty($file) ? $file->volume : '' }}" class="js-ajax-volume form-control" placeholder="{{ trans('webinars.online_file_volume') }}"/>
                         </div>
                     </div>
 
-                    <div class="form-group">
-                        <label class="input-label">{{ trans('public.description') }}</label>
+                    <div class="form-group" style="margin-top:10px;">
+                        <label class="input-label">{{ trans('public.description') }} <span class="text-danger">*</span></label>
                         <textarea name="ajax[{{ !empty($file) ? $file->id : 'new' }}][description]" rows="4" class="js-ajax-description form-control" placeholder="{{ trans('public.description') }}">{{ !empty($file) ? $file->description : '' }}</textarea>
                     </div>
 
                     <div class="js-online_viewer-input form-group mt-20 {{ (!empty($file) and $file->file_type == 'pdf') ? '' : 'd-none' }}">
-                        <div class="d-flex align-items-center justify-content-between">
+                        <div class="kemetic-switch-row">
                             <label class="cursor-pointer input-label" for="online_viewerSwitch{{ !empty($file) ? $file->id : '_record' }}">{{ trans('update.online_viewer') }}</label>
-                            <div class="custom-control custom-switch">
-                                <input type="checkbox" name="ajax[{{ !empty($file) ? $file->id : 'new' }}][online_viewer]" class="custom-control-input" id="online_viewerSwitch{{ !empty($file) ? $file->id : '_record' }}" {{ (!empty($file) and $file->online_viewer) ? 'checked' : '' }}>
-                                <label class="custom-control-label" for="online_viewerSwitch{{ !empty($file) ? $file->id : '_record' }}"></label>
-                            </div>
+                            <label class="kemetic-switch">
+                                <input type="checkbox" name="ajax[{{ !empty($file) ? $file->id : 'new' }}][online_viewer]" id="online_viewerSwitch{{ !empty($file) ? $file->id : '_record' }}" {{ (!empty($file) and $file->online_viewer) ? 'checked' : '' }}>
+                                <span class="kemetic-switch-track"></span>
+                            </label>
                         </div>
                     </div>
 
                     <div class="form-group mt-20">
-                        <div class="d-flex align-items-center justify-content-between">
+                        <div class="kemetic-switch-row">
                             <label class="cursor-pointer input-label" for="fileStatusSwitch{{ !empty($file) ? $file->id : '_record' }}">{{ trans('public.active') }}</label>
-                            <div class="custom-control custom-switch">
-                                <input type="checkbox" name="ajax[{{ !empty($file) ? $file->id : 'new' }}][status]" class="custom-control-input" id="fileStatusSwitch{{ !empty($file) ? $file->id : '_record' }}" {{ (empty($file) or $file->status == \App\Models\File::$Active) ? 'checked' : '' }}>
-                                <label class="custom-control-label" for="fileStatusSwitch{{ !empty($file) ? $file->id : '_record' }}"></label>
-                            </div>
+                            <label class="kemetic-switch">
+                                <input type="checkbox" name="ajax[{{ !empty($file) ? $file->id : 'new' }}][status]" id="fileStatusSwitch{{ !empty($file) ? $file->id : '_record' }}" {{ (empty($file) or $file->status == \App\Models\File::$Active) ? 'checked' : '' }}>
+                                <span class="kemetic-switch-track"></span>
+                            </label>
                         </div>
                     </div>
                 </div>
             </div>
 
-            <div class="mt-30 d-flex align-items-center">
+            <div class="mt-30 d-flex align-items-center" style="margin-top:10px;">
                 <button type="button" class="js-save-file btn btn-primary">{{ trans('public.save') }}</button>
                 @if(empty($file))
                     <button type="button" class="btn btn-danger ml-10 cancel-accordion">{{ trans('public.close') }}</button>

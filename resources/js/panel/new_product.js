@@ -346,7 +346,7 @@
 
         if (el && el.length) {
             el.select2({
-                placeholder: $(this).data('placeholder'),
+                placeholder: el.attr('data-placeholder'),
                 //minimumInputLength: 3,
                 //allowClear: true,
                 /*ajax: {
@@ -413,16 +413,19 @@
                     allowSelectionInput.removeClass('d-none');
                     summaryInput.addClass('d-none');
 
-                    const select = $('.multi_values-select2');
+                    const select = $form.find('.js-ajax-multi_values');
                     let html='';
                     if (multiValues) {
                         for (const multiValue of multiValues) {
                             html += `<option value="${multiValue.id}">${multiValue.title}</option>`;
                         }
                     }
-                    select.append(html);
-
-                    handleSpecificationMultiValueSelect2('multi_values-select2');
+                    select.empty().append(html);
+                    
+                    if (select.hasClass('select2-hidden-accessible')) {
+                        select.select2('destroy');
+                    }
+                    select.select2();
                 } else {
                     multiValuesInput.addClass('d-none');
                     allowSelectionInput.addClass('d-none');

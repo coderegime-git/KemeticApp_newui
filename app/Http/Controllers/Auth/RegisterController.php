@@ -668,7 +668,7 @@ class RegisterController extends Controller
         }
         // dd($user);
 
-        return redirect('/panel');
+        return redirect('/membership');
 
     }
 

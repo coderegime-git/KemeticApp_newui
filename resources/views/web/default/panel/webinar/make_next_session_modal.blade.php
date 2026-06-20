@@ -217,7 +217,7 @@
             <div class="row">
                 <div class="col-12 col-md-7">
                     <div class="form-group">
-                        <label class="input-label">{{ trans('webinars.session_title') }}</label>
+                        <label class="input-label">{{ trans('webinars.session_title') }} <span class="text-danger">*</span></label>
                         <input type="text" name="ajax[new][title]" class="js-ajax-title form-control" value=""/>
                         <div class="invalid-feedback"></div>
                     </div>
@@ -225,7 +225,7 @@
 
                 <div class="col-12 col-md-5">
                     <div class="form-group">
-                        <label class="input-label">{{ trans('public.date') }}</label>
+                        <label class="input-label">{{ trans('public.date') }} <span class="text-danger">*</span></label>
                         <div class="input-group">
                             <div class="input-group-prepend">
                             <span class="input-group-text">
@@ -270,7 +270,7 @@
 
             <div class="col-6">
                 <div class="form-group">
-                    <label class="input-label">{{ trans('public.duration') }}</label>
+                    <label class="input-label">{{ trans('public.duration') }} <span class="text-danger">*</span></label>
                     <input type="text" name="ajax[new][duration]" value="" class="js-ajax-duration form-control"/>
                     <div class="invalid-feedback"></div>
                 </div>

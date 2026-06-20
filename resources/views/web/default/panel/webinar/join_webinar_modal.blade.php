@@ -121,7 +121,7 @@
         <div class="row">
             <div class="col-12 col-md-7">
                 <div class="form-group kemetic-form">
-                    <label>{{ trans('webinars.session_title') }}</label>
+                    <label>{{ trans('webinars.session_title') }} <span class="text-danger">*</span></label>
                     <input type="text" readonly
                            class="js-join-session-title form-control kemetic-input"/>
                 </div>
@@ -129,7 +129,7 @@
 
             <div class="col-12 col-md-5">
                 <div class="form-group kemetic-form">
-                    <label>{{ trans('public.date') }}</label>
+                    <label>{{ trans('public.date') }} <span class="text-danger">*</span></label>
                     <div class="input-group kemetic-input-group">
                         <div class="input-group-prepend">
                             <span class="input-group-text">

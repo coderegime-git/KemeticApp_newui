@@ -120,7 +120,7 @@
 @stack('scripts_bottom')
 
 <script src="/assets/default/js//parts/main.min.js"></script>
-<script src="/assets/default/js/panel/public.min.js"></script>
+<script src="/assets/default/js/panel/public.min.js?v=2"></script>
 <script src="/assets/default/js/parts/content_delete.min.js"></script>
 <script src="/assets/default/js/panel/ai-content-generator.min.js"></script>
 

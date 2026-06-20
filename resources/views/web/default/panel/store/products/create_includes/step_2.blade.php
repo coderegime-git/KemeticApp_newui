@@ -20,13 +20,20 @@
 
 /* Inputs */
 .k-card .form-control,
-.k-card .custom-select,
-.k-card .select2-container--default .select2-selection--single{
+.k-card .custom-select {
     background:#0b0b0b;
     color:#eaeaea;
     border:1px solid #2a2a2a;
     border-radius:12px;
     width: fit-content !important;
+}
+
+.k-card .select2-container--default .select2-selection--single {
+    background:#0b0b0b !important;
+    color:#eaeaea !important;
+    border:1px solid #2a2a2a !important;
+    border-radius:12px !important;
+    width: 100% !important;
 }
 
 .k-card .form-control:focus,
@@ -300,6 +307,7 @@
     display: flex;
     align-items: center;
     color: #e0e0e0 !important;
+    width: 100% !important;
 }
 
 /* text */
@@ -318,6 +326,11 @@
     background: #0f0f0f !important;
     border: 1px solid rgba(242,201,76,.35) !important;
     border-radius: 12px !important;
+    z-index: 9999 !important;
+}
+
+.select2-container {
+    width: 100% !important;
 }
 
 /* options */
@@ -492,7 +505,7 @@
                     @if(empty($cjProduct))
                         <div class="form-group">
                             <label class="input-label">{{ trans('update.delivery_fee') }}</label>
-                            <input type="number" name="delivery_fee" data-price-input
+                            <input type="number" name="delivery_fee" min="0" data-price-input
                                 value="{{ (!empty($product) && isset($product->delivery_fee)) ? $product->delivery_fee : old('delivery_fee') }}"
                                 class="form-control @error('delivery_fee') is-invalid @enderror">
                         </div>
@@ -500,7 +513,7 @@
 
                 <div class="form-group">
                     <label class="input-label">{{ trans('update.delivery_estimated_time') }}</label>
-                    <input type="number" name="delivery_estimated_time"
+                    <input type="number" name="delivery_estimated_time" min="0"
                            value="{{ $product->delivery_estimated_time ?? old('delivery_estimated_time') }}"
                            class="form-control">
                 </div>
@@ -568,7 +581,7 @@
     <div class="col-12 col-md-6">
 
         <div class="form-group kemetic-form-group">
-            <label class="kemetic-label">{{ trans('public.category') }}</label>
+            <label class="kemetic-label">{{ trans('public.category') }} <span class="text-danger">*</span></label>
 
             <select id="categories" class="kemetic-select select2 @error('category_id')  is-invalid @enderror" name="category_id" required>
                 <option {{ (!empty($product) and !empty($product->category_id)) ? '' : 'selected' }} disabled>{{ trans('public.choose_category') }}</option>

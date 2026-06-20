@@ -407,7 +407,7 @@
 
             {{-- TITLE --}}
             <div class="form-group kemetic-form-group">
-                <label class="kemetic-label">{{ trans('public.title') }}</label>
+                <label class="kemetic-label">{{ trans('public.title') }} <span class="text-danger">*</span></label>
 
                 <input type="text"
                        name="title"
@@ -421,7 +421,7 @@
 
             {{-- SEO DESCRIPTION --}}
             <div class="form-group kemetic-form-group">
-                <label class="kemetic-label">{{ trans('public.seo_description') }}</label>
+                <label class="kemetic-label">{{ trans('public.seo_description') }} <span class="text-danger">*</span></label>
 
                 <input type="text"
                        name="seo_description"
@@ -436,7 +436,7 @@
 
             {{-- SUMMARY --}}
             <div class="form-group kemetic-form-group">
-                <label class="kemetic-label">{{ trans('public.summary') }}</label>
+                <label class="kemetic-label">{{ trans('public.summary') }}  <span class="text-danger">*</span></label>
 
                 <textarea name="summary"
                           rows="5"
@@ -457,7 +457,7 @@
 <div class="row mt-20">
     <div class="col-12">
         <div class="k-form-card">
-            <label class="input-label">{{ trans('public.description') }}</label>
+            <label class="input-label">{{ trans('public.description') }} <span class="text-danger">*</span></label>
             <textarea id="summernote" name="description"
                       class="form-control @error('description') is-invalid @enderror">
                 {!! (!empty($product) && !empty($product->translate($locale))) ? $product->translate($locale)->description : (!empty($cjProduct) ? ($cjProduct['description'] ?? '') : old('description')) !!}

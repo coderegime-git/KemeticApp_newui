@@ -467,9 +467,11 @@
 
         {{-- ================= FOOTER ================= --}}
         <div class="d-flex flex-column flex-md-row justify-content-end mt-40 gap-10">
-            <button type="button" class="js-submit-quiz-form w-100 w-md-auto kemetic-btn-gold mb-2 mb-md-0">
-                {{ !empty($quiz) ? trans('public.save_change') : trans('public.create') }}
-            </button>
+            @if(empty($quiz) && !empty($inWebinarPage))
+                <button type="button" class="js-submit-quiz-form w-100 w-md-auto kemetic-btn-gold mb-2 mb-md-0">
+                    {{ !empty($quiz) ? trans('public.save_change') : trans('public.create') }}
+                </button>
+            @endif
 
             @if(empty($quiz) && !empty($inWebinarPage))
                 <button type="button" class="kemetic-btn-outline w-100 w-md-auto cancel-accordion">

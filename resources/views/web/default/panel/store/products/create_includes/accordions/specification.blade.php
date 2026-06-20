@@ -361,7 +361,7 @@
 
                         {{-- ── SPECIFICATION SELECT ── --}}
                         <div class="form-group kemetic-form-group mt-15">
-                            <label class="kemetic-label d-block">{{ trans('update.specification') }}</label>
+                            <label class="kemetic-label d-block">{{ trans('update.specification') }} <span class="text-danger">*</span></label>
 
                             <select name="ajax[{{ !empty($selectedSpecification) ? $selectedSpecification->id : 'new' }}][specification_id]"
                                     class="kemetic-select js-ajax-specification_id {{ !empty($selectedSpecification) ? '' : 'specification-select2' }}"
@@ -399,7 +399,7 @@
 
                         {{-- ── MULTI VALUES ── --}}
                         <div class="form-group kemetic-form-group js-multi-values-input {{ (!empty($selectedSpecification) and $selectedSpecification->type == 'multi_value') ? '' : 'd-none' }}">
-                            <label class="kemetic-label d-block">{{ trans('update.parameters') }}</label>
+                            <label class="kemetic-label d-block">{{ trans('update.parameters') }} <span class="text-danger">*</span></label>
 
                             @php
                                 $selectedMultiValues = [];
@@ -431,7 +431,7 @@
 
                         {{-- ── SUMMARY (textarea) ── --}}
                         <div class="form-group kemetic-form-group js-summery-input {{ (!empty($selectedSpecification) and $selectedSpecification->type == 'textarea') ? '' : 'd-none' }}">
-                            <label class="kemetic-label d-block">{{ trans('update.product_summary') }}</label>
+                            <label class="kemetic-label d-block">{{ trans('update.product_summary') }} <span class="text-danger">*</span></label>
                             <textarea name="ajax[{{ !empty($selectedSpecification) ? $selectedSpecification->id : 'new' }}][summary]"
                                       rows="4"
                                       class="kemetic-textarea js-ajax-summary">{{ (!empty($selectedSpecification) and $selectedSpecification->type == 'textarea') ? $selectedSpecification->value : '' }}</textarea>

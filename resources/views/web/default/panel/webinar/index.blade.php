@@ -211,10 +211,15 @@ section {
     padding: 12px 16px;
     font-size: 14px;
     transition: .25s;
+    background: transparent !important;  /* Fix: buttons default to ButtonFace white */
+    width: 100%;
+    text-align: left;
+    display: block;
+    border: none;
 }
 
 .webinar-actions:hover {
-    background: var(--k-gold-soft);
+    background: var(--k-gold-soft) !important;
     color: var(--k-gold);
 }
 
@@ -780,7 +785,27 @@ section {
         var undefinedActiveSessionLang = '{{ trans('webinars.undefined_active_session') }}';
         var saveSuccessLang = '{{ trans('webinars.success_store') }}';
         var selectChapterLang = '{{ trans('update.select_chapter') }}';
+
+        /* =====================================================
+         * Fix: Close any open dropdown when another is opened.
+         * Bootstrap 5 fires 'show.bs.dropdown' BEFORE adding
+         * .show to the new dropdown, so at this moment every
+         * .dropdown-menu.show is a STALE open menu → close all.
+         * ===================================================== */
+        document.addEventListener('show.bs.dropdown', function () {
+            // At this point the new dropdown is not yet visible,
+            // so any .show menus are from previously-opened dropdowns.
+            document.querySelectorAll('.webinar-dropdown .dropdown-menu.show')
+                    .forEach(function (menu) {
+                        menu.classList.remove('show');
+                        var toggle = menu.previousElementSibling;
+                        if (toggle) {
+                            toggle.setAttribute('aria-expanded', 'false');
+                            toggle.classList.remove('show');
+                        }
+                    });
+        });
     </script>
 
-    <script src="/assets/default/js/panel/make_next_session.min.js"></script>
+    <script src="/assets/default/js/panel/make_next_session.min.js?v=3"></script>
 @endpush

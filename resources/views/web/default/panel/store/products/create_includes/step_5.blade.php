@@ -212,7 +212,7 @@
         <div class="col-12 col-md-4">
             <div class="form-group k-switch mt-10">
                 <div class="d-flex align-items-center justify-content-between">
-                    <label class="cursor-pointer input-label" for="rulesSwitch">{{ trans('public.agree_rules') }}</label>
+                    <label class="cursor-pointer input-label" for="rulesSwitch">{{ trans('public.agree_rules') }} <span class="text-danger">*</span></label>
                     <div class="custom-control custom-switch">
                         <input type="checkbox" name="rules" class="custom-control-input" id="rulesSwitch">
                         <label class="custom-control-label" for="rulesSwitch"></label>

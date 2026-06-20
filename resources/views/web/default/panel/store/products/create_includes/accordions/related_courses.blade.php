@@ -11,7 +11,7 @@
 }
 
 /* Header */
-.kemetic-accordion-header {
+.k-accordion-header {
     padding: 16px 18px;
     cursor: pointer;
     border-bottom: 1px solid rgba(242,201,76,.15);
@@ -113,16 +113,15 @@
 <li data-id="{{ !empty($relatedCourse) ? $relatedCourse->id :'' }}"
     class="accordion-row kemetic-accordion mt-20">
 
-    <div class="kemetic-accordion-header d-flex align-items-center justify-content-between"
+    <div class="k-accordion-header d-flex align-items-center justify-content-between"
          role="tab"
          id="relatedCourse_{{ !empty($relatedCourse) ? $relatedCourse->id :'record' }}">
 
         {{-- TITLE --}}
-        <div class="kemetic-accordion-title"
-             href="#collapseRelatedCourse{{ !empty($relatedCourse) ? $relatedCourse->id :'record' }}"
-             data-parent="#relatedCoursesAccordion"
-             role="button"
+        <div class="kemetic-accordion-title flex-grow-1"
              data-toggle="collapse"
+             data-target="#collapseRelatedCourse{{ !empty($relatedCourse) ? $relatedCourse->id :'record' }}"
+             role="button"
              aria-expanded="true">
 
             <span>
@@ -147,7 +146,7 @@
 
                     <div class="dropdown-menu dropdown-menu-right kemetic-dropdown-menu">
                         <a href="/panel/relatedCourses/{{ $relatedCourse->id }}/delete"
-                           class="dropdown-item text-danger">
+                           class="dropdown-item text-danger delete-action">
                             {{ trans('public.delete') }}
                         </a>
                     </div>
@@ -157,11 +156,9 @@
             <i class="kemetic-chevron"
                data-feather="chevron-down"
                height="18"
-               href="#collapseRelatedCourse{{ !empty($relatedCourse) ? $relatedCourse->id :'record' }}"
-               data-parent="#relatedCoursesAccordion"
-               role="button"
                data-toggle="collapse"
-               aria-expanded="true"></i>
+               data-target="#collapseRelatedCourse{{ !empty($relatedCourse) ? $relatedCourse->id :'record' }}"
+               role="button"></i>
         </div>
     </div>
 
@@ -188,7 +185,7 @@
                     <div class="col-12 col-lg-6">
                         <div class="form-group kemetic-form-group">
                             <label class="kemetic-label">
-                                {{ trans('update.select_related_courses') }}
+                                {{ trans('update.select_related_courses') }} <span class="text-danger">*</span>
                             </label>
 
                             <select name="ajax[{{ !empty($relatedCourse) ? $relatedCourse->id : 'new' }}][course_id]"

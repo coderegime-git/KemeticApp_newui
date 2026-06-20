@@ -94,12 +94,9 @@ class RelatedCoursesController extends Controller
             $item->delete();
         }
 
-        $url = '/panel/webinars';
-        return redirect($url);
-
-        // return response()->json([
-        //     'code' => 200
-        // ], 200);
+        return response()->json([
+            'code' => 200
+        ], 200);
     }
 
     private function getTargetType($data)

@@ -176,7 +176,7 @@
 
             {{-- THUMBNAIL --}}
             <div class="form-group kemetic-form-group">
-                <label class="kemetic-label">{{ trans('public.thumbnail_image') }}</label>
+                <label class="kemetic-label">{{ trans('public.thumbnail_image') }} <span class="text-danger">*</span></label>
 
                 <div class="kemetic-input-group">
                     <button type="button"
@@ -203,7 +203,7 @@
 
             {{-- PRODUCT IMAGES --}}
             <div id="productImagesInputs" class="form-group kemetic-form-group mt-15">
-                <label class="kemetic-label mb-0">{{ trans('update.images') }}</label>
+                <label class="kemetic-label mb-0">{{ trans('update.images') }} <span class="text-danger">*</span></label>
 
                 <div class="main-row input-group product-images-input-group kemetic-input-group mt-10" style="margin-bottom:10px;">
                     <button type="button" class="kemetic-upload-btn panel-file-manager-image" data-input="images_record" data-preview="holder">
