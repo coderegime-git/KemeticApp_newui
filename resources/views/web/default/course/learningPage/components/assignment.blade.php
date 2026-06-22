@@ -91,6 +91,14 @@
     color: #F2C94C;
 }
 
+/* Image bounding */
+.assignment-attachments-post .mt-15 img {
+    max-width: 100%;
+    height: auto;
+    border-radius: 8px;
+    margin-top: 10px;
+}
+
 </style>
 <section class="p-15 m-15 rounded-lg bg-gray900 border border-gray700">
     <div class="assignment-top-stats d-flex flex-wrap flex-md-nowrap align-items-center justify-content-around">
@@ -249,39 +257,47 @@
                             <div class="invalid-feedback"></div>
                         </div>
 
-                        <div class="form-group d-flex align-items-center">
+                        <div class="form-group d-flex align-items-center" style="margin-top: 10px;">
                             <div class="input-group mr-10">
                                 <div class="input-group-prepend">
-                                    <button type="button" class="input-group-text panel-file-manager bg-gold text-dark" data-input="assignmentAttachmentInput" data-preview="holder">
+                                    <button type="button" class="input-group-text panel-file-manager bg-gold text-dark" data-input="assignmentAttachmentInput" data-preview="holder" style="border-top-left-radius: 8px; border-bottom-left-radius: 8px;height: 100%;">
                                         <i data-feather="upload" width="18" height="18"></i>
                                     </button>
                                 </div>
                                 <input type="text" name="file_path" id="assignmentAttachmentInput" value="" class="form-control bg-gray700 text-gray border-gray600" placeholder="{{ trans('update.assignment_attachments_placeholder') }}"/>
                             </div>
 
+                            
+                        </div>
+                        
+                        <div class="form-group d-flex align-items-center" style="margin-top: 10px;">
                             <button type="button" class="js-save-history-message btn btn-gold btn-sm">{{ trans('update.send') }}</button>
                         </div>
+
                     </form>
                 </div>
                 @if($user->id == $assignment->creator_id)
-                        <div class="bg-info-light p-10 rounded-sm border mt-15">
-                            <h4 class="font-16 font-weight-bold text-dark-blue">{{ trans('update.rate_the_assignment') }}</h4>
+                        <div class="bg-gray800 p-15 rounded-sm border border-gray700 mt-15">
+                            <h4 class="font-16 font-weight-bold text-gold mb-10">{{ trans('update.rate_the_assignment') }}</h4>
 
                             <form method="post" action="/course/assignment/{{ $assignment->id }}/history/{{ $assignmentHistory->id }}/setGrade">
                                 <input type="hidden" name="student_id" value="{{ $assignmentHistory->student_id }}">
 
                                 <div class="form-group">
-                                    <label class="input-label">{{ trans('update.assignments_grade') }}</label>
-                                    <div class="d-flex align-items-start">
+                                    <label class="input-label text-gold">{{ trans('update.assignments_grade') }}</label>
+                                    <div class="d-flex align-items-start mt-2">
                                         <div class="mr-10 w-100">
-                                            <input name="grade" class="form-control" placeholder="{{ trans('update.pass_grade') }}: {{ $assignment->pass_grade }}"/>
+                                            <input name="grade" class="form-control bg-gray700 text-gray border-gray600" placeholder="{{ trans('update.pass_grade') }}: {{ $assignment->pass_grade }}" min="0"/>
                                             <div class="invalid-feedback"></div>
                                         </div>
 
-                                        <button type="button" class="js-save-history-rate btn btn-primary btn-sm">{{ trans('public.submit') }}</button>
+                                        
+                                    </div>
+                                    <div class="d-flex align-items-start mt-2">
+                                        <button type="button" class="js-save-history-rate btn btn-gold btn-sm" style="height: 42px;">{{ trans('public.submit') }}</button>
                                     </div>
                                 </div>
-                                <p class="font-12 text-gray">{{ trans('update.by_submitting_the_grade_you_the_assignment_will_be_closed') }}</p>
+                                <p class="font-12 text-gray mt-10">{{ trans('update.by_submitting_the_grade_you_the_assignment_will_be_closed') }}</p>
                             </form>
                         </div>
                     @endif
@@ -296,7 +312,7 @@
                             <div class="assignment-attachments-post p-15 border rounded-sm mb-15 bg-gray800 border-gray700">
                                 <div class="d-flex align-items-center">
                                     <div class="user-avatar rounded-circle">
-                                        <img src="{{ $message->sender->getAvatar(50) }}" class="img-cover rounded-circle" alt="{{ $message->sender->full_name }}">
+                                        <img src="{{ $message->sender->getAvatar(50) }}" style="width: 50px; height: 50px;" class="img-cover rounded-circle" alt="{{ $message->sender->full_name }}">
                                     </div>
                                     <div class="ml-10">
                                         <h4 class="font-14 font-weight-500 text-gold">{{ $message->sender->full_name }}</h4>
@@ -308,8 +324,8 @@
                                 </div>
 
                                 @if(!empty($message->file_path))
-                                    <div class="d-flex flex-wrap align-items-center mt-10">
-                                        <a href="{{ $message->getDownloadUrl($assignment->id) }}" target="_blank" class="d-flex align-items-center text-gray bg-gray700 border border-gray600 px-10 py-5 rounded-pill mr-10 mt-5">
+                                    <div class="d-flex flex-wrap align-items-center mt-2">
+                                        <a href="{{ $message->getDownloadUrl($assignment->id) }}" target="_blank" class="d-flex align-items-center text-gray bg-gray700 border border-gray600 px-10 py-5 rounded-pill mr-10 mt-2">
                                             <i data-feather="paperclip" class="text-gold" width="16" height="16"></i>
                                             <span class="ml-5 font-12 text-gold">{{ !empty($message->file_title) ? $message->file_title : trans('update.attachment') }}</span>
                                         </a>

@@ -579,15 +579,15 @@
                                                 <img src="{{ $result->quiz->creator->getAvatar() }}" alt="">
                                             </div>
                                             <div class="user-info">
-                                                <span class="user-name">{{ $result->quiz->creator->full_name }}</span>
-                                                <span class="user-email">{{ $result->quiz->creator->email }}</span>
+                                                <span class="user-name">{{ $result->quiz->creator?->full_name ?? '-' }}</span>
+                                                <span class="user-email">{{ $result->quiz->creator?->email ?? '-' }}</span>
                                             </div>
                                         </div>
                                     </td>
 
                                     <td class="text-left">
                                         <div class="quiz-title">{{ $result->quiz->title }}</div>
-                                        <div class="quiz-course">{{ $result->quiz->webinar->title }}</div>
+                                        <div class="quiz-course">{{ $result->quiz->webinar?->title ?? '-' }}</div>
                                     </td>
 
                                     <td>
@@ -631,9 +631,11 @@
                                                         {{ trans('public.try_again') }}
                                                     </a>
                                                 @endif
-                                                <a href="{{ $result->quiz->webinar->getUrl() }}" class="dropdown-item" target="_blank">
-                                                    {{ trans('webinars.webinar_page') }}
-                                                </a>
+                                                @if($result->quiz->webinar)
+                                                    <a href="{{ $result->quiz->webinar->getUrl() }}" class="dropdown-item" target="_blank">
+                                                        {{ trans('webinars.webinar_page') }}
+                                                    </a>
+                                                @endif
                                             </div>
                                         </div>
                                     </td>

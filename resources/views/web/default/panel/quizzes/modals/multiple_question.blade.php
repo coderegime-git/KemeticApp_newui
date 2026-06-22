@@ -88,7 +88,7 @@
                         <div class="form-group">
                             <label class="kemetic-label">{{ trans('quiz.grade') }} <span class="text-danger">*</span></label>
                             <input type="number"
-                                   name="ajax[grade]"
+                                   name="ajax[grade]" min="0"
                                    class="form-control kemetic-input js-ajax-grade"
                                    value="{{ $question_edit->grade ?? '' }}">
                             <span class="invalid-feedback"></span>

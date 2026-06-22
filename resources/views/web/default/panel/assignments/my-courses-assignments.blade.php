@@ -12,7 +12,7 @@
     --k-gold-soft: rgba(212,175,55,.25);
     --k-border: rgba(212,175,55,.15);
     --k-text: #f5f5f5;
-    --k-muted: #9a9a9a;
+    --k-muted: #f5f5f5;
     --k-radius: 18px;
     --k-shadow: 0 12px 40px rgba(0,0,0,.65);
 }
@@ -193,7 +193,7 @@
                             <tr>
                                 <td class="text-left">
                                     <span class="d-block font-16 font-weight-500 text-dark-blue">{{ $assignment->title }}</span>
-                                    <span class="d-block font-12 text-muted">{{ $assignment->webinar->title }}</span>
+                                    <span class="d-block font-12 text-gold">{{ $assignment->webinar->title }}</span>
                                 </td>
                                 <td>{{ $assignment->min_grade ?? '-' }}</td>
                                 <td>{{ $assignment->average_grade ?? '-' }}</td>

@@ -374,7 +374,7 @@
                         <label class="kemetic-label">{{ trans('quiz.pass_mark') }} <span class="text-danger">*</span></label>
                         <input type="number"
                                name="ajax[{{ !empty($quiz) ? $quiz->id : 'new' }}][pass_mark]"
-                               value="{{ $quiz->pass_mark ?? old('pass_mark') }}"
+                               value="{{ $quiz->pass_mark ?? old('pass_mark') }}" min="0"
                                class="kemetic-input js-ajax-pass_mark">
                     </div>
 
@@ -383,7 +383,7 @@
                         <label class="kemetic-label">{{ trans('update.expiry_days') }}</label>
                         <input type="number"
                                name="ajax[{{ !empty($quiz) ? $quiz->id : 'new' }}][expiry_days]"
-                               value="{{ $quiz->expiry_days ?? old('expiry_days') }}"
+                               value="{{ $quiz->expiry_days ?? old('expiry_days') }}" min="0"
                                class="kemetic-input js-ajax-expiry_days">
                         <small class="kemetic-hint">{{ trans('update.quiz_expiry_days_hint') }}</small>
                     </div>
@@ -470,6 +470,12 @@
             @if(empty($quiz) && !empty($inWebinarPage))
                 <button type="button" class="js-submit-quiz-form w-100 w-md-auto kemetic-btn-gold mb-2 mb-md-0">
                     {{ !empty($quiz) ? trans('public.save_change') : trans('public.create') }}
+                </button>
+            @endif
+
+            @if(!empty($quiz) && empty($inWebinarPage))
+                <button type="button" class="js-submit-quiz-form w-100 w-md-auto kemetic-btn-gold mb-2 mb-md-0">
+                    {{trans('public.save_change')}}
                 </button>
             @endif
 

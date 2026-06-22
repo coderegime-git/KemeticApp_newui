@@ -164,6 +164,17 @@
     }
 }
 
+/* FIX DATERANGEPICKER TEXT COLOR */
+.daterangepicker {
+    color: #333 !important;
+}
+.daterangepicker .calendar-table td.available {
+    color: #333 !important;
+}
+.daterangepicker .calendar-table td.off, 
+.daterangepicker .calendar-table td.disabled {
+    color: #aaa !important;
+}
 </style>
 <div class="d-none" id="webinarNextSessionModal">
     <form action="/panel/sessions/store" method="post">
@@ -203,7 +214,7 @@
                 </div>
                 <div class="col-12 col-md-5">
                     <div class="form-group">
-                        <label class="input-label">{{ trans('public.chapter') }}</label>
+                        <label class="input-label">{{ trans('public.chapter') }} <span class="text-danger">*</span></label>
 
                         <select name="ajax[new][chapter_id]" class="js-ajax-chapter_id form-control">
 
@@ -217,7 +228,7 @@
             <div class="row">
                 <div class="col-12 col-md-7">
                     <div class="form-group">
-                        <label class="input-label">{{ trans('webinars.session_title') }}</label>
+                        <label class="input-label">{{ trans('webinars.session_title') }} <span class="text-danger">*</span></label>
                         <input type="text" name="ajax[new][title]" class="js-ajax-title form-control" value=""/>
                         <div class="invalid-feedback"></div>
                     </div>
@@ -225,14 +236,14 @@
 
                 <div class="col-12 col-md-5">
                     <div class="form-group">
-                        <label class="input-label">{{ trans('public.date') }}</label>
+                        <label class="input-label">{{ trans('public.date') }} <span class="text-danger">*</span></label>
                         <div class="input-group">
                             <div class="input-group-prepend">
                             <span class="input-group-text">
                                 <i data-feather="calendar" width="18" height="18" class="text-white"></i>
                             </span>
                             </div>
-                            <input type="text" name="ajax[new][date]" value="" class="js-ajax-date form-control datetimepicker"/>
+                            <input type="text" name="ajax[new][date]" value="" class="js-ajax-date form-control datetimepicker" autocomplete="off"/>
                             <div class="invalid-feedback"></div>
                         </div>
                     </div>
@@ -242,7 +253,7 @@
             <div class="row">
                 <div class="col-12">
                     <div class="form-group">
-                        <label class="input-label">{{ trans('public.description') }}</label>
+                        <label class="input-label">{{ trans('public.description') }} <span class="text-danger">*</span></label>
                         <textarea name="ajax[new][description]" class="js-ajax-description form-control" rows="5"></textarea>
                         <div class="invalid-feedback"></div>
                     </div>
@@ -255,10 +266,10 @@
         <div class="row">
             <div class="col-6 js-local-link">
                 <div class="form-group">
-                    <label class="input-label">{{ trans('public.link') }}</label>
+                    <label class="input-label">{{ trans('public.link') }} <span class="text-danger">*</span></label>
                     <div class="input-group">
                         <div class="input-group-prepend">
-                            <button type="button" class="input-group-text js-copy" data-input="ajax[new][link]" data-toggle="tooltip" data-placement="top" title="{{ trans('public.copy') }}" data-copy-text="{{ trans('public.copy') }}" data-done-text="{{ trans('public.copied') }}">
+                            <button type="button" class="input-group-text js-copy" data-input="ajax[new][link]" data-bs-toggle="tooltip" data-placement="top" title="{{ trans('public.copy') }}" data-copy-text="{{ trans('public.copy') }}" data-done-text="{{ trans('public.copied') }}">
                                 <i data-feather="copy" width="18" height="18" class="text-white"></i>
                             </button>
                         </div>
@@ -270,7 +281,7 @@
 
             <div class="col-6">
                 <div class="form-group">
-                    <label class="input-label">{{ trans('public.duration') }}</label>
+                    <label class="input-label">{{ trans('public.duration') }} <span class="text-danger">*</span></label>
                     <input type="text" name="ajax[new][duration]" value="" class="js-ajax-duration form-control"/>
                     <div class="invalid-feedback"></div>
                 </div>
@@ -291,7 +302,7 @@
 
             <div class="col-12 col-md-6 js-api-secret">
                 <div class="form-group">
-                    <label class="input-label">{{ trans('auth.password') }}</label>
+                    <label class="input-label">{{ trans('auth.password') }} <span class="text-danger">*</span></label>
                     <input type="text" name="ajax[new][api_secret]" class="js-ajax-api_secret form-control" value=""/>
                     <div class="invalid-feedback"></div>
                 </div>

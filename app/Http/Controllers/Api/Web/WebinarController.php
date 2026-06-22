@@ -708,6 +708,27 @@ class WebinarController extends Controller
             case 'oldest':
                 $webinarsQuery->orderBy('webinars.created_at', 'asc');
                 break;
+            case 'trending':
+                // Trending = total likes (all-time). Webinars with 0 likes still
+                // show up as "related" — they just sort to the bottom since
+                // MySQL treats NULL/0 as lowest on DESC.
+                $webinarsQuery->selectRaw('webinars.*, (
+                        SELECT COUNT(*) FROM webinar_like wl
+                        WHERE wl.webinar_id = webinars.id
+                    ) as trending_score')
+                    ->orderByDesc('trending_score')
+                    ->orderBy('webinars.created_at', 'desc');
+                break;
+
+            case 'top_rated':
+                // Top rated first, unrated webinars fall in after as "related".
+                $webinarsQuery->selectRaw('webinars.*, (
+                        SELECT AVG(wr.rates) FROM webinar_reviews wr
+                        WHERE wr.webinar_id = webinars.id AND wr.status = "active"
+                    ) as avg_rates')
+                    ->orderByDesc('avg_rates')
+                    ->orderBy('webinars.created_at', 'desc');
+                break;
             default:
                 $webinarsQuery->orderBy('webinars.created_at', 'desc');
         }

@@ -94,17 +94,37 @@
 .k-dropdown .dropdown-menu{
     background:#151515;
     border:1px solid var(--k-border);
+    box-shadow: 0 5px 15px rgba(0,0,0,0.5);
 }
 
 .k-dropdown .dropdown-item,
-.k-dropdown button{
+.k-dropdown button:not(.k-action-btn){
     color:var(--k-text);
 }
 
 .k-dropdown .dropdown-item:hover,
-.k-dropdown button:hover{
+.k-dropdown button:not(.k-action-btn):hover{
     background:var(--k-gold-soft);
     color:var(--k-gold);
+}
+
+.k-action-btn {
+    background: transparent;
+    border: none;
+    color: var(--k-text);
+    padding: 5px 10px;
+    border-radius: 8px;
+    transition: all 0.3s;
+}
+.k-action-btn:hover, .k-action-btn:focus {
+    background: rgba(255,255,255,0.05);
+    color: var(--k-gold);
+    outline: none;
+}
+
+/* Fix for table responsive scrollbar with dropdowns */
+.table-responsive {
+    overflow: visible !important;
 }
 
 /* ===============================
@@ -404,19 +424,19 @@
                 <table class="k-table text-center">
                     <thead>
                     <tr>
-                        <th class="text-left">{{ trans('panel.user') }}</th>
-                        <th class="text-left">{{ trans('panel.webinar') }}</th>
-                        <th>{{ trans('panel.comment') }}</th>
-                        <th>{{ trans('public.status') }}</th>
-                        <th>{{ trans('public.date') }}</th>
-                        <th></th>
+                        <th class="text-left" style="vertical-align: middle;">{{ trans('panel.user') }}</th>
+                        <th class="text-left" style="vertical-align: middle;">{{ trans('panel.webinar') }}</th>
+                        <th class="text-center" style="vertical-align: middle;">{{ trans('panel.comment') }}</th>
+                        <th class="text-center" style="vertical-align: middle;">{{ trans('public.status') }}</th>
+                        <th class="text-center" style="vertical-align: middle;">{{ trans('public.date') }}</th>
+                        <th class="text-center" style="vertical-align: middle;">Action</th>
                     </tr>
                     </thead>
                     <tbody>
 
                     @foreach($comments as $comment)
                         <tr>
-                            <td class="text-left">
+                            <td class="text-left align-middle">
                                 <div class="d-flex align-items-center">
                                     <img src="{{ $comment->user->getAvatar() }}"
                                          class="rounded-circle" width="36">
@@ -426,7 +446,7 @@
                                 </div>
                             </td>
 
-                            <td class="text-left">
+                            <td class="text-left align-middle">
                                 <a href="{{ $comment->webinar->getUrl() }}"
                                    target="_blank"
                                    class="k-user-name">
@@ -434,14 +454,14 @@
                                 </a>
                             </td>
 
-                            <td>
+                            <td class="text-center align-middle">
                                 <button class="btn btn-sm k-btn-gray js-view-comment"
                                         data-comment-id="{{ $comment->id }}">
                                     {{ trans('public.view') }}
                                 </button>
                             </td>
 
-                            <td>
+                            <td class="text-center align-middle">
                                 @if(empty($comment->reply_id))
                                     <span class="text-warning">{{ trans('public.open') }}</span>
                                 @else
@@ -449,19 +469,23 @@
                                 @endif
                             </td>
 
-                            <td>{{ dateTimeFormat($comment->created_at,'j M Y | H:i') }}</td>
+                            <td class="text-center align-middle">{{ dateTimeFormat($comment->created_at,'j M Y | H:i') }}</td>
 
-                            <td class="text-right">
+                            <td class="text-center align-middle">
                                 <input type="hidden"
                                        id="commentDescription{{ $comment->id }}"
                                        value="{{ nl2br($comment->comment) }}">
 
                                 <div class="dropdown k-dropdown">
-                                    <button class="btn-transparent dropdown-toggle"
-                                            data-bs-toggle="dropdown">
+                                    <button class="k-action-btn dropdown-toggle"
+                                            type="button"
+                                            data-toggle="dropdown"
+                                            data-bs-toggle="dropdown"
+                                            data-boundary="window"
+                                            aria-expanded="false">
                                         <i data-feather="more-vertical"></i>
                                     </button>
-                                    <div class="dropdown-menu">
+                                    <div class="dropdown-menu dropdown-menu-right">
                                         <button class="dropdown-item js-reply-comment"
                                                 data-comment-id="{{ $comment->id }}">
                                             {{ trans('panel.reply') }}

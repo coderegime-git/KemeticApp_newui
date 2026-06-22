@@ -175,7 +175,7 @@
                     <div class="d-flex">
 
                         <div class="kemetic-avatar">
-                            <img src="{{ $forum->user->getAvatar(64) }}" class="rounded-circle" />
+                            <img src="{{ $forum->user->getAvatar(64) }}" style="width: 50px; height: 50px;" class="rounded-circle" />
                         </div>
 
                         <div class="ml-10">

@@ -57,6 +57,10 @@ trait LearningPageItemInfoTrait
             return false;
         }
 
+        if (!empty($user) && ($course->creator_id == $user->id || $course->teacher_id == $user->id || $user->isAdmin())) {
+            return true;
+        }
+
         // Free course — everyone can access
         $isFree = is_null($course->price) || (float)$course->price == 0.0;
         if ($isFree) {
@@ -64,9 +68,6 @@ trait LearningPageItemInfoTrait
         }
 
         return ($course->checkUserHasBought($user) or !empty($course->getInstallmentOrder()));
-
-
-        //return (!empty($course) and ($course->checkUserHasBought($user) or !empty($course->getInstallmentOrder())));
     }
 
     private function getFileInfo($id)
@@ -142,6 +143,9 @@ trait LearningPageItemInfoTrait
 
 
             $isFinished = $session->isFinished();
+            $isCreator = ($user && ($user->id == $session->creator_id || $user->id == $session->webinar->creator_id || $user->id == $session->webinar->teacher_id || $user->isAdmin()));
+            $is_started = (time() > ($session->date - 600)) || $isCreator;
+
             // for translate send on array of data
             $data = [
                 'session' => [
@@ -149,7 +153,7 @@ trait LearningPageItemInfoTrait
                     'webinar_id' => $session->webinar_id,
                     'title' => $session->title,
                     'is_finished' => $isFinished,
-                    'is_started' => (time() > $session->date),
+                    'is_started' => $is_started,
                     'password' => $session->api_secret,
                     'join_url' => !$isFinished ? $session->getJoinLink(true) : null,
                     'start_data' => dateTimeFormat($session->date, 'j M Y H:i'),

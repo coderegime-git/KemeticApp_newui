@@ -560,7 +560,7 @@ select.form-control option {
                                 <tr>
                                     <td class="text-left kemetic-title-cell" data-label="{{ trans('public.certificate') }}">
                                         <span class="title">{{ $quiz->title }}</span>
-                                        <span class="text-muted">{{ $quiz->webinar->title }}</span>
+                                        <span class="text-muted">{{ $quiz->webinar->title ?? '-' }}</span>
                                     </td>
                                     
                                     <td data-label="{{ trans('public.certificate_id') }}">

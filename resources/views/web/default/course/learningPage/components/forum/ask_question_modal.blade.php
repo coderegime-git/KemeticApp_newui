@@ -11,6 +11,16 @@
         --kemetic-shadow: 0 10px 40px rgba(0,0,0,0.55);
     }
 
+    /* Kemetic Swal Override */
+    .kemetic-swal-popup {
+        background: #0f0f0f !important;
+        border: 1px solid rgba(242,201,76,0.25) !important;
+        border-radius: 18px !important;
+    }
+    .kemetic-swal-popup .swal2-content {
+        color: #e6e6e6 !important;
+    }
+
     /* Modal Container */
     #askNewQuestionModal {
         background: rgba(0,0,0,0.65);
@@ -24,15 +34,9 @@
     }
 
     /* Modal Body */
-    #askNewQuestionModal .kemetic-modal {
-        background: var(--kemetic-dark);
-        border: 1px solid var(--kemetic-gold-soft);
-        border-radius: var(--kemetic-radius);
-        width: 100%;
-        max-width: 520px;
-        padding: 30px;
-        box-shadow: var(--kemetic-shadow);
-        animation: kemeticFadeUp .35s ease;
+    .kemetic-modal {
+        text-align: left;
+        padding: 10px 20px;
     }
 
     @keyframes kemeticFadeUp {
@@ -55,19 +59,20 @@
         margin-bottom: 6px;
     }
 
-    /* Inputs */
     .kemetic-input,
     .kemetic-textarea {
-        background: var(--kemetic-black);
-        border: 1px solid var(--kemetic-gold-soft);
-        color: var(--kemetic-text);
-        border-radius: 12px;
-        padding: 10px 12px;
+        background: var(--kemetic-black) !important;
+        border: 1px solid var(--kemetic-gold-soft) !important;
+        color: var(--kemetic-text-light) !important;
+        border-radius: 12px !important;
+        padding: 10px 12px !important;
+        width: 100% !important;
+        display: block;
     }
     .kemetic-input:focus,
     .kemetic-textarea:focus {
-        border-color: var(--kemetic-gold);
-        box-shadow: 0 0 0 3px rgba(212,175,55,0.25);
+        border-color: var(--kemetic-gold) !important;
+        box-shadow: 0 0 0 3px rgba(212,175,55,0.25) !important;
     }
 
     /* File Input Group */
@@ -117,14 +122,14 @@
 
             {{-- Title --}}
             <div class="form-group mb-3">
-                <label class="kemetic-label">{{ trans('public.title') }}</label>
+                <label class="kemetic-label">{{ trans('public.title') }} <span class="text-danger">*</span></label>
                 <input type="text" name="title" class="kemetic-input w-100"/>
                 <span class="invalid-feedback"></span>
             </div>
 
             {{-- Description --}}
             <div class="form-group mb-3">
-                <label class="kemetic-label">{{ trans('public.description') }}</label>
+                <label class="kemetic-label">{{ trans('public.description') }} <span class="text-danger">*</span></label>
                 <textarea name="description" rows="5" class="kemetic-textarea w-100"></textarea>
                 <span class="invalid-feedback"></span>
             </div>
@@ -146,14 +151,14 @@
                     <input type="text"
                            name="attach"
                            id="questionAttachmentInput_record"
-                           placeholder="{{ trans('update.no_file_selected') }}"
+                           placeholder="{{ trans('update.attach_a_file') }}"
                            class="w-100 px-2">
                 </div>
             </div>
 
             {{-- Buttons --}}
             <div class="d-flex justify-content-end mt-4">
-                <button type="button" class="js-save-question kemetic-btn">
+                <button type="button" class="js-save-question kemetic-btn" style="margin-right: 10px;">
                     {{ trans('admin/main.post') }}
                 </button>
 

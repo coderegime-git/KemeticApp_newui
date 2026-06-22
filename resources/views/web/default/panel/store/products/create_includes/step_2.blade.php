@@ -475,7 +475,7 @@
                         <div class="col-6">
                             <div class="form-group">
                                 <label class="kemetic-label">Earning price</label>
-                                <input type="number" id="userMargin" name="cj_your_price" step="0.01" class="kemetic-input" placeholder="0" value="{{ (!empty($product) && isset($product->cj_your_price)) ? $product->cj_your_price : old('cj_your_price', '0') }}">
+                                <input type="number" id="userMargin" name="cj_your_price" min="0" class="kemetic-input" placeholder="0" value="{{ (!empty($product) && isset($product->cj_your_price)) ? $product->cj_your_price : old('cj_your_price', '0') }}">
                             </div>
                         </div>
                     </div>
@@ -487,7 +487,7 @@
                         </div>
                         <div class="col-6">
                             <span class="d-block text-gray font-11">Platform Fee (10%)</span>
-                            <input type="number" id="platformprice" name="platform_price" step="0.01" class="kemetic-input" placeholder="0" value="{{ (!empty($product) && isset($product->platform_price)) ? $product->platform_price : old('platform_price') }}">
+                            <input type="number" id="platformprice" name="platform_price" min="0" readonly class="kemetic-input" placeholder="0" value="{{ (!empty($product) && isset($product->platform_price)) ? $product->platform_price : old('platform_price') }}">
                         </div>
                     </div>
 
@@ -523,13 +523,13 @@
             @if(empty($cjProduct))
                 <div class="form-group">
                     <label class="input-label">Earning {{ trans('public.price') }} ({{ $currency }})</label>
-                    <input id="computedEarningPrice" name="earning_price" type="text" class="form-control" value="{{ (!empty($product) && isset($product->earning_price)) ? $product->earning_price : old('earning_price', '0') }}">
+                    <input id="computedEarningPrice" name="earning_price" type="text" min="0" class="form-control" value="{{ (!empty($product) && isset($product->earning_price)) ? $product->earning_price : old('earning_price', '0') }}">
                     <p class="font-12 text-gray mt-10">- Earning amount for this product.</p>
                 </div>
 
                 <div class="form-group">
                     <label class="input-label">Platform {{ trans('public.price') }} (10%)</label>
-                    <input id="computedPlatformFee" name="own_platform_price" type="text" class="form-control" value="{{ (!empty($product) && isset($product->own_platform_price)) ? $product->own_platform_price : old('own_platform_price', '0') }}" readonly>
+                    <input id="computedPlatformFee" name="own_platform_price" type="text" min="0" class="form-control" value="{{ (!empty($product) && isset($product->own_platform_price)) ? $product->own_platform_price : old('own_platform_price', '0') }}" readonly>
                     <p class="font-12 text-gray mt-10">- Platform fee is 10% of the earning price.</p>
                 </div>
             @endif
@@ -537,7 +537,7 @@
 
              <div class="form-group">
                 <label class="input-label">{{ trans('public.price') }} ({{ $currency }})</label>
-                <input type="number" name="price" id="finalPriceInput" data-price-input
+                <input type="number" name="price" id="finalPriceInput" data-price-input min="0"
                        value="{{ (!empty($product) && isset($product->price)) ? $product->price : (!empty($cjProduct) ? ceil($cjPrice * 1.10) : old('price')) }}"
                        class="form-control @error('price') is-invalid @enderror">
                 @error('price')<div class="invalid-feedback">{{ $message }}</div>@enderror
@@ -545,14 +545,14 @@
 
             <div class="form-group js-inventory-inputs {{ ($product->unlimited_inventory ?? false) ? 'd-none' : '' }}">
                 <label class="input-label">{{ trans('update.inventory') }}</label>
-                <input type="number" name="inventory"
+                <input type="number" name="inventory" min="0"
                        value="{{ $product->getAvailability() ?? old('inventory') }}"
                        class="form-control">
             </div>
 
             <div class="form-group js-inventory-inputs {{ ($product->unlimited_inventory ?? false) ? 'd-none' : '' }}">
                 <label class="input-label">{{ trans('update.inventory_warning') }}</label>
-                <input type="number" name="inventory_warning"
+                <input type="number" name="inventory_warning" min="0"
                        value="{{ $product->inventory_warning ?? old('inventory_warning') }}"
                        class="form-control">
             </div>

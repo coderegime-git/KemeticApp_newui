@@ -743,7 +743,7 @@
 
                                     <td class="text-left">
                                         <div class="quiz-title">{{ $result->quiz->title }}</div>
-                                        <div class="quiz-course">{{ $result->quiz->webinar->title }}</div>
+                                        <div class="quiz-course">{{ $quiz->webinar?->title ?? '-' }}</div>
                                     </td>
 
                                     <td>

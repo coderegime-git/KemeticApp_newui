@@ -233,6 +233,7 @@
    <div class="d-flex flex-column flex-md-row justify-content-between align-items-start align-items-md-center mb-2">
         <h2 class="section-title after-line mb-3 mb-md-0">
             {{ trans('public.faq') }} ({{ trans('public.optional') }})
+        </h2>
 
         <button id="webinarAddFAQ" data-webinar-id="{{ $webinar->id }}" type="button" class="kemetic-add-btn mobile-full-width">
             + {{ trans('public.add_faq') }}
