@@ -143,6 +143,29 @@ body .select2-container .select2-selection--multiple .select2-search--inline .se
     color: #fff !important;
     border-radius: 8px !important;
 }
+
+/* Step 4 Mobile Fix */
+@media (max-width: 767px) {
+    .k-card {
+        padding: 12px;
+        overflow-x: hidden;
+    }
+    .k-card .row {
+        margin-left: 0;
+        margin-right: 0;
+    }
+    .k-card [class*="col-"] {
+        padding-left: 6px;
+        padding-right: 6px;
+    }
+    .k-card .form-control, .k-card .custom-select {
+        font-size: 14px !important;
+        min-width: 0 !important;
+    }
+    .k-accordion {
+        padding: 8px !important;
+    }
+}
 </style>
 @endpush
 

@@ -48,9 +48,9 @@
         }
 
         /* Hide duplicated timer elements if script runs twice */
-        .timer .jst-hours ~ .jst-hours,
-        .timer .jst-minutes ~ .jst-minutes,
-        .timer .jst-seconds ~ .jst-seconds,
+        .timer .jst-hours~.jst-hours,
+        .timer .jst-minutes~.jst-minutes,
+        .timer .jst-seconds~.jst-seconds,
         .timer .jst-clearDiv {
             display: none !important;
         }
@@ -176,15 +176,33 @@
             background-color: #dc2626 !important;
         }
 
-        /* Media */
-        .quiz-media img,
-        .quiz-media video {
+        .quiz-media img {
             max-width: 200px !important;
             max-height: 200px !important;
             border-radius: 0.75rem;
             object-fit: contain;
             display: block;
             margin: 0 auto;
+        }
+
+        .quiz-media iframe {
+            width: 100% !important;
+            max-width: 100% !important;
+            height: auto;
+            border-radius: 0.75rem;
+            display: block;
+            margin: 0 auto;
+            aspect-ratio: 16/9;
+        }
+
+        .quiz-media video {
+            width: 100% !important;
+            max-height: 450px !important;
+            border-radius: 0.75rem;
+            display: block;
+            margin: 0 auto;
+            object-fit: contain;
+            background: #000;
         }
     </style>
     <link rel="stylesheet" href="/assets/default/vendors/video/video-js.min.css">
@@ -272,10 +290,26 @@
                                         <img src="{{ $question->image }}" class="img-cover rounded-lg" alt=""
                                             style="width:200px;hegight:100px;">
                                     @else
-                                        <video id="questionVideo{{ $question->id }}" class="video-js" controls preload="auto"
-                                            width="100%" data-setup='{"fluid": true}'>
-                                            <source src="{{ $question->video }}" type="video/mp4" />
-                                        </video>
+                                        @php
+                                            $isYouTube = false;
+                                            $youtubeId = '';
+                                            if (preg_match('/(?:youtube\.com\/(?:[^\/]+\/.+\/|(?:v|e(?:mbed)?)\/|.*[?&]v=)|youtu\.be\/)([^"&?\/\s]{11})/i', $question->video, $matches)) {
+                                                $isYouTube = true;
+                                                $youtubeId = $matches[1];
+                                            }
+                                        @endphp
+
+                                        @if($isYouTube)
+                                            <iframe
+                                                src="https://www.youtube.com/embed/{{ $youtubeId }}?autoplay=0&controls=1&rel=0&modestbranding=1"
+                                                frameborder="0"
+                                                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                                                allowfullscreen style="width: 100%; aspect-ratio: 16/9; border-radius: 0.75rem;"></iframe>
+                                        @else
+                                            <video id="questionVideo{{ $question->id }}" controls preload="auto" style="width: 100%; max-height: 450px; background: #000; border-radius: 0.75rem;">
+                                                <source src="{{ $question->video }}" type="video/mp4" />
+                                            </video>
+                                        @endif
                                     @endif
                                 </div>
                             @endif

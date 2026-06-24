@@ -665,7 +665,7 @@ select.kemetic-control option {
                             </span>
                             <input type="text"
                                    name="ajax[{{ !empty($file) ? $file->id : 'new' }}][secure_host_file_path]"
-                                   value="{{ !empty($file) ? $file->file : '' }}"
+                                   value="{{ !empty($file) ? $file->file : '' }}" 
                                    class="kemetic-control js-ajax-secure_host_file_path"
                                    placeholder="{{ trans('update.enter_file_url') }}">
                         </div>
@@ -702,7 +702,7 @@ select.kemetic-control option {
                             <div class="custom-file js-ajax-s3_file" style="flex:1; overflow:hidden;">
                                 <input type="file"
                                        name="ajax[{{ !empty($file) ? $file->id : 'new' }}][s3_file]"
-                                       class="js-s3-file-input custom-file-input cursor-pointer"
+                                       class="js-s3-file-input custom-file-input cursor-pointer" 
                                        id="s3File{{ !empty($file) ? $file->id : 'record' }}">
                                 <label class="custom-file-label kemetic-control"
                                        for="s3File{{ !empty($file) ? $file->id : 'record' }}"
@@ -804,7 +804,7 @@ select.kemetic-control option {
                     </div>
 
                     {{-- ── Sequence Content ── --}}
-                    @if(getFeaturesSettings('sequence_content_status'))
+                    <!-- @if(getFeaturesSettings('sequence_content_status'))
                         <div class="kemetic-switch-row">
                             <label class="switch-label"
                                    for="SequenceContentSwitch{{ !empty($file) ? $file->id : '_record' }}">
@@ -847,7 +847,7 @@ select.kemetic-control option {
                                 <div class="invalid-feedback"></div>
                             </div>
                         </div>
-                    @endif
+                    @endif -->
 
                     {{-- ── Progress bar ── --}}
                     <div class="progress kemetic-progress d-none" style="margin-top:16px;">

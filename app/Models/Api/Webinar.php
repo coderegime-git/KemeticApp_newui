@@ -174,6 +174,34 @@ class Webinar extends Model
                         ];
                     }
                 }),
+            'related_courses' => \App\Models\RelatedCourse::where('targetable_id', $this->id)
+                ->where('targetable_type', 'App\Models\Webinar')
+                ->get()
+                ->map(function ($rc) {
+                    $course = \App\Models\Webinar::find($rc->course_id);
+                    if ($course and $course->status == 'active') {
+                        return [
+                            'title' => $course->title,
+                            // 'url' => $course->getUrl(),
+                        ];
+                    }
+                })
+                ->filter()
+                ->values(),
+
+            'learning_materials' => (!empty($this->webinarExtraDescription))
+                ? $this->webinarExtraDescription->where('type', 'learning_materials')->pluck('value')->values()
+                : [],
+
+            'company_logos' => (!empty($this->webinarExtraDescription))
+                ? $this->webinarExtraDescription->where('type', 'company_logos')->map(function ($item) {
+                    return $item->value ? url($item->value) : null;
+                })->values()
+                : [],
+
+            'requirements' => (!empty($this->webinarExtraDescription))
+                ? $this->webinarExtraDescription->where('type', 'requirements')->pluck('value')->values()
+                : [],   
             'faqs' => $this->faqs()->orderBy('order', 'asc')
                 ->get()
                 ->map(function ($faq) {
@@ -949,6 +977,11 @@ class Webinar extends Model
     public function quizzes()
     {
         return $this->hasMany('App\Models\Api\Quiz', 'webinar_id', 'id');
+    }
+
+    public function relatedCourses()
+    {
+        return $this->morphMany('App\Models\RelatedCourse', 'targetable');
     }
 
     // public function product()

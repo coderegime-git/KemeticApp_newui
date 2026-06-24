@@ -51,6 +51,16 @@
     border-radius:14px;
     padding:10px 20px;
     font-weight:600;
+    transition: 0.3s;
+    border: none;
+}
+
+.kemetic-btn-gold:disabled,
+.kemetic-btn-gold.loadingbar {
+    background: #444 !important;
+    color: #888 !important;
+    cursor: not-allowed;
+    opacity: 0.8;
 }
 
 .kemetic-btn-outline {
@@ -59,6 +69,15 @@
     border-radius:14px;
     padding:10px 18px;
     background:transparent;
+    transition: 0.3s;
+}
+
+.kemetic-btn-outline:disabled,
+.kemetic-btn-outline.loadingbar {
+    border-color: #555 !important;
+    color: #888 !important;
+    cursor: not-allowed;
+    opacity: 0.8;
 }
 
 .kemetic-question-card {
@@ -295,7 +314,7 @@
                             </select>
                         </div>
                     @else
-                        <input type="hidden" name="ajax[new][locale]" value="{{ $defaultLocale }}">
+                        <input type="hidden" name="ajax[{{ !empty($quiz) ? $quiz->id : 'new' }}][locale]" value="{{ $defaultLocale }}">
                     @endif
 
                     {{-- Webinar --}}
@@ -314,11 +333,11 @@
                             </select>
                         </div>
                     @else
-                        <input type="hidden" name="ajax[new][webinar_id]" value="{{ $selectedWebinar->id }}">
+                        <input type="hidden" name="ajax[{{ !empty($quiz) ? $quiz->id : 'new' }}][webinar_id]" value="{{ $selectedWebinar->id }}">
                     @endif
 
                     @if(!empty($inWebinarPage))
-                        <input type="hidden" name="ajax[new][is_webinar_page]" value="1">
+                        <input type="hidden" name="ajax[{{ !empty($quiz) ? $quiz->id : 'new' }}][is_webinar_page]" value="1">
                     @endif
 
                     {{-- Chapter --}}
@@ -379,14 +398,14 @@
                     </div>
 
                     {{-- Expiry --}}
-                    <div class="kemetic-form-group">
+                    <!-- <div class="kemetic-form-group">
                         <label class="kemetic-label">{{ trans('update.expiry_days') }}</label>
                         <input type="number"
                                name="ajax[{{ !empty($quiz) ? $quiz->id : 'new' }}][expiry_days]"
                                value="{{ $quiz->expiry_days ?? old('expiry_days') }}" min="0"
                                class="kemetic-input js-ajax-expiry_days">
                         <small class="kemetic-hint">{{ trans('update.quiz_expiry_days_hint') }}</small>
-                    </div>
+                    </div> -->
 
                     <div class="form-group mt-20 d-flex align-items-center justify-content-between">
                         <label class="cursor-pointer input-label" for="displayQuestionsRandomlySwitch{{ !empty($quiz) ? $quiz->id : 'record' }}">{{ trans('update.display_questions_randomly') }}</label>
@@ -455,7 +474,7 @@
                                     <i data-feather="edit-2"></i>
                                 </button>
                                 <a href="/panel/quizzes-questions/{{ $question->id }}/delete"
-                                   class="kemetic-text-danger" title="{{ trans('public.delete') }}" style="margin-right:15px;">
+                                   class="kemetic-text-danger delete-action" title="{{ trans('public.delete') }}" style="margin-right:15px;">
                                     <i data-feather="trash-2"></i>
                                 </a>
                             </div>
@@ -473,7 +492,20 @@
                 </button>
             @endif
 
-            @if(!empty($quiz) && empty($inWebinarPage))
+            @if(empty($quiz) && empty($inWebinarPage))
+                <button type="button" class="js-submit-quiz-form w-100 w-md-auto kemetic-btn-gold mb-2 mb-md-0">
+                    {{  trans('public.create') }}
+                </button>
+            @endif
+
+
+            @if(!empty($quiz) && !empty($inWebinarPage))
+                <button type="button" class="js-submit-quiz-form w-100 w-md-auto kemetic-btn-gold mb-2 mb-md-0">
+                    {{trans('public.save_change')}}
+                </button>
+            @endif
+
+             @if(!empty($quiz) && empty($inWebinarPage))
                 <button type="button" class="js-submit-quiz-form w-100 w-md-auto kemetic-btn-gold mb-2 mb-md-0">
                     {{trans('public.save_change')}}
                 </button>

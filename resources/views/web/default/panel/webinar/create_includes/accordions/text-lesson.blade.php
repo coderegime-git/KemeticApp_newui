@@ -633,7 +633,7 @@
                             </label>
                         </div>
 
-                        @if(getFeaturesSettings('sequence_content_status'))
+                        <!-- @if(getFeaturesSettings('sequence_content_status'))
                         <div class="kemetic-switch-group mt-20">
                             <label class="kemetic-label">{{ trans('update.sequence_content') }}</label>
                             <label class="kemetic-switch">
@@ -667,7 +667,7 @@
                             </div>
 
                         </div>
-                        @endif
+                        @endif -->
 
                     </div>
                 </div>

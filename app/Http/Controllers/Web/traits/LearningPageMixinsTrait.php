@@ -50,7 +50,9 @@ trait LearningPageMixinsTrait
 
         $course = $query->first();
 
-        if (!empty($course) and ($course->checkUserHasBought($user) or !empty($course->getInstallmentOrder()))) {
+        $isFree = !empty($course) && (is_null($course->price) || (float)$course->price == 0.0);
+
+        if (!empty($course) and ($isFree or $course->checkUserHasBought($user) or !empty($course->getInstallmentOrder()))) {
             $isPrivate = $course->private;
             $hasBought = $course->checkUserHasBought($user);
 

@@ -400,11 +400,13 @@
                         @if(!empty(getFeaturesSettings('extra_time_to_join_status')) and getFeaturesSettings('extra_time_to_join_status'))
                             <div class="kemetic-form-group">
                                 <label class="kemetic-label">{{ trans('update.extra_time_to_join') }} <span class="braces">({{ trans('public.minutes') }})</span></label>
-                                <input type="text" name="ajax[{{ !empty($session) ? $session->id : 'new' }}][extra_time_to_join]" value="{{ (!empty($session) and $session->extra_time_to_join) ? $session->extra_time_to_join : getFeaturesSettings('extra_time_to_join_default_value') }}" class="kemetic-input js-ajax-extra_time_to_join" placeholder=""/>
+                                <input type="text" name="ajax[{{ !empty($session) ? $session->id : 'new' }}][extra_time_to_join]" value="{{ (!empty($session)) ? $session->extra_time_to_join : '' }}" class="kemetic-input js-ajax-extra_time_to_join" placeholder=""/>
                                 <div class="invalid-feedback"></div>
                             </div>
                         @elseif(!empty(getFeaturesSettings('extra_time_to_join_default_value')))
-                            <input type="hidden" name="ajax[{{ !empty($session) ? $session->id : 'new' }}][extra_time_to_join]" value="{{ (!empty($session) and $session->extra_time_to_join) ? $session->extra_time_to_join : getFeaturesSettings('extra_time_to_join_default_value') }}" class="js-ajax-extra_time_to_join form-control" placeholder=""/>
+                            <input type="hidden" name="ajax[{{ !empty($session) ? $session->id : 'new' }}][extra_time_to_join]" value="{{ (!empty($session)) ? $session->extra_time_to_join : '' }}" class="js-ajax-extra_time_to_join form-control" placeholder=""/>
+                        @else
+                            <input type="hidden" name="ajax[{{ !empty($session) ? $session->id : 'new' }}][extra_time_to_join]" value="" class="js-ajax-extra_time_to_join form-control"/>
                         @endif
 
                         <div class="kemetic-form-group kemetic-switch-row">
@@ -427,7 +429,7 @@
                             @endif
                         </div>
 
-                        @if(getFeaturesSettings('sequence_content_status'))
+                        <!-- @if(getFeaturesSettings('sequence_content_status'))
                             <div class="kemetic-form-group kemetic-switch-row">
                                 <label class="kemetic-label">{{ trans('update.sequence_content') }}</label>
                                 <label class="kemetic-switch">
@@ -451,7 +453,7 @@
                                     <div class="invalid-feedback"></div>
                                 </div>
                             </div>
-                        @endif
+                        @endif -->
 
                     </div>
                 </div>

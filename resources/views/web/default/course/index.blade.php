@@ -255,6 +255,125 @@
       <div class="course-description">
         {!! nl2br($course->description) !!}
     </div>
+
+    @if($course->tags->count() > 0)
+        <div style="margin-top:18px;">
+            <h3 style="display:flex;align-items:center;gap:10px;margin-bottom:10px">{{ trans('public.tags') }}</h3>
+            <div style="display:flex;flex-wrap:wrap;gap:8px;">
+                @foreach($course->tags as $tag)
+                 <!-- href="/tags/courses/{{ urlencode($tag->title) }}"--> 
+                    <a 
+                       style="display:inline-block;
+                              padding:5px 14px;
+                              border-radius:999px;
+                              background:rgba(255,255,255,0.08);
+                              border:1px solid rgba(255,255,255,0.15);
+                              color:var(--muted, #aaa);
+                              font-size:13px;
+                              text-decoration:none;
+                              transition:background 0.2s, color 0.2s;"
+                       onmouseover="this.style.background='rgba(255,255,255,0.18)';this.style.color='#fff'"
+                       onmouseout="this.style.background='rgba(255,255,255,0.08)';this.style.color='var(--muted, #aaa)'">
+                        # {{ $tag->title }}
+                    </a>
+                @endforeach
+            </div>
+        </div>
+    @endif
+
+
+    @php
+        $learningMaterialsExtraDescription = !empty($course->webinarExtraDescription) ? $course->webinarExtraDescription->where('type','learning_materials') : null;
+        $companyLogosExtraDescription = !empty($course->webinarExtraDescription) ? $course->webinarExtraDescription->where('type','company_logos') : null;
+        $requirementsExtraDescription = !empty($course->webinarExtraDescription) ? $course->webinarExtraDescription->where('type','requirements') : null;
+    @endphp
+
+    @if(!empty($learningMaterialsExtraDescription) and count($learningMaterialsExtraDescription))
+        <h3 style="display:flex;align-items:center;gap:10px;margin-top:18px">{{ trans('update.what_you_will_learn') }}</h3>
+        <div style="display:flex;flex-direction:column;gap:10px;margin-top:10px">
+            @foreach($learningMaterialsExtraDescription as $learningMaterial)
+                <div class="coursedetail-lesson">
+                    <span><i data-feather="check" width="18" height="18" style="vertical-align: middle; margin-right: 5px;"></i> {{ $learningMaterial->value }}</span>
+                </div>
+            @endforeach
+        </div>
+    @endif
+
+    @if(!empty($companyLogosExtraDescription) and count($companyLogosExtraDescription))
+        <h3 style="display:flex;align-items:center;gap:10px;margin-top:18px">{{ trans('update.suggested_by_top_companies') }}</h3>
+        <p style="color:var(--muted);margin-top:6px">{{ trans('update.suggested_by_top_companies_hint') }}</p>
+
+        <div style="display:flex; flex-wrap:wrap; gap:15px; margin-top:10px">
+            @foreach($companyLogosExtraDescription as $companyLogo)
+                <div style="background: rgba(255,255,255,0.1); padding: 10px; border-radius: 8px;">
+                    <img src="{{ $companyLogo->value }}" style="max-height: 40px; object-fit: contain;" alt="{{ trans('update.company_logos') }}">
+                </div>
+            @endforeach
+        </div>
+    @endif
+
+    @if(!empty($requirementsExtraDescription) and count($requirementsExtraDescription))
+        <h3 style="display:flex;align-items:center;gap:10px;margin-top:18px">{{ trans('update.requirements') }}</h3>
+        <div style="display:flex;flex-direction:column;gap:10px;margin-top:10px">
+            @foreach($requirementsExtraDescription as $requirementExtraDescription)
+                <div class="coursedetail-lesson">
+                    <span><i data-feather="check" width="18" height="18" style="vertical-align: middle; margin-right: 5px;"></i> {{ $requirementExtraDescription->value }}</span>
+                </div>
+            @endforeach
+        </div>
+    @endif
+
+    {{-- course prerequisites --}}
+    @if(!empty($course->prerequisites) and $course->prerequisites->count() > 0)
+        <h3 style="display:flex;align-items:center;gap:10px;margin-top:18px">{{ trans('public.prerequisites') }}</h3>
+        <div style="display:flex;flex-direction:column;gap:10px;margin-top:10px">
+            @foreach($course->prerequisites as $prerequisite)
+                @if($prerequisite->prerequisiteWebinar)
+                    <div class="coursedetail-lesson">
+                        <a href="{{ $prerequisite->prerequisiteWebinar->getUrl() }}" style="color: inherit; text-decoration: none; width: 100%;">
+                            <span>{{ $prerequisite->prerequisiteWebinar->title }}</span>
+                        </a>
+                    </div>
+                @endif
+            @endforeach
+        </div>
+    @endif
+    {{-- ./ course prerequisites --}}
+
+
+    {{-- Related Course --}}
+    @if(!empty($course->relatedCourses) and $course->relatedCourses->count() > 0)
+        <h3 style="display:flex;align-items:center;gap:10px;margin-top:18px">{{ trans('update.related_courses') }}</h3>
+        <div style="display:flex;flex-direction:column;gap:10px;margin-top:10px">
+            @foreach($course->relatedCourses as $relatedCourse)
+                @if($relatedCourse->course)
+                    <div class="coursedetail-lesson">
+                        <a href="{{ $relatedCourse->course->getUrl() }}" style="color: inherit; text-decoration: none; width: 100%;">
+                            <span>{{ $relatedCourse->course->title }}</span>
+                        </a>
+                    </div>
+                @endif
+            @endforeach
+        </div>
+    @endif
+    {{-- ./ Related Course --}}
+
+    {{-- course FAQ --}}
+    @if(!empty($course->faqs) and $course->faqs->count() > 0)
+        <h3 style="display:flex;align-items:center;gap:10px;margin-top:18px">{{ trans('public.faq') }}</h3>
+
+        <div style="display:flex;flex-direction:column;gap:10px;margin-top:10px">
+            @foreach($course->faqs as $faq)
+                <div class="coursedetail-lesson" style="flex-direction: column; align-items: flex-start; gap: 8px;">
+                    <div style="font-weight: bold;">{{ clean($faq->title,'title') }}</div>
+                    <div style="color: var(--muted); font-size: 14px;">
+                        {!! clean($faq->answer,'answer') !!}
+                    </div>
+                </div>
+            @endforeach
+        </div>
+    @endif
+    {{-- ./ course FAQ --}}
     </section>
 
     <!-- Curriculum preview -->

@@ -794,7 +794,9 @@ class WebinarController extends Controller
 
             $course = Webinar::where('id', $id)->first();
 
-            if (!empty($course) and $course->checkUserHasBought($user)) {
+            $isFree = !empty($course) && (is_null($course->price) || (float)$course->price == 0.0);
+
+            if (!empty($course) and ($isFree || $course->checkUserHasBought($user))) {
                 $data = $request->all();
 
                 $item = $data['item'];

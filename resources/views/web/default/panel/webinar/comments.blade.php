@@ -424,8 +424,8 @@
                 <table class="k-table text-center">
                     <thead>
                     <tr>
-                        <th class="text-left" style="vertical-align: middle;">{{ trans('panel.user') }}</th>
-                        <th class="text-left" style="vertical-align: middle;">{{ trans('panel.webinar') }}</th>
+                        <th class="text-center" style="vertical-align: middle;">{{ trans('panel.user') }}</th>
+                        <th class="text-center" style="vertical-align: middle;">{{ trans('panel.webinar') }}</th>
                         <th class="text-center" style="vertical-align: middle;">{{ trans('panel.comment') }}</th>
                         <th class="text-center" style="vertical-align: middle;">{{ trans('public.status') }}</th>
                         <th class="text-center" style="vertical-align: middle;">{{ trans('public.date') }}</th>
@@ -436,7 +436,7 @@
 
                     @foreach($comments as $comment)
                         <tr>
-                            <td class="text-left align-middle">
+                            <td class="text-center align-middle">
                                 <div class="d-flex align-items-center">
                                     <img src="{{ $comment->user->getAvatar() }}"
                                          class="rounded-circle" width="36">
@@ -446,7 +446,7 @@
                                 </div>
                             </td>
 
-                            <td class="text-left align-middle">
+                            <td class="text-center align-middle">
                                 <a href="{{ $comment->webinar->getUrl() }}"
                                    target="_blank"
                                    class="k-user-name">

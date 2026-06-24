@@ -155,9 +155,9 @@ class QuizQuestionController extends Controller
                 ];
 
                 if ($question->type == 'multiple') {
-                    $html = (string)\View::make(getTemplate() . '.panel.quizzes.modals.multiple_question', $data);
+                    $html = (string) \View::make(getTemplate() . '.panel.quizzes.modals.multiple_question', $data);
                 } else {
-                    $html = (string)\View::make(getTemplate() . '.panel.quizzes.modals.descriptive_question', $data);
+                    $html = (string) \View::make(getTemplate() . '.panel.quizzes.modals.descriptive_question', $data);
                 }
 
                 return response()->json([
@@ -297,7 +297,8 @@ class QuizQuestionController extends Controller
                 ]);
 
                 $quiz_total_grade = ($quiz_total_grade > 0 ? $quiz_total_grade : 0) + $data['grade'];
-                $quiz->update(['total_mark' => $quiz_total_grade]);;
+                $quiz->update(['total_mark' => $quiz_total_grade]);
+                ;
 
                 if ($data['type'] == QuizzesQuestion::$multiple and !empty($data['answers'])) {
                     $answers = $data['answers'];

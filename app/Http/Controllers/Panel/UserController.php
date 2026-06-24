@@ -212,6 +212,12 @@ class UserController extends Controller
             ]);
         }
 
+        if ($step == 6) {
+            $rules = array_merge($rules, [
+                'bank_id' => 'required|exists:user_banks,id',
+            ]);
+        }
+
         $this->validate($request, $rules);
 
         if (!empty($user)) {
@@ -297,10 +303,11 @@ class UserController extends Controller
                     'bio' => $data['bio'] ?? null,
                 ];
             } elseif ($step == 6) {
+                // All user types can update identity & financial data
+                $updateData = $this->handleUserIdentityAndFinancial($user, $data);
 
-                 if (!$user->isUser()) {
-                    $updateData = $this->handleUserIdentityAndFinancial($user, $data);
-                } else {
+                // Also handle extra form fields if not a regular user
+                if (!$user->isUser()) {
                     $handleUserExtraForm = $this->handleUserExtraForm($request, $user);
                     if ($handleUserExtraForm != "ok") {
                         return $handleUserExtraForm;
@@ -338,9 +345,11 @@ class UserController extends Controller
                 //     $updateData = $this->handleUserIdentityAndFinancial($user, $data);
                 // }
             } elseif ($step == 7) {
+                // All user types can update identity & financial data
+                $updateData = $this->handleUserIdentityAndFinancial($user, $data);
+
+                // Also handle extra form fields if not a regular user
                 if (!$user->isUser()) {
-                    $updateData = $this->handleUserIdentityAndFinancial($user, $data);
-                } else {
                     $handleUserExtraForm = $this->handleUserExtraForm($request, $user);
                     if ($handleUserExtraForm != "ok") {
                         return $handleUserExtraForm;
@@ -406,13 +415,24 @@ class UserController extends Controller
                 $url = "/panel/manage/{$userType}/{$user->id}/edit";
             }
 
-            // if ($step <= 9) {
-            //     if ($nextStep) {
-            //         $step = $step + 1;
-            //     }
+            if ($step >= 1 && $step <= 9) {
+                // Determine the next step. If 'next_step' was submitted, increment the step.
+                if ($nextStep) {
+                    $step = $step + 1;
+                }
 
-            //     $url .= '/step/' . (($step <= 8) ? $step : 9);
-            // }
+                // Make sure step doesn't exceed the max (e.g., 9)
+                $stepUrl = ($step <= 9) ? $step : 9;
+                
+                // Append the step to the URL. For teachers/organizations, it needs to append properly.
+                if (!empty($organization)) {
+                    // For manage routes: /panel/manage/instructors/1/edit
+                    // Wait, the step parameter for the manage route is usually /step/X as well.
+                    $url .= '/step/' . $stepUrl;
+                } else {
+                    $url .= '/step/' . $stepUrl;
+                }
+            }
 
             $toastData = [
                 'title' => trans('public.request_success'),
@@ -426,20 +446,39 @@ class UserController extends Controller
 
     private function handleUserIdentityAndFinancial($user, $data)
     {
-        $identity_scan = $this->createImage($user, $data['identity_scan']);
-        $certificate = $this->createImage($user, $data['certificate']);
+        $identity_scan = $user->identity_scan;
+        if (array_key_exists('identity_scan', $data)) {
+            if (empty($data['identity_scan'])) {
+                $identity_scan = ''; // User deleted it
+            } elseif (strpos($data['identity_scan'], ';base64,') !== false) {
+                $identity_scan = $this->createImage($user, $data['identity_scan']); // New upload
+            } else {
+                $identity_scan = $data['identity_scan']; // Keep existing
+            }
+        }
+
+        $certificate = $user->certificate;
+        if (array_key_exists('certificate', $data)) {
+            if (empty($data['certificate'])) {
+                $certificate = ''; // User deleted it
+            } elseif (strpos($data['certificate'], ';base64,') !== false) {
+                $certificate = $this->createImage($user, $data['certificate']); // New upload
+            } else {
+                $certificate = $data['certificate']; // Keep existing
+            }
+        }
                 
         $updateData = [
             'identity_scan' => $identity_scan ?? '',
-            'certificate' => $certificate ?? '',
-            'address' => $data['address'] ?? '',
+            'certificate'   => $certificate ?? '',
+            'address'       => $data['address'] ?? $user->address ?? '',
         ];
 
         if (!empty($data['bank_id'])) {
             UserSelectedBank::query()->where('user_id', $user->id)->delete();
 
             $userSelectedBank = UserSelectedBank::query()->create([
-                'user_id' => $user->id,
+                'user_id'      => $user->id,
                 'user_bank_id' => $data['bank_id']
             ]);
 
@@ -449,9 +488,9 @@ class UserController extends Controller
                 foreach ($data['bank_specifications'] as $specificationId => $specificationValue) {
                     if (!empty($specificationValue)) {
                         $specificationInsert[] = [
-                            'user_selected_bank_id' => $userSelectedBank->id,
+                            'user_selected_bank_id'      => $userSelectedBank->id,
                             'user_bank_specification_id' => $specificationId,
-                            'value' => $specificationValue
+                            'value'                      => $specificationValue
                         ];
                     }
                 }
@@ -523,11 +562,33 @@ class UserController extends Controller
 
     public function createImage($user, $img)
     {
+        // Guard: only process if it's a valid base64 encoded image
+        if (empty($img) || strpos($img, ';base64,') === false) {
+            return null;
+        }
+
         $folderPath = "/" . $user->id . '/';
 
         $image_parts = explode(";base64,", $img);
+        if (count($image_parts) < 2) {
+            return null;
+        }
+
         $image_type_aux = explode("image/", $image_parts[0]);
-        $image_type = $image_type_aux[1];
+        if (count($image_type_aux) < 2) {
+            // Fallback for non-image (e.g. PDF encoded as data:application/pdf)
+            $image_type = 'png';
+        } else {
+            $image_type = $image_type_aux[1];
+        }
+
+        // Sanitize extension
+        $allowed = ['jpg', 'jpeg', 'png', 'gif', 'webp', 'pdf'];
+        $image_type = strtolower($image_type);
+        if (!in_array($image_type, $allowed)) {
+            $image_type = 'png';
+        }
+
         $image_base64 = base64_decode($image_parts[1]);
         $file = uniqid() . '.' . $image_type;
 

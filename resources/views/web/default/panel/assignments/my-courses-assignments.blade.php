@@ -177,31 +177,31 @@
                     <table class="text-center custom-table">
                         <thead>
                             <tr>
-                                <th>{{ trans('update.title_and_course') }}</th>
-                                <th>{{ trans('update.min_grade') }}</th>
-                                <th>{{ trans('quiz.average') }}</th>
-                                <th>{{ trans('update.submissions') }}</th>
-                                <th>{{ trans('public.pending') }}</th>
-                                <th>{{ trans('quiz.passed') }}</th>
-                                <th>{{ trans('quiz.failed') }}</th>
-                                <th>{{ trans('public.status') }}</th>
+                                <th class="text-center" style="vertical-align: middle;">{{ trans('update.title_and_course') }}</th>
+                                <th class="text-center" style="vertical-align: middle;">{{ trans('update.min_grade') }}</th>
+                                <th class="text-center" style="vertical-align: middle;">{{ trans('quiz.average') }}</th>
+                                <th class="text-center" style="vertical-align: middle;">{{ trans('update.submissions') }}</th>
+                                <th class="text-center" style="vertical-align: middle;">{{ trans('public.pending') }}</th>
+                                <th class="text-center" style="vertical-align: middle;">{{ trans('quiz.passed') }}</th>
+                                <th class="text-center" style="vertical-align: middle;">{{ trans('quiz.failed') }}</th>
+                                <th class="text-center" style="vertical-align: middle;">{{ trans('public.status') }}</th>
                                 <th></th>
                             </tr>
                         </thead>
                         <tbody>
                         @foreach($assignments as $assignment)
                             <tr>
-                                <td class="text-left">
+                                <td class="text-center" style="vertical-align: middle;">
                                     <span class="d-block font-16 font-weight-500 text-dark-blue">{{ $assignment->title }}</span>
                                     <span class="d-block font-12 text-gold">{{ $assignment->webinar->title }}</span>
                                 </td>
-                                <td>{{ $assignment->min_grade ?? '-' }}</td>
-                                <td>{{ $assignment->average_grade ?? '-' }}</td>
-                                <td>{{ $assignment->submissions }}</td>
-                                <td>{{ $assignment->pendingCount }}</td>
-                                <td>{{ $assignment->passedCount }}</td>
-                                <td>{{ $assignment->failedCount }}</td>
-                                <td>
+                                <td class="text-center" style="vertical-align: middle;">{{ $assignment->min_grade ?? '-' }}</td>
+                                <td class="text-center" style="vertical-align: middle;">{{ $assignment->average_grade ?? '-' }}</td>
+                                <td class="text-center" style="vertical-align: middle;">{{ $assignment->submissions }}</td>
+                                <td class="text-center" style="vertical-align: middle;">{{ $assignment->pendingCount }}</td>
+                                <td class="text-center" style="vertical-align: middle;">{{ $assignment->passedCount }}</td>
+                                <td class="text-center" style="vertical-align: middle;">{{ $assignment->failedCount }}</td>
+                                <td class="text-center" style="vertical-align: middle;">
                                     @switch($assignment->status)
                                         @case('active')
                                             <span class="k-status-active">{{ trans('public.active') }}</span>

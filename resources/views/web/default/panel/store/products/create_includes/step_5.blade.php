@@ -191,6 +191,26 @@
 .custom-switch .custom-control-input:disabled:checked ~ .custom-control-label::before {
   background-color: rgba(67, 212, 119, 0.5);
 }
+}
+
+/* Step 5 Mobile Fix */
+@media (max-width: 767px) {
+    .k-card {
+        padding: 12px;
+        overflow-x: hidden;
+    }
+    .k-card .row {
+        margin-left: 0;
+        margin-right: 0;
+    }
+    .k-card [class*="col-"] {
+        padding-left: 6px;
+        padding-right: 6px;
+    }
+    .k-textarea {
+        font-size: 14px !important;
+    }
+}
 </style>
 @endpush
 

@@ -25,7 +25,9 @@ class AssignmentHistoryController extends Controller
         if (!empty($assignment)) {
             $webinar = $assignment->webinar;
 
-            if (!empty($webinar) and $webinar->checkUserHasBought($user)) {
+            $isFree = !empty($webinar) && (is_null($webinar->price) || (float)$webinar->price == 0.0);
+
+            if (!empty($webinar) and ($isFree || $webinar->checkUserHasBought($user))) {
                 $studentId = $request->get('student_id');
                 $assignmentHistory = $this->getAssignmentHistory($webinar, $assignment, $user, $studentId);
 
@@ -183,7 +185,9 @@ class AssignmentHistoryController extends Controller
         if (!empty($assignment)) {
             $webinar = $assignment->webinar;
 
-            if (!empty($webinar) and $webinar->checkUserHasBought($user)) {
+            $isFree = !empty($webinar) && (is_null($webinar->price) || (float)$webinar->price == 0.0);
+
+            if (!empty($webinar) and ($isFree || $webinar->checkUserHasBought($user))) {
                 $allow = ($webinar->creator_id == $user->id or $webinar->teacher_id == $user->id or $user->isAdmin());
 
                 $assignmentHistory = WebinarAssignmentHistory::where('instructor_id', $assignment->creator_id)

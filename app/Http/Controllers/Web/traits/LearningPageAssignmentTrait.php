@@ -61,7 +61,9 @@ trait LearningPageAssignmentTrait
         if (!empty($assignment)) {
             $webinar = $assignment->webinar;
 
-            if (!empty($webinar) and $webinar->checkUserHasBought($user)) {
+            $isFree = !empty($webinar) && (is_null($webinar->price) || (float)$webinar->price == 0.0);
+
+            if (!empty($webinar) and ($isFree or $webinar->checkUserHasBought($user))) {
 
                 $studentId = (!empty($requestData['student']) and $webinar->isOwner($user->id)) ? $requestData['student'] : null;
                 $assignmentHistory = $this->getAssignmentHistory($course, $assignment, $user, $studentId);

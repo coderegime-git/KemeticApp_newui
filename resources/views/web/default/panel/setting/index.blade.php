@@ -226,12 +226,12 @@
 
         <!-- Tabs -->
         <nav class="settings-profile-tabs" id="tabs">
-            <a class="settings-profile-tab settings-active" data-tab="basic" data-step="1">Basic Information</a>
-            <a class="settings-profile-tab" data-tab="images" data-step="2">Images</a>
-            <a class="settings-profile-tab" data-tab="about" data-step="3">About</a>
-            <a class="settings-profile-tab" data-tab="experience" data-step="5">Experience</a>
-            <a class="settings-profile-tab" data-tab="education" data-step="4">Education</a>
-            <a class="settings-profile-tab" data-tab="identity" data-step="6">Identity & Financial</a>
+            <a class="settings-profile-tab {{ (!empty($currentStep) && $currentStep == 1) ? 'settings-active' : '' }}" data-tab="basic" data-step="1">Basic Information</a>
+            <a class="settings-profile-tab {{ (!empty($currentStep) && $currentStep == 2) ? 'settings-active' : '' }}" data-tab="images" data-step="2">Images</a>
+            <a class="settings-profile-tab {{ (!empty($currentStep) && $currentStep == 3) ? 'settings-active' : '' }}" data-tab="about" data-step="3">About</a>
+            <a class="settings-profile-tab {{ (!empty($currentStep) && $currentStep == 5) ? 'settings-active' : '' }}" data-tab="experience" data-step="5">Experience</a>
+            <a class="settings-profile-tab {{ (!empty($currentStep) && $currentStep == 4) ? 'settings-active' : '' }}" data-tab="education" data-step="4">Education</a>
+            <a class="settings-profile-tab {{ (!empty($currentStep) && $currentStep == 6) ? 'settings-active' : '' }}" data-tab="identity" data-step="6">Identity & Financial</a>
         </nav>
         <form method="post" id="userSettingForm" class="mt-30" action="{{ (!empty($new_user)) ? '/panel/manage/'. $user_type .'/new' : '/panel/setting' }}">
         
@@ -505,7 +505,7 @@
                         <!-- LEFT: Main profile photo -->
                         <section class="settings-panel">
                             <div class="settings-panel-tag">Main Profile Photo</div>
-                            <h2>Face of Your Kemetic Journey</h2>
+                            <h2 style="margin-top: 20px;">Face of Your Kemetic Journey</h2>
                             <p>Choose a clear, warm photo so Seekers and Wisdom Keepers recognize you instantly.</p>
 
                             <div class="settings-main-photo-wrap">
@@ -873,9 +873,9 @@
                                 
 
                                 <div class="settings-form-group">
-                                    <label for="bank">{{ trans('financial.select_account_type') }}</label>
+                                    <label for="bank">{{ trans('financial.select_account_type') }} <span style="color:#F2C94C;">*</span></label>
                                     <select name="bank_id" class="js-user-bank-input settings-field-input @error('bank_id')  is-invalid @enderror" {{ ($user->financial_approval) ? 'disabled' : '' }}">
-                                        <option selected disabled>{{ trans('financial.select_account_type') }}</option>
+                                        <option value="" selected disabled>{{ trans('financial.select_account_type') }}</option>
 
                                         @foreach($userBanks as $userBank)
                                             <option value="{{ $userBank->id }}" @if(!empty($user->selectedBank) and $user->selectedBank->user_bank_id == $userBank->id) selected="selected" @endif data-specifications="{{ json_encode($userBank->specifications->pluck('name','id')->toArray()) }}">{{ $userBank->title }}</option>
@@ -895,8 +895,8 @@
                                                 $selectedBankSpecification = $user->selectedBank->specifications->where('user_selected_bank_id', $user->selectedBank->id)->where('user_bank_specification_id', $specification->id)->first();
                                             @endphp
                                             <div class="settings-form-group">
-                                                <label class="font-weight-500 text-dark-blue">{{ $specification->name }}</label>
-                                                <input type="text" name="bank_specifications[{{ $specification->id }}]" value="{{ (!empty($selectedBankSpecification)) ? $selectedBankSpecification->value : '' }}" class="form-control" {{ ($user->financial_approval) ? 'disabled' : '' }}/>
+                                                <label class="font-weight-500 text-dark-blue">{{ $specification->name }} <span style="color:#F2C94C;">*</span></label>
+                                                <input type="text" name="bank_specifications[{{ $specification->id }}]" value="{{ (!empty($selectedBankSpecification)) ? $selectedBankSpecification->value : '' }}" class="form-control settings-field-input" placeholder="Enter {{ $specification->name }}" {{ ($user->financial_approval) ? 'disabled' : '' }}/>
                                             </div>
                                         @endforeach
                                     @endif
@@ -1421,7 +1421,11 @@
                             });
                             educationModal.style.display = 'none';
                             resetEducationModal();
-                            setTimeout(() => { window.location.reload(); }, 500);
+                            setTimeout(() => { 
+                                let currentUrl = window.location.href.split('?')[0].replace(/\/$/, '');
+                                currentUrl = currentUrl.replace(/\/step\/\d+$/, '');
+                                window.location.href = currentUrl + '/step/4';
+                            }, 500);
                         } else {
                             Swal.fire({
                                 icon: 'error',
@@ -1509,7 +1513,11 @@
                             });
                             experienceModal.style.display = 'none';
                             resetExperienceModal();
-                            setTimeout(() => { window.location.reload(); }, 500);
+                            setTimeout(() => { 
+                                let currentUrl = window.location.href.split('?')[0].replace(/\/$/, '');
+                                currentUrl = currentUrl.replace(/\/step\/\d+$/, '');
+                                window.location.href = currentUrl + '/step/5';
+                            }, 500);
                         } else {
                             Swal.fire({
                                 icon: 'error',
@@ -1924,10 +1932,6 @@
 
         // AJAX function to delete gallery photo
         function deleteGalleryPhoto(photoId) {
-            if (!confirm('Are you sure you want to delete this photo?')) {
-                return;
-            }
-
             fetch(`/panel/setting/gallery-photo/${photoId}`, {
                 method: 'DELETE',
                 headers: {
@@ -1938,19 +1942,17 @@
             .then(response => response.json())
             .then(data => {
                 if (data.success) {
-                    // Remove the photo element from DOM
+                    // Remove the photo element from DOM silently
                     const photoElement = document.querySelector(`[data-photo-id="${photoId}"]`);
                     if (photoElement) {
                         photoElement.remove();
                     }
-                    showSuccess('Photo deleted successfully!');
                 } else {
-                    showError('Error: ' + data.message);
+                    console.error('Error:', data.message);
                 }
             })
             .catch(error => {
                 console.error('Error:', error);
-                showError('An error occurred while deleting the photo.');
             });
         }
 
@@ -2051,13 +2053,9 @@
         document.getElementById('imageViewerModal').style.display = 'none';
     }
 
-    // Function to remove document
+    // Function to remove document — silently clears without any popup
     function removeDocument(type) {
-        if (!confirm('Are you sure you want to remove this document?')) {
-            return;
-        }
-        
-        // Reset the hidden input
+        // Reset the hidden input to empty (will clear on save)
         document.getElementById(type).value = '';
         
         // Reset file input
@@ -2082,8 +2080,6 @@
                 </div>
             `;
         }
-        
-        showSuccess('Document removed');
     }
 
     // Function to reset identity form

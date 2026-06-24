@@ -29,6 +29,7 @@ use App\Models\Webinar;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Illuminate\Support\Carbon;
+use Illuminate\Support\Str;
 
 class User extends Authenticatable
 {
@@ -127,7 +128,9 @@ class User extends Authenticatable
     public function getAvatar($size = 40)
     {
         if (!empty($this->avatar)) {
-            $avatarUrl = $this->avatar;
+            $avatarUrl = Str::startsWith($this->avatar, ['http://', 'https://', '/'])
+                ? $this->avatar
+                : '/' . $this->avatar;
         } else {
             $settings = getOthersPersonalizationSettings();
 
@@ -135,7 +138,9 @@ class User extends Authenticatable
                 $avatarUrl = "/getDefaultAvatar?item={$this->id}&name={$this->full_name}&size=$size";
             } else {
                 if (!empty($settings) and !empty($settings['default_user_avatar'])) {
-                    $avatarUrl = $settings['default_user_avatar'];
+                    $avatarUrl = Str::startsWith($settings['default_user_avatar'], ['http://', 'https://', '/'])
+                        ? $settings['default_user_avatar']
+                        : '/' . $settings['default_user_avatar'];
                 } else {
                     $avatarUrl = "/assets/default/img/default/avatar-1.png";
                 }

@@ -1471,7 +1471,8 @@ class WebinarsController extends Controller
                     // ANSWERS  →  quizzes[].questions[].answers[]
                     // Only for multiple-choice type questions
                     // ----------------------------------------------------------
-                    if ($quizQuestion->type == QuizzesQuestion::$multiple && !empty($questionData['answers'])) {
+                    // if ($quizQuestion->type == QuizzesQuestion::$multiple && !empty($questionData['answers'])) {
+                    if ($qType == QuizzesQuestion::$multiple && !empty($questionData['answers'])) {
 
                         foreach ($questionData['answers'] ?? [] as $answerKey => $answer) {
 

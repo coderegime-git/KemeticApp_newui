@@ -112,6 +112,31 @@
     margin-bottom: 14px;
 }
 
+/* Step 3 Mobile Fix */
+@media (max-width: 767px) {
+    .kemetic-card, .k-card {
+        padding: 12px;
+        overflow-x: hidden;
+    }
+    .kemetic-card .row, .k-card .row {
+        margin-left: 0;
+        margin-right: 0;
+    }
+    .kemetic-card [class*="col-"], .k-card [class*="col-"] {
+        padding-left: 6px;
+        padding-right: 6px;
+    }
+    .kemetic-input, .kemetic-select, .kemetic-textarea, .form-control {
+        font-size: 14px !important;
+        min-width: 0 !important;
+    }
+    .kemetic-input-group {
+        flex-wrap: nowrap;
+    }
+    .accordion-content-wrapper {
+        padding: 8px !important;
+    }
+}
 </style>
 @endpush
 

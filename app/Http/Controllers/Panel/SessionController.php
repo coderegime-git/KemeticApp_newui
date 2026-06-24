@@ -85,7 +85,7 @@ class SessionController extends Controller
                 'moderator_secret' => $data['moderator_secret'] ?? null,
                 'check_previous_parts' => $data['check_previous_parts'],
                 'access_after_day' => $data['access_after_day'],
-                'extra_time_to_join' => $data['extra_time_to_join'] ?? null,
+                'extra_time_to_join' => (!empty($data['extra_time_to_join'])) ? $data['extra_time_to_join'] : null,
                 'status' => (!empty($data['status']) and $data['status'] == 'on') ? Session::$Active : Session::$Inactive,
                 'created_at' => time()
             ]);
@@ -218,7 +218,7 @@ class SessionController extends Controller
                     'agora_settings' => $agoraSettings,
                     'check_previous_parts' => $data['check_previous_parts'],
                     'access_after_day' => $data['access_after_day'],
-                    'extra_time_to_join' => $data['extra_time_to_join'] ?? null,
+                    'extra_time_to_join' => (!empty($data['extra_time_to_join'])) ? $data['extra_time_to_join'] : null,
                     'updated_at' => time()
                 ]);
 
@@ -342,7 +342,8 @@ class SessionController extends Controller
             } else {
                 $webinar = Webinar::find($session->webinar_id);
 
-                if ($webinar->checkUserHasBought($user)) {
+                $isFree = !empty($webinar) && (is_null($webinar->price) || (float)$webinar->price == 0.0);
+                if ($isFree || $webinar->checkUserHasBought($user)) {
 
                     $url = \Bigbluebutton::join([
                         'meetingID' => $session->id,
@@ -414,7 +415,8 @@ class SessionController extends Controller
                 } else {
                     $webinar = Webinar::find($session->webinar_id);
 
-                    if ($webinar->checkUserHasBought($user)) {
+                    $isFree = !empty($webinar) && (is_null($webinar->price) || (float)$webinar->price == 0.0);
+                    if ($isFree || $webinar->checkUserHasBought($user)) {
                         $canAccess = true;
                     }
                 }
@@ -562,8 +564,11 @@ class SessionController extends Controller
                 if (($user->id == $session->creator_id) or $webinar->canAccess($user)) {
                     $canAccess = true;
                     $role = "moderator";
-                } else if ($webinar->checkUserHasBought($user)) {
-                    $canAccess = true;
+                } else {
+                    $isFree = !empty($webinar) && (is_null($webinar->price) || (float)$webinar->price == 0.0);
+                    if ($isFree || $webinar->checkUserHasBought($user)) {
+                        $canAccess = true;
+                    }
                 }
 
                 if ($canAccess) {

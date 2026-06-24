@@ -175,7 +175,7 @@
                     <div class="d-flex">
 
                         <div class="kemetic-avatar">
-                            <img src="{{ $forum->user->getAvatar(64) }}" style="width: 50px; height: 50px;" class="rounded-circle" />
+                            <img src="{{ $forum->user->getAvatar() }}" style="width: 50px; height: 50px;" class="rounded-circle" />
                         </div>
 
                         <div class="ml-10">
@@ -223,7 +223,7 @@
                                     @foreach($forum->usersAvatars as $avatar)
                                         <img src="{{ $avatar->getAvatar(32) }}"
                                             class="rounded-circle mr-1"
-                                            style="border:1px solid var(--kemetic-gold-soft);" />
+                                            style="border:1px solid var(--kemetic-gold-soft);width:50px;height:50px;" />
                                     @endforeach
                                 </div>
                             </div>
@@ -241,7 +241,7 @@
                             <span class="kemetic-label">{{ trans('update.last_answer') }}</span>
 
                             <div class="d-flex mt-20">
-                                <img src="{{ $forum->lastAnswer->user->getAvatar(30) }}"
+                                <img src="{{ $forum->lastAnswer->user->getAvatar(30) }}" style="width: 50px; height: 50px;"
                                     class="rounded-circle" />
 
                                 <div class="ml-10">

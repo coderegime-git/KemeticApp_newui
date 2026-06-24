@@ -446,7 +446,8 @@ class QuizController extends Controller
             if (!empty($quiz->webinar_id)) {
                 $webinar = $quiz->webinar;
 
-                $checkUserHasBought = $webinar->checkUserHasBought($user);
+                $isFree = !empty($webinar) && (is_null($webinar->price) || (float) $webinar->price == 0.0);
+                $checkUserHasBought = $isFree || $webinar->checkUserHasBought($user);
 
                 if (!$checkUserHasBought) {
                     $toastData = [
@@ -590,7 +591,7 @@ class QuizController extends Controller
 
                                     if ($answer and $answer->correct) {
                                         $results[$questionId]['status'] = true;
-                                        $totalMark += (int)$question->grade;
+                                        $totalMark += (int) $question->grade;
                                     }
 
                                     if ($question->type == 'descriptive') {
@@ -646,9 +647,11 @@ class QuizController extends Controller
 
         $quizResult = QuizzesResult::where('id', $quizResultId)
             ->where('user_id', $user->id)
-            ->with(['quiz' => function ($query) {
-                $query->with(['quizQuestions']);
-            }])
+            ->with([
+                'quiz' => function ($query) {
+                    $query->with(['quizQuestions']);
+                }
+            ])
             ->first();
 
         if ($quizResult) {
@@ -782,7 +785,8 @@ class QuizController extends Controller
             $quizzesResults = $query->with([
                 'quiz' => function ($query) {
                     $query->with(['quizQuestions', 'creator', 'webinar']);
-                }, 'user'
+                },
+                'user'
             ])->orderBy('created_at', 'desc')
                 ->paginate(10);
 
@@ -858,10 +862,10 @@ class QuizController extends Controller
                 $query->where('user_id', $user->id)
                     ->orWhereIn('quiz_id', $quizzesIds);
             })->with([
-                'quiz' => function ($query) {
-                    $query->with(['quizQuestions', 'webinar']);
-                }
-            ])->first();
+                    'quiz' => function ($query) {
+                        $query->with(['quizQuestions', 'webinar']);
+                    }
+                ])->first();
 
         if (!empty($quizResult)) {
             $numberOfAttempt = QuizzesResult::where('quiz_id', $quizResult->quiz->id)
@@ -987,10 +991,10 @@ class QuizController extends Controller
 
                                     if ($question->type == 'descriptive') {
                                         if (!empty($result['status']) and $result['status']) {
-                                            $user_grade = $user_grade - (isset($result['grade']) ? (int)$result['grade'] : 0);
-                                            $user_grade = $user_grade + (isset($review['grade']) ? (int)$review['grade'] : (int)$question->grade);
+                                            $user_grade = $user_grade - (isset($result['grade']) ? (int) $result['grade'] : 0);
+                                            $user_grade = $user_grade + (isset($review['grade']) ? (int) $review['grade'] : (int) $question->grade);
                                         } else if (isset($result['status']) and !$result['status']) {
-                                            $user_grade = $user_grade + (isset($review['grade']) ? (int)$review['grade'] : (int)$question->grade);
+                                            $user_grade = $user_grade + (isset($review['grade']) ? (int) $review['grade'] : (int) $question->grade);
                                             $oldResults[$question_id]['grade'] = isset($review['grade']) ? $review['grade'] : $question->grade;
                                         }
 
@@ -1010,7 +1014,7 @@ class QuizController extends Controller
                                     ->first();
 
                                 if ($question and $question->type == 'descriptive') {
-                                    $user_grade += (isset($review['grade']) ? (int)$review['grade'] : 0);
+                                    $user_grade += (isset($review['grade']) ? (int) $review['grade'] : 0);
                                 }
                             }
                         }

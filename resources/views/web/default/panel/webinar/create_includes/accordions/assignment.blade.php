@@ -483,14 +483,14 @@
                         </div>
 
                         {{-- DEADLINE --}}
-                        <div class="kemetic-field">
+                        <!-- <div class="kemetic-field">
                             <label>{{ trans('update.deadline') }}</label>
                             <input type="text"
                                    class="kemetic-input js-ajax-deadline"
                                    name="ajax[{{ !empty($assignment) ? $assignment->id : 'new' }}][deadline]"
                                    value="{{ !empty($assignment) ? $assignment->deadline : '' }}">
                             <div class="invalid-feedback"></div>
-                        </div>
+                        </div> -->
 
                         {{-- ATTEMPTS --}}
                         <div class="kemetic-field">
@@ -599,7 +599,7 @@
                         </div>
 
                         {{-- SEQUENCE CONTENT --}}
-                        @if(getFeaturesSettings('sequence_content_status'))
+                        <!-- @if(getFeaturesSettings('sequence_content_status'))
                             <div class="kemetic-switch-row mt-20">
                                 <label class="cursor-pointer input-label"
                                        for="SequenceContentSwitch{{ !empty($assignment) ? $assignment->id : '_record' }}">
@@ -643,7 +643,7 @@
                                     <div class="invalid-feedback"></div>
                                 </div>
                             </div>
-                        @endif
+                        @endif -->
 
                     </div>
                 </div>

@@ -397,7 +397,7 @@
 
         <div class="form-group mt-15">
             <label class="input-label">{{ trans('public.capacity') }} <span class="text-danger">*</span></label>
-            <input type="number" name="capacity" required value="{{ (!empty($webinar) and !empty($webinar->capacity)) ? $webinar->capacity : old('capacity') }}" class="form-control @error('capacity')  is-invalid @enderror" placeholder="{{ trans('forms.capacity_placeholder') }}"/>
+            <input type="number" min="0" name="capacity" required value="{{ (!empty($webinar) and !empty($webinar->capacity)) ? $webinar->capacity : old('capacity') }}" class="form-control @error('capacity')  is-invalid @enderror" placeholder="{{ trans('forms.capacity_placeholder') }}"/>
             @error('capacity')
             <div class="invalid-feedback">
                 {{ $message }}

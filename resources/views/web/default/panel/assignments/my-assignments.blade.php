@@ -504,31 +504,31 @@
                     <table class="custom-table text-center">
                         <thead>
                         <tr>
-                            <th>{{ trans('update.title_and_course') }}</th>
-                            <th>{{ trans('update.deadline') }}</th>
-                            <th>{{ trans('update.first_submission') }}</th>
-                            <th>{{ trans('update.last_submission') }}</th>
-                            <th>{{ trans('update.attempts') }}</th>
-                            <th>{{ trans('quiz.grade') }}</th>
-                            <th>{{ trans('update.pass_grade') }}</th>
-                            <th>{{ trans('public.status') }}</th>
+                            <th class="text-center" style="vertical-align: middle;">{{ trans('update.title_and_course') }}</th>
+                            <th class="text-center" style="vertical-align: middle;">{{ trans('update.deadline') }}</th>
+                            <th class="text-center" style="vertical-align: middle;">{{ trans('update.first_submission') }}</th>
+                            <th class="text-center" style="vertical-align: middle;">{{ trans('update.last_submission') }}</th>
+                            <th class="text-center" style="vertical-align: middle;">{{ trans('update.attempts') }}</th>
+                            <th class="text-center" style="vertical-align: middle;">{{ trans('quiz.grade') }}</th>
+                            <th class="text-center" style="vertical-align: middle;">{{ trans('update.pass_grade') }}</th>
+                            <th class="text-center" style="vertical-align: middle;">{{ trans('public.status') }}</th>
                             <th></th>
                         </tr>
                         </thead>
                         <tbody>
                         @foreach($assignments as $assignment)
                             <tr>
-                                <td class="text-left">
+                                <td class="text-center" style="vertical-align: middle;">
                                     <span class="d-block font-16 font-weight-500">{{ $assignment->title }}</span>
                                     <span class="d-block font-12 text-gold">{{ $assignment->webinar->title }}</span>
                                 </td>
-                                <td>{{ !empty($assignment->deadline) ? dateTimeFormat($assignment->deadlineTime, 'j M Y') : '-' }}</td>
-                                <td>{{ !empty($assignment->first_submission) ? dateTimeFormat($assignment->first_submission, 'j M Y | H:i') : '-' }}</td>
-                                <td>{{ !empty($assignment->last_submission) ? dateTimeFormat($assignment->last_submission, 'j M Y | H:i') : '-' }}</td>
-                                <td>{{ !empty($assignment->attempts) ? "{$assignment->usedAttemptsCount}/{$assignment->attempts}" : '-' }}</td>
-                                <td>{{ (!empty($assignment->assignmentHistory) and !empty($assignment->assignmentHistory->grade)) ? $assignment->assignmentHistory->grade : '-' }}</td>
-                                <td>{{ $assignment->pass_grade }}</td>
-                                <td>
+                                <td class="text-center" style="vertical-align: middle;">{{ !empty($assignment->deadline) ? dateTimeFormat($assignment->deadlineTime, 'j M Y') : '-' }}</td>
+                                <td class="text-center" style="vertical-align: middle;">{{ !empty($assignment->first_submission) ? dateTimeFormat($assignment->first_submission, 'j M Y | H:i') : '-' }}</td>
+                                <td class="text-center" style="vertical-align: middle;">{{ !empty($assignment->last_submission) ? dateTimeFormat($assignment->last_submission, 'j M Y | H:i') : '-' }}</td>
+                                <td class="text-center" style="vertical-align: middle;">{{ !empty($assignment->attempts) ? "{$assignment->usedAttemptsCount}/{$assignment->attempts}" : '-' }}</td>
+                                <td class="text-center" style="vertical-align: middle;">{{ (!empty($assignment->assignmentHistory) and !empty($assignment->assignmentHistory->grade)) ? $assignment->assignmentHistory->grade : '-' }}</td>
+                                <td class="text-center" style="vertical-align: middle;">{{ $assignment->pass_grade }}</td>
+                                <td class="text-center" style="vertical-align: middle;">
                                     @if(empty($assignment->assignmentHistory) or ($assignment->assignmentHistory->status == \App\Models\WebinarAssignmentHistory::$notSubmitted))
                                         <span class="k-status-failed">{{ trans('update.assignment_history_status_not_submitted') }}</span>
                                     @else
