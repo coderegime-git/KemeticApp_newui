@@ -428,7 +428,7 @@ class ProductController extends Controller
             }
         }
 
-        if ($data['termsandrules'] && $data['termsandrules'] == 1) {
+        try{
             $notifyOptions = [
                 '[u.name]' => $user->full_name,
                 '[item_title]' => $product->title,
@@ -436,6 +436,22 @@ class ProductController extends Controller
             ];
             sendNotification("new_item_created", $notifyOptions, 1);
         }
+        catch (\Throwable $e) {
+            \Log::error('Course creation notification failed: ' . $e->getMessage(), [
+                'webinar_id' => $webinar->id ?? null,
+                'user_id' => $user->id ?? null,
+            ]);
+            // intentionally swallow — notification failure must not block course creation
+        }
+
+        // if ($data['termsandrules'] && $data['termsandrules'] == 1) {
+        //     $notifyOptions = [
+        //         '[u.name]' => $user->full_name,
+        //         '[item_title]' => $product->title,
+        //         '[content_type]' => trans('update.product'),
+        //     ];
+        //     sendNotification("new_item_created", $notifyOptions, 1);
+        // }
 
         return apiResponse2(1, 'stored', 'Product Stored Successfully');
     }

@@ -8154,7 +8154,7 @@ th {
   border: 1px solid var(--border-soft);
   /* background: radial-gradient(circle at top, #1b1028, #07030b); */
   padding: 11px 12px;
-  color: #ffffff;
+  color: #afa7a7;
   font-size: 14px;
   outline: none;
   transition: border-color .18s ease, box-shadow .18s ease;

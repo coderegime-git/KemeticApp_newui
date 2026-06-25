@@ -12,7 +12,7 @@
         <div class="col-12 col-lg-4">
 
             <div class="form-group">
-                <label class="input-label">{{ trans('financial.select_account_type') }}</label>
+                <label class="input-label">{{ trans('financial.select_account_type') }} <span class="text-danger">*</span></label>
                 <select name="bank_id" class="js-user-bank-input form-control @error('bank_id')  is-invalid @enderror" {{ ($user->financial_approval) ? 'disabled' : '' }}>
                     <option selected disabled>{{ trans('financial.select_account_type') }}</option>
 
@@ -33,10 +33,12 @@
                     @foreach($user->selectedBank->bank->specifications as $specification)
                         @php
                             $selectedBankSpecification = $user->selectedBank->specifications->where('user_selected_bank_id', $user->selectedBank->id)->where('user_bank_specification_id', $specification->id)->first();
+                            $isAccountNum = stripos($specification->name, 'account number') !== false || stripos($specification->name, 'iban') !== false;
+                            $extraAttr = $isAccountNum ? 'maxlength="35" oninput="this.value = this.value.replace(/[^a-zA-Z0-9]/g, \'\')"' : '';
                         @endphp
                         <div class="form-group">
-                            <label class="font-weight-500 text-dark-blue">{{ $specification->name }}</label>
-                            <input type="text" name="bank_specifications[{{ $specification->id }}]" value="{{ (!empty($selectedBankSpecification)) ? $selectedBankSpecification->value : '' }}" class="form-control" {{ ($user->financial_approval) ? 'disabled' : '' }}/>
+                            <label class="font-weight-500 text-dark-blue">{{ $specification->name }} <span class="text-danger">*</span></label>
+                            <input type="text" name="bank_specifications[{{ $specification->id }}]" value="{{ (!empty($selectedBankSpecification)) ? $selectedBankSpecification->value : '' }}" class="form-control" {{ ($user->financial_approval) ? 'disabled' : '' }} {!! $extraAttr !!}/>
                         </div>
                     @endforeach
                 @endif

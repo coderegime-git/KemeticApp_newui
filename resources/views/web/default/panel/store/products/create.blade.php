@@ -75,6 +75,22 @@
     from{opacity:0;transform:translateY(10px)}
     to{opacity:1;transform:translateY(0)}
 }
+
+@media (max-width: 767px) {
+    .right-controls-wrapper {
+        flex-wrap: nowrap !important;
+        width: 100%;
+        overflow-x: auto;
+        gap: 10px;
+        padding-top: 10px;
+    }
+    .right-controls-wrapper .btn {
+        margin-right: 0 !important;
+        margin-top: 0 !important;
+        flex: 1;
+        white-space: nowrap;
+    }
+}
 </style>
 @endpush
 
@@ -136,11 +152,12 @@
         </div>
 
         {{-- Right controls --}}
-        <div class="mt-20 mt-md-0 d-flex flex-wrap align-items-center">
+        <div class="mt-20 mt-md-0 d-flex align-items-center right-controls-wrapper">
 
             <button type="button"
                     id="sendForReview" style="margin-right: 10px;"
-                    class="btn btn-kemetic mr-10">
+                    class="btn btn-kemetic mr-10 @if(empty($product)) disabled @endif"
+                    @if(empty($product)) disabled @endif>
                 {{ trans('public.send_for_review') }}
             </button>
 

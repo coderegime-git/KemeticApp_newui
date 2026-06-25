@@ -1460,13 +1460,15 @@ main.home-container {
           </p>
 
           <div class="kh-actions">
-            @if(auth()->check())
-              <button class="kh-btn kh-gold" onclick="location.href='/membership'">👑 Become A Member</button>
-               <a onclick="location.href='/membership'" class="kh-btn kh-outline">▶ Explore Platform</a>
-            @else
+            <button class="kh-btn kh-gold" onclick="location.href='/membership'">👑 Become A Member</button>
+               <a onclick="location.href='/pages/newsletter'" class="kh-btn kh-outline">▶ Discover Your Archetype</a>
+            <!-- @if(auth()->check()) -->
+              <!-- <button class="kh-btn kh-gold" onclick="location.href='/membership'">👑 Become A Member</button>
+               <a onclick="location.href='/pages/newsletter'" class="kh-btn kh-outline">▶ Discover Your Archetype</a> -->
+            <!-- @else
               <button class="kh-btn kh-gold" onclick="storeRedirectThenLogin()">👑 Become A Member</button>
               <a onclick="storeRedirectThenLogin()" class="kh-btn kh-outline">▶ Explore Platform</a>
-            @endif
+            @endif -->
            
           </div>
           <div class="kh-proof-row"><span>No Ai No Bots! Only real people</span></div>
@@ -1527,7 +1529,7 @@ main.home-container {
           <div class="kh-feat kf-books">
             <span class="kh-feat-icon">📚</span>
             <div class="kh-feat-name">Books</div>
-            <div class="kh-feat-desc">Access sacred scrolls.</div>
+            <div class="kh-feat-desc">Access sacred Books.</div>
           </div>
           <div class="kh-feat kf-live">
             <span class="kh-feat-icon">📡</span>
@@ -1598,7 +1600,8 @@ main.home-container {
               <div class="kh-plan-price"><sub>€</sub>10</div>
               <p>Full access for 12 months</p>
               
-              @if($isYearlyActive)
+              <button class="kh-btn kh-purple-btn" style="width:100%" onclick="location.href='/membership'">Get Started</button>
+              <!-- @if($isYearlyActive)
                 <button class="kh-btn kh-purple-btn" style="width:100%;background:#d9534f;" onclick="location.href='/membership'">Manage / Cancel</button>
               @elseif($hasLifetime)
                 <button class="kh-btn kh-purple-btn" disabled style="opacity:.5;cursor:not-allowed;width:100%">Already Lifetime</button>
@@ -1610,7 +1613,7 @@ main.home-container {
                 @else
                   <button class="kh-btn kh-purple-btn" style="width:100%" onclick="storeRedirectThenLogin(document.getElementById('khFormYearly'))">Get Started</button>
                 @endif
-              @endif
+              @endif -->
             </div>
           @endif
 
@@ -1625,8 +1628,9 @@ main.home-container {
               <h3>Lifetime Access</h3>
               <div class="kh-plan-price"><sub>€</sub>33</div>
               <p>One-time payment • Forever access</p>
-              
-              @if($isLifetimeActive)
+
+              <button class="kh-btn kh-purple-btn" style="width:100%" onclick="location.href='/membership'">Get Started</button>
+              <!-- @if($isLifetimeActive)
                 <button class="kh-btn kh-gold" disabled style="opacity:.5;cursor:not-allowed;width:100%">Lifetime Activated</button>
               @elseif($hasAnySubscription)
                 <button class="kh-btn kh-gold" style="width:100%" onclick="location.href='/membership'">Upgrade</button>
@@ -1636,7 +1640,7 @@ main.home-container {
                 @else
                   <button class="kh-btn kh-gold" style="width:100%" onclick="storeRedirectThenLogin(document.getElementById('khFormLifetime'))">Get Lifetime Access</button>
                 @endif
-              @endif
+              @endif -->
             </div>
           @endif
         </div>
@@ -1704,16 +1708,18 @@ main.home-container {
           <p style="margin-bottom: 20px;">Access thousands of resources, connect with seekers worldwide, and continue your journey through the modern Mystery School.</p>
           
           <h3>Begin Your Journey Today</h3>
-
-          @if(auth()->check())
-            <button class="kh-btn kh-gold" onclick="location.href='/membership'">
+           <button class="kh-btn kh-gold" onclick="location.href='/membership'">
               👑 Become A Member
             </button>
-          @else
+          <!-- @if(auth()->check()) -->
+            <!-- <button class="kh-btn kh-gold" onclick="location.href='/membership'">
+              👑 Become A Member
+            </button> -->
+          <!-- @else
             <button class="kh-btn kh-gold" onclick="storeRedirectThenLogin()">
               👑 Become A Member
             </button>
-          @endif
+          @endif -->
         </div>
 
       </div>
@@ -1761,16 +1767,18 @@ main.home-container {
         <div class="kh-transform-cta">
           <h3>Your Journey Starts Here</h3>
           <p>Join {{ $totalWisdomSeekers }} Wisdom Seekers Worldwide</p>
-
-          @if(auth()->check())
-            <button class="kh-btn kh-gold" onclick="location.href='/membership'">
+             <button class="kh-btn kh-gold" onclick="location.href='/membership'">
               👑 Become A Member
             </button>
-          @else
+          <!-- @if(auth()->check()) -->
+            <!-- <button class="kh-btn kh-gold" onclick="location.href='/membership'">
+              👑 Become A Member
+            </button> -->
+          <!-- @else
             <button class="kh-btn kh-gold" onclick="storeRedirectThenLogin()">
               👑 Become A Member
             </button>
-          @endif
+          @endif -->
 
           <small>Unlock courses, articles, books, livestreams, Portals and more.</small>
         </div>
@@ -1971,7 +1979,7 @@ main.home-container {
       <!-- BOOKS (Bundles) -->
       @if(!empty($books) and !$books->isEmpty())
       <section>
-        <div class="home-row-head"><h2>Scrolls</h2><a href="/classes?type[]=bundle" class="home-chip">{{ trans('Browse') }}</a></div>
+        <div class="home-row-head"><h2>Books</h2><a href="/classes?type[]=bundle" class="home-chip">{{ trans('Browse') }}</a></div>
         <div class="home-grid">
           @foreach($books as $book)
           <div class="home-tile">
@@ -1983,9 +1991,9 @@ main.home-container {
               @endif
             </div>
             <div class="home-actions">
-              <a href="{{ $book->getUrl() }}"><button class="home-btn">Read Scrolls</button></a>
+              <a href="{{ $book->getUrl() }}"><button class="home-btn">Read Books</button></a>
               <!-- @if($book->price == 0)
-                <a href="{{ $book->getUrl() }}"><button class="home-btn">Read Scrolls</button></a>
+                <a href="{{ $book->getUrl() }}"><button class="home-btn">Read Books</button></a>
               @else
                 <a href="{{ $book->getUrl() }}"><button class="home-btn">{{ trans('Buy Audiobook') }}</button></a>
               @endif -->

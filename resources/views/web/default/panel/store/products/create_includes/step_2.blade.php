@@ -542,39 +542,39 @@
            
             @if(empty($cjProduct))
                 <div class="form-group">
-                    <label class="input-label">Earning {{ trans('public.price') }} ({{ $currency }})</label>
-                    <input id="computedEarningPrice" name="earning_price" type="text" min="0" class="form-control" value="{{ (!empty($product) && isset($product->earning_price)) ? $product->earning_price : old('earning_price', '0') }}">
+                    <label class="input-label">Earning {{ trans('public.price') }} ({{ $currency }}) <span class="text-danger">*</span></label>
+                    <input id="computedEarningPrice" name="earning_price" type="text" min="0" class="form-control" value="{{ (!empty($product) && isset($product->earning_price)) ? $product->earning_price : old('earning_price', '0') }}" required>
                     <p class="font-12 text-gray mt-10">- Earning amount for this product.</p>
                 </div>
 
                 <div class="form-group">
-                    <label class="input-label">Platform {{ trans('public.price') }} (10%)</label>
-                    <input id="computedPlatformFee" name="own_platform_price" type="text" min="0" class="form-control" value="{{ (!empty($product) && isset($product->own_platform_price)) ? $product->own_platform_price : old('own_platform_price', '0') }}" readonly>
+                    <label class="input-label">Platform {{ trans('public.price') }} (10%) <span class="text-danger">*</span></label>
+                    <input id="computedPlatformFee" name="own_platform_price" type="text" min="0" class="form-control" value="{{ (!empty($product) && isset($product->own_platform_price)) ? $product->own_platform_price : old('own_platform_price', '0') }}" readonly required>
                     <p class="font-12 text-gray mt-10">- Platform fee is 10% of the earning price.</p>
                 </div>
             @endif
             
 
              <div class="form-group">
-                <label class="input-label">{{ trans('public.price') }} ({{ $currency }})</label>
+                <label class="input-label">{{ trans('public.price') }} ({{ $currency }}) <span class="text-danger">*</span></label>
                 <input type="number" name="price" id="finalPriceInput" data-price-input min="0"
                        value="{{ (!empty($product) && isset($product->price)) ? $product->price : (!empty($cjProduct) ? ceil($cjPrice * 1.10) : old('price')) }}"
-                       class="form-control @error('price') is-invalid @enderror">
+                       class="form-control @error('price') is-invalid @enderror" required>
                 @error('price')<div class="invalid-feedback">{{ $message }}</div>@enderror
             </div>
 
             <div class="form-group js-inventory-inputs {{ ($product->unlimited_inventory ?? false) ? 'd-none' : '' }}">
-                <label class="input-label">{{ trans('update.inventory') }}</label>
-                <input type="number" name="inventory" min="0"
+                <label class="input-label">{{ trans('update.inventory') }} <span class="text-danger js-inventory-req">*</span></label>
+                <input type="number" name="inventory" id="inventoryInput" min="0"
                        value="{{ $product->getAvailability() ?? old('inventory') }}"
-                       class="form-control">
+                       class="form-control" {{ ($product->unlimited_inventory ?? false) ? '' : 'required' }}>
             </div>
 
             <div class="form-group js-inventory-inputs {{ ($product->unlimited_inventory ?? false) ? 'd-none' : '' }}">
-                <label class="input-label">{{ trans('update.inventory_warning') }}</label>
-                <input type="number" name="inventory_warning" min="0"
+                <label class="input-label">{{ trans('update.inventory_warning') }} <span class="text-danger js-inventory-req">*</span></label>
+                <input type="number" name="inventory_warning" id="inventoryWarningInput" min="0"
                        value="{{ $product->inventory_warning ?? old('inventory_warning') }}"
-                       class="form-control">
+                       class="form-control" {{ ($product->unlimited_inventory ?? false) ? '' : 'required' }}>
             </div>
 
             <div class="form-group mt-25 d-flex align-items-center k-switch" style="margin-top:10px;">
@@ -705,7 +705,7 @@
     <div class="k-card mt-20">
         <div id="relatedCoursesAccordion">
             @if(!empty($product->relatedCourses) and count($product->relatedCourses))
-                <ul class="draggable-lists" data-order-table="relatedCourses">
+                <ul class="draggable-lists" data-order-table="relatedCourses" style="padding-left: 0; list-style-type: none; margin-bottom: 0;">
                     @foreach($product->relatedCourses as $relatedCourseInfo)
                         @include('web.default.panel.store.products.create_includes.accordions.related_courses',['product' => $product,'relatedCourse' => $relatedCourseInfo])
                     @endforeach
@@ -905,7 +905,75 @@
                 return text;
             }
 
+            // Handle related course delete without full page reload
+            $('body').off('click', '.js-delete-related-course');
+            $('body').on('click', '.js-delete-related-course', function(e) {
+                e.preventDefault();
+                e.stopPropagation();
+                var href = $(this).attr('href');
+                var productId = '{{ $product->id }}';
+                var stepUrl   = '/panel/store/products/' + productId + '/step/2';
+
+                Swal.fire({
+                    title: typeof deleteAlertTitle !== 'undefined' ? deleteAlertTitle : 'Are you sure?',
+                    html: '<p>' + (typeof deleteAlertHint !== 'undefined' ? deleteAlertHint : 'This action cannot be undone.') + '</p>'
+                        + '<div class="mt-20 d-flex align-items-center justify-content-center">'
+                        + '<button type="button" id="swlDeleteRelated" data-href="' + href + '" data-step-url="' + stepUrl + '" class="btn btn-sm btn-primary">'
+                        + (typeof deleteAlertConfirm !== 'undefined' ? deleteAlertConfirm : 'Yes, delete') + '</button>'
+                        + '<button type="button" class="btn btn-sm btn-danger ml-10 close-swl">'
+                        + (typeof deleteAlertCancel !== 'undefined' ? deleteAlertCancel : 'Cancel') + '</button>'
+                        + '</div>',
+                    icon: 'warning',
+                    showConfirmButton: false,
+                    showCancelButton: false,
+                    allowOutsideClick: function() { return !Swal.isLoading(); }
+                });
+            });
+
+            $('body').off('click', '#swlDeleteRelated');
+            $('body').on('click', '#swlDeleteRelated', function(e) {
+                e.preventDefault();
+                var $btn     = $(this);
+                var href     = $btn.attr('data-href');
+                var stepUrl  = $btn.attr('data-step-url');
+                $btn.addClass('loadingbar primary').prop('disabled', true);
+
+                $.get(href, function(result) {
+                    if (result && result.code === 200) {
+                        Swal.close();
+                        $.toast({
+                            heading: 'Deleted',
+                            text: 'Related course removed successfully!',
+                            bgColor: '#43d477',
+                            textColor: 'white',
+                            hideAfter: 3000,
+                            position: 'bottom-right',
+                            icon: 'success'
+                        });
+
+                        // Refresh ONLY the related courses accordion
+                        $.get(stepUrl, function(html) {
+                            var $html         = $(html);
+                            var $newAccordion = $html.find('#relatedCoursesAccordion');
+                            if ($newAccordion.length) {
+                                $('#relatedCoursesAccordion').html($newAccordion.html());
+                                if (typeof feather !== 'undefined') feather.replace();
+                                initWebinarSelect($('.panel-search-webinar-select2'));
+                            }
+                        });
+                    } else {
+                        Swal.fire({
+                            title: typeof deleteAlertFail !== 'undefined' ? deleteAlertFail : 'Error',
+                            icon: 'error'
+                        });
+                    }
+                }).always(function() {
+                    $btn.removeClass('loadingbar primary').prop('disabled', false);
+                });
+            });
+
             $('body').off('click', '#webinarAddRelatedCourses'); // prevent duplicates
+
             $('body').on('click', '#webinarAddRelatedCourses', function (e) {
                 e.preventDefault();
                 var key = kemeticRandomString();
@@ -969,15 +1037,31 @@
                 
                 $.post(action, data, function (result) {
                     if (result && result.code === 200) {
-                        Swal.fire({
-                            icon: 'success',
-                            html: '<h3 class="font-20 text-center text-dark-blue py-25">Saved successfully!</h3>',
-                            showConfirmButton: false,
-                            width: '25rem'
+                        $.toast({
+                            heading: 'Success',
+                            text: 'Related course saved successfully!',
+                            bgColor: '#43d477',
+                            textColor: 'white',
+                            hideAfter: 3000,
+                            position: 'bottom-right',
+                            icon: 'success'
                         });
-                        setTimeout(function () {
-                            window.location.reload();
-                        }, 500);
+
+                        // Refresh ONLY the related courses accordion (not the whole page)
+                        // so that other form fields (category, price, etc.) are preserved.
+                        var productId = '{{ $product->id }}';
+                        var stepUrl   = '/panel/store/products/' + productId + '/step/2';
+
+                        $.get(stepUrl, function(html) {
+                            var $html      = $(html);
+                            var $newAccordion = $html.find('#relatedCoursesAccordion');
+                            if ($newAccordion.length) {
+                                $('#relatedCoursesAccordion').html($newAccordion.html());
+                                if (typeof feather !== 'undefined') feather.replace();
+                                // Re-init select2 for any existing items
+                                initWebinarSelect($('.panel-search-webinar-select2'));
+                            }
+                        });
                     }
                 }).fail(function (err) {
                     $this.removeClass('loadingbar primary').prop('disabled', false);
@@ -997,6 +1081,78 @@
                     }
                 });
             });
+            // Toggle required for inventory based on unlimited inventory switch
+            var $unlimitedSwitch = $('#unlimitedInventorySwitch');
+            var $inventoryInput = $('#inventoryInput');
+            var $inventoryWarningInput = $('#inventoryWarningInput');
+            var $inventoryReqAsterisk = $('.js-inventory-req');
+
+            function toggleInventoryRequired() {
+                if ($unlimitedSwitch.is(':checked')) {
+                    $inventoryInput.prop('required', false);
+                    $inventoryWarningInput.prop('required', false);
+                    $inventoryReqAsterisk.addClass('d-none');
+                } else {
+                    $inventoryInput.prop('required', true);
+                    $inventoryWarningInput.prop('required', true);
+                    $inventoryReqAsterisk.removeClass('d-none');
+                }
+            }
+            
+            if ($unlimitedSwitch.length) {
+                toggleInventoryRequired();
+                $unlimitedSwitch.on('change', toggleInventoryRequired);
+            }
+
+            // Custom Validation before allowing Next
+            var nextBtn = document.getElementById('getNextStep');
+            if (nextBtn) {
+                nextBtn.addEventListener('click', function(e) {
+                    var requiredFields = [
+                        $('[name="earning_price"]'),
+                        $('[name="own_platform_price"]'),
+                        $('[name="price"]')
+                    ];
+                    
+                    if (!$unlimitedSwitch.is(':checked')) {
+                        requiredFields.push($inventoryInput);
+                        requiredFields.push($inventoryWarningInput);
+                    }
+
+                    var isValid = true;
+                    for (var i = 0; i < requiredFields.length; i++) {
+                        var $field = requiredFields[i];
+                        if ($field.length && $.trim($field.val()) === '') {
+                            isValid = false;
+                            $field.addClass('is-invalid');
+                        } else if ($field.length) {
+                            $field.removeClass('is-invalid');
+                        }
+                    }
+
+                    if (!isValid) {
+                        e.preventDefault();
+                        e.stopImmediatePropagation();
+                        e.stopPropagation();
+                        $.toast({
+                            heading: 'Validation Error',
+                            text: 'Please fill required fields',
+                            bgColor: '#f63c3c',
+                            textColor: 'white',
+                            hideAfter: 5000,
+                            position: 'bottom-right',
+                            icon: 'error'
+                        });
+                        
+                        // Remove the loading state if the main JS already added it (just in case)
+                        var $btn = $('#getNextStep');
+                        $btn.removeClass('loadingbar primary').prop('disabled', false);
+                        // Optional: restore original text if needed, but stopping propagation should prevent the loading state from applying.
+                        
+                        return false;
+                    }
+                }, true); // useCapture = true to catch it early
+            }
 
         });
     </script>

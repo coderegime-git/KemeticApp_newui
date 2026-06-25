@@ -1052,28 +1052,28 @@
                 @endcan
             @endif
 
-            @if($authUser->isTeacher())
+            @if(auth()->user())
                 <div class="nav-collapsible {{ (request()->is('panel/book') or request()->is('panel/book/*')) ? 'open' : '' }}">
-                    <a
-                        class="nav-collapsible-toggle {{ (request()->is('panel/book') or request()->is('panel/book/*')) ? 'active' : '' }}">
+                    <a class="nav-collapsible-toggle {{ (request()->is('panel/book') or request()->is('panel/book/*')) ? 'active' : '' }}">
                         <span class="dashboard-ms">book</span>Library
                         <span class="nav-arrow">›</span>
                     </a>
                     <div class="nav-collapsible-content">
-                        <a href="/panel/book/new" class="{{ (request()->is('panel/book/new')) ? 'active' : '' }}">
-                            <span class="dashboard-ms">add_circle</span> New Library
-                        </a>
+                        @if($authUser->isTeacher())
+                            <a href="/panel/book/new" class="{{ (request()->is('panel/book/new')) ? 'active' : '' }}">
+                                <span class="dashboard-ms">add_circle</span> New Library
+                            </a>
 
-                        <a href="/panel/book/" class="{{ (request()->is('panel/book/')) ? 'active' : '' }}">
-                            <span class="dashboard-ms">library_books</span> My Libraries
-                        </a>
+                            <a href="/panel/book/" class="{{ (request()->is('panel/book/')) ? 'active' : '' }}">
+                                <span class="dashboard-ms">library_books</span> My Libraries
+                            </a>
+                            <a href="/panel/book/sales" class="{{ Request::is('panel/book/sales') ? 'active' : '' }}">
+                                <span class="dashboard-ms">shopping_cart</span> {{ trans('panel.sales') }}
+                            </a>
+                        @endif
 
                         <a href="/panel/book/purchases" class="{{ Request::is('panel/book/purchases') ? 'active' : '' }}">
                             <span class="dashboard-ms">shopping_bag</span> {{ trans('panel.my_purchases') }}
-                        </a>
-
-                        <a href="/panel/book/sales" class="{{ Request::is('panel/book/sales') ? 'active' : '' }}">
-                            <span class="dashboard-ms">shopping_cart</span> {{ trans('panel.sales') }}
                         </a>
                     </div>
                 </div>

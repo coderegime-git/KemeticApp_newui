@@ -28,7 +28,7 @@ class ProductController extends Controller
 {
     use InstallmentsTrait;
     use CheckContentLimitationTrait;
-    
+
     public function searchLists(Request $request)
     {
         $user = null;
@@ -68,7 +68,7 @@ class ProductController extends Controller
         $pageDescription = $seoSettings['description'] ?? '';
         $pageRobot = getPageRobot('products_lists');
         $trendingProducts = Product::getTrendingProducts(3, $user);
-        
+
 
         $data = [
             'pageTitle' => $pageTitle,
@@ -206,7 +206,7 @@ class ProductController extends Controller
 
     public function show($slug)
     {
-        
+
         $user = null;
         $activeSubscribe = "";
 
@@ -223,6 +223,12 @@ class ProductController extends Controller
         $product = Product::where('status', Product::$active)
             ->where('slug', $slug)
             ->with([
+                'relatedCourses' => function ($query) {
+                    $query->whereHas('course', function ($query) {
+                        $query->where('status', 'active');
+                    });
+                    $query->with(['course']);
+                },
                 'selectedSpecifications' => function ($query) {
                     $query->where('status', ProductSelectedSpecification::$Active);
                     $query->with(['specification']);
@@ -321,7 +327,7 @@ class ProductController extends Controller
 
         $pageRobot = getPageRobot('product_show'); // return => index
         $hasBought = $product->checkUserHasBought($user);
-        
+
         $data = [
             'pageTitle' => $product->title,
             'pageDescription' => $product->seo_description,
@@ -337,7 +343,7 @@ class ProductController extends Controller
             'sellerBadges' => $seller->getBadges(),
             'sellerRates' => $seller->rates(),
             'sellerFollowers' => $followers,
-            'sellerFollowing' => $following ,
+            'sellerFollowing' => $following,
             'authUserIsFollower' => $authUserIsFollower,
             'advertisingBanners' => $advertisingBanners,
             'activeSpecialOffer' => $product->getActiveDiscount(),

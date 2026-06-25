@@ -850,10 +850,27 @@ class Webinar extends Model
         }
     }
 
+    // public function getExpiredAttribute()
+    // {
+    //     if ($this->type == self::$webinar) {
+    //         return (date('Y-m-d', $this->start_date) < date('Y-m-d'));
+    //         // return ($this->start_date < time());
+    //     }
+    //     return false;
+    // }
+
     public function getExpiredAttribute()
     {
         if ($this->type == self::$webinar) {
-            return ($this->start_date < time());
+            $timezone = $this->timezone ?: getTimezone(); // use the SAME timezone that was used to save
+
+            $startDate = \Carbon\Carbon::createFromTimestamp($this->start_date)
+                ->setTimezone($timezone)
+                ->format('Y-m-d');
+
+            $today = \Carbon\Carbon::now($timezone)->format('Y-m-d');
+
+            return $startDate < $today;
         }
         return false;
     }

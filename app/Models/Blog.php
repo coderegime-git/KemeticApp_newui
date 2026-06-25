@@ -40,6 +40,7 @@ class Blog extends Model implements TranslatableContract
 
     public static function makeSlug($title)
     {
+        $title = \Illuminate\Support\Str::slug($title);
         return SlugService::createSlug(self::class, 'slug', $title);
     }
 

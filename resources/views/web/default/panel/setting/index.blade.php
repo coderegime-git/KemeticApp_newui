@@ -893,10 +893,12 @@
                                         @foreach($user->selectedBank->bank->specifications as $specification)
                                             @php
                                                 $selectedBankSpecification = $user->selectedBank->specifications->where('user_selected_bank_id', $user->selectedBank->id)->where('user_bank_specification_id', $specification->id)->first();
+                                                $isAccountNum = stripos($specification->name, 'account number') !== false || stripos($specification->name, 'iban') !== false;
+                                                $extraAttr = $isAccountNum ? 'maxlength="35" oninput="this.value = this.value.replace(/[^a-zA-Z0-9]/g, \'\')"' : '';
                                             @endphp
                                             <div class="settings-form-group">
                                                 <label class="font-weight-500 text-dark-blue">{{ $specification->name }} <span style="color:#F2C94C;">*</span></label>
-                                                <input type="text" name="bank_specifications[{{ $specification->id }}]" value="{{ (!empty($selectedBankSpecification)) ? $selectedBankSpecification->value : '' }}" class="form-control settings-field-input" placeholder="Enter {{ $specification->name }}" {{ ($user->financial_approval) ? 'disabled' : '' }}/>
+                                                <input type="text" name="bank_specifications[{{ $specification->id }}]" value="{{ (!empty($selectedBankSpecification)) ? $selectedBankSpecification->value : '' }}" class="form-control settings-field-input" placeholder="Enter {{ $specification->name }}" {{ ($user->financial_approval) ? 'disabled' : '' }} {!! $extraAttr !!}/>
                                             </div>
                                         @endforeach
                                     @endif

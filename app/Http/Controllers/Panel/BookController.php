@@ -257,6 +257,20 @@ class BookController extends Controller
             ]);
         }
 
+        try {
+            $user = auth()->user(); // fixes the $suer typo — use the logged-in admin/user
+
+            $notifyOptions = [
+                '[u.name]' => $user->full_name ?? '',
+                '[book_title]' => $data['title'],
+            ];
+
+            sendNotification("new_book_create", $notifyOptions, 1);
+        } catch (\Throwable $e) {
+            \Log::error('Book creation notification failed: ' . $e->getMessage());
+            // Don't block the redirect — the book was created successfully either way
+        }
+
         return redirect('panel/book/')->with('success', 'Book created successfully.');
     }
 

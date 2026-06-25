@@ -162,7 +162,7 @@
         <section class="profile-grid">
           @if($isWisdomKeeper)
             @if(!empty($webinars) && $webinars->count() > 0)
-              @foreach($user->webinars as $webinar)
+              @foreach($webinars as $webinar)
               <a class="profile-card" href="{{ $webinar->getUrl() }}">
                   <img src="{{ $webinar->getImage() }}" alt="{{ $webinar->title }}">
                 <div class="profile-badge"><span class="profile-star">★</span> {{ $webinar->like_count ?? 0 }}</div>

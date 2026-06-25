@@ -565,7 +565,7 @@ class WebinarsController extends Controller
             'created_at' => time(),
             'message_for_reviewer' => $data['message_for_reviewer'] ?? null,
         ]);
-
+        
         if ($webinar) {
             WebinarTranslation::updateOrCreate([
                 'webinar_id' => $webinar->id,
@@ -576,16 +576,25 @@ class WebinarsController extends Controller
                 'seo_description' => $data['seo_description'],
             ]);
 
+            // if (!empty($data['start_date'])) {
+            //     if (empty($data['timezone']) or !getFeaturesSettings('timezone_in_create_webinar')) {
+            //         $data['timezone'] = getTimezone();
+            //     }
 
+            //     $startDate = convertTimeToUTCzone($data['start_date'], $data['timezone']);
 
+            //     $data['start_date'] = $startDate->getTimestamp();
+            // }
+
+            
             if (!empty($data['start_date'])) {
-                if (empty($data['timezone']) or !getFeaturesSettings('timezone_in_create_webinar')) {
+                if (empty($data['timezone']) || !getFeaturesSettings('timezone_in_create_webinar')) {
                     $data['timezone'] = getTimezone();
                 }
-
                 $startDate = convertTimeToUTCzone($data['start_date'], $data['timezone']);
-
                 $data['start_date'] = $startDate->getTimestamp();
+                // also persist it:
+                // $data['timezone'] = $data['timezone']; (already set, just make sure it's a saved column)
             }
 
             $data['forum'] = (!empty($data['forum']) and ($data['forum'] == 'on' or $data['forum'] == 1)) ? 1 : 0;
@@ -1508,14 +1517,26 @@ class WebinarsController extends Controller
 
         }
 
+        try{
+            $notifyOptions = [
+                '[u.name]' => $user->full_name,
+                '[item_title]' => $webinar->title,
+                '[content_type]' => trans('admin/main.course'),
+            ];
 
-        $notifyOptions = [
-            '[u.name]' => $user->full_name,
-            '[item_title]' => $webinar->title,
-            '[content_type]' => trans('admin/main.course'),
-        ];
+            sendNotification("new_item_created", $notifyOptions, 1);
 
-        sendNotification("new_item_created", $notifyOptions, 1);
+            sendNotification('course_created', ['[c.title]' => $webinar->title], $user->id);
+
+            sendNotification("content_review_request", $notifyOptions, 1);
+        }
+        catch (\Throwable $e) {
+            \Log::error('Course creation notification failed: ' . $e->getMessage(), [
+                'webinar_id' => $webinar->id ?? null,
+                'user_id' => $user->id ?? null,
+            ]);
+            // intentionally swallow — notification failure must not block course creation
+        }
 
         $data = [
             "success" => true,

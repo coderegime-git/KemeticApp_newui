@@ -439,7 +439,7 @@
                         </div>
 
                         {{-- ── ALLOW USER SELECTION (restored) ── --}}
-                        <div class="form-group kemetic-form-group mt-20 js-allow-selection-input {{ (!empty($selectedSpecification) and $selectedSpecification->type == 'multi_value') ? '' : 'd-none' }}">
+                        <!-- <div class="form-group kemetic-form-group mt-20 js-allow-selection-input {{ (!empty($selectedSpecification) and $selectedSpecification->type == 'multi_value') ? '' : 'd-none' }}">
                             <div class="d-flex align-items-center justify-content-between">
                                 <label class="kemetic-label cursor-pointer"
                                        for="specificationAllowSelectionSwitch{{ !empty($selectedSpecification) ? $selectedSpecification->id : '_record' }}">
@@ -455,7 +455,7 @@
                                            for="specificationAllowSelectionSwitch{{ !empty($selectedSpecification) ? $selectedSpecification->id : '_record' }}"></label>
                                 </div>
                             </div>
-                        </div>
+                        </div> -->
 
                         {{-- ── ACTIVE STATUS ── --}}
                         <div class="form-group kemetic-form-group mt-20">

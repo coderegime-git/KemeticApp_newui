@@ -246,12 +246,15 @@
 @push('scripts_bottom')
 <script src="/assets/vendors/summernote/summernote-bs4.min.js"></script>
 <script>
-    // Fix for Summernote modals close button in Bootstrap 5
     $(document).ready(function() {
         if($.fn.filemanager) {
             $('.panel-file-manager-image').filemanager('image', {
                 prefix: '/laravel-filemanager'
             });
+        }
+
+        if (jQuery().summernote) {
+            makeSummernote($('#contentSummernote'), 400);
         }
     });
     

@@ -26,6 +26,17 @@ class ProductResource extends JsonResource
             'type' => $this->type,
             'unlimited_inventory' => (bool)$this->unlimited_inventory,
             'availability' => (string)($this->unlimited_inventory) ? trans('update.unlimited') : (string)$this->getAvailability(),
+            'new_inventory_warning' => (bool)(
+                !empty($this->inventory) &&
+                !empty($this->inventory_warning) &&
+                $this->inventory_warning >= $this->getAvailability()
+            ),
+            'inventory_warning_message' => (
+                !empty($this->inventory) &&
+                !empty($this->inventory_warning) &&
+                $this->inventory_warning >= $this->getAvailability()
+            ) ? trans('update.only_n_left', ['count' => $this->getAvailability()]) : null,
+
             'point' => (string)$this->point,
             'sales_count' => (string)$this->salesCount() ?? 0,
             'sales_amount' => (string)convertPriceToUserCurrency($this->sales()->sum('total_amount')) ?? 0,
@@ -101,6 +112,22 @@ class ProductResource extends JsonResource
                             'url'   => $image->path ? url($image->path) : null,
                         ];
                     }),
+                    
+                    'related_courses' => \App\Models\RelatedCourse::where('targetable_id', $this->id)
+                        ->where('targetable_type', 'App\Models\Product')
+                        ->get()
+                        ->map(function ($rc) {
+                            $course = \App\Models\Webinar::find($rc->course_id);
+                            if ($course and $course->status == 'active') {
+                                return [
+                                    'title' => $course->title,
+                                    // 'url' => $course->getUrl(),
+                                ];
+                            }
+                        })
+                        ->filter()
+                        ->values(),
+                    
                     'selectable_specifications' => $this->dde(),
                     'selected_specifications'   => $this->getPrettySpecification(),
                     'description'               => $this->description,

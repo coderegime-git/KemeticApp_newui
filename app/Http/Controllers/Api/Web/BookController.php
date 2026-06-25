@@ -815,6 +815,23 @@ class BookController extends Controller
 
             // Format response
             $formattedBook = $this->formatBookDetails($book->fresh(), $userid);
+
+            try {
+                // NOTE: $suer was undefined — replace with however you fetch the
+                // current user elsewhere in this controller (e.g. User::find($userid))
+                $user = User::find($userid);
+
+                $notifyOptions = [
+                    '[u.name]' => $user->full_name ?? '',
+                    '[book_title]' => $data['title'],
+                ];
+
+                sendNotification("new_book_create", $notifyOptions, 1);
+            } catch (\Throwable $e) {
+                \Log::error('Book creation notification failed: ' . $e->getMessage());
+                // Swallow this — the book itself was created successfully,
+                // a notification failure shouldn't turn into a 500 for the user.
+            }
             
             return apiResponse2(1, 'created', trans('api.public.created'), [
                 'book' => $formattedBook,

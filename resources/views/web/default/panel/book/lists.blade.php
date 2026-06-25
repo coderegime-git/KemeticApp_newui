@@ -414,6 +414,8 @@
                             <input type="date"
                                 class="form-control kemetic-input text-center"
                                 name="from"
+                                id="from_date"
+                                max="{{ date('Y-m-d') }}"
                                 value="{{ request()->get('from') }}">
                         </div>
                     </div>
@@ -425,6 +427,8 @@
                             <input type="date"
                                 class="form-control kemetic-input text-center"
                                 name="to"
+                                id="to_date"
+                                max="{{ date('Y-m-d') }}"
                                 value="{{ request()->get('to') }}">
                         </div>
                     </div>
@@ -493,7 +497,7 @@
                     <table class="kemetic-table">
                         <thead>
                         <tr>
-                            <th>#</th>
+                            <th>ID</th>
                             <th class="text-left">Title</th>
                             <th class="text-center">Price</th>
                             <!-- <th class="text-center">Created At</th>

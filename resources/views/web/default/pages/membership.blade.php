@@ -91,8 +91,8 @@
         </div>
       </div>
       <div style="display:flex; gap:12px; align-items:center; justify-content:flex-end; flex-wrap:wrap">
-        <button type="button" class="membership-cta" onclick="chooseplan()">Join €10/year</button>
-        <button type="button" class="membership-cta secondary" onclick="chooseplan()">or €33/Lifetime</button>
+        <button type="button" class="membership-cta" onclick="chooseplan()">Join €33/Lifetime</button>
+        <button type="button" class="membership-cta secondary" onclick="chooseplan()">or €10/year</button>
       </div>
     </div>
   </div>
@@ -295,7 +295,7 @@
     // Update sticky CTA button label
     const stickyBtn = document.querySelector('.membership-sticky .membership-cta.secondary');
     if (stickyBtn) {
-        stickyBtn.textContent = cur === 'USD' ? '$11/mo' : '€10/mo';
+        stickyBtn.textContent = cur === 'USD' ? '$11/yr' : '€10/yr';
     }
 
     // Update hero CTA button labels

@@ -35,38 +35,43 @@
 <!-- Reading progress -->
 <div class="articledetail-progress" id="articledetail-progress"></div>
 
-<header class="articledetail-hero">
-  <div class="articledetail-bg" style="background: 
-        linear-gradient(180deg, rgba(0,0,0,0.5) 0%, rgba(0,0,0,0) 30%, rgba(0,0,0,0.7) 100%),
-        url('{{ $post->image }}') center / cover no-repeat;"></div>
-  <div class="articledetail-inner">
+<header class="articledetail-hero" style="position:relative; height:500px; overflow:hidden; display:flex; align-items:center; justify-content:center;">
+
+  {{-- Blurred background layer (fills full hero, no black bars) --}}
+  <div style="position:absolute; inset:0; z-index:0;
+              background: url('{{ $post->image }}') center/cover no-repeat;
+              filter: blur(18px) brightness(0.45) saturate(1.2);
+              transform: scale(1.1);"></div>
+
+  {{-- Dark gradient overlay --}}
+  <div style="position:absolute; inset:0; z-index:1;
+              background: linear-gradient(180deg, rgba(0,0,0,0.2) 0%, rgba(0,0,0,0.0) 40%, rgba(0,0,0,0.75) 100%);"></div>
+
+  {{-- Actual image – fully visible, no crop --}}
+  <img src="{{ $post->image }}" alt="{{ $post->title }}"
+       style="position:relative; z-index:2; max-width:100%; max-height:100%; width:auto; height:100%; object-fit:contain; display:block;">
+
+  {{-- Title & meta pinned to bottom --}}
+  <div class="articledetail-inner" style="position:absolute; bottom:0; left:0; right:0; z-index:3;">
     <div>
       <h1 class="articledetail-title">{{$post->title}}</h1>
       <div class="articledetail-meta">
-         @php
-        $rate = $post->getRate();
-            $i = 5;
+        @php
+          $rate = $post->getRate();
+          $i = 5;
         @endphp
-
         <div style="color:#ffd769;font-weight:900">
-            @while(--$i >= 5 - $rate)
-                ★
-            @endwhile
-            @while($i-- >= 0)
-                ☆
-            @endwhile
-            <!-- <span style="color:#fff;font-weight:900;margin-left:6px">{{$post->reviews->count()}} reviews</span> -->
-           </div>
+          @while(--$i >= 5 - $rate) ★ @endwhile
+          @while($i-- >= 0) ☆ @endwhile
+        </div>
         <span>{{$post->reviews->count()}} reviews</span>
-        <!-- <span class="articledetail-badge">12 min read</span> -->
         <span class="articledetail-badge">{{$post->category->title}}</span>
       </div>
     </div>
-    <!-- <div class="articledetail-cta">
-      <button class="articledetail-btn-gold"><span class="material-symbols-outlined">book_2</span> Start Reading</button>
-    </div> -->
   </div>
+
 </header>
+
 
 <!-- FLOATING ACTION RAIL -->
 <!-- <div class="articledetail-rail">

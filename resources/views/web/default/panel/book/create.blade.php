@@ -329,7 +329,7 @@
             <div class="form-group mt-20">
                 <label class="input-label">{{ trans('public.description') }} <span class="text-danger">*</span></label>
                 <textarea id="summernote"
-                          name="description"
+                          name="description" required
                           class="form-control @error('description') is-invalid @enderror">
 {!! (!empty($book) ) ? $book->description : old('description') !!}
                 </textarea>
@@ -341,8 +341,8 @@
             {{-- CONTENT --}}
             <div class="form-group mt-20">
                 <label class="input-label">{{ trans('admin/main.content') }} <span class="text-danger">*</span></label>
-                <textarea id="summernote"
-                          name="content"
+                <textarea id="contentSummernote"
+                          name="content" required
                           class="form-control @error('content') is-invalid @enderror">
 {!! (!empty($book)) ? $book->content : old('content') !!}
                 </textarea>
@@ -378,6 +378,10 @@
         $('.panel-file-manager-pdf').filemanager('pdf', {
             prefix: '/laravel-filemanager'
         });
+
+        if (jQuery().summernote) {
+            makeSummernote($('#contentSummernote'), 400);
+        }
     });
 
 
@@ -447,8 +451,19 @@
         
         const pages = pagesInput.value;
         
-        if (!pages || pages < 1) {
-            alert('Please enter a valid number of pages (minimum 1)');
+        if (!pages || pages < 32 || pages > 800) {
+            $.toast({
+                heading: 'Error',
+                text: 'Page count must be in range 32-800',
+                bgColor: '#f63c3c',
+                textColor: 'white',
+                hideAfter: 5000,
+                position: 'bottom-right',
+                icon: 'error'
+            });
+            printPriceInput.value = '';
+            pagesInput.value = '';
+            calculatePlatformFee(); // recalculate total
             pagesInput.focus();
             return;
         }
@@ -485,14 +500,45 @@
                     calculatePlatformFee();
                 }
             } else {
-                alert('Error calculating print price: ' + (data.message || 'Unknown error'));
+                let errorMsg = data.message || 'Unknown error';
+                
+                // Extract detailed error from raw_response if available
+                if (data.raw_response && data.raw_response.line_items && data.raw_response.line_items.length > 0) {
+                    const lineItemError = data.raw_response.line_items[0];
+                    if (lineItemError.page_count && lineItemError.page_count.length > 0) {
+                        errorMsg = lineItemError.page_count[0];
+                    }
+                }
+                
+                $.toast({
+                    heading: 'Error',
+                    text: errorMsg,
+                    bgColor: '#f63c3c',
+                    textColor: 'white',
+                    hideAfter: 5000,
+                    position: 'bottom-right',
+                    icon: 'error'
+                });
             }
         } catch (error) {
             console.error('Error:', error);
-            alert('Network error. Please check your connection and try again.');
+            $.toast({
+                heading: 'Error',
+                text: 'Network error. Please check your connection and try again.',
+                bgColor: '#f63c3c',
+                textColor: 'white',
+                hideAfter: 5000,
+                position: 'bottom-right',
+                icon: 'error'
+            });
         } finally {
             // Hide loading spinner
-            printPriceLoading.style.display = 'none';
+            if (typeof printPriceLoading !== 'undefined' && printPriceLoading) {
+                printPriceLoading.style.display = 'none';
+            } else {
+                let spinner = document.getElementById('printPriceLoading');
+                if (spinner) spinner.style.display = 'none';
+            }
         }
     }
 
@@ -531,7 +577,99 @@
     document.getElementById('book_price').addEventListener('input', calculatePlatformFee)
 
     document.getElementById('bookForm').addEventListener('submit', function(e) {
-        if (this.checkValidity()) {
+        let isValid = true;
+        
+        // Custom validation for all required inputs
+        const requiredInputs = this.querySelectorAll('[required]');
+        requiredInputs.forEach(input => {
+            // Skip summernote textareas here, we validate them separately
+            if (input.id === 'summernote' || input.id === 'contentSummernote') return;
+            
+            // Only check visible inputs or hidden inputs that should be validated (like print fields if print type)
+            if (input.offsetParent !== null || input.id === 'print_price' || input.id === 'shipping_price' || input.id === 'page_count') {
+                if (input.required && (!input.value || input.value.trim() === '')) {
+                    isValid = false;
+                    input.classList.add('is-invalid');
+                    let feedback = input.parentElement.querySelector('.invalid-feedback');
+                    if (!feedback) {
+                        feedback = document.createElement('div');
+                        feedback.className = 'invalid-feedback';
+                        input.parentElement.appendChild(feedback);
+                    }
+                    feedback.innerText = 'Please fill required fields';
+                    feedback.style.display = 'block';
+                } else {
+                    input.classList.remove('is-invalid');
+                    let feedback = input.parentElement.querySelector('.invalid-feedback');
+                    if (feedback) feedback.style.display = 'none';
+                }
+            }
+        });
+
+        // Validate Summernote fields
+        ['summernote', 'contentSummernote'].forEach(function(id) {
+            const el = $('#' + id);
+            if (el.length && el.prop('required')) {
+                let isEmpty = false;
+                try {
+                    const code = el.summernote('code');
+                    isEmpty = el.summernote('isEmpty') || code === '<p><br></p>' || code.replace(/<[^>]*>?/gm, '').trim() === '';
+                } catch(e) {
+                    isEmpty = !el.val() || el.val().trim() === '';
+                }
+                
+                const domEl = document.getElementById(id);
+                if (isEmpty) {
+                    isValid = false;
+                    domEl.classList.add('is-invalid');
+                    let feedback = domEl.parentElement.querySelector('.invalid-feedback');
+                    if (!feedback) {
+                        feedback = document.createElement('div');
+                        feedback.className = 'invalid-feedback';
+                        domEl.parentElement.appendChild(feedback);
+                    }
+                    feedback.innerText = 'Please fill required fields';
+                    feedback.style.display = 'block';
+                } else {
+                    domEl.classList.remove('is-invalid');
+                    let feedback = domEl.parentElement.querySelector('.invalid-feedback');
+                    if (feedback) feedback.style.display = 'none';
+                }
+            }
+        });
+
+        // Specific print type validation
+        const bookType = document.getElementById('book_type').value;
+        if (bookType === 'Print') {
+            const printPrice = document.getElementById('print_price').value;
+            if (!printPrice || printPrice === '0' || printPrice === '') {
+                isValid = false;
+                const printPriceInput = document.getElementById('print_price');
+                printPriceInput.classList.add('is-invalid');
+                let feedback = printPriceInput.parentElement.querySelector('.invalid-feedback');
+                if (!feedback) {
+                    feedback = document.createElement('div');
+                    feedback.className = 'invalid-feedback';
+                    printPriceInput.parentElement.appendChild(feedback);
+                }
+                feedback.innerText = 'Please fill required fields (Print Price missing)';
+                feedback.style.display = 'block';
+            }
+        }
+
+        if (!isValid || !this.checkValidity()) {
+            e.preventDefault();
+            $.toast({
+                heading: 'Error',
+                text: 'Please fill all required fields correctly.',
+                bgColor: '#f63c3c',
+                textColor: 'white',
+                hideAfter: 5000,
+                position: 'bottom-right',
+                icon: 'error'
+            });
+            return false;
+        } else {
             Swal.fire({
                 html: '<div class="d-flex align-items-center justify-content-center py-20"><div class="spinner-border text-primary" role="status"></div><span class="ml-15 font-16">Please wait...</span></div>',
                 showConfirmButton: false,

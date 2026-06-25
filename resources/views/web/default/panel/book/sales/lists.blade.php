@@ -115,11 +115,11 @@
             <div class="row align-items-end g-2">
                 <div class="col-md-3 col-6">
                     <label>From</label>
-                    <input type="date" class="form-control" name="from" value="{{ request('from') }}">
+                    <input type="date" class="form-control" name="from" max="{{ date('Y-m-d') }}" value="{{ request('from') }}">
                 </div>
                 <div class="col-md-3 col-6">
                     <label>To</label>
-                    <input type="date" class="form-control" name="to" value="{{ request('to') }}">
+                    <input type="date" class="form-control" name="to" max="{{ date('Y-m-d') }}" value="{{ request('to') }}">
                 </div>
                 <div class="col-md-4 col-12">
                     <label>Status</label>
@@ -144,7 +144,7 @@
             <table class="wk-table">
                 <thead>
                     <tr>
-                        <th>#</th>
+                        <th>ID</th>
                         <th>Buyer</th>
                         <th>Book</th>
                         <th>Type</th>
