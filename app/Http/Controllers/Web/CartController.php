@@ -167,6 +167,28 @@ class CartController extends Controller
                 ])
                 ->get();
         }
+
+        // $carts = $carts->filter(function ($cart) {
+        //     // If it has a webinar_id, ensure the webinar exists
+        //     if (!empty($cart->webinar_id) && empty($cart->webinar)) {
+        //         return false;
+        //     }
+        //     // If it has a bundle_id, ensure the bundle exists
+        //     if (!empty($cart->bundle_id) && empty($cart->bundle)) {
+        //         return false;
+        //     }
+        //     // If it has a reserve_meeting_id, ensure the meeting exists
+        //     if (!empty($cart->reserve_meeting_id)) {
+        //         if (empty($cart->reserveMeeting) || empty($cart->reserveMeeting->meeting)) {
+        //             return false;
+        //         }
+        //     }
+        //     // If it has an installment_payment_id, ensure it exists
+        //     if (!empty($cart->installment_payment_id) && empty($cart->installmentPayment)) {
+        //         return false;
+        //     }
+        //     return true;
+        // });
     
        // echo "<pre>"; print_r($carts); die;
         if ($carts->isNotEmpty()) {

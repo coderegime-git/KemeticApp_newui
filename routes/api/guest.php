@@ -74,6 +74,7 @@ Route::group([], function () {
 
 
     Route::get('users/{id}/profile', ['uses' => 'UserController@profile']);
+    Route::get('/users/{id}/profile-content', ['uses' => 'UserController@profileContent']);
     Route::post('users/{id}/send-message', 'UserController@sendMessage');
     Route::get('users/{id}/dashboard', 'UserController@dashboard');
 

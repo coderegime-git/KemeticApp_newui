@@ -1030,7 +1030,7 @@
                                     </div>
                                 </div>
 
-                                <div class="settings-form-group settings-full">
+                                <!-- <div class="settings-form-group settings-full">
                                     <label for="extra-notes">
                                         {{ trans('financial.address') }}
                                     </label>
@@ -1040,7 +1040,7 @@
                                         {{ $message }}
                                     </div>
                                     @enderror
-                                </div>
+                                </div> -->
                             </div>
 
                             <div class="settings-card-footer">

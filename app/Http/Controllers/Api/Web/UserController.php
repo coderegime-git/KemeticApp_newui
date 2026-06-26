@@ -681,6 +681,633 @@ class UserController extends Controller
         ]);
 
     }
+
+    public function profileContent(Request $request, $id)
+    {
+        $type = $request->get('type', 'reels');
+    
+        $user = User::where('id', $id)
+        ->whereIn('role_name', [Role::$organization, Role::$teacher, Role::$user, Role::$admin])
+        ->with([
+            'stories' => function ($query) {
+                $query->active()
+                    ->withCount('views')
+                    ->orderBy('created_at', 'desc');
+            },
+            'userMetas'
+            ])
+            ->first();
+
+        if (!$user) {
+            abort(404);
+        }
+
+        if ($user) {
+            // Set full URL for avatar
+            $user->avatar = !empty($user->avatar) ? url($user->avatar) : "";
+            
+            // Set full URLs for each story's media_url
+            if ($user->stories) {
+                foreach ($user->stories as $story) {
+                    $story->media_url = url($story->media_url);
+                }
+            }
+        }
+
+        // Calculate total counts directly from database without loading relationships
+        $totalCounts = [
+            'likes' => 0,
+            'comments' => 0,
+            'reviews' => 0
+        ];
+
+        $isWisdomKeeper = in_array($user->role->name, ['admin', 'organization', 'teacher']);
+
+        if ($isWisdomKeeper) {
+            // Blog/Articles counts
+            $blogIds = Blog::where('author_id', $user->id)->where('status', 'publish')->pluck('id');
+            if ($blogIds->isNotEmpty()) {
+                $totalCounts['likes'] += DB::table('article_like')->whereIn('article_id', $blogIds)->count();
+                $totalCounts['comments'] += DB::table('comments')->whereIn('blog_id', $blogIds)->where('status', 'active')->count();
+                $totalCounts['reviews'] += DB::table('article_reviews')->whereIn('article_id', $blogIds)->count();
+            }
+
+            // Products counts
+            $productIds = Product::where('creator_id', $user->id)->where('status', Product::$active)->pluck('id');
+            if ($productIds->isNotEmpty()) {
+                $totalCounts['likes'] += DB::table('product_like')->whereIn('product_id', $productIds)->count();
+                $totalCounts['comments'] += DB::table('comments')->whereIn('product_id', $productIds)->count();
+                $totalCounts['reviews'] += DB::table('product_reviews')->whereIn('product_id', $productIds)->count();
+            }
+
+            // Reels counts
+            $reelIds = Reel::where('user_id', $user->id)->where('is_hidden', '0')->pluck('id');
+            if ($reelIds->isNotEmpty()) {
+                $totalCounts['likes'] += DB::table('reel_likes')->whereIn('reel_id', $reelIds)->count();
+                $totalCounts['comments'] += DB::table('reel_comments')->whereIn('reel_id', $reelIds)->count();
+                $totalCounts['reviews'] += DB::table('reel_review')->whereIn('reel_id', $reelIds)->count();
+            }
+
+            // Webinars counts
+            $webinarIds = Webinar::where('creator_id', $user->id)
+                ->orWhere('teacher_id', $user->id)
+                ->where('status', Webinar::$active)
+                ->where('private', false)
+                ->pluck('id');
+            if ($webinarIds->isNotEmpty()) {
+                $totalCounts['likes'] += DB::table('webinar_like')->whereIn('webinar_id', $webinarIds)->count();
+                $totalCounts['comments'] += DB::table('comments')->whereIn('webinar_id', $webinarIds)->count();
+                $totalCounts['reviews'] += DB::table('webinar_reviews')->whereIn('webinar_id', $webinarIds)->where('status', 'active')->count();
+            }
+        } else {
+            // Count likes, comments, reviews for seeker
+            $totalCounts['likes'] = DB::table('article_like')->where('user_id', $user->id)->count()
+                + DB::table('product_like')->where('user_id', $user->id)->count()
+                + DB::table('webinar_like')->where('user_id', $user->id)->count()
+                + DB::table('reel_likes')->where('user_id', $user->id)->count();
+
+            $totalCounts['reviews'] = DB::table('article_reviews')->where('creator_id', $user->id)->count()
+                + DB::table('product_reviews')->where('creator_id', $user->id)->count()
+                + DB::table('webinar_reviews')->where('creator_id', $user->id)->count()
+                + DB::table('reel_review')->where('user_id', $user->id)->count();
+
+            $totalCounts['comments'] = DB::table('comments')->where('user_id', $user->id)->count()
+                + DB::table('reel_comments')->where('user_id', $user->id)->count();
+        }
+
+        // Prepare user data
+        $user->avatar = !empty($user->avatar) ? url($user->avatar) : "";
+        
+        // Process user metas
+        if ($user->userMetas) {
+            foreach ($user->userMetas as $meta) {
+                $user->{$meta->name} = $meta->value;
+            }
+        }
+
+        // Get user badges
+        $userBadges = $user->getBadges();
+        
+        // Get followers and following
+        $followings = $user->following();
+        $followers = $user->followers();
+
+        // Check if authenticated user is follower
+        $authUser = apiAuth();
+        $authUserIsFollower = false;
+        
+        if ($authUser) {
+            $authUserIsFollower = Follow::where('user_id', $user->id)
+                ->where('follower', $authUser->id)
+                ->where('status', Follow::$accepted)
+                ->exists();
+        }
+        
+        $user->auth_user_is_follower = $authUserIsFollower;
+
+        // IMPORTANT: Unset relationships that we don't want to appear in the response
+        // This prevents webinars, products, blog, reels from appearing in the user object
+        $user->unsetRelation('webinars');
+        $user->unsetRelation('products');
+        $user->unsetRelation('blog');
+        $user->unsetRelation('reels');
+    
+        switch ($type) {
+            case 'reels':
+                $result = $this->paginatedReels($user, $isWisdomKeeper, $request);
+                break;
+    
+            case 'products':
+                $result = $this->paginatedProducts($user, $isWisdomKeeper, $request);
+                break;
+    
+            case 'courses':
+                $result = $this->paginatedCourses($user, $isWisdomKeeper, $request);
+                break;
+    
+            case 'articles':
+                $result = $this->paginatedArticles($user, $isWisdomKeeper, $request);
+                break;
+    
+            case 'reviews':
+                $result = $this->paginatedReviews($user, $isWisdomKeeper, $request);
+                break;
+    
+            default:
+                return apiResponse2(0, 'error', 'Invalid type requested', []);
+        }
+    
+        return apiResponse2(1, 'retrieved', trans('api.public.retrieved'), [
+            'user' => $user,
+            'userBadges' => $userBadges,
+            'userFollowers' => $followers,
+            'userFollowing' => $followings,
+            'auth_user_is_follower' => $authUserIsFollower,
+            'totalLikes' => $totalCounts['likes'],
+            'totalComments' => $totalCounts['comments'],
+            'totalReviews' => $totalCounts['reviews'],
+            'type'             => $type,
+            'is_wisdom_keeper' => $isWisdomKeeper,
+            'items'            => $result['items'],
+            'pagination'       => $result['pagination'],
+        ]);
+    }
+    
+    private function applyPagination($query, Request $request, ?callable $transform = null, $defaultPerPage = 10)
+    {
+        $limit = (int) $request->get('limit', $request->get('per_page', $defaultPerPage));
+        $limit = $limit > 0 ? min($limit, 50) : $defaultPerPage;
+    
+        if ($request->has('offset')) {
+            $offset = max((int) $request->get('offset', 0), 0);
+    
+            $total = $query->count();
+            $items = $query->skip($offset)->take($limit)->get();
+    
+            if ($transform) {
+                $items = $items->map($transform);
+            }
+    
+            return [
+                'items' => $items,
+                'pagination' => [
+                    'total'    => $total,
+                    'offset'   => $offset,
+                    'limit'    => $limit,
+                    'has_more' => ($offset + $limit) < $total,
+                ],
+            ];
+        }
+    
+        $page = (int) $request->get('page', 1);
+        $paginator = $query->paginate($limit, ['*'], 'page', max($page, 1));
+    
+        $collection = $paginator->getCollection();
+        if ($transform) {
+            $collection = $collection->map($transform);
+        }
+    
+        return [
+            'items' => $collection->values(),
+            'pagination' => [
+                'total'        => $paginator->total(),
+                'current_page' => $paginator->currentPage(),
+                'per_page'     => $paginator->perPage(),
+                'last_page'    => $paginator->lastPage(),
+                'has_more'     => $paginator->hasMorePages(),
+            ],
+        ];
+    }
+    
+    private function paginatedReels($user, $isWisdomKeeper, Request $request)
+    {
+        // if ($isWisdomKeeper) {
+        //     $query = $user->reels()
+        //         ->where('is_hidden', '0')
+        //         ->orderBy('created_at', 'desc');
+        // } else {
+        //     // ⚠️ verify relation name — see assumption note at top of file.
+        //     $query = \App\Models\Reel::whereHas('savedItems', function ($q) use ($user) {
+        //             $q->where('user_id', $user->id);
+        //         })
+        //         ->where('is_hidden', '0')
+        //         ->orderBy('created_at', 'desc');
+        // }
+
+        $query = $user->reels()
+                ->where('is_hidden', '0')
+                ->orderBy('created_at', 'desc');
+    
+        return $this->applyPagination($query, $request, function ($reel) {
+            $video = $reel->video_path ?? $reel->media_url ?? null;
+            return [
+                'id'        => $reel->id,
+                'title'     => $reel->title,
+                'thumbnail' => !empty($video) ? url($video) : null,
+                'reviewer_name'   => '',
+                'reviewer_avatar' => '',
+                'review'          => '',
+                'rating'          => '',
+            ];
+        });
+    }
+    
+    private function paginatedProducts($user, $isWisdomKeeper, Request $request)
+    {
+        if ($isWisdomKeeper) {
+            $query = $user->products()
+                ->where('status', Product::$active)
+                ->orderBy('created_at', 'desc');
+        } else {
+            $query = Product::whereHas('savedItems', function ($q) use ($user) {
+                    $q->where('user_id', $user->id);
+                })
+                ->where('status', Product::$active)
+                ->orderBy('created_at', 'desc');
+        }
+    
+        return $this->applyPagination($query, $request, function ($product) {
+            return [
+                'id'        => $product->id,
+                'title'     => $product->title,
+                'thumbnail' => !empty($product->thumbnail) ? url($product->thumbnail) : null,
+                'reviewer_name'   => '',
+                'reviewer_avatar' => '',
+                'review'          => '',
+                'rating'          => '',
+            ];
+        });
+    }
+    
+    private function paginatedCourses($user, $isWisdomKeeper, Request $request)
+    {
+        if ($isWisdomKeeper) {
+            $query = Webinar::where('status', Webinar::$active)
+                ->where('private', false)
+                ->where(function ($q) use ($user) {
+                    $q->where('creator_id', $user->id)
+                        ->orWhere('teacher_id', $user->id);
+                })
+                ->orderBy('updated_at', 'desc');
+        } else {
+            $query = Webinar::whereHas('savedcourse', function ($q) use ($user) {
+                    $q->where('user_id', $user->id);
+                })
+                ->where('status', Webinar::$active)
+                ->where('private', false)
+                ->orderBy('updated_at', 'desc');
+        }
+    
+        return $this->applyPagination($query, $request, function ($webinar) {
+            return [
+                'id'        => $webinar->id,
+                'title'     => $webinar->title,
+                'thumbnail' => !empty($webinar->thumbnail) ? url($webinar->thumbnail) : null,
+                'reviewer_name'   => '',
+                'reviewer_avatar' => '',
+                'review'          => '',
+                'rating'          => '',
+            ];
+        });
+    }
+    
+    private function paginatedArticles($user, $isWisdomKeeper, Request $request)
+    {
+        if ($isWisdomKeeper) {
+            $query = $user->blog()
+                ->where('status', 'publish')
+                ->orderBy('created_at', 'desc');
+        } else {
+            // ⚠️ relation name matches your original profile() code: Blog::saveditems
+            $query = Blog::whereHas('saveditems', function ($q) use ($user) {
+                    $q->where('user_id', $user->id);
+                })
+                ->where('status', 'publish')
+                ->orderBy('created_at', 'desc');
+        }
+    
+        return $this->applyPagination($query, $request, function ($article) {
+            return [
+                'id'        => $article->id,
+                'title'     => $article->title,
+                'thumbnail' => !empty($article->image) ? url($article->image) : null,
+                'reviewer_name'   => '',
+                'reviewer_avatar' => '',
+                'review'          => '',
+                'rating'          => '',
+            ];
+        });
+    }
+    
+    private function paginatedReviews($user, $isWisdomKeeper, Request $request)
+    {
+        try {
+            $allReviews = collect();
+
+            if ($isWisdomKeeper) {
+                // Webinar Reviews
+                try {
+                    $webinarReviews = DB::table('webinar_reviews')
+                        ->join('webinars', 'webinar_reviews.webinar_id', '=', 'webinars.id')
+                        ->join('webinar_translations', 'webinars.id', '=', 'webinar_translations.webinar_id')
+                        ->join('users', 'webinar_reviews.creator_id', '=', 'users.id')
+                        ->where(function ($q) use ($user) {
+                            $q->where('webinars.creator_id', $user->id)
+                            ->orWhere('webinars.teacher_id', $user->id);
+                        })
+                        ->where('webinar_reviews.status', 'active')
+                        ->select(
+                            'webinars.id as content_id',
+                            'webinar_translations.title as title',
+                            'webinars.thumbnail as thumbnail',
+                            'webinar_reviews.rates as rates',
+                            'webinar_reviews.description as review',
+                            'webinar_reviews.created_at as created_at',
+                            'users.full_name as reviewer_name',
+                            'users.avatar as reviewer_avatar'
+                        )
+                        ->get();
+                    
+                    $webinarReviews = $webinarReviews->map(function ($item) {
+                        $item->content_type = 'webinar';
+                        return $item;
+                    });
+                } catch (\Exception $e) {
+                    \Log::error('Webinar reviews error: ' . $e->getMessage());
+                    $webinarReviews = collect();
+                }
+
+                // Product Reviews
+                try {
+                    $productReviews = DB::table('product_reviews')
+                        ->join('products', 'product_reviews.product_id', '=', 'products.id')
+                        ->join('product_translations', 'products.id', '=', 'product_translations.product_id')
+                        ->join('users', 'product_reviews.creator_id', '=', 'users.id')
+                        ->where('products.creator_id', $user->id)
+                        ->select(
+                            'products.id as content_id',
+                            'product_translations.title as title',
+                            'products.thumbnail as thumbnail',
+                            'product_reviews.rates as rates',
+                            'product_reviews.description as review',
+                            'product_reviews.created_at as created_at',
+                            'users.full_name as reviewer_name',
+                            'users.avatar as reviewer_avatar'
+                        )
+                        ->get();
+                    
+                    $productReviews = $productReviews->map(function ($item) {
+                        $item->content_type = 'product';
+                        return $item;
+                    });
+                } catch (\Exception $e) {
+                    \Log::error('Product reviews error: ' . $e->getMessage());
+                    $productReviews = collect();
+                }
+
+                // Article Reviews
+                try {
+                    $articleReviews = DB::table('article_reviews')
+                        ->join('blog', 'article_reviews.article_id', '=', 'blog.id')
+                        ->join('blog_translations', 'blog.id', '=', 'blog_translations.blog_id')
+                        ->join('users', 'article_reviews.creator_id', '=', 'users.id')
+                        ->where('blog.author_id', $user->id)
+                        ->select(
+                            'blog.id as content_id',
+                            'blog_translations.title as title',
+                            'blog.image as thumbnail',
+                            'article_reviews.rates as rates',
+                            'article_reviews.description as review',
+                            'article_reviews.created_at as created_at',
+                            'users.full_name as reviewer_name',
+                            'users.avatar as reviewer_avatar'
+                        )
+                        ->get();
+                    
+                    $articleReviews = $articleReviews->map(function ($item) {
+                        $item->content_type = 'article';
+                        return $item;
+                    });
+                } catch (\Exception $e) {
+                    \Log::error('Article reviews error: ' . $e->getMessage());
+                    $articleReviews = collect();
+                }
+
+                // Reel Reviews
+                try {
+                    $reelReviews = DB::table('reel_review')
+                        ->join('reels', 'reel_review.reel_id', '=', 'reels.id')
+                        ->join('users', 'reel_review.user_id', '=', 'users.id')
+                        ->where('reels.user_id', $user->id)
+                        ->select(
+                            'reels.id as content_id',
+                            'reels.title as title',
+                            'reels.video_path as thumbnail',
+                            'reel_review.rating as rates',
+                            'reel_review.review as review',
+                            'reel_review.created_at as created_at',
+                            'users.full_name as reviewer_name',
+                            'users.avatar as reviewer_avatar'
+                        )
+                        ->get();
+                    
+                    $reelReviews = $reelReviews->map(function ($item) {
+                        $item->content_type = 'reel';
+                        return $item;
+                    });
+                } catch (\Exception $e) {
+                    \Log::error('Reel reviews error: ' . $e->getMessage());
+                    $reelReviews = collect();
+                }
+
+                $allReviews = $webinarReviews
+                    ->concat($productReviews)
+                    ->concat($articleReviews)
+                    ->concat($reelReviews);
+                    
+            } else {
+                // Reviews WRITTEN by this seeker
+                
+                // Webinar Reviews
+                try {
+                    $webinarReviews = DB::table('webinar_reviews')
+                        ->join('webinars', 'webinar_reviews.webinar_id', '=', 'webinars.id')
+                        ->join('webinar_translations', 'webinars.id', '=', 'webinar_translations.webinar_id')
+                        ->where('webinar_reviews.creator_id', $user->id)
+                        ->select(
+                            'webinars.id as content_id',
+                            'webinar_translations.title as title',
+                            'webinars.thumbnail as thumbnail',
+                            'webinar_reviews.rates as rates',
+                            'webinar_reviews.description as review',
+                            'webinar_reviews.created_at as created_at'
+                        )
+                        ->get();
+                    
+                    $webinarReviews = $webinarReviews->map(function ($item) {
+                        $item->content_type = 'webinar';
+                        return $item;
+                    });
+                } catch (\Exception $e) {
+                    \Log::error('Webinar reviews error: ' . $e->getMessage());
+                    $webinarReviews = collect();
+                }
+
+                // Product Reviews
+                try {
+                    $productReviews = DB::table('product_reviews')
+                        ->join('products', 'product_reviews.product_id', '=', 'products.id')
+                        ->join('product_translations', 'products.id', '=', 'product_translations.product_id')
+                        ->where('product_reviews.creator_id', $user->id)
+                        ->select(
+                            'products.id as content_id',
+                            'product_translations.title as title',
+                            'products.thumbnail as thumbnail',
+                            'product_reviews.rates as rates',
+                            'product_reviews.description as review',
+                            'product_reviews.created_at as created_at'
+                        )
+                        ->get();
+                    
+                    $productReviews = $productReviews->map(function ($item) {
+                        $item->content_type = 'product';
+                        return $item;
+                    });
+                } catch (\Exception $e) {
+                    \Log::error('Product reviews error: ' . $e->getMessage());
+                    $productReviews = collect();
+                }
+
+                // Article Reviews
+                try {
+                    $articleReviews = DB::table('article_reviews')
+                        ->join('blog', 'article_reviews.article_id', '=', 'blog.id')
+                        ->join('blog_translations', 'blog.id', '=', 'blog_translations.blog_id')
+                        ->where('article_reviews.creator_id', $user->id)
+                        ->select(
+                            'blog.id as content_id',
+                            'blog_translations.title as title',
+                            'blog.image as thumbnail',
+                            'article_reviews.rates as rates',
+                            'article_reviews.description as review',
+                            'article_reviews.created_at as created_at'
+                        )
+                        ->get();
+                    
+                    $articleReviews = $articleReviews->map(function ($item) {
+                        $item->content_type = 'article';
+                        return $item;
+                    });
+                } catch (\Exception $e) {
+                    \Log::error('Article reviews error: ' . $e->getMessage());
+                    $articleReviews = collect();
+                }
+
+                // Reel Reviews
+                try {
+                    $reelReviews = DB::table('reel_review')
+                        ->join('reels', 'reel_review.reel_id', '=', 'reels.id')
+                        ->where('reel_review.user_id', $user->id)
+                        ->select(
+                            'reels.id as content_id',
+                            'reels.title as title',
+                            'reels.video_path as thumbnail',
+                            'reel_review.rating as rates',
+                            'reel_review.review as review',
+                            'reel_review.created_at as created_at'
+                        )
+                        ->get();
+                    
+                    $reelReviews = $reelReviews->map(function ($item) {
+                        $item->content_type = 'reel';
+                        return $item;
+                    });
+                } catch (\Exception $e) {
+                    \Log::error('Reel reviews error: ' . $e->getMessage());
+                    $reelReviews = collect();
+                }
+
+                $allReviews = $webinarReviews
+                    ->concat($productReviews)
+                    ->concat($articleReviews)
+                    ->concat($reelReviews);
+            }
+
+            // Sort by created_at descending
+            $allReviews = $allReviews->sortByDesc('created_at')->values();
+
+            // Manual pagination
+            $page = (int) $request->get('page', 1);
+            $perPage = (int) $request->get('per_page', 10);
+            $perPage = min($perPage, 50);
+            
+            $total = $allReviews->count();
+            $items = $allReviews->forPage($page, $perPage);
+            
+            // Transform items
+            $items = $items->map(function ($item) use ($isWisdomKeeper, $user) {
+                return [
+                    'id'              => $item->content_id ?? $item->id ?? 0,
+                    'title'           => $item->title ?? '',
+                    'thumbnail'       => !empty($item->thumbnail) ? url($item->thumbnail) : null,
+                    'content_type'    => $item->content_type ?? '',
+                    'reviewer_name'   => $isWisdomKeeper ? ($item->reviewer_name ?? $user->full_name ?? '') : ($user->full_name ?? ''),
+                    'reviewer_avatar' => $isWisdomKeeper
+                        ? (!empty($item->reviewer_avatar) ? url($item->reviewer_avatar) : (!empty($user->avatar) ? url($user->avatar) : null))
+                        : (!empty($user->avatar) ? url($user->avatar) : null),
+                    'review'          => $item->review ?? '',
+                    'rating'          => $item->rates ?? '',
+                ];
+            });
+
+            return [
+                'items' => $items->values(),
+                'pagination' => [
+                    'total'        => $total,
+                    'current_page' => $page,
+                    'per_page'     => $perPage,
+                    'last_page'    => max(1, ceil($total / $perPage)),
+                    'has_more'     => ($page * $perPage) < $total,
+                ],
+            ];
+            
+        } catch (\Exception $e) {
+            \Log::error('paginatedReviews error: ' . $e->getMessage());
+            \Log::error('paginatedReviews trace: ' . $e->getTraceAsString());
+            
+            // Return empty result on error
+            return [
+                'items' => [],
+                'pagination' => [
+                    'total'        => 0,
+                    'current_page' => 1,
+                    'per_page'     => 10,
+                    'last_page'    => 1,
+                    'has_more'     => false,
+                ],
+            ];
+        }
+    }
     
     private function getUserForumTopics($userId)
     {

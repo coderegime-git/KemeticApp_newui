@@ -265,9 +265,9 @@
     border: 2px solid rgba(242,201,76,0.3);
     background: #000;
     width: 240px;
-    margin: 0 auto;
     height: 426px;
     position: relative;
+    margin: 0 auto;
 }
 .plyr {
     border-radius: 10px;

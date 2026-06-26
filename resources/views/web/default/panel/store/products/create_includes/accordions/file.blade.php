@@ -130,7 +130,7 @@
 @endpush
 
 <li data-id="{{ !empty($file) ? $file->id : '' }}" class="accordion-row k-accordion-item">
-    <div class="k-accordion-header" data-toggle="collapse" data-target="#collapseFile{{ !empty($file) ? $file->id : 'record' }}" aria-controls="collapseFile{{ !empty($file) ? $file->id : 'record' }}" data-parent="#filesAccordion">
+    <div class="k-accordion-header" data-toggle="collapse" href="#collapseFile{{ !empty($file) ? $file->id : 'record' }}" aria-controls="collapseFile{{ !empty($file) ? $file->id : 'record' }}" data-parent="#filesAccordion">
         <div class="d-flex align-items-center">
             <i data-feather="file" class="mr-10"></i>
             <span class="title">{{ !empty($file) ? $file->title : trans('public.add_new_files') }}</span>
